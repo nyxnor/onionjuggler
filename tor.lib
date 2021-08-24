@@ -1,0 +1,159 @@
+#!/bin/bash
+
+# Portions of this file was source from TorBox, an easy to use anonymizing router based on Raspberry Pi.
+#
+# Copyright (C) 2021 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# Copyright (C) 2021 The RaspiBlitz developers
+# Github:  https://github.com/rootzoll/raspiblitz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file is a library for the tor menus and scripts.
+# It contains functions which are used in several scripts.
+# Hopefully, this way the scripts stay short and clear.
+#
+# SYNTAX
+# . _tor.commands.sh
+#
+##### SET VARIABLES ######
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_15=15
+MENU_HEIGHT_20=20
+MENU_HEIGHT_25=25
+
+#Colors
+NOCOLOR='\033[0m'
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+AMBER='\033[0;33m'
+WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
+
+#Connectivity check
+CHECK_URL1="http://debian.org"
+PING_SERVER="debian.org"
+
+DISTRIBUTION=$(lsb_release -sc)
+
+SOURCES_DEB_SECURITY_ONION="http://5ajw6aqf3ep7sijnscdzw77t7xq4xjpsy335yb2wiwgouo7yfxtjlmid.onion/"
+SOURCES_DEB_UPDATE_ONION="http://2s4yqjx5ul6okpp3f2gaunr2syex5jgbfpfvhxxbbjwnrsvbk5v3qbid.onion/"
+SOURCES_DEB_SECURITY_PLAIN="https://deb.debian.org/"
+SOURCES_DEB_UPDATE_PLAIN="https://deb.debian.org/"
+
+SOURCES_TOR_UPDATE_ONION="http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
+SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
+
+#Other variables
+LOCAL_IP=$(hostname -I | awk '{print $1}')
+DEFAULT_CONTROL_PORT=9051
+DEFAULT_SOCKS_PORT=9050
+OWNER_CONF_DIR="admin"
+OWNER_DATA_DIR="debian-tor"
+ROOT_TORRC="/etc/tor"
+TORRC="${ROOT_TORRC}/torrc"
+ROOT_DATA_DIR="/var/lib"
+DATA_DIR="${ROOT_DATA_DIR}/tor"
+SERVICES_DATA_DIR="${DATA_DIR}/services"
+CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
+USER_DIR="/home/${USER}"
+
+TAR_FILE=tor-hs-`date +%Y-%m-%d`.tar.gz
+LOCAL_DOWNLOAD_PATH="${USER_DIR}/Downloads/tor-backup"
+SCP_TARGET_USER="user"
+SCP_TARGET_IP="192.168.1.10"
+SCP_TARGET_PATH="/home/admin/my-bk"
+SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" # '[USER]@[SERVER]:[SERVER_DIR]'
+
+
+##############################
+######## FUNCTIONS ###########
+
+set_owner_permission(){
+  sudo chown -R ${OWNER_DATA_DIR}:${OWNER_DATA_DIR} ${DATA_DIR}
+  sudo chown ${OWNER_CONF_DIR}:${OWNER_CONF_DIR} ${TORRC}
+  sudo chmod 700 ${DATA_DIR}
+  sudo chmod 644 ${TORRC}
+}
+
+# check_tor()
+# Used predefined variables: RED, NOCOLOR
+# This function checks the status on https://check.torproject.org/
+check_tor()
+{
+#clear
+echo -e "${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}"
+TOR_SERVICE=$(curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
+TOR_SERVICE=$(cut -d "." -f1 <<< $TOR_SERVICE)
+
+if [ "$TOR_SERVICE" = "Congratulations" ]; then
+  TOR_STATUS="Tor is working"
+else
+  TOR_STATUS=""
+fi
+clear
+}
+
+
+# online_check()
+# Syntax online_check <source_script>
+# Used predefined variables: RED, NOCOLOR, MENU_HEIGHT_15 MENU_WIDTH
+# This function checks the internet connection and exits to <source_script> if none.
+online_check()
+{
+  clear
+  echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
+  JUMPTO=$1
+  clear
+  OCHECK=$(curl -m 5 -s $CHECK_URL1)
+  if [ $? -gt 0 ]; then
+    whiptail --title "Tor - INFO" --msgbox "\n\nIt seems that your Tor is not properly connected to the internet! For this operation, TorBox has to properly connected with the internet!" $MENU_HEIGHT_15 $MENU_WIDTH
+    trap "bash $JUMPTO; exit 0" EXIT
+    exit 0
+  fi
+}
+
+
+# restarting_tor(<source script>)
+# This function reload tor by default or forces to restart
+# Nyxnor: Why this name restart when it reload by default? I dont know a better name.
+restarting_tor()
+{
+  #clear
+  SOURCE_SCRIPT=$1
+  ACTION=$2
+  set_owner_permission
+  if [ "${ACTION}" == "force" ]; then
+    echo -e "${RED}[+] Restarting tor!${NOCOLOR}"
+    sudo systemctl restart tor@default
+    echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+    echo -e "    Starting Anonymizing overlay network for TCP..."
+    echo -e "    At the end, you should see \"Bootstrapped 100% (done): Done\"."
+  elif [ "${ACTION}" == "" ]; then
+    echo -e "${RED}[+] Reloading tor!${NOCOLOR}"
+    sudo pkill -sighup tor
+    echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+    echo -e "   Received reload signal (hup). Reloading config and resetting internal state!"
+  fi
+  #echo -e "    You can leave the progress report with CTRL-C."
+  #trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
+  #sudo journalctl -fu tor@default
+}
