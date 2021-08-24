@@ -26,6 +26,8 @@ bash onion-cli
 
 There are not accidents - Master Oogway
 
+* Please repport the bug, open an issue with enough description to reproduce the steps and solve the problem.
+
 ## TODO
 
 * Whole lot...

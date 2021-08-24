@@ -1,5 +1,7 @@
 #!/bin/bash
 
+## This file is part of onion-cli, an easy to use Tor hidden services manager.
+##
 ## Copyright (C) 2018-2021 openoms, rootzoll, frennkie, nolith (MIT)
 ## Github: https://github.com/openoms, https://github.com/rootzoll, https://github.com/frennkie, https://github.com/nolith
 ## Source: https://github.com/rootzoll/raspiblitz/tree/v1.7/home.admin/config.scripts/internet.hiddenservice.sh
@@ -54,6 +56,8 @@ Usage: bash ${0} COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
 
+  man 1                                                           read the manual, you will need it
+
   on tcp-socket [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>  activate a service targeting tcp socket
 
   on unix-socket [SERV] [VIRTPORT] <VIRTPORT2>                    activate a service targeting unix socket
@@ -89,7 +93,7 @@ fi
 ######## FUNCTIONS ########
 
 ## include lib
-. tor.lib
+. onion.lib
 
 #clear
 fail_log=0
@@ -243,6 +247,11 @@ fi
 
 case ${COMMAND} in
 
+  ## show manual
+  man)
+    man text/onion-cli.man
+  ;;
+
   ## deactivate a service by removing service torrc's block.
   ## it is raw, services variables should be separated by an empty line per service, else you might get other non-related configuration deleted.
   ## purge is optional, it deletes the <HiddenServiceDir>
@@ -387,17 +396,17 @@ case ${COMMAND} in
         TOR_HOSTNAME_WITHOUT_ONION=$(echo "${TOR_HOSTNAME}" | cut -c1-56)
         TORRC_CLIENT_KEY=(${TOR_HOSTNAME_WITHOUT_ONION}":descriptor:x25519:"${PRIV_KEY})
         TORRC_SERVER_KEY=("descriptor:x25519:"${PUB_KEY})
-        # Server side configuration
+        3# Server side configuration
         echo ${TORRC_SERVER_KEY} | sudo tee ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/${CLIENT}.auth >/dev/null
-        # Client side configuration
-        # echo "## Instructions for services available on the Tor Browser:"
-        # echo
-        # echo "Service  = "${SERVICE}
-        # echo "Client   = "${CLIENT}
-        # echo "Address  = "${TOR_HOSTNAME}
-        # echo "Key      = "${PRIV_KEY}
-        # echo "Conf = "${TORRC_CLIENT_KEY}
-        # echo
+        ## Client side configuration
+        #echo "## Instructions for services available on the Tor Browser:"
+        #echo
+        #echo "Service  = "${SERVICE}
+        #echo "Client   = "${CLIENT}
+        #echo "Address  = "${TOR_HOSTNAME}
+        #echo "Key      = "${PRIV_KEY}
+        #echo "Conf = "${TORRC_CLIENT_KEY}
+        #echo
         echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
         echo "# Declare the variables"
         echo "SERVICE="${SERVICE}
@@ -588,15 +597,23 @@ case ${COMMAND} in
     METHOD="${2}"
     case ${METHOD} in
       import)
-        # RESTORE
-        # sudo mkdir -p ${LOCAL_DOWNLOAD_PATH}/backup.tbx
-        # sudo tar -xpzvf ${LOCAL_DOWNLOAD_PATH}/${TAR_FILE} -C ${LOCAL_DOWNLOAD_PATH}/backup.tbx
-        # sudo mv ${LOCAL_DOWNLOAD_PATH}/backup.tbx${SERVICES_DATA_DIR}/* ${SERVICES_DATA_DIR}/
-        # sudo mv ${LOCAL_DOWNLOAD_PATH}/backup.tbx${CLIENT_ONION_AUTH_DIR}/* ${CLIENT_ONION_AUTH_DIR}/
-        # cat ${LOCAL_DOWNLOAD_PATH}/backup.tbx/${TORRC} | sudo tee -a ${TORRC} ## add extra empty lines
-        # sudo sed -n "/^HiddenServiceDir/,/^\s*$/{p}" ${LOCAL_DOWNLOAD_PATH}/backup.tbx/${TORRC} | sudo tee -a ${LOCAL_DOWNLOAD_PATH}/backup.tbx/${TORRC}.tmp
-        # sudo mv ${LOCAL_DOWNLOAD_PATH}/backup.tbx/torrc.tmp ${TORRC}
-        # sudo rm -rf ${LOCAL_DOWNLOAD_PATH}/backup.tbx
+
+        ## RESTORE
+        sudo mkdir -p ${HS_BK_DIR}/backup-restoration.tbx
+        sudo tar -xpzvf ${HS_BK_DIR}/*.tar.gz -C ${HS_BK_DIR}/backup-restoration.tbx
+        sudo chown -R ${USER}:${USER} ${HS_BK_DIR}/backup-restoration.tbx
+        sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${SERVICES_DATA_DIR}/* ${SERVICES_DATA_DIR}/ >/dev/null
+        sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${CLIENT_ONION_AUTH_DIR}/* ${CLIENT_ONION_AUTH_DIR}/ >/dev/null
+
+        ## TODO: find the union os HiddenServicesDir from torrc and the backup torrc to avoid duplicate services config
+
+        sudo sed -i '1 i \ ' ${TORRC}; sudo sed -i "\$a\ " ${TORRC} ## insert extra lines, one at the beggining and and the end of the file
+        sudo sed -n "/^HiddenServiceDir/,/^\s*$/{p}" ${HS_BK_DIR}/backup-restoration.tbx${TORRC} | sudo tee -a ${TORRC} >/dev/null
+        sudo sed -i "\$a\ " ${TORRC}
+        awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' ${TORRC} | sudo tee ${TORRC}.tmp >/dev/null && sudo mv ${TORRC}.tmp ${TORRC}
+        #sudo rm -rf ${HS_BK_DIR}/backup-restoration.tbx
+        sudo chown -R ${OWNER_DATA_DIR}:${OWNER_DATA_DIR} ${DATA_DIR}
+        sudo chown -R ${OWNER_CONF_DIR}:${OWNER_CONF_DIR} ${ROOT_TORRC}
 
         ## RESTORE BACKUP FROM REMOTE
         echo "# Restore your configuration importing from a remote machine."
@@ -604,37 +621,41 @@ case ${COMMAND} in
         echo
         ## upload from remote to this instane
         echo "## Import backup file uploading from remote. On the remote terminal, run:"
-        echo "  sudo scp -r ${TAR_FILE} ${USER}@${LOCAL_IP}:${LOCAL_DOWNLOAD_PATH}/"
+        echo "  sudo scp -r ${HS_BK_TAR} ${USER}@${LOCAL_IP}:${HS_BK_DIR}/"
         echo
         ## download from this instance
         echo "## Import backup file downloading from remote. On this terminal instance, run:"
-        echo "  sudo scp -r ${SCP_TARGET_FULL} ${LOCAL_DOWNLOAD_PATH}/${TAR_FILE}"
+        echo "  sudo scp -r ${SCP_TARGET_FULL} ${HS_BK_DIR}/${HS_BK_TAR}"
       ;;
 
       export)
-        ## CREATE BACKUP
-        # mkdir -p ${LOCAL_DOWNLOAD_PATH}
-        # sudo sed -n "/^HiddenServiceDir/,/^\s*$/{p}" ${TORRC} | sudo tee ${LOCAL_DOWNLOAD_PATH}/${TORRC}
-        # sudo tar -cpzvf ${LOCAL_DOWNLOAD_PATH}/${TAR_FILE} ${SERVICES_DATA_DIR} ${CLIENT_ONION_AUTH_DIR} ${LOCAL_DOWNLOAD_PATH}/${TORRC}
+        ## CREATE
 
         ## BACKUP ON REMOTE
         echo "# Backup your configuration and export it to a remote machine."
         echo "## Backing up the services dir, onion_auth dir and the torrc"
         echo
-        sudo -u admin mkdir -p ${LOCAL_DOWNLOAD_PATH}${ROOT_TORRC}
-        sudo -u admin touch ${LOCAL_DOWNLOAD_PATH}${TORRC}
-        echo "$(sudo sed -n "/^HiddenServiceDir/,/^\s*$/{p}" ${TORRC})" | sudo tee ${LOCAL_DOWNLOAD_PATH}${TORRC} >/dev/null
-        sudo tar -cpzf ${LOCAL_DOWNLOAD_PATH}/${TAR_FILE} ${SERVICES_DATA_DIR} ${CLIENT_ONION_AUTH_DIR} ${LOCAL_DOWNLOAD_PATH}${TORRC} 2>/dev/null
-        SHA512SUM=$(sha512sum ${LOCAL_DOWNLOAD_PATH}/${TAR_FILE})
-        SHA256SUM=$(sha256sum ${LOCAL_DOWNLOAD_PATH}/${TAR_FILE})
-        echo "sha512sum=${SHA512SUM}"; echo; echo "sha256sum=${SHA256SUM}"; echo
+        sudo -u ${USER} mkdir -p ${HS_BK_DIR}${ROOT_TORRC}
+        sudo -u ${USER} touch ${HS_BK_DIR}${TORRC}
+        sudo cp ${TORRC} ${TORRC}.rest
+        echo "$(sudo sed -n "/^HiddenServiceDir/,/^\s*$/{p}" ${TORRC})" | sudo tee ${TORRC}.tmp >/dev/null
+        sudo mv ${TORRC}.tmp ${TORRC}
+        sudo tar -cpzvf ${HS_BK_DIR}/${HS_BK_TAR} ${SERVICES_DATA_DIR} ${CLIENT_ONION_AUTH_DIR} ${TORRC} 2>/dev/null
+        sudo mv ${TORRC}.rest ${TORRC}
+        SHA512SUM=$(sha512sum ${HS_BK_DIR}/${HS_BK_TAR})
+        SHA256SUM=$(sha256sum ${HS_BK_DIR}/${HS_BK_TAR})
+        sudo chown -R ${USER}:${USER} ${HS_BK_DIR}/${HS_BK_TAR}
+        sudo find ${HS_BK_DIR} \! -name ${HS_BK_TAR} -delete 2>/dev/null
+        sudo chown -R ${OWNER_DATA_DIR}:${OWNER_DATA_DIR} ${DATA_DIR}
+        sudo chown -R ${OWNER_CONF_DIR}:${OWNER_CONF_DIR} ${ROOT_TORRC}
+        echo; echo "sha512sum=${SHA512SUM}"; echo; echo "sha256sum=${SHA256SUM}"; echo
         ## upload to remote
         echo "## Export backup file uploading to remote. On this terminal instance, run:"
-        echo "  sudo scp -r ${LOCAL_DOWNLOAD_PATH}/${TAR_FILE} ${SCP_TARGET_FULL}"
+        echo "  sudo scp -r ${HS_BK_DIR}/${HS_BK_TAR} ${SCP_TARGET_FULL}"
         echo
         ## download from this instance on remote
         echo "## Export backup file downloading from remote. On the remote terminal, run:"
-        echo "  sudo scp -r ${USER}@${LOCAL_IP}:${LOCAL_DOWNLOAD_PATH}/${TAR_FILE} ."
+        echo "  sudo scp -r ${USER}@${LOCAL_IP}:${HS_BK_DIR}/${HS_BK_TAR} ."
       ;;
 
       *)

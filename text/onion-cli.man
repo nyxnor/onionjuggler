@@ -1,0 +1,221 @@
+.\" Manpage for onion-cli.
+.\" Contact nyxnor@protonmail to correct errors or typos.
+.TH man 8 "06 September 2069" "1.0" "onion-cli man page"
+.SH NAME
+onion-cli \- dinamically manage your onion services with bash
+.SH SYNOPSIS
+.B onion-cli [COMMAND]... <OPTION>...
+.SH DESCRIPTION
+onion-cli is a dynamic menu that reads the onion services folders to faciliate usage of hidden services. Activating, deactivating (optionally purging keys), renewing hostnames, configuring client authorization as a server and add the file as a client, see its credentials and QR code. Tor is reloaded when torrc is edited and just restarts if it fails to reload.
+
+The project is composed by 3 scripts, one being the menu, one being the library and the last one being the main handler. The menu is dynamically produced depending on how much services (<HiddenServicesDataDir>/<HiddenServiceDir>) or clients you have (<HiddenServiceDir>/authorized_clients/) or clients you are (ClientOnionAuthDir). The library is used to source the global variables to be used in the other scripts, such as where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used. The main script is where all the magic happens, in fact, menu script just build the variables with a graphical interface by the user checklisting or writing with a input box to be organized to call the main script by non technical users.
+
+At least two arguments are required for every command, some could have more required arguments.
+
+.TP
+.B "COMMANDS SYNTAX"
+
+.TP
+.PP
+.B "on tcp-socket [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>"
+.RS
+.IP
+Activate a hidden service with tcp sockets. WARNING, TCP sockets leaks the onion service to the local network. For tcp socket, the target format expected is 'addr:port', which can be local or remote host. Abscence of target will replicate the virtual port to target as following 'localhost:port'. The 2nd virtual port and target is optional.
+.RE
+.br
+
+.TP
+.PP
+.B "on unix-socket [SERV] [VIRTPORT] <VIRTPORT2>"
+.RS
+.IP
+Activate a hidden service with unix sockets. Unix sockets avoids leaking the onion service to a local network. Sockets are named after the service name and the virtual port to avoid being overwritten by being unique. The 2nd virtual port is optional.
+.RE
+.br
+
+.TP
+.PP
+.B "off [SERV1,SERV2,...] <purge>"
+.RS
+.IP
+Deactivate a service by deleting it's torrc service block. Service directory will persist with keys unless 'purge' option is given to remove the service directory from the disk.
+.RE
+.br
+
+.TP
+.PP
+.B "renew [all-services|SERV1,SERV2,...]"
+.RS
+.IP
+Renew indicated services or all-services addresses by deleting both public and private ed25519 keys.
+.RE
+.br
+
+.TP
+.PP
+.B "auth-server-[on|off] [SERV1,SERV2,...] [CLIENT1,CLIENT2,...]
+.RS
+.IP
+As the onion operator, add or delete client keys from indicated services that are inside <HiddenServiceDir>/authorized_clients/.
+.RE
+.br
+
+.TP
+.PP
+.B "auth-server-purge [all-services|SERV1,SERV2,...]
+.RS
+.IP
+As the onion operator, delete all client keys from indicated services or all-services that are inside <HiddenServiceDir>/authorized_clients/.
+.RE
+.br
+
+.TP
+.PP
+.B "auth-client-on [AUTH_FILE] [AUTH_PRIV_KEY]
+.RS
+.IP
+As the onion client, add your client key inside ClientOnionAuthDir, mentioning the file name 'bob_onion' (good practice to mention the service operator or service name to remember to know where that key is used and when it should be deleted) and the client private key you received from the onion operator in the following format: '<onion-addr-without-.onion-part>:descriptor:x25519:<private-key>'.
+.RE
+.br
+
+.TP
+.PP
+.B "auth-client-off [AUTH_FILE1,AUTH_FILE2,...]
+.RS
+.IP
+As the onion client, delete your client key that is inside ClientOnionAuthDir by mentioning its file name without the extenstion '.auth_private'.
+.RE
+.br
+
+.TP
+.PP
+.B "credentials [SERV1,SERV2,...]
+.RS
+.IP
+Get credentials from indicated services such as the QR code of the hostname, the hostname, the local folder service name, the number of clients and their names, the torrc service block.
+.RE
+.br
+
+.TP
+.PP
+.B "onion-location [SERV]
+.RS
+.IP
+Guide to add onion-location to your plainnet site, referring to your own onion service so a tor user can be redirected at will or automatically. The guide will use the indicated service hostname to facilitate copy and pasting the headers with your onion serivce already filled. It succintly describes, but enough to configure, the web servers Nginx and Apache2 and the file in HTML.
+.RE
+.br
+
+.TP
+.B "COMMANDS DETAILS"
+
+.TP
+.PP
+.B "var ALL CAPS"
+.RS
+.IP
+Variable names, refers to a string.
+.RE
+
+.TP
+.PP
+.B "var no caps"
+.RS
+.IP
+Commands defined, should be typed as indicated.
+.RE
+
+.TP
+.PP
+.B "SERV"
+.RS
+.IP
+Service name located inside the services directory. Only one service should be indicated.
+.RE
+
+.TP
+.PP
+.B "VIRTPORT"
+.RS
+.IP
+Virtual port to be used by clients when accessing the service through the web server.
+.RE
+
+.TP
+.PP
+.B "TARGET"
+.RS
+.IP
+TCP socket, format is 'addr:port'. Local or remote host.
+.RE
+
+.TP
+.PP
+.B "SERV1,SERV2,..."
+.RS
+.IP
+One or more services can be indicated as follow 'ssh,blog,xmpp'.
+.RE
+
+.TP
+.PP
+.B "CLIENT1,CLIENT2,..."
+.RS
+.IP
+One or more clients can be indicated as follow 'alice,bob'.
+.RE
+
+.TP
+.PP
+.B "AUTH_FILE1,AUTH_FILE2,..."
+.RS
+.IP
+One ore more file name can be indicated as follow 'alice_blog,bob_chat', without the extension '.auth_private'.
+.RE
+
+.TP
+.PP
+.B "AUTH_FILE"
+.RS
+.IP
+Name of the file you want to save your client key inside ClietOnionAuthDir.
+.RE
+
+.TP
+.PP
+.B "AUTH_PRIV_KEY"
+.RS
+.IP
+Client private key you received from the onion operator in the following format: '<onion-addr-without-.onion-part>:descriptor:x25519:<private-key>'.
+.RE
+
+.TP
+.PP
+.B "all-services"
+.RS
+.IP
+Command will pass through all services inside the services directory.
+.RE
+
+.TP
+.PP
+.B "purge"
+.RS
+.IP
+All of the files from the indicate server for the given command [renew|off] will be permanently deleted. Purge will delete client keys and HS keys when renewing a service or only removing client keys when setting off all of the clients with auth-server-purge.
+.RE
+
+.SH OPTIONS
+The onion-cli does not take any options. However, you can supply username.
+.SH SEE ALSO
+tor(1), bash(1)
+.SH BUGS
+There are no accidents, just huge mistakes.
+
+Report bugs at https://github.com/nyxnor/onion-cli
+.SH COPYRIGHT
+COPYRIGHT
+Copyright  ©  2021  nyxnor.   License  GPLv3+:  GNU  GPL  version  3 or later <https://gnu.org/li‐
+censes/gpl.html>.
+This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+.SH AUTHOR
+Written by nyxnor (nyxnor@protonmail)
