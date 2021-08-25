@@ -78,9 +78,8 @@ Options:
 
   onion-location [SERV]                                           only guide, not execution
 
-  backup export                                                   make backup and export to remote host
-
-  backup import                                                   import backup from remote host and
+  backup [export|import]                                          create backup and export to remote host or
+                                                                    import backup from remote host and
                                                                     integrate the new configuation
 
 '# Done': You should always see it at the end, else something unexpected occured.
@@ -190,8 +189,7 @@ create_auth_list(){
   CLIENT_NAME_LIST=""
   AUTH_NUMBER=0
   for AUTHORIZATION in $(sudo -u ${OWNER_DATA_DIR} ls ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/); do
-    AUTHORIZATION_PATH=${AUTHORIZATION%*/}
-    AUTHORIZATION_NAME=$(echo "${AUTHORIZATION_PATH##*/}" | cut -f1 -d '.')
+    AUTHORIZATION_NAME=$(echo "${AUTHORIZATION##*/}" | cut -f1 -d '.')
     CLIENT_NAME_LIST="${CLIENT_NAME_LIST},${AUTHORIZATION_NAME}"
     ((AUTH_NUMBER++))
   done
@@ -240,10 +238,10 @@ loop_array_dynamic(){
 ## tor does not need to be running to delete service, authorize o remove authorization from clients or see credentials (off, auth, credentials)
 #check_tor
 
-CHECK_SERVICES_DIR=$(sudo -u ${OWNER_DATA_DIR} ls -A ${DATA_DIR} | grep -c "services")
-if [ ${CHECK_SERVICES_DIR} -eq 0 ]; then
-  sudo -u ${OWNER_DATA_DIR} mkdir -p ${SERVICES_DATA_DIR}
-fi
+
+sudo -u ${OWNER_DATA_DIR} mkdir -p ${SERVICES_DATA_DIR}
+sudo -u ${OWNER_DATA_DIR} mkdir -p ${CLIENT_ONION_AUTH_DIR}
+sudo sed -i 's/\/$//' ${TORRC} ## no config should end with '/' to find exact match.
 
 case ${COMMAND} in
 
@@ -262,12 +260,12 @@ case ${COMMAND} in
       PURGE="${2}"
       ## remove service service data
       if [ "${purge}" == "purge" ]; then
-          echo "# Deleting Hidden Service data of ${SERVICE}"
-          sudo rm -rf ${SERVICES_DATA_DIR}/${SERVICE}
+        echo "# Deleting Hidden Service data of ${SERVICE}"
+        sudo rm -rf ${SERVICES_DATA_DIR}/${SERVICE}
       fi
       ## remove service paragraph in torrc
       echo "# Deleting Hidden Service configuration in ${TORRC}"
-      sudo sed -i "/HiddenServiceDir .*${SERVICE}/,/^\s*$/{d}" ${TORRC}
+      sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
       ## substitute multiple sequential empty lines to a single one per sequence
       awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' ${TORRC} | sudo tee ${TORRC}.tmp >/dev/null && sudo mv ${TORRC}.tmp ${TORRC}
       echo "# Removed service  ${SERVICE}"
@@ -321,7 +319,7 @@ case ${COMMAND} in
       echo
 
       ## delete any old entry for that servive
-      sudo sed -i "/HiddenServiceDir .*${SERVICE}/,/^\s*$/{d}" ${TORRC}
+      sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
 
       echo "# Including Hidden Service configuration in ${TORRC}"
       ## add configuration block, empty line after and before it
@@ -562,7 +560,7 @@ case ${COMMAND} in
         fi
         echo
         #echo "# torrc block:"
-        sudo sed -n "/^HiddenServiceDir .*${SERVICE}/,/^\s*$/{p}" ${TORRC} | sed '/^[[:space:]]*$/d'
+        sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" ${TORRC} | sed '/^[[:space:]]*$/d'
         echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
       fi
     }
@@ -605,13 +603,20 @@ case ${COMMAND} in
         sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${SERVICES_DATA_DIR}/* ${SERVICES_DATA_DIR}/ >/dev/null
         sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${CLIENT_ONION_AUTH_DIR}/* ${CLIENT_ONION_AUTH_DIR}/ >/dev/null
 
-        ## TODO: find the union os HiddenServicesDir from torrc and the backup torrc to avoid duplicate services config
-
-        sudo sed -i '1 i \ ' ${TORRC}; sudo sed -i "\$a\ " ${TORRC} ## insert extra lines, one at the beggining and and the end of the file
-        sudo sed -n "/^HiddenServiceDir/,/^\s*$/{p}" ${HS_BK_DIR}/backup-restoration.tbx${TORRC} | sudo tee -a ${TORRC} >/dev/null
-        sudo sed -i "\$a\ " ${TORRC}
+        ## avoid duplication of services, it will keep the oldest config for safety
+        for SERVICE in $(sudo -u ${OWNER_CONF_DIR} cat ${TORRC} | grep "HiddenServiceDir" | cut -d ' ' -f2); do
+          SERVICE_NAME=$(echo "${SERVICE##*/}")
+          sed -n "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{p}" ${TORRC} > ${TORRC}.tmp
+          sed -i "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{d}" ${TORRC}
+          sed '/^\s*$/Q' ${TORRC}.tmp > ${TORRC}.mod
+          sudo sed -i '1 i \ ' ${TORRC}.mod; sudo sed -i "\$a\ " ${TORRC}.mod
+          sudo cat ${TORRC}.mod | sudo tee -a ${TORRC} >/dev/null
+        done
+        sudo rm -f ${TORRC}.tmp ${TORRC}.mod
         awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' ${TORRC} | sudo tee ${TORRC}.tmp >/dev/null && sudo mv ${TORRC}.tmp ${TORRC}
-        #sudo rm -rf ${HS_BK_DIR}/backup-restoration.tbx
+        sudo chown -R ${OWNER_CONF_DIR}:${OWNER_CONF_DIR} ${TORRC}
+
+        sudo rm -rf ${HS_BK_DIR}/backup-restoration.tbx
         sudo chown -R ${OWNER_DATA_DIR}:${OWNER_DATA_DIR} ${DATA_DIR}
         sudo chown -R ${OWNER_CONF_DIR}:${OWNER_CONF_DIR} ${ROOT_TORRC}
 
@@ -638,7 +643,7 @@ case ${COMMAND} in
         sudo -u ${USER} mkdir -p ${HS_BK_DIR}${ROOT_TORRC}
         sudo -u ${USER} touch ${HS_BK_DIR}${TORRC}
         sudo cp ${TORRC} ${TORRC}.rest
-        echo "$(sudo sed -n "/^HiddenServiceDir/,/^\s*$/{p}" ${TORRC})" | sudo tee ${TORRC}.tmp >/dev/null
+        echo "$(sudo sed -n "/HiddenServiceDir/,/^\s*$/{p}" ${TORRC})" | sudo tee ${TORRC}.tmp >/dev/null
         sudo mv ${TORRC}.tmp ${TORRC}
         sudo tar -cpzvf ${HS_BK_DIR}/${HS_BK_TAR} ${SERVICES_DATA_DIR} ${CLIENT_ONION_AUTH_DIR} ${TORRC} 2>/dev/null
         sudo mv ${TORRC}.rest ${TORRC}

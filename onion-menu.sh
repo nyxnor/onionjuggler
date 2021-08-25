@@ -411,7 +411,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
       elif [ "${AUTH_TYPE}" == "DEL" ]; then
         client_auth_menu
         if [ ! -z ${ONION_AUTH_NAME_LIST} ]; then
-            bash onion-service.sh auth-client-off ${ONION_AUTH_NAME_LIST}
+          bash onion-service.sh auth-client-off ${ONION_AUTH_NAME_LIST}
         fi
       fi
     ;;
