@@ -77,7 +77,7 @@ service_menu(){
 }
 
 
-server_auth_menu(){
+AUTH_SERVER_menu(){
   prepare_derived_menu
 
 for SERVICE in $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/); do
@@ -173,7 +173,7 @@ done
 }
 
 
-client_auth_menu(){
+AUTH_CLIENT_menu(){
   prepare_derived_menu
 
   for ONION_AUTH in $(sudo -u ${DATA_DIR_OWNER} ls -A ${CLIENT_ONION_AUTH_DIR}/ | cut -d '.' -f1); do
@@ -233,13 +233,6 @@ md_menu(){
 
 ###########################
 
-## -d won't work as the data dir is owned by the tor user
-CHECK_SERVICES_DIR=$(sudo -u ${DATA_DIR_OWNER} ls -A ${DATA_DIR} | grep -c "services")
-if [ ${CHECK_SERVICES_DIR} -gt 0 ]; then
-  sudo -u ${DATA_DIR_OWNER} mkdir -p ${DATA_DIR_HS}
-  sudo -u ${DATA_DIR_OWNER} mkdir -p ${CLIENT_ONION_AUTH_DIR}
-fi
-
 
 TITLE="Onion Services Main Menu"
 HEIGHT=20
@@ -249,8 +242,11 @@ MENU="Manage your onion services"
 
 if [ -z "$(sudo -u ${DATA_DIR_OWNER} ls -A ${DATA_DIR_HS}/)" ]; then
   CHOICE_MAIN=$(whiptail --menu "${MENU}" --title "${TITLE}" ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
+    "MAN" "Manual pages for the onion-cli" \
+    "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
     "CREATE" "Create and host a hidden service" \
     "IMPORT" "Import your hidden service data directory" \
+    "AUTH_CLIENT" "Manage your client key of someonelse's service" \
     3>&1 1>&2 2>&3)
 else
   CHOICE_MAIN=$(whiptail --menu "${MENU}" --title "${TITLE}" ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
@@ -259,8 +255,8 @@ else
     "CREATE" "Host a hidden service" \
     "DELETE" "Delete chosen onion service" \
     "RENEW" "Renew onion service address" \
-    "SERVER_AUTH" "Add or Remove client authorization from your service" \
-    "CLIENT_AUTH" "I am the client from a remote service" \
+    "AUTH_SERVER" "Add or Remove client authorization from your service" \
+    "AUTH_CLIENT" "Manage your client key of someonelse's service" \
     "CREDENTIALS" "See credentials (onion address, authorized clients)" \
     "IMPORT" "Import your hidden service data from another machine" \
     "EXPORT" "Export your hidden service data to another machine" \
@@ -277,7 +273,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
     ;;
 
     GUIDES)
-        md_menu
+      md_menu
     ;;
 
     DELETE)
@@ -360,7 +356,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
       fi
     ;;
 
-    SERVER_AUTH)
+    AUTH_SERVER)
       TITLE="Client Authorization"
       MENU="Would you like to add or remove authorization from a client?"
       AUTH_TYPE=$(whiptail --menu "${MENU}" --title "${TITLE}" 12 50 2 \
@@ -380,15 +376,15 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
         fi
       elif [ "${AUTH_TYPE}" == "DEL" ]; then
         AUTH_STATUS="off"
-        server_auth_menu
+        AUTH_SERVER_menu
       fi
 
       if [ ! -z ${CLIENT_NAME_LIST} ]; then
-        bash onion-service.sh auth-server-${AUTH_STATUS} ${SERVICE_NAME_LIST} ${CLIENT_NAME_LIST}
+        bash onion-service.sh auth server ${AUTH_STATUS} ${SERVICE_NAME_LIST} ${CLIENT_NAME_LIST}
       fi
     ;;
 
-    CLIENT_AUTH)
+    AUTH_CLIENT)
       TITLE="Client Authorization"
       MENU="Would you like to add or remove authorization from a client?"
       AUTH_TYPE=$(whiptail --menu "${MENU}" --title "${TITLE}" 15 70 2 \
@@ -405,13 +401,13 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
           AUTH_PRIV_KEY=("$(whiptail --inputbox "${DESCRIPTION}" 15 70 3>&1 1>&2 2>&3)")
           AUTH_PRIV_KEY=$(echo ${AUTH_PRIV_KEY} | tr -d ' ')
           if [ ! -z ${AUTH_PRIV_KEY} ]; then
-            bash onion-service.sh auth-client-on ${AUTH_FILE_NAME} ${AUTH_PRIV_KEY}
+            bash onion-service.sh auth client on ${AUTH_FILE_NAME} ${AUTH_PRIV_KEY}
           fi
         fi
       elif [ "${AUTH_TYPE}" == "DEL" ]; then
-        client_auth_menu
+        AUTH_CLIENT_menu
         if [ ! -z ${ONION_AUTH_NAME_LIST} ]; then
-          bash onion-service.sh auth-client-off ${ONION_AUTH_NAME_LIST}
+          bash onion-service.sh auth client off ${ONION_AUTH_NAME_LIST}
         fi
       fi
     ;;

@@ -88,6 +88,8 @@ SCP_TARGET_IP="192.168.1.10"
 SCP_TARGET_PATH="/home/admin/my-bk"
 SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" # '[USER]@[SERVER]:[SERVER_DIR]'
 
+## DO NOT EDIT
+FIRST_ONION_RUN=0
 
 ##############################
 ######## FUNCTIONS ###########
@@ -98,6 +100,15 @@ set_owner_permission(){
   sudo chmod 700 ${DATA_DIR}
   sudo chmod 644 ${TORRC}
 }
+
+if [ ${FIRST_ONION_RUN} -eq 1 ]; then
+  sudo adduser ${USER} ${DATA_DIR_OWNER}
+  sudo -u ${DATA_DIR_OWNER} mkdir -p ${DATA_DIR_HS}
+  sudo -u ${DATA_DIR_OWNER} mkdir -p ${CLIENT_ONION_AUTH_DIR}
+  sudo sed -i 's/\/$//' ${TORRC} ## no config should end with '/' to find exact match.
+  set_owner_permission
+  sed -i '0,/FIRST_ONION_RUN=.*/s//FIRST_ONION_RUN=0/' ./onion.lib
+fi
 
 # check_tor()
 # Used predefined variables: RED, NOCOLOR

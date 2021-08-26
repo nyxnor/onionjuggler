@@ -214,8 +214,7 @@ There are no accidents, just huge mistakes.
 Report bugs at https://github.com/nyxnor/onion-cli
 .SH COPYRIGHT
 COPYRIGHT
-Copyright  ©  2021  nyxnor.   License  GPLv3+:  GNU  GPL  version  3 or later <https://gnu.org/li‐
-censes/gpl.html>.
+Copyright  ©  2021  nyxnor.   License  GPLv3+:  GNU  GPL  version  3 or later <https://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
 .SH AUTHOR
 Written by nyxnor (nyxnor@protonmail)

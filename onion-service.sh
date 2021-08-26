@@ -33,20 +33,13 @@
 ## [string] --> Necessary
 ## <string> --> Optional
 ##
-## Syntetic exaplanation for bit brains:
-##   on          --> create torrc config, tor will create HiddenServiceDir
-##   off         --> delete torrc config, optionally purge service inside DataDir
-##   renew       --> remove <HiddenServiceDir>/* (contents: keys, hostname, authorized_clients)
-##   auth        --> <HiddenServiceDir>/authorized_clients/ or <ClientOnionAuthDir>/
-##   credentials --> qrencode -m 2 -t ANSIUTF8 <HiddenServiceDir>/hostname
-##
 ## Changes applied to X modify Y:
-##   on              <torrc> and consequentially <HiddenServiceDir>/ if not existent
-##   off             <torrc> and optionally <HiddenServiceDir>/
-##   renew:          <HiddenServiceDir>/
-##   auth-server-*   <HiddenServiceDir>/authorized_clients/
-##   auth-client-*   <torrc> once and <ClientOnionAuthDir>/
-##   credentials     null
+##   on              Create <torrc> config, tor will create <HiddenServiceDir>
+##   off             Delete <torrc> config, optionally purge <HiddenServiceDir>
+##   renew:          Remove <HiddenServiceDir>/* (contents: keys, hostname, authorized_clients)
+##   auth-server-*   Create or remove '.auth' files inside <HiddenServiceDir>/authorized_clients/
+##   auth-client-*   Create or remove '.auth_private' files inside <ClientOnionAuthDir>
+##   credentials     No modification, reads the <torrc> and <HiddenServiceDir>/
 ##
 ## command info
 if [[ $# -eq 0 || -z ${2} || "$1" = "-h" || "$1" = "-help" || "$1" = "--help" ]]; then
@@ -56,33 +49,25 @@ Usage: bash ${0} COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
 
-  man 1                                                           read the manual, you will need it
-
   on tcp-socket [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>  activate a service targeting tcp socket
 
   on unix-socket [SERV] [VIRTPORT] <VIRTPORT2>                    activate a service targeting unix socket
 
-  off [SERV1,SERV2,...] <purge>                                   deactivate a service and optionally
-                                                                    purge data
-  renew [all-services|SERV1,SERV2,...]                            renew indicated services or
-                                                                    all-services addresses
-  auth-server-[on|off] [SERV1,SERV2,...] [CLIENT1,CLIENT2,...]    add or delete client keys from indicated
-                                                                    services
-  auth-server-purge [all-services|SERV1,SERV2,...]                delete all client keys from indicated
-                                                                    services or all-services
-  auth-client-on [AUTH_FILE] [AUTH_PRIV_KEY]                      add your client key
+  off [SERV1,SERV2,...] <purge>                                   deactivate a service and optionally purge its directory
 
-  auth-client-off [AUTH_FILE1,AUTH_FILE2,...]                     delete your client key
+  renew [all-services|SERV1,SERV2,...]                            renew indicated|all services addresses
+
+  auth server [on|off] [SERV1,SERV2,...] [CLIENT1,CLIENT2,...]    authorize or remove authorization of client access
+
+  auth client [on|off] [AUTH_FILE] <AUTH_PRIV_KEY>                add or remove your client key, key not needed when removing
 
   credentials [all-services|SERV1,SERV2,...]                      see credentials from indicated services
 
   onion-location [SERV]                                           only guide, not execution
 
-  backup [export|import]                                          create backup and export to remote host or
-                                                                    import backup from remote host and
-                                                                    integrate the new configuation
+  backup [export|import]                                          create backup or import backup and integrate the files
 
-  vanguards [install|logs|upgrade|remove]
+  vanguards [install|logs|upgrade|remove]                         install, upgrdade, remove or see logs for vanguards addon
 
 '# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs."
@@ -241,19 +226,7 @@ loop_array_dynamic(){
 ## tor does not need to be running to delete service, authorize o remove authorization from clients or see credentials (off, auth, credentials)
 #check_tor
 
-
-sudo -u ${DATA_DIR_OWNER} mkdir -p ${DATA_DIR_HS}
-sudo -u ${DATA_DIR_OWNER} mkdir -p ${CLIENT_ONION_AUTH_DIR}
-sudo sed -i 's/\/$//' ${TORRC} ## no config should end with '/' to find exact match.
-
 case ${COMMAND} in
-
-
-  ## show manual
-  man)
-    man text/onion-cli.man
-  ;;
-
 
   ## deactivate a service by removing service torrc's block.
   ## it is raw, services variables should be separated by an empty line per service, else you might get other non-related configuration deleted.
@@ -368,10 +341,12 @@ case ${COMMAND} in
           sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
           ## add configuration block, empty line after and before it
           echo; echo "# Including Hidden Service configuration in ${TORRC}"
+          UNIX_PATH="unix:/var/run/tor-hs${SERVICE}-${VIRTPORT}.sock"
+          UNIX_PATH2="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT2}.sock"
           if [ -n ${VIRTPORT2} ]; then
-            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock\nHiddenServicePort ${VIRTPORT2} unix:/var/run/tor-${SERVICE}-${VIRTPORT2}.sock" | sudo tee -a ${TORRC}
+            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\nHiddenServicePort ${VIRTPORT2} ${UNIX_PATH2}" | sudo tee -a ${TORRC}
           else
-            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock\n" | sudo tee -a ${TORRC}
+            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\n" | sudo tee -a ${TORRC}
           fi
         finish_service_activation
       ;;
@@ -381,147 +356,161 @@ case ${COMMAND} in
     esac
 
 
-  ## as the onion service operator, make your onion authenticated by generating a pair or public and private keys,
-  ## the client pub key is automatically saved inside <HiddenServiceDir>/authorized_clients/alice.auth
-  ## the client private key is shown in the screen and the key file deleted
-  ## the onion service operator should send the private key for the desired client
-  auth-server-on)
-    CLIENT="${3}"
-    ## Install basez if not installed
-    echo "# Generating keys to access onion service (Client Authorization) ..."; echo -e "# -> Send this to the client(s):\n"
-    command -v openssl >/dev/null || sudo apt install -y openssl
-    command -v openssl >/dev/null || sudo apt install -y basez
+  auth)
+    HOST="${2}"
+    STATUS="${3}"
+    SERVICE="${4}"
+    CLIENT="${5}"
+    case ${HOST} in
 
-    generate_auth(){
-      SERVICE="${1}"
-      CLIENT="${2}"
-      service_existent=0; test_service_exists ${SERVICE}
-      if [ ${service_existent} -eq 1 ]; then
-        ## Generate pem and derive pub and priv keys
-        openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
-        cat /tmp/k1.prv.pem | grep -v " PRIVATE KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
-        openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
-        ## save variables
-        PUB_KEY=$(cat /tmp/k1.pub.key)
-        PRIV_KEY=$(cat /tmp/k1.prv.key)
-        TOR_HOSTNAME_WITHOUT_ONION=$(echo "${TOR_HOSTNAME}" | cut -c1-56)
-        TORRC_CLIENT_KEY=(${TOR_HOSTNAME_WITHOUT_ONION}":descriptor:x25519:"${PRIV_KEY})
-        TORRC_SERVER_KEY=("descriptor:x25519:"${PUB_KEY})
-        3# Server side configuration
-        echo ${TORRC_SERVER_KEY} | sudo tee ${DATA_DIR_HS}/${SERVICE}/authorized_clients/${CLIENT}.auth >/dev/null
-        ## Client side configuration
-        #echo "## Instructions for services available on the Tor Browser:"
-        #echo
-        #echo "Service  = "${SERVICE}
-        #echo "Client   = "${CLIENT}
-        #echo "Address  = "${TOR_HOSTNAME}
-        #echo "Key      = "${PRIV_KEY}
-        #echo "Conf = "${TORRC_CLIENT_KEY}
-        #echo
-        echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-        echo "# Declare the variables"
-        echo "SERVICE="${SERVICE}
-        echo "CLIENT="${CLIENT}
-        echo "TOR_HOSTNAME="${TOR_HOSTNAME}
-        echo "TOR_HOSTNAME_WITHOUT_ONION="${TOR_HOSTNAME_WITHOUT_ONION}
-        echo "PRIV_KEY="${PRIV_KEY}
-        echo "TORRC_CLIENT_KEY="${TORRC_CLIENT_KEY}
-        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-        echo
-        ## Delete pem and keys
-        sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
-      fi
-    }
-    instructions_auth(){
-        echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-        echo -e "\n# Instructions client side:\n"
-        echo "# Declare variables for files and directories:"
-        CLIENT_TORRC=/etc/tor/torrc
-        CLIENT_ONION_AUTH_DIR=/var/lib/tor/onion_auth
-        echo "CLIENT_TORRC=/etc/tor/torrc"
-        echo "CLIENT_ONION_AUTH_DIR=/var/lib/tor/onion_auth"
-        echo
-        echo "# Check if ClientOnionAuthDir was configured in \${CLIENT_TORRC}"
-        echo "sed -i 's/#ClientOnionAuthDir/ClientOnionAuthDir/g' \${CLIENT_TORRC}"
-        echo "if [ \$(grep -c '^ClientOnionAuthDir' ${CLIENT_TORRC}) -eq 0 ]; then ClientOnionAuthDir='\${CLIENT_ONION_AUTH_DIR}'; echo -e '\nClientOnionAuthDir \${ClientOnionAuthDir}\n' | sudo tee -a \${CLIENT_TORRC}"
-        echo "else ClientOnionAuthDir=\$(grep 'ClientOnionAuthDir' ${CLIENT_TORRC} | cut -f2 -d ' '); fi"
-        echo
-        echo "# Create key"
-        echo "echo \${TORRC_CLIENT_KEY} | sudo tee -a \${ClientOnionAuthDir}/\${SERVICE}-\${TOR_HOSTNAME_WITHOUT_ONION}.auth_private"
-        echo
-        echo "# Reload tor"
-        echo "sudo chown -R debian-tor:debian-tor /var/lib/tor"
-        echo "sudo pkill -sighup tor"
-        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    }
-    loop_array_dynamic generate_auth ${SERVICE} ${CLIENT} 1
-    instructions_auth
-    success_msg reload
-  ;;
+      server)
 
-  ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
-  ## if no clients are present, the service will be available to anyone that has the onion service address
-  auth-server-off)
-    CLIENT="${3}"
-    delete_auth(){
-      SERVICE="${1}"
-      CLIENT="${2}"
-      echo "# Removing client authorization:"
-      echo "Service  = "${SERVICE}
-      echo "Client   = "${CLIENT}
-      echo
-      sudo rm -f ${DATA_DIR_HS}/${SERVICE}/authorized_clients/${CLIENT}.auth
-    }
-    loop_array_dynamic delete_auth ${SERVICE} ${CLIENT} 1
-    success_msg reload
-  ;;
+        case ${STATUS} in
 
-  ## as the onion service operator, you can purge clients fast to make it available to anyone that has the onion service address
-  ##  all clients for chosen service
-  ##  all clients from all-services
-  auth-server-purge)
-    CLIENT="${3}"
-    echo "# Removing all clients authorizations from listed services:"
-    if [ "${SERVICE}" == "all-services" ]; then
-      #sudo rm -f ${DATA_DIR_HS}/*/authorized_clients/*
-      for SERVICE in $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/); do
-        sudo rm -f ${DATA_DIR_HS}/${SERVICE}/authorized_clients/*
-      done
-    else
-      purge_auth(){
-        SERVICE=${1}
-        sudo rm -f ${DATA_DIR_HS}/${SERVICE}/authorized_clients/*
-      }
-      loop_array_dynamic purge_auth ${SERVICE}
-    fi
-    echo "Server side client authorization removed"
-    echo "You can know access the services without being requested for a key"
-    success_msg
-  ;;
+          ## as the onion service operator, make your onion authenticated by generating a pair or public and private keys,
+          ## the client pub key is automatically saved inside <HiddenServiceDir>/authorized_clients/alice.auth
+          ## the client private key is shown in the screen and the key file deleted
+          ## the onion service operator should send the private key for the desired client
+          on)
+            CLIENT="${5}"
+            ## Install basez if not installed
+            echo "# Generating keys to access onion service (Client Authorization) ..."; echo -e "# -> Send this to the client(s):\n"
+            command -v openssl >/dev/null || sudo apt install -y openssl
+            command -v openssl >/dev/null || sudo apt install -y basez
 
-  ## as the onion service client, add a key given by the onion service operator to authenticate yourself inside ClientOnionAuthDir
-  ## just the client name. '.auth_private' should not be mentioned, it will be automatically inserted
-  ## private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>
-  ## adding to Tor Browser automatically not supported yet
-  auth-client-on)
-    AUTH_FILE_NAME=${2}
-    AUTH_PRIV_KEY=${3}
-    echo "${AUTH_PRIV_KEY}" | sudo tee -a ${CLIENT_ONION_AUTH_DIR}/${AUTH_FILE_NAME}.auth_private >/dev/null
-    echo "Client side authorization added"
-    success_msg
-  ;;
+            generate_auth(){
+              SERVICE="${1}"
+              CLIENT="${2}"
+              service_existent=0; test_service_exists ${SERVICE}
+              if [ ${service_existent} -eq 1 ]; then
+                ## Generate pem and derive pub and priv keys
+                openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
+                cat /tmp/k1.prv.pem | grep -v " PRIVATE KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
+                openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
+                ## save variables
+                PUB_KEY=$(cat /tmp/k1.pub.key)
+                PRIV_KEY=$(cat /tmp/k1.prv.key)
+                TOR_HOSTNAME_WITHOUT_ONION=$(echo "${TOR_HOSTNAME}" | cut -c1-56)
+                TORRC_CLIENT_KEY=(${TOR_HOSTNAME_WITHOUT_ONION}":descriptor:x25519:"${PRIV_KEY})
+                TORRC_SERVER_KEY=("descriptor:x25519:"${PUB_KEY})
+                3# Server side configuration
+                echo ${TORRC_SERVER_KEY} | sudo tee ${DATA_DIR_HS}/${SERVICE}/authorized_clients/${CLIENT}.auth >/dev/null
+                ## Client side configuration
+                echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+                echo "# Declare the variables"
+                echo "SERVICE="${SERVICE}
+                echo "CLIENT="${CLIENT}
+                echo "TOR_HOSTNAME="${TOR_HOSTNAME}
+                echo "TOR_HOSTNAME_WITHOUT_ONION="${TOR_HOSTNAME_WITHOUT_ONION}
+                echo "PRIV_KEY="${PRIV_KEY}
+                echo "TORRC_CLIENT_KEY="${TORRC_CLIENT_KEY}
+                echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+                echo
+                ## Delete pem and keys
+                sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
+              fi
+            }
+            instructions_auth(){
+                echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+                echo -e "\n# Instructions client side:\n"
+                echo
+                echo "# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, inser it:"
+                echo "ClientOnionAuthDir /var/lib/tor/onion_auth"
+                echo
+                echo "# Create the auth file inside <ClientOnionAuthDir>"
+                echo "echo \${TORRC_CLIENT_KEY} | sudo tee -a /var/lib/tor/onion_auth/${SERVICE}-${TOR_HOSTNAME}.auth_private"
+                echo
+                echo "# Reload tor"
+                echo "sudo chown -R debian-tor:debian-tor /var/lib/tor"
+                echo "sudo pkill -sighup tor"
+                echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            }
+            loop_array_dynamic generate_auth ${SERVICE} ${CLIENT} 1
+            instructions_auth
+            success_msg reload
+          ;;
 
-  ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
-  auth-client-off)
-    client_auth_remove(){
-      AUTH_FILE_NAME=${1}
-      sudo rm -f ${CLIENT_ONION_AUTH_DIR}/${AUTH_FILE_NAME}.auth_private
-    }
-    AUTH_FILE_NAME=${2}
-    loop_array_dynamic client_auth_remove ${AUTH_FILE_NAME}
-    echo "Client side authorization removed"
-    success_msg
-  ;;
+          ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
+          ## if no clients are present, the service will be available to anyone that has the onion service address
+          off)
+            CLIENT="${5}"
+            delete_auth(){
+              SERVICE="${1}"
+              CLIENT="${2}"
+              echo "# Removing client authorization:"
+              echo "Service  = "${SERVICE}
+              echo "Client   = "${CLIENT}
+              echo
+              sudo rm -f ${DATA_DIR_HS}/${SERVICE}/authorized_clients/${CLIENT}.auth
+            }
+            loop_array_dynamic delete_auth ${SERVICE} ${CLIENT} 1
+            success_msg reload
+          ;;
+
+          ## as the onion service operator, you can purge clients fast to make it available to anyone that has the onion service address
+          ##  all clients for chosen service
+          ##  all clients from all-services
+          purge)
+            CLIENT="${5}"
+            echo "# Removing all clients authorizations from listed services:"
+            if [ "${SERVICE}" == "all-services" ]; then
+              #sudo rm -f ${DATA_DIR_HS}/*/authorized_clients/*
+              for SERVICE in $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/); do
+                sudo rm -f ${DATA_DIR_HS}/${SERVICE}/authorized_clients/*
+              done
+            else
+              purge_auth(){
+                SERVICE=${1}
+                sudo rm -f ${DATA_DIR_HS}/${SERVICE}/authorized_clients/*
+              }
+              loop_array_dynamic purge_auth ${SERVICE}
+            fi
+            echo "Server side client authorization removed"
+            echo "You can know access the services without being requested for a key"
+            success_msg
+          ;;
+
+          *)
+            error_msg
+        esac
+      ;;
+
+
+      client)
+        case ${STATUS} in
+
+          ## as the onion service client, add a key given by the onion service operator to authenticate yourself inside ClientOnionAuthDir
+          ## just the client name. '.auth_private' should not be mentioned, it will be automatically inserted
+          ## private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>
+          ## adding to Tor Browser automatically not supported yet
+          on)
+            AUTH_FILE_NAME=${2}
+            AUTH_PRIV_KEY=${3}
+            echo "${AUTH_PRIV_KEY}" | sudo tee -a ${CLIENT_ONION_AUTH_DIR}/${AUTH_FILE_NAME}.auth_private >/dev/null
+            echo "Client side authorization added"
+            success_msg
+          ;;
+
+          ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
+          off)
+            AUTH_CLIENT_remove(){
+              AUTH_FILE_NAME=${1}
+              sudo rm -f ${CLIENT_ONION_AUTH_DIR}/${AUTH_FILE_NAME}.auth_private
+            }
+            AUTH_FILE_NAME=${2}
+            loop_array_dynamic AUTH_CLIENT_remove ${AUTH_FILE_NAME}
+            echo "Client side authorization removed"
+            success_msg
+          ;;
+
+          *)
+            error_msg
+        esac
+
+      *)
+        error_msg
+    esac
+
 
   ## change service hostname by deleting its ed25519 pub and priv keys.
   ## <HiddenServiceDir>/authorized_clients/ because the would need to update their '.auth_private' file with the new onion address anyway and for security reasons.
@@ -587,7 +576,8 @@ case ${COMMAND} in
     success_msg
   ;;
 
-  ## guide to redirect tor users when using your plainnet site to the onion service address
+
+  ## guide to add onion-location to redirect tor users when using your plainnet site to the onion service address
   onion-location)
     #pandoc file.md | lynx -stdin
     #pandoc ONION-LOCATION.md | lynx -stdin
@@ -604,18 +594,20 @@ case ${COMMAND} in
     fi
   ;;
 
+
   backup)
     METHOD="${2}"
     case ${METHOD} in
-      import)
 
+      ## backup tar file will be extracted and integrated into their respective tor folders
+      ## scp instructions to import backup from remote host
+      import)
         ## RESTORE
         sudo mkdir -p ${HS_BK_DIR}/backup-restoration.tbx
         sudo tar -xpzvf ${HS_BK_DIR}/*.tar.gz -C ${HS_BK_DIR}/backup-restoration.tbx
         sudo chown -R ${USER}:${USER} ${HS_BK_DIR}/backup-restoration.tbx
         sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${DATA_DIR_HS}/* ${DATA_DIR_HS}/ >/dev/null
         sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${CLIENT_ONION_AUTH_DIR}/* ${CLIENT_ONION_AUTH_DIR}/ >/dev/null
-
         ## avoid duplication of services, it will keep the oldest config for safety
         for SERVICE in $(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} | grep "HiddenServiceDir" | cut -d ' ' -f2); do
           SERVICE_NAME=$(echo "${SERVICE##*/}")
@@ -628,11 +620,9 @@ case ${COMMAND} in
         sudo rm -f ${TORRC}.tmp ${TORRC}.mod
         awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' ${TORRC} | sudo tee ${TORRC}.tmp >/dev/null && sudo mv ${TORRC}.tmp ${TORRC}
         sudo chown -R ${CONF_DIR_OWNER}:${CONF_DIR_OWNER} ${TORRC}
-
         sudo rm -rf ${HS_BK_DIR}/backup-restoration.tbx
         sudo chown -R ${DATA_DIR_OWNER}:${DATA_DIR_OWNER} ${DATA_DIR}
         sudo chown -R ${CONF_DIR_OWNER}:${CONF_DIR_OWNER} ${TORRC_ROOT}
-
         ## RESTORE BACKUP FROM REMOTE
         echo "# Restore your configuration importing from a remote machine."
         echo "## Backup the services dir, onion_auth dir and the torrc"
@@ -646,10 +636,12 @@ case ${COMMAND} in
         echo "  sudo scp -r ${SCP_TARGET_FULL} ${HS_BK_DIR}/${HS_BK_TAR}"
       ;;
 
-      export)
-        ## CREATE
 
-        ## BACKUP ON REMOTE
+      ## full backup needede to restore all of your hidden services and client keys
+      ## folders/files included: <torrc>, <DataDir>/services/, <DataDir>/onion_auth/
+      ## scp instructions to export backup to remote host
+      export)
+        ## CREATE BACKUP
         echo "# Backup your configuration and export it to a remote machine."
         echo "## Backing up the services dir, onion_auth dir and the torrc"
         echo
@@ -681,6 +673,9 @@ case ${COMMAND} in
     esac
   ;;
 
+  ## This addon protects against guard discovery and related traffic analysis attacks.
+  ## A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
+  ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
   vanguards)
     ACTION="${2}"
     case ${ACTION} in
