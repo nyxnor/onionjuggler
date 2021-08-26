@@ -63,20 +63,22 @@ SOURCES_DEB_UPDATE_PLAIN="https://deb.debian.org/"
 SOURCES_TOR_UPDATE_ONION="http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
 SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
 
-#Other variables
+## GENERAL
 LOCAL_IP=$(hostname -I | awk '{print $1}')
-DEFAULT_CONTROL_PORT=9051
-DEFAULT_SOCKS_PORT=9050
-OWNER_CONF_DIR="admin"
-OWNER_DATA_DIR="debian-tor"
-ROOT_TORRC="/etc/tor"
-TORRC="${ROOT_TORRC}/torrc"
-ROOT_DATA_DIR="/var/lib"
-DATA_DIR="${ROOT_DATA_DIR}/tor"
-SERVICES_DATA_DIR="${DATA_DIR}/services"
-CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
 USER_DIR="/home/${USER}"
+CONTROL_PORT=9051
+SOCKS_PORT=9050
+CONF_DIR_OWNER="${USER}"
+DATA_DIR_OWNER="debian-tor"
+TORRC_ROOT="/etc/tor"
+TORRC="${TORRC_ROOT}/torrc"
+DATA_DIR_ROOT="/var/lib"
+DATA_DIR="${DATA_DIR_ROOT}/tor"
+DATA_DIR_HS="${DATA_DIR}/services"
+CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
+VANGUARDS_COMMIT_HASH=10942de
 
+## BACKUP
 DATE_TIME=`date +%Y-%m-%d-%H'h'-%M'm'`
 HS_BK_TAR=tor-hs-bk-${DATE_TIME}.tar.gz
 HS_BK_DIR="${USER_DIR}/tor-hs-bk"
@@ -91,8 +93,8 @@ SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" # '[USE
 ######## FUNCTIONS ###########
 
 set_owner_permission(){
-  sudo chown -R ${OWNER_DATA_DIR}:${OWNER_DATA_DIR} ${DATA_DIR}
-  sudo chown ${OWNER_CONF_DIR}:${OWNER_CONF_DIR} ${TORRC}
+  sudo chown -R ${DATA_DIR_OWNER}:${DATA_DIR_OWNER} ${DATA_DIR}
+  sudo chown ${CONF_DIR_OWNER}:${CONF_DIR_OWNER} ${TORRC}
   sudo chmod 700 ${DATA_DIR}
   sudo chmod 644 ${TORRC}
 }

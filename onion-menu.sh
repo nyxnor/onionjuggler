@@ -45,7 +45,7 @@ prepare_derived_menu(){
 service_menu(){
   prepare_derived_menu
 
-  for SERVICE in $(sudo -u ${OWNER_DATA_DIR} ls -A ${SERVICES_DATA_DIR}/); do
+  for SERVICE in $(sudo -u ${DATA_DIR_OWNER} ls -A ${DATA_DIR_HS}/); do
     ((i++))
     SERVICE_ARRAY+=(${i} "${SERVICE}" OFF)
   done
@@ -80,12 +80,12 @@ service_menu(){
 server_auth_menu(){
   prepare_derived_menu
 
-for SERVICE in $(sudo -u ${OWNER_DATA_DIR} ls ${SERVICES_DATA_DIR}/); do
+for SERVICE in $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/); do
   ## only include services that has at least one .auth
-  if [ $(sudo -u ${OWNER_DATA_DIR} ls ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/ | wc -l) -gt 0 ]; then
+  if [ $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/${SERVICE}/authorized_clients/ | wc -l) -gt 0 ]; then
     ((i++))
     SERVICE_ARRAY+=(${i} "${SERVICE}" OFF)
-    AUTH_NAME_LIST=$(sudo -u ${OWNER_DATA_DIR} ls ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/ | cut -d '.' -f1)
+    AUTH_NAME_LIST=$(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/${SERVICE}/authorized_clients/ | cut -d '.' -f1)
     AUTH_RAW_ARRAY+=("${AUTH_NAME_LIST}")
   fi
 done
@@ -176,7 +176,7 @@ done
 client_auth_menu(){
   prepare_derived_menu
 
-  for ONION_AUTH in $(sudo -u ${OWNER_DATA_DIR} ls -A ${CLIENT_ONION_AUTH_DIR}/ | cut -d '.' -f1); do
+  for ONION_AUTH in $(sudo -u ${DATA_DIR_OWNER} ls -A ${CLIENT_ONION_AUTH_DIR}/ | cut -d '.' -f1); do
   ((i++))
   ONION_AUTH_ARRAY+=(${i} "${ONION_AUTH}" OFF)
   done
@@ -234,10 +234,10 @@ md_menu(){
 ###########################
 
 ## -d won't work as the data dir is owned by the tor user
-CHECK_SERVICES_DIR=$(sudo -u ${OWNER_DATA_DIR} ls -A ${DATA_DIR} | grep -c "services")
+CHECK_SERVICES_DIR=$(sudo -u ${DATA_DIR_OWNER} ls -A ${DATA_DIR} | grep -c "services")
 if [ ${CHECK_SERVICES_DIR} -gt 0 ]; then
-  sudo -u ${OWNER_DATA_DIR} mkdir -p ${SERVICES_DATA_DIR}
-  sudo -u ${OWNER_DATA_DIR} mkdir -p ${CLIENT_ONION_AUTH_DIR}
+  sudo -u ${DATA_DIR_OWNER} mkdir -p ${DATA_DIR_HS}
+  sudo -u ${DATA_DIR_OWNER} mkdir -p ${CLIENT_ONION_AUTH_DIR}
 fi
 
 
@@ -247,7 +247,7 @@ WIDTH=80
 CHOICE_HEIGHT=10
 MENU="Manage your onion services"
 
-if [ -z "$(sudo -u ${OWNER_DATA_DIR} ls -A ${SERVICES_DATA_DIR}/)" ]; then
+if [ -z "$(sudo -u ${DATA_DIR_OWNER} ls -A ${DATA_DIR_HS}/)" ]; then
   CHOICE_MAIN=$(whiptail --menu "${MENU}" --title "${TITLE}" ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
     "CREATE" "Create and host a hidden service" \
     "IMPORT" "Import your hidden service data directory" \

@@ -39,4 +39,5 @@ There are no accidents - Master Oogway
 ## TODO
 
 * [Vanguards](https://github.com/mikeperry-tor/vanguards)
+* [Ronn-ng](https://github.com/apjanke/ronn-ng/) to build man pages from markdown instead of writing them manually :(
 * Something you would like to see to manage onion services? Please open an issue with `[Feature Request] something` on the title.

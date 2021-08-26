@@ -82,6 +82,8 @@ Options:
                                                                     import backup from remote host and
                                                                     integrate the new configuation
 
+  vanguards [install|logs|upgrade|remove]
+
 '# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs."
   exit 1
@@ -150,6 +152,7 @@ error_msg(){
   echo "See manual for this sotware with:"
   echo "  man ./onion-cli-manual"
   fail_log=1
+  exit 0
 }
 
 
@@ -172,12 +175,12 @@ success_msg(){
 ## if the service exists, will save the hostname for when requested.
 test_service_exists(){
   SERVICE="${1}"
-  ADDRESS_EXISTS=$(sudo -u ${OWNER_DATA_DIR} cat ${SERVICES_DATA_DIR}/${SERVICE}/hostname 2>/dev/null | grep -c ".onion")
+  ADDRESS_EXISTS=$(sudo -u ${DATA_DIR_OWNER} cat ${DATA_DIR_HS}/${SERVICE}/hostname 2>/dev/null | grep -c ".onion")
   if [ ${ADDRESS_EXISTS} -eq 0 ]; then
     echo "ERROR: Could not locate hostname file for the service ${SERVICE}"
     service_existent=0
   else
-    TOR_HOSTNAME=$(sudo -u ${OWNER_DATA_DIR} cat ${SERVICES_DATA_DIR}/${SERVICE}/hostname)
+    TOR_HOSTNAME=$(sudo -u ${DATA_DIR_OWNER} cat ${DATA_DIR_HS}/${SERVICE}/hostname)
     service_existent=1
   fi
 }
@@ -188,7 +191,7 @@ create_auth_list(){
   SERVICE="${1}"
   CLIENT_NAME_LIST=""
   AUTH_NUMBER=0
-  for AUTHORIZATION in $(sudo -u ${OWNER_DATA_DIR} ls ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/); do
+  for AUTHORIZATION in $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/${SERVICE}/authorized_clients/); do
     AUTHORIZATION_NAME=$(echo "${AUTHORIZATION##*/}" | cut -f1 -d '.')
     CLIENT_NAME_LIST="${CLIENT_NAME_LIST},${AUTHORIZATION_NAME}"
     ((AUTH_NUMBER++))
@@ -239,16 +242,18 @@ loop_array_dynamic(){
 #check_tor
 
 
-sudo -u ${OWNER_DATA_DIR} mkdir -p ${SERVICES_DATA_DIR}
-sudo -u ${OWNER_DATA_DIR} mkdir -p ${CLIENT_ONION_AUTH_DIR}
+sudo -u ${DATA_DIR_OWNER} mkdir -p ${DATA_DIR_HS}
+sudo -u ${DATA_DIR_OWNER} mkdir -p ${CLIENT_ONION_AUTH_DIR}
 sudo sed -i 's/\/$//' ${TORRC} ## no config should end with '/' to find exact match.
 
 case ${COMMAND} in
+
 
   ## show manual
   man)
     man text/onion-cli.man
   ;;
+
 
   ## deactivate a service by removing service torrc's block.
   ## it is raw, services variables should be separated by an empty line per service, else you might get other non-related configuration deleted.
@@ -261,7 +266,7 @@ case ${COMMAND} in
       ## remove service service data
       if [ "${purge}" == "purge" ]; then
         echo "# Deleting Hidden Service data of ${SERVICE}"
-        sudo rm -rf ${SERVICES_DATA_DIR}/${SERVICE}
+        sudo rm -rf ${DATA_DIR_HS}/${SERVICE}
       fi
       ## remove service paragraph in torrc
       echo "# Deleting Hidden Service configuration in ${TORRC}"
@@ -274,6 +279,7 @@ case ${COMMAND} in
     success_msg reload
   ;;
 
+
   ## activate a service by configure its own torrc's block, consequentially the <HiddenServiceDir> will be created.
   ## tcp-socket uses addr:port, which can be remote or localhost. It leaks onion address to the local network
   ## unix-socket uses unix:path, which is create a unique name for it. It does not leak onion address to the local network.
@@ -283,80 +289,18 @@ case ${COMMAND} in
   on)
     SOCKET="${2}"
     SERVICE="${3}"
-    echo "# Checking if command is valid..."
-    if [ "${SOCKET}" == "tcp-socket" ]; then
-      ## Required
-      VIRTPORT="${4}"; if [ -z ${VIRTPORT} ]; then error_msg "VIRTPORT"; fi
-      TARGET="${5}"
-      TARGET_ADDR_DOTS=$(echo "${TARGET}" | awk -F '.' '{ print NF - 1 }')
-      TARGET_TEXT_LOCALHOST=$(echo "${TARGET}" | cut -d ':' -f1)
-      if [ -z ${TARGET} ] || [[ "${TARGET_TEXT_LOCALHOST}" != "localhost" && ${TARGET_ADDR_DOTS} -eq 0 ]]; then TARGET="127.0.0.1:"${VIRTPORT}; fi
-      is_integer ${VIRTPORT}; is_addr_port ${TARGET} "TARGET"
-      TARGET_ALREADY_INSERTED=$(sudo -u ${OWNER_CONF_DIR} cat ${TORRC} 2>/dev/null | grep -c "\b${TARGET}\b")
-      if [ ${TARGET_ALREADY_INSERTED} -eq 1 ]; then error_msg "TARGET=${TARGET} was already inserted"; fi
-      ## Optional
-      VIRTPORT2="${6}"
-      TARGET2="${7}"
-      TARGET2_ADDR_DOTS=$(echo "${TARGET2}" | awk -F '.' '{ print NF - 1 }')
-      TARGET2_TEXT_LOCALHOST=$(echo "${TARGET2}" | cut -d ':' -f1)
-      if [ -z ${TARGET2} ] || [[ "${TARGET2_TEXT_LOCALHOST}" != "localhost" && ${TARGET2_ADDR_DOTS} -eq 0 ]]; then TARGET2="127.0.0.1:"${VIRTPORT2}; fi
-      if [ ! -z ${VIRTPORT2} ]; then
-        if [ -z ${TARGET2} ]; then TARGET2="127.0.0.1:"${VIRTPORT2}; fi
-        is_integer ${VIRTPORT2}; is_addr_port ${TARGET2} "TARGET2"
-        if [ "${TARGET}" == "${TARGET2}" ]; then error_msg "TARGET is the same as TARGET2"; fi
-        TARGET2_ALREADY_INSERTED=$(sudo -u ${OWNER_CONF_DIR} cat ${TORRC} 2>/dev/null | grep -c "\b${TARGET2}\b")
-        if [ ${TARGET2_ALREADY_INSERTED} -eq 1 ]; then error_msg "The TARGET2=${TARGET2} was already inserted"; fi
-      fi
 
-    elif [ "${SOCKET}" == "unix-socket" ]; then
-      VIRTPORT="${4}"; if [ -z ${VIRTPORT} ]; then error_msg "VIRTPORT"; else is_integer ${VIRTPORT}; fi
-      VIRTPORT2="${5}"; if [ ! -z ${VIRTPORT2} ]; then is_integer ${VIRTPORT2}; fi ## var not mandatory
-    fi
-
-    if [ ${fail_log} -eq 1 ]||[[ "${SOCKET}" != "tcp-socket" && "${SOCKET}" != "unix-socket" ]]; then
-      echo "Check the error message above before running this script again."
-    else
-      echo
-
-      ## delete any old entry for that servive
-      sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
-
-      echo "# Including Hidden Service configuration in ${TORRC}"
-      ## add configuration block, empty line after and before it
-      if [ "${SOCKET}" == "tcp-socket" ]; then
-        if [ -n ${VIRTPORT2} ]; then
-          echo -e "\nHiddenServiceDir ${SERVICES_DATA_DIR}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}" | sudo tee -a ${TORRC}
-        else
-          echo -e "\nHiddenServiceDir ${SERVICES_DATA_DIR}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n" | sudo tee -a ${TORRC}
-        fi
-      elif [ "${SOCKET}" == "unix-socket" ]; then
-        if [ -n ${VIRTPORT2} ]; then
-          echo -e "\nHiddenServiceDir ${SERVICES_DATA_DIR}/${SERVICE}\nHiddenServicePort ${VIRTPORT} unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock\nHiddenServicePort ${VIRTPORT2} unix:/var/run/tor-${SERVICE}-${VIRTPORT2}.sock" | sudo tee -a ${TORRC}
-        else
-          echo -e "\nHiddenServiceDir ${SERVICES_DATA_DIR}/${SERVICE}\nHiddenServicePort ${VIRTPORT} unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock\n" | sudo tee -a ${TORRC}
-        fi
-      fi
-
+    finish_service_activation(){
       ## remove double empty lines
       awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' ${TORRC} | sudo tee ${TORRC}.tmp >/dev/null && sudo mv ${TORRC}.tmp ${TORRC}
-      echo
-      echo "# Reloading tor to activate the Hidden Service..."
-      PREVIOUS_TIMESTAMP=$(systemctl show tor@default.service --property=StateChangeTimestampMonotonic)
-      sudo systemctl reload-or-restart tor@default.service
-      # sleep 1
-      # CURRENT_TIMESTAMP=$(systemctl show tor@default.service --property=StateChangeTimestampMonotonic)
-      # if [ ${CURRENT_TIMESTAMP} -gt ${PREVIOUS_TIMESTAMP} ]; then
-      #   echo "# Reloaded succesfully"
-      # else
-      #   echo "# Failed to reload"
-      # fi
+      echo; echo "# Reloading tor to activate the Hidden Service..."
+      sudo systemctl reload-or-restart tor@default
       sleep 3
 
       ## show the Hidden Service address
       service_existent=0; test_service_exists ${SERVICE}
       if [ ! -z ${TOR_HOSTNAME} ]; then
-        echo
-        echo "# Tor Hidden Service information:"
+        echo; echo "# Tor Hidden Service information:"
         echo "Service name    = "${SERVICE}
         echo "Service address = "${TOR_HOSTNAME}
         echo "Virtual port    = "${VIRTPORT}
@@ -365,8 +309,77 @@ case ${COMMAND} in
         fi
         success_msg
       fi
-    fi
-  ;;
+    }
+
+    case ${SOCKET} in
+
+      tcp)
+        echo "# Checking if command is valid..."
+        ## Required
+        VIRTPORT="${4}"; if [ -z ${VIRTPORT} ]; then error_msg "VIRTPORT"; fi
+        TARGET="${5}"
+        TARGET_ADDR_DOTS=$(echo "${TARGET}" | awk -F '.' '{ print NF - 1 }')
+        TARGET_TEXT_LOCALHOST=$(echo "${TARGET}" | cut -d ':' -f1)
+        if [ -z ${TARGET} ] || [[ "${TARGET_TEXT_LOCALHOST}" != "localhost" && ${TARGET_ADDR_DOTS} -eq 0 ]]; then TARGET="127.0.0.1:"${VIRTPORT}; fi
+        is_integer ${VIRTPORT}; is_addr_port ${TARGET} "TARGET"
+        TARGET_ALREADY_INSERTED=$(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} 2>/dev/null | grep -c "\b${TARGET}\b")
+        if [ ${TARGET_ALREADY_INSERTED} -eq 1 ]; then error_msg "TARGET=${TARGET} was already inserted"; fi
+        ## Optional
+        VIRTPORT2="${6}"
+        TARGET2="${7}"
+        TARGET2_ADDR_DOTS=$(echo "${TARGET2}" | awk -F '.' '{ print NF - 1 }')
+        TARGET2_TEXT_LOCALHOST=$(echo "${TARGET2}" | cut -d ':' -f1)
+        if [ -z ${TARGET2} ] || [[ "${TARGET2_TEXT_LOCALHOST}" != "localhost" && ${TARGET2_ADDR_DOTS} -eq 0 ]]; then TARGET2="127.0.0.1:"${VIRTPORT2}; fi
+        if [ ! -z ${VIRTPORT2} ]; then
+          if [ -z ${TARGET2} ]; then TARGET2="127.0.0.1:"${VIRTPORT2}; fi
+          is_integer ${VIRTPORT2}; is_addr_port ${TARGET2} "TARGET2"
+          if [ "${TARGET}" == "${TARGET2}" ]; then error_msg "TARGET is the same as TARGET2"; fi
+          TARGET2_ALREADY_INSERTED=$(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} 2>/dev/null | grep -c "\b${TARGET2}\b")
+          if [ ${TARGET2_ALREADY_INSERTED} -eq 1 ]; then error_msg "The TARGET2=${TARGET2} was already inserted"; fi
+        fi
+
+        if [ ${fail_log} -eq 1 ]; then
+          echo "Check the error message above before running this script again."
+        else
+          echo
+          ## delete any old entry for that servive
+          sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
+          ## add configuration block, empty line after and before it
+          echo; echo "# Including Hidden Service configuration in ${TORRC}"
+          if [ -n ${VIRTPORT2} ]; then
+            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}" | sudo tee -a ${TORRC}
+          else
+            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n" | sudo tee -a ${TORRC}
+          fi
+          finish_service_activation
+        fi
+      ;;
+
+      unix)
+        echo "# Checking if command is valid..."
+        VIRTPORT="${4}"; if [ -z ${VIRTPORT} ]; then error_msg "VIRTPORT"; else is_integer ${VIRTPORT}; fi
+        VIRTPORT2="${5}"; if [ ! -z ${VIRTPORT2} ]; then is_integer ${VIRTPORT2}; fi ## var not mandatory
+
+        if [ ${fail_log} -eq 1 ]; then
+          echo "Check the error message above before running this script again."
+        else
+          echo
+          ## delete any old entry for that servive
+          sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
+          ## add configuration block, empty line after and before it
+          echo; echo "# Including Hidden Service configuration in ${TORRC}"
+          if [ -n ${VIRTPORT2} ]; then
+            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock\nHiddenServicePort ${VIRTPORT2} unix:/var/run/tor-${SERVICE}-${VIRTPORT2}.sock" | sudo tee -a ${TORRC}
+          else
+            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock\n" | sudo tee -a ${TORRC}
+          fi
+        finish_service_activation
+      ;;
+
+      *)
+        error_msg
+    esac
+
 
   ## as the onion service operator, make your onion authenticated by generating a pair or public and private keys,
   ## the client pub key is automatically saved inside <HiddenServiceDir>/authorized_clients/alice.auth
@@ -395,7 +408,7 @@ case ${COMMAND} in
         TORRC_CLIENT_KEY=(${TOR_HOSTNAME_WITHOUT_ONION}":descriptor:x25519:"${PRIV_KEY})
         TORRC_SERVER_KEY=("descriptor:x25519:"${PUB_KEY})
         3# Server side configuration
-        echo ${TORRC_SERVER_KEY} | sudo tee ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/${CLIENT}.auth >/dev/null
+        echo ${TORRC_SERVER_KEY} | sudo tee ${DATA_DIR_HS}/${SERVICE}/authorized_clients/${CLIENT}.auth >/dev/null
         ## Client side configuration
         #echo "## Instructions for services available on the Tor Browser:"
         #echo
@@ -457,7 +470,7 @@ case ${COMMAND} in
       echo "Service  = "${SERVICE}
       echo "Client   = "${CLIENT}
       echo
-      sudo rm -f ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/${CLIENT}.auth
+      sudo rm -f ${DATA_DIR_HS}/${SERVICE}/authorized_clients/${CLIENT}.auth
     }
     loop_array_dynamic delete_auth ${SERVICE} ${CLIENT} 1
     success_msg reload
@@ -470,14 +483,14 @@ case ${COMMAND} in
     CLIENT="${3}"
     echo "# Removing all clients authorizations from listed services:"
     if [ "${SERVICE}" == "all-services" ]; then
-      #sudo rm -f ${SERVICES_DATA_DIR}/*/authorized_clients/*
-      for SERVICE in $(sudo -u ${OWNER_DATA_DIR} ls ${SERVICES_DATA_DIR}/); do
-        sudo rm -f ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/*
+      #sudo rm -f ${DATA_DIR_HS}/*/authorized_clients/*
+      for SERVICE in $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/); do
+        sudo rm -f ${DATA_DIR_HS}/${SERVICE}/authorized_clients/*
       done
     else
       purge_auth(){
         SERVICE=${1}
-        sudo rm -f ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/*
+        sudo rm -f ${DATA_DIR_HS}/${SERVICE}/authorized_clients/*
       }
       loop_array_dynamic purge_auth ${SERVICE}
     fi
@@ -521,9 +534,9 @@ case ${COMMAND} in
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
       create_auth_list ${SERVICE}
       ## delete service public and private keys
-      sudo rm -rf ${SERVICES_DATA_DIR}/${SERVICE}/hs_ed25519_*_key
+      sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/hs_ed25519_*_key
       ## delete authorized clients
-      sudo rm -rf ${SERVICES_DATA_DIR}/${SERVICE}/authorized_clients/*
+      sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/authorized_clients/*
       ## generate auth for clients
       bash ${0} auth-server-on ${SERVICE} ${CLIENT_NAME_LIST}
       echo "# Service renewed."
@@ -531,7 +544,7 @@ case ${COMMAND} in
     }
 
     if [ "${SERVICE}" == "all-services" ]; then
-      for SERVICE in $(sudo -u ${OWNER_DATA_DIR} ls ${SERVICES_DATA_DIR}/); do
+      for SERVICE in $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/); do
         renew_service_address ${SERVICE}
       done
     else
@@ -565,7 +578,7 @@ case ${COMMAND} in
       fi
     }
     if [ "${SERVICE}" == "all-services" ]; then
-      for SERVICE in $(sudo -u ${OWNER_DATA_DIR} ls ${SERVICES_DATA_DIR}/); do
+      for SERVICE in $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/); do
         get_credentials ${SERVICE}
       done
     else
@@ -600,11 +613,11 @@ case ${COMMAND} in
         sudo mkdir -p ${HS_BK_DIR}/backup-restoration.tbx
         sudo tar -xpzvf ${HS_BK_DIR}/*.tar.gz -C ${HS_BK_DIR}/backup-restoration.tbx
         sudo chown -R ${USER}:${USER} ${HS_BK_DIR}/backup-restoration.tbx
-        sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${SERVICES_DATA_DIR}/* ${SERVICES_DATA_DIR}/ >/dev/null
+        sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${DATA_DIR_HS}/* ${DATA_DIR_HS}/ >/dev/null
         sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${CLIENT_ONION_AUTH_DIR}/* ${CLIENT_ONION_AUTH_DIR}/ >/dev/null
 
         ## avoid duplication of services, it will keep the oldest config for safety
-        for SERVICE in $(sudo -u ${OWNER_CONF_DIR} cat ${TORRC} | grep "HiddenServiceDir" | cut -d ' ' -f2); do
+        for SERVICE in $(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} | grep "HiddenServiceDir" | cut -d ' ' -f2); do
           SERVICE_NAME=$(echo "${SERVICE##*/}")
           sed -n "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{p}" ${TORRC} > ${TORRC}.tmp
           sed -i "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{d}" ${TORRC}
@@ -614,11 +627,11 @@ case ${COMMAND} in
         done
         sudo rm -f ${TORRC}.tmp ${TORRC}.mod
         awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' ${TORRC} | sudo tee ${TORRC}.tmp >/dev/null && sudo mv ${TORRC}.tmp ${TORRC}
-        sudo chown -R ${OWNER_CONF_DIR}:${OWNER_CONF_DIR} ${TORRC}
+        sudo chown -R ${CONF_DIR_OWNER}:${CONF_DIR_OWNER} ${TORRC}
 
         sudo rm -rf ${HS_BK_DIR}/backup-restoration.tbx
-        sudo chown -R ${OWNER_DATA_DIR}:${OWNER_DATA_DIR} ${DATA_DIR}
-        sudo chown -R ${OWNER_CONF_DIR}:${OWNER_CONF_DIR} ${ROOT_TORRC}
+        sudo chown -R ${DATA_DIR_OWNER}:${DATA_DIR_OWNER} ${DATA_DIR}
+        sudo chown -R ${CONF_DIR_OWNER}:${CONF_DIR_OWNER} ${TORRC_ROOT}
 
         ## RESTORE BACKUP FROM REMOTE
         echo "# Restore your configuration importing from a remote machine."
@@ -640,19 +653,19 @@ case ${COMMAND} in
         echo "# Backup your configuration and export it to a remote machine."
         echo "## Backing up the services dir, onion_auth dir and the torrc"
         echo
-        sudo -u ${USER} mkdir -p ${HS_BK_DIR}${ROOT_TORRC}
+        sudo -u ${USER} mkdir -p ${HS_BK_DIR}${TORRC_ROOT}
         sudo -u ${USER} touch ${HS_BK_DIR}${TORRC}
         sudo cp ${TORRC} ${TORRC}.rest
         echo "$(sudo sed -n "/HiddenServiceDir/,/^\s*$/{p}" ${TORRC})" | sudo tee ${TORRC}.tmp >/dev/null
         sudo mv ${TORRC}.tmp ${TORRC}
-        sudo tar -cpzvf ${HS_BK_DIR}/${HS_BK_TAR} ${SERVICES_DATA_DIR} ${CLIENT_ONION_AUTH_DIR} ${TORRC} 2>/dev/null
+        sudo tar -cpzvf ${HS_BK_DIR}/${HS_BK_TAR} ${DATA_DIR_HS} ${CLIENT_ONION_AUTH_DIR} ${TORRC} 2>/dev/null
         sudo mv ${TORRC}.rest ${TORRC}
         SHA512SUM=$(sha512sum ${HS_BK_DIR}/${HS_BK_TAR})
         SHA256SUM=$(sha256sum ${HS_BK_DIR}/${HS_BK_TAR})
         sudo chown -R ${USER}:${USER} ${HS_BK_DIR}/${HS_BK_TAR}
         sudo find ${HS_BK_DIR} \! -name ${HS_BK_TAR} -delete 2>/dev/null
-        sudo chown -R ${OWNER_DATA_DIR}:${OWNER_DATA_DIR} ${DATA_DIR}
-        sudo chown -R ${OWNER_CONF_DIR}:${OWNER_CONF_DIR} ${ROOT_TORRC}
+        sudo chown -R ${DATA_DIR_OWNER}:${DATA_DIR_OWNER} ${DATA_DIR}
+        sudo chown -R ${CONF_DIR_OWNER}:${CONF_DIR_OWNER} ${TORRC_ROOT}
         echo; echo "sha512sum=${SHA512SUM}"; echo; echo "sha256sum=${SHA256SUM}"; echo
         ## upload to remote
         echo "## Export backup file uploading to remote. On this terminal instance, run:"
@@ -663,6 +676,64 @@ case ${COMMAND} in
         echo "  sudo scp -r ${USER}@${LOCAL_IP}:${HS_BK_DIR}/${HS_BK_TAR} ."
       ;;
 
+      *)
+        error_msg
+    esac
+  ;;
+
+  vanguards)
+    ACTION="${2}"
+    case ${ACTION} in
+      install)
+        echo "# Installing Vanguards..."
+        sudo git clone https://github.com/mikeperry-tor/vanguards.git ${DATA_DIR}
+        sudo chown -R ${DATA_DIR_OWNER}:${DATA_DIR_OWNER} ${DATA_DIR}
+        sudo -u ${DATA_DIR_OWNER} git -C ${DATA_DIR}/vanguards reset --hard ${VANGUARDS_COMMIT_HASH}
+        sudo -u ${DATA_DIR_OWNER} cp ${DATA_DIR}/vanguards/vanguards-example.conf ${DATA_DIR}/vanguards/vanguards.conf
+        sudo sed -i "s/^control_socket =.*/control_socket = \/run\/tor\/control/" ${DATA_DIR}/vanguards/vanguards.conf
+        sudo sed -i "s/^logfile =.*/logfile = \/var\/log\/tor\/vanguards.log/" ${DATA_DIR}/vanguards/vanguards.conf
+        sudo chmod 700 ${DATA_DIR}
+        sudo chown -R ${DATA_DIR_OWNER}:${DATA_DIR_OWNER} ${DATA_DIR}
+        echo "
+[Unit]
+Description=Additional protections for Tor onion services
+Wants=tor@default.service
+After=network.target nss-lookup.target
+
+[Service]
+WorkingDirectory=${DATA_DIR}/vanguards
+ExecStart=/usr/bin/python3 src/vanguards.py --control_socket /run/tor/control ## --control_port ${CONTROL_PORT}
+Environment=VANGUARDS_CONFIG=${DATA_DIR}/vanguards/vanguards.conf
+User=${DATA_DIR_OWNER}
+Group=${DATA_DIR_OWNER}
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+" | sudo tee /etc/systemd/system/vanguards@default.service
+        sudo systemctl daemon-reload
+        sudo systemctl enable vanguards@default.service
+        sudo systemctl start vanguards@default.service
+        echo; echo "# Check logs with:"
+        echo"   sudo tail -f -n 25 /var/log/tor/vanguards.log"
+        success_msg
+      ;;
+      update)
+        echo "# Upgrading Vanguards..."
+        sudo -u ${DATA_DIR_OWNER} git -C ${DATA_DIR}/vanguards pull -p
+        sudo -u ${DATA_DIR_OWNER} git -C ${DATA_DIR}/vanguards reset --hard ${VANGUARDS_COMMIT_HASH}
+        sudo -u ${DATA_DIR_OWNER} git -C ${DATA_DIR}/vanguards show
+        success_msg
+      ;;
+      remove)
+        echo "# Removing Vanguards..."
+        sudo rm -rf ${DATA_DIR}/vanguards
+        success_msg
+      ;;
+      logs)
+        sudo tail -f -n 25 /var/log/tor/vanguards.log
+      ;;
       *)
         error_msg
     esac
