@@ -289,9 +289,8 @@ case ${COMMAND} in
       ## show the Hidden Service address
       service_existent=0; test_service_exists ${SERVICE}
       if [ ! -z ${TOR_HOSTNAME} ]; then
-        echo "# Tor Hidden Service information:"
+        echo; echo "# Tor Hidden Service information:"
         qrencode -m 2 -t ANSIUTF8 ${TOR_HOSTNAME}
-        echo
         echo "Service name    = "${SERVICE}
         echo "Service address = "${TOR_HOSTNAME}
         echo "Virtual port    = "${VIRTPORT}
