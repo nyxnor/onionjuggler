@@ -102,6 +102,7 @@ set_owner_permission(){
 }
 
 if [ ${FIRST_ONION_RUN} -eq 1 ]; then
+  sudo apt install -y tor
   sudo adduser ${USER} ${DATA_DIR_OWNER}
   sudo -u ${DATA_DIR_OWNER} mkdir -p ${DATA_DIR_HS}
   sudo -u ${DATA_DIR_OWNER} mkdir -p ${CLIENT_ONION_AUTH_DIR}

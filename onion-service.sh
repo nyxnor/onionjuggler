@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#set -x
+
 ## This file is part of onion-cli, an easy to use Tor hidden services manager.
 ##
 ## Copyright (C) 2018-2021 openoms, rootzoll, frennkie, nolith (MIT)
@@ -42,16 +44,16 @@
 ##   credentials     No modification, reads the <torrc> and <HiddenServiceDir>/
 ##
 ## command info
-if [[ $# -eq 0 || -z ${2} || "$1" = "-h" || "$1" = "-help" || "$1" = "--help" ]]; then
+onion_usage(){
   echo "Configure an Onion Service
 
 Usage: bash ${0} COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
 
-  on tcp-socket [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>  activate a service targeting tcp socket
+  on tcp [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>         activate a service targeting tcp socket
 
-  on unix-socket [SERV] [VIRTPORT] <VIRTPORT2>                    activate a service targeting unix socket
+  on unix [SERV] [VIRTPORT] <VIRTPORT2>                           activate a service targeting unix socket
 
   off [SERV1,SERV2,...] <purge>                                   deactivate a service and optionally purge its directory
 
@@ -72,8 +74,7 @@ Options:
 '# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs."
   exit 1
-fi
-
+}
 
 ###########################
 ######## FUNCTIONS ########
@@ -125,6 +126,16 @@ is_addr_port(){
   fi
 }
 
+if [ "$EUID" -eq 0 ]; then
+  echo "Not was root please..."
+  exit 0
+fi
+
+
+if [[ $# -eq 0 || -z ${2} || "$1" = "-h" || "$1" = "-help" || "$1" = "--help" ]]; then
+  onion_usage
+fi
+
 ## display error message with instructions to use the script correctly.
 ## fail_log=1 makes the script abort after checking all of the variables.
 error_msg(){
@@ -132,10 +143,10 @@ error_msg(){
     echo "ERROR: ${1} missing"
   fi
   echo "Invalid command!"
-  echo "See instructions for this script with:"
-  echo "  bash ${0} --help"
   echo "See manual for this sotware with:"
   echo "  man ./onion-cli-manual"
+  echo
+  onion_usage
   fail_log=1
   exit 0
 }
@@ -164,6 +175,7 @@ test_service_exists(){
   if [ ${ADDRESS_EXISTS} -eq 0 ]; then
     echo "ERROR: Could not locate hostname file for the service ${SERVICE}"
     service_existent=0
+    exit 0
   else
     TOR_HOSTNAME=$(sudo -u ${DATA_DIR_OWNER} cat ${DATA_DIR_HS}/${SERVICE}/hostname)
     service_existent=1
@@ -231,14 +243,16 @@ case ${COMMAND} in
   ## deactivate a service by removing service torrc's block.
   ## it is raw, services variables should be separated by an empty line per service, else you might get other non-related configuration deleted.
   ## purge is optional, it deletes the <HiddenServiceDir>
+  ## will not check if folder or configuration exist, this is cleanup mode
   off)
+  #set -x
     PURGE="${3}"
     delete_service(){
       SERVICE="${1}"
       PURGE="${2}"
       ## remove service service data
-      if [ "${purge}" == "purge" ]; then
-        echo "# Deleting Hidden Service data of ${SERVICE}"
+      if [ "${PURGE}" == "purge" ]; then
+        echo "# Deleting Hidden Service data in ${DATA_DIR_HS}"
         sudo rm -rf ${DATA_DIR_HS}/${SERVICE}
       fi
       ## remove service paragraph in torrc
@@ -256,8 +270,10 @@ case ${COMMAND} in
   ## activate a service by configure its own torrc's block, consequentially the <HiddenServiceDir> will be created.
   ## tcp-socket uses addr:port, which can be remote or localhost. It leaks onion address to the local network
   ## unix-socket uses unix:path, which is create a unique name for it. It does not leak onion address to the local network.
-  ## VIRTPORT is the port to be used by the client when visiting the service
+  ## VIRTPORT is the port to be used by the client when visiting the service.
   ## TARGET is where the incoming traffic from VIRTPORT gets redirected. This option is abscent on unix-socket because the script completes it.
+  ##  if TARGET is not specified, will use the same port from VIRTPORT and bind to localhost.
+  ##  if TARGET only contains the port number and not the address, will bind to localhost.
   ## VIRTPORT2 and TARGET 2 are optional
   on)
     SOCKET="${2}"
@@ -314,7 +330,6 @@ case ${COMMAND} in
         if [ ${fail_log} -eq 1 ]; then
           echo "Check the error message above before running this script again."
         else
-          echo
           ## delete any old entry for that servive
           sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
           ## add configuration block, empty line after and before it
@@ -336,24 +351,25 @@ case ${COMMAND} in
         if [ ${fail_log} -eq 1 ]; then
           echo "Check the error message above before running this script again."
         else
-          echo
           ## delete any old entry for that servive
           sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
           ## add configuration block, empty line after and before it
           echo; echo "# Including Hidden Service configuration in ${TORRC}"
-          UNIX_PATH="unix:/var/run/tor-hs${SERVICE}-${VIRTPORT}.sock"
+          UNIX_PATH="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock"
           UNIX_PATH2="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT2}.sock"
           if [ -n ${VIRTPORT2} ]; then
             echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\nHiddenServicePort ${VIRTPORT2} ${UNIX_PATH2}" | sudo tee -a ${TORRC}
           else
             echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\n" | sudo tee -a ${TORRC}
           fi
-        finish_service_activation
+          finish_service_activation
+        fi
       ;;
 
       *)
         error_msg
     esac
+  ;;
 
 
   auth)
@@ -373,10 +389,10 @@ case ${COMMAND} in
           ## the onion service operator should send the private key for the desired client
           on)
             CLIENT="${5}"
-            ## Install basez if not installed
-            echo "# Generating keys to access onion service (Client Authorization) ..."; echo -e "# -> Send this to the client(s):\n"
+            ## Install openssl and basez if not installed
+            #echo "# Generating keys to access onion service (Client Authorization) ..."; echo -e "# -> Send this to the client(s):\n"
             command -v openssl >/dev/null || sudo apt install -y openssl
-            command -v openssl >/dev/null || sudo apt install -y basez
+            command -v basez >/dev/null || sudo apt install -y basez
 
             generate_auth(){
               SERVICE="${1}"
@@ -391,9 +407,9 @@ case ${COMMAND} in
                 PUB_KEY=$(cat /tmp/k1.pub.key)
                 PRIV_KEY=$(cat /tmp/k1.prv.key)
                 TOR_HOSTNAME_WITHOUT_ONION=$(echo "${TOR_HOSTNAME}" | cut -c1-56)
-                TORRC_CLIENT_KEY=(${TOR_HOSTNAME_WITHOUT_ONION}":descriptor:x25519:"${PRIV_KEY})
+                PRIV_KEY_CONFIG=(${TOR_HOSTNAME_WITHOUT_ONION}":descriptor:x25519:"${PRIV_KEY})
                 TORRC_SERVER_KEY=("descriptor:x25519:"${PUB_KEY})
-                3# Server side configuration
+                # Server side configuration
                 echo ${TORRC_SERVER_KEY} | sudo tee ${DATA_DIR_HS}/${SERVICE}/authorized_clients/${CLIENT}.auth >/dev/null
                 ## Client side configuration
                 echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
@@ -401,9 +417,8 @@ case ${COMMAND} in
                 echo "SERVICE="${SERVICE}
                 echo "CLIENT="${CLIENT}
                 echo "TOR_HOSTNAME="${TOR_HOSTNAME}
-                echo "TOR_HOSTNAME_WITHOUT_ONION="${TOR_HOSTNAME_WITHOUT_ONION}
                 echo "PRIV_KEY="${PRIV_KEY}
-                echo "TORRC_CLIENT_KEY="${TORRC_CLIENT_KEY}
+                echo "PRIV_KEY_CONFIG="${PRIV_KEY_CONFIG}
                 echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
                 echo
                 ## Delete pem and keys
@@ -418,7 +433,7 @@ case ${COMMAND} in
                 echo "ClientOnionAuthDir /var/lib/tor/onion_auth"
                 echo
                 echo "# Create the auth file inside <ClientOnionAuthDir>"
-                echo "echo \${TORRC_CLIENT_KEY} | sudo tee -a /var/lib/tor/onion_auth/${SERVICE}-${TOR_HOSTNAME}.auth_private"
+                echo "echo \${PRIV_KEY_CONFIG} | sudo tee -a /var/lib/tor/onion_auth/${SERVICE}-${TOR_HOSTNAME}.auth_private"
                 echo
                 echo "# Reload tor"
                 echo "sudo chown -R debian-tor:debian-tor /var/lib/tor"
@@ -506,10 +521,12 @@ case ${COMMAND} in
           *)
             error_msg
         esac
+      ;;
 
       *)
         error_msg
     esac
+  ;;
 
 
   ## change service hostname by deleting its ed25519 pub and priv keys.
@@ -551,6 +568,7 @@ case ${COMMAND} in
       SERVICE="${1}"
       service_existent=0; test_service_exists ${SERVICE}
       if [ ${service_existent} -eq 1 ]; then
+        command -v qrencode >/dev/null || sudo apt install -y qrencode
         ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
         create_auth_list ${SERVICE}
         echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
@@ -608,7 +626,7 @@ case ${COMMAND} in
         sudo chown -R ${USER}:${USER} ${HS_BK_DIR}/backup-restoration.tbx
         sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${DATA_DIR_HS}/* ${DATA_DIR_HS}/ >/dev/null
         sudo cp -rf ${HS_BK_DIR}/backup-restoration.tbx${CLIENT_ONION_AUTH_DIR}/* ${CLIENT_ONION_AUTH_DIR}/ >/dev/null
-        ## avoid duplication of services, it will keep the oldest config for safety
+        ## avoid duplication of services, it will keep the current machine config lines for safety
         for SERVICE in $(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} | grep "HiddenServiceDir" | cut -d ' ' -f2); do
           SERVICE_NAME=$(echo "${SERVICE##*/}")
           sed -n "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{p}" ${TORRC} > ${TORRC}.tmp
