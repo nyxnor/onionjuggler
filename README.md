@@ -38,6 +38,7 @@ There are no accidents - Master Oogway
 
 ## TODO
 
-* [Vanguards](https://github.com/mikeperry-tor/vanguards)
+* [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
+* [Vanguards](https://github.com/mikeperry-tor/vanguards) menu option
 * [Ronn-ng](https://github.com/apjanke/ronn-ng/) to build man pages from markdown instead of writing them manually :(
 * Something you would like to see to manage onion services? Please open an issue with `[Feature Request] something` on the title.

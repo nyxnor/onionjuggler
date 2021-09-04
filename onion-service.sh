@@ -289,7 +289,9 @@ case ${COMMAND} in
       ## show the Hidden Service address
       service_existent=0; test_service_exists ${SERVICE}
       if [ ! -z ${TOR_HOSTNAME} ]; then
-        echo; echo "# Tor Hidden Service information:"
+        echo "# Tor Hidden Service information:"
+        qrencode -m 2 -t ANSIUTF8 ${TOR_HOSTNAME}
+        echo
         echo "Service name    = "${SERVICE}
         echo "Service address = "${TOR_HOSTNAME}
         echo "Virtual port    = "${VIRTPORT}
@@ -309,7 +311,8 @@ case ${COMMAND} in
         TARGET="${5}"
         TARGET_ADDR_DOTS=$(echo "${TARGET}" | awk -F '.' '{ print NF - 1 }')
         TARGET_TEXT_LOCALHOST=$(echo "${TARGET}" | cut -d ':' -f1)
-        if [ -z ${TARGET} ] || [[ "${TARGET_TEXT_LOCALHOST}" != "localhost" && ${TARGET_ADDR_DOTS} -eq 0 ]]; then TARGET="127.0.0.1:"${VIRTPORT}; fi
+        if [ -z ${TARGET} ]; then TARGET=${VIRTPORT}; fi
+        if [[ "${TARGET_TEXT_LOCALHOST}" != "localhost" || ${TARGET_ADDR_DOTS} -eq 0 ]]; then TARGET="127.0.0.1:"${TARGET}; fi
         is_integer ${VIRTPORT}; is_addr_port ${TARGET} "TARGET"
         TARGET_ALREADY_INSERTED=$(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} 2>/dev/null | grep -c "\b${TARGET}\b")
         if [ ${TARGET_ALREADY_INSERTED} -eq 1 ]; then error_msg "TARGET=${TARGET} was already inserted"; fi
@@ -334,7 +337,7 @@ case ${COMMAND} in
           sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
           ## add configuration block, empty line after and before it
           echo; echo "# Including Hidden Service configuration in ${TORRC}"
-          if [ -n ${VIRTPORT2} ]; then
+          if [ ! -z ${VIRTPORT2} ]; then
             echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}" | sudo tee -a ${TORRC}
           else
             echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n" | sudo tee -a ${TORRC}
@@ -357,7 +360,7 @@ case ${COMMAND} in
           echo; echo "# Including Hidden Service configuration in ${TORRC}"
           UNIX_PATH="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock"
           UNIX_PATH2="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT2}.sock"
-          if [ -n ${VIRTPORT2} ]; then
+          if [ ! -z ${VIRTPORT2} ]; then
             echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\nHiddenServicePort ${VIRTPORT2} ${UNIX_PATH2}" | sudo tee -a ${TORRC}
           else
             echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\n" | sudo tee -a ${TORRC}
