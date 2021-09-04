@@ -39,8 +39,8 @@
 ##   on              Create <torrc> config, tor will create <HiddenServiceDir>
 ##   off             Delete <torrc> config, optionally purge <HiddenServiceDir>
 ##   renew:          Remove <HiddenServiceDir>/* (contents: keys, hostname, authorized_clients)
-##   auth-server-*   Create or remove '.auth' files inside <HiddenServiceDir>/authorized_clients/
-##   auth-client-*   Create or remove '.auth_private' files inside <ClientOnionAuthDir>
+##   auth server     Create or remove '.auth' files inside <HiddenServiceDir>/authorized_clients/
+##   auth client     Create or remove '.auth_private' files inside <ClientOnionAuthDir>
 ##   credentials     No modification, reads the <torrc> and <HiddenServiceDir>/
 ##
 ## command info
@@ -69,7 +69,7 @@ Options:
 
   backup [export|import]                                          create backup or import backup and integrate the files
 
-  vanguards [install|logs|upgrade|remove]                         install, upgrdade, remove or see logs for vanguards addon
+  vanguards [install|logs|upgrade|remove]                         install, upgrade, remove or see logs for vanguards addon
 
 '# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs."
@@ -139,9 +139,9 @@ fi
 ## display error message with instructions to use the script correctly.
 ## fail_log=1 makes the script abort after checking all of the variables.
 error_msg(){
-  if [ ${#1} -gt 0 ]; then
-    echo "ERROR: ${1} missing"
-  fi
+  # if [ ${#1} -gt 0 ]; then
+  #   echo "ERROR: ${1} missing"
+  # fi
   echo "Invalid command!"
   echo "See manual for this sotware with:"
   echo "  man ./onion-cli-manual"
@@ -161,8 +161,8 @@ success_msg(){
   fi
   echo
   echo "# Done"
-  read -n 1 -s -r -p "Press any key to continue"
-  echo
+  #read -n 1 -s -r -p "Press any key to continue"
+  #echo
   exit 1
 }
 
@@ -194,6 +194,7 @@ create_auth_list(){
     ((AUTH_NUMBER++))
   done
   CLIENT_NAME_LIST=$(echo ${CLIENT_NAME_LIST} | sed 's/^,//g')
+  if [ "${CLIENT_NAME_LIST}" == "1" ]; then CLIENT_NAME_LIST=""; fi
 }
 
 
@@ -310,8 +311,8 @@ case ${COMMAND} in
         TARGET="${5}"
         TARGET_ADDR_DOTS=$(echo "${TARGET}" | awk -F '.' '{ print NF - 1 }')
         TARGET_TEXT_LOCALHOST=$(echo "${TARGET}" | cut -d ':' -f1)
-        if [ -z ${TARGET} ]; then TARGET=${VIRTPORT}; fi
-        if [[ "${TARGET_TEXT_LOCALHOST}" != "localhost" || ${TARGET_ADDR_DOTS} -eq 0 ]]; then TARGET="127.0.0.1:"${TARGET}; fi
+        if [ -z "${TARGET}" ]; then TARGET=${VIRTPORT}; fi
+        if [[ "${TARGET_TEXT_LOCALHOST}" != "localhost" || ${TARGET_ADDR_DOTS} -ne 3 ]]; then TARGET="127.0.0.1:${TARGET}"; fi
         is_integer ${VIRTPORT}; is_addr_port ${TARGET} "TARGET"
         TARGET_ALREADY_INSERTED=$(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} 2>/dev/null | grep -c "\b${TARGET}\b")
         if [ ${TARGET_ALREADY_INSERTED} -eq 1 ]; then error_msg "TARGET=${TARGET} was already inserted"; fi
@@ -320,7 +321,8 @@ case ${COMMAND} in
         TARGET2="${7}"
         TARGET2_ADDR_DOTS=$(echo "${TARGET2}" | awk -F '.' '{ print NF - 1 }')
         TARGET2_TEXT_LOCALHOST=$(echo "${TARGET2}" | cut -d ':' -f1)
-        if [ -z ${TARGET2} ] || [[ "${TARGET2_TEXT_LOCALHOST}" != "localhost" && ${TARGET2_ADDR_DOTS} -eq 0 ]]; then TARGET2="127.0.0.1:"${VIRTPORT2}; fi
+        if [ -z ${TARGET2} ]; then TARGET2=${VIRTPORT2}; fi
+        if [[ "${TARGET2_TEXT_LOCALHOST}" != "localhost" && ${TARGET2_ADDR_DOTS} -eq 0 ]]; then TARGET2="127.0.0.1:"${VIRTPORT2}; fi
         if [ ! -z ${VIRTPORT2} ]; then
           if [ -z ${TARGET2} ]; then TARGET2="127.0.0.1:"${VIRTPORT2}; fi
           is_integer ${VIRTPORT2}; is_addr_port ${TARGET2} "TARGET2"
@@ -537,18 +539,31 @@ case ${COMMAND} in
   renew)
     renew_service_address(){
       SERVICE="${1}"
-      CLIENT_NAME_LIST="${2}"
-      echo "# Renewing service ${SERVICE}"
-      ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
-      create_auth_list ${SERVICE}
-      ## delete service public and private keys
-      sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/hs_ed25519_*_key
-      ## delete authorized clients
-      sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/authorized_clients/*
-      ## generate auth for clients
-      bash ${0} auth-server-on ${SERVICE} ${CLIENT_NAME_LIST}
-      echo "# Service renewed."
-      echo
+      service_existent=0; test_service_exists ${SERVICE}
+      if [ ${service_existent} -eq 1 ]; then
+        echo "# Renewing service ${SERVICE}"
+        echo "Current = "${TOR_HOSTNAME}
+        ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
+        create_auth_list ${SERVICE}
+        ## delete the service folder
+        #sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/
+        ## delete service public and private keys
+        sudo rm -f ${DATA_DIR_HS}/${SERVICE}/hs_ed25519_secret_key
+        sudo rm -f ${DATA_DIR_HS}/${SERVICE}/hs_ed25519_public_key
+        ## delete authorized clients
+        sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/authorized_clients/*
+        ## reload tor now so auth option can get the new hostname
+        sudo systemctl reload-or-restart tor@default
+        sleep 3
+        ## generate auth for clients
+        if [ ! -z ${CLIENT_NAME_LIST} ]; then
+          bash ${0} auth server on ${SERVICE} ${CLIENT_NAME_LIST}
+        fi
+        test_service_exists ${SERVICE}
+        echo "New     = "${TOR_HOSTNAME}
+        echo "# Service renewed."
+        echo
+      fi
     }
 
     if [ "${SERVICE}" == "all-services" ]; then
@@ -556,7 +571,7 @@ case ${COMMAND} in
         renew_service_address ${SERVICE}
       done
     else
-      loop_array_dynamic renew_service_address ${SERVICE} ${CLIENT} 1
+      loop_array_dynamic renew_service_address ${SERVICE}
     fi
 
     success_msg reload
