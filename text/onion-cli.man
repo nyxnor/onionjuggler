@@ -17,7 +17,7 @@ At least two arguments are required for every command, some could have more requ
 
 .TP
 .PP
-.B "on tcp-socket [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>"
+.B "on tcp [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>"
 .RS
 .IP
 Activate a hidden service with tcp sockets. WARNING, TCP sockets leaks the onion service to the local network. For tcp socket, the target format expected is 'addr:port', which can be local or remote host. Abscence of target will replicate the virtual port to target as following 'localhost:port'. The 2nd virtual port and target is optional.
@@ -26,7 +26,7 @@ Activate a hidden service with tcp sockets. WARNING, TCP sockets leaks the onion
 
 .TP
 .PP
-.B "on unix-socket [SERV] [VIRTPORT] <VIRTPORT2>"
+.B "on unix [SERV] [VIRTPORT] <VIRTPORT2>"
 .RS
 .IP
 Activate a hidden service with unix sockets. Unix sockets avoids leaking the onion service to a local network. Sockets are named after the service name and the virtual port to avoid being overwritten by being unique. The 2nd virtual port is optional.
@@ -53,7 +53,7 @@ Renew indicated services or all-services addresses by deleting both public and p
 
 .TP
 .PP
-.B "auth-server-[on|off] [SERV1,SERV2,...] [CLIENT1,CLIENT2,...]
+.B "auth server [on|off] [SERV1,SERV2,...] [CLIENT1,CLIENT2,...]
 .RS
 .IP
 As the onion operator, add or delete client keys from indicated services that are inside <HiddenServiceDir>/authorized_clients/.
@@ -62,7 +62,7 @@ As the onion operator, add or delete client keys from indicated services that ar
 
 .TP
 .PP
-.B "auth-server-purge [all-services|SERV1,SERV2,...]
+.B "auth server purge [all-services|SERV1,SERV2,...]
 .RS
 .IP
 As the onion operator, delete all client keys from indicated services or all-services that are inside <HiddenServiceDir>/authorized_clients/.
@@ -71,7 +71,7 @@ As the onion operator, delete all client keys from indicated services or all-ser
 
 .TP
 .PP
-.B "auth-client-on [AUTH_FILE] [AUTH_PRIV_KEY]
+.B "auth client on [AUTH_FILE] [AUTH_PRIV_KEY]
 .RS
 .IP
 As the onion client, add your client key inside ClientOnionAuthDir, mentioning the file name 'bob_onion' (good practice to mention the service operator or service name to remember to know where that key is used and when it should be deleted) and the client private key you received from the onion operator in the following format: '<onion-addr-without-.onion-part>:descriptor:x25519:<private-key>'.
@@ -80,7 +80,7 @@ As the onion client, add your client key inside ClientOnionAuthDir, mentioning t
 
 .TP
 .PP
-.B "auth-client-off [AUTH_FILE1,AUTH_FILE2,...]
+.B "auth client off [AUTH_FILE1,AUTH_FILE2,...]
 .RS
 .IP
 As the onion client, delete your client key that is inside ClientOnionAuthDir by mentioning its file name without the extenstion '.auth_private'.

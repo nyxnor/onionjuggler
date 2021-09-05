@@ -6,7 +6,7 @@ The goal is to manage services on the the tor configuration level, not the web s
 
 If you want extra functionalities to be a relay, bridge or connect to a bridge easily, you should check out [Torbox](https://github.com/radio24/TorBox).
 
-Stage is `do not trust this repo yet`.
+**WARNING: `do not trust this repo yet`, backup your hs keys in another location**
 
 ## INSTRUCTIONS
 

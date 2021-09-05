@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#set -x
-
 ## This file is part of onion-cli, an easy to use Tor hidden services manager.
 ##
 ## Copyright (C) 2018-2021 openoms, rootzoll, frennkie, nolith (MIT)
@@ -83,52 +81,47 @@ It does not imply the code worked, you should always pay attention for errors in
 . onion.lib
 
 #clear
-fail_log=0
-var_not_integer=0
-valid_addr_port=0
 COMMAND="${1}"
 SERVICE="${2}"
 
 ## check if variable is integer
 is_integer(){
   if [[ ${1} =~ ^-?[0-9]+$ ]]; then
-    echo "Variable is integer: ${1}"
+    echo "Is integer: ${1}"
   else
-    echo "Variable must be an integer: ${1}"
-    fail_log=1
+    echo "Must be an integer: ${1}"
+    exit 1
   fi
 }
 
 ## checks if the TARGET is valid.
 ## Address range from 0.0.0.0 to 255.255.255.255. Port ranges from 0 to 65535
 ## accept localhos:port if port is valid.
+## this is not perfect but it is better than nothing
 is_addr_port(){
   ADDR=$(echo "${1}" | cut -d ':' -f1)
   PORT=$(echo "${1}" | cut -d ':' -f2)
   DEFINED_VAR="${2}"
-  if [ "${ADDR}" == "${PORT}" ]; then fail_log=1
-  elif [ "${ADDR}" == "localhost" ]; then
-    if [[ "${PORT}" =~ ^-?[0-9]+$ ]] && [[ ${PORT} -gt 0 && ${PORT} -le 65535 ]]; then
-      valid_addr_port=1; else fail_log=1; fi
-  else
-    ## port must be integer, 0 < port <= 65535
-    if [[ "${PORT}" =~ ^-?[0-9]+$ && ${PORT} -gt 0 && ${PORT} -le 65535 \
-      ## addr must be integer, 0 < addr <=255
-      && "${ADDR}" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
-      valid_addr_port=1; else fail_log=1; fi
+  if [ "${ADDR}" == "${PORT}" ]; then
+    if [[ "${PORT}" =~ ^-?[0-9]+$ && ${PORT} -gt 0 && ${PORT} -le 65535 \ ## port must be integer, 0 < port <= 65535
+      && "${ADDR}" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then ## addr must be integer, 0 < addr <=255
+      valid_addr_port=1
+    else
+      exit 1
+    fi
   fi
 
   if [ ${valid_addr_port} -eq 1 ]; then
     echo "Valid 'addr:port': ${DEFINED_VAR}=${ADDR}:${PORT}"
   else
     echo "Invalid 'addr:port': ${DEFINED_VAR}=${ADDR}:${PORT}"
-    fail_log=1
+    exit 1
   fi
 }
 
 if [ "$EUID" -eq 0 ]; then
   echo "Not was root please..."
-  exit 0
+  exit 1
 fi
 
 
@@ -137,18 +130,11 @@ if [[ $# -eq 0 || -z ${2} || "$1" = "-h" || "$1" = "-help" || "$1" = "--help" ]]
 fi
 
 ## display error message with instructions to use the script correctly.
-## fail_log=1 makes the script abort after checking all of the variables.
 error_msg(){
-  # if [ ${#1} -gt 0 ]; then
-  #   echo "ERROR: ${1} missing"
-  # fi
+  if [ ! -z ${1} ]; then echo "ERROR: ${1} missing"; fi
   echo "Invalid command!"
-  echo "See manual for this sotware with:"
-  echo "  man ./onion-cli-manual"
   echo
   onion_usage
-  fail_log=1
-  exit 0
 }
 
 
@@ -175,7 +161,7 @@ test_service_exists(){
   if [ ${ADDRESS_EXISTS} -eq 0 ]; then
     echo "ERROR: Could not locate hostname file for the service ${SERVICE}"
     service_existent=0
-    exit 0
+    exit 1
   else
     TOR_HOSTNAME=$(sudo -u ${DATA_DIR_OWNER} cat ${DATA_DIR_HS}/${SERVICE}/hostname)
     service_existent=1
@@ -236,7 +222,7 @@ loop_array_dynamic(){
 ###########################
 
 ## tor needs to be running to create services and renew addresses (on, renew)
-## tor does not need to be running to delete service, authorize o remove authorization from clients or see credentials (off, auth, credentials)
+## tor does not need to be running to delete service, authorize or remove authorization from clients or see credentials (off, auth, credentials)
 #check_tor
 
 case ${COMMAND} in
@@ -246,7 +232,6 @@ case ${COMMAND} in
   ## purge is optional, it deletes the <HiddenServiceDir>
   ## will not check if folder or configuration exist, this is cleanup mode
   off)
-  #set -x
     PURGE="${3}"
     delete_service(){
       SERVICE="${1}"
@@ -289,15 +274,13 @@ case ${COMMAND} in
 
       ## show the Hidden Service address
       service_existent=0; test_service_exists ${SERVICE}
-      if [ ! -z ${TOR_HOSTNAME} ]; then
+      if [ ${service_existent} -eq 1 ]; then
         echo; echo "# Tor Hidden Service information:"
         qrencode -m 2 -t ANSIUTF8 ${TOR_HOSTNAME}
         echo "Service name    = "${SERVICE}
         echo "Service address = "${TOR_HOSTNAME}
         echo "Virtual port    = "${VIRTPORT}
-        if [ ! -z ${VIRTPORT2} ]; then
-          echo "Virtual port    = "${VIRTPORT2}
-        fi
+        if [ ! -z ${VIRTPORT2} ]; then echo "Virtual port    = "${VIRTPORT2}; fi
         success_msg
       fi
     }
@@ -305,69 +288,64 @@ case ${COMMAND} in
     case ${SOCKET} in
 
       tcp)
+      set -x
         echo "# Checking if command is valid..."
         ## Required
-        VIRTPORT="${4}"; if [ -z ${VIRTPORT} ]; then error_msg "VIRTPORT"; fi
+        VIRTPORT="${4}"; [[ -z ${VIRTPORT} ]] && error_msg "VIRTPORT"
         TARGET="${5}"
-        TARGET_ADDR_DOTS=$(echo "${TARGET}" | awk -F '.' '{ print NF - 1 }')
-        TARGET_TEXT_LOCALHOST=$(echo "${TARGET}" | cut -d ':' -f1)
-        if [ -z "${TARGET}" ]; then TARGET=${VIRTPORT}; fi
-        if [[ "${TARGET_TEXT_LOCALHOST}" != "localhost" || ${TARGET_ADDR_DOTS} -ne 3 ]]; then TARGET="127.0.0.1:${TARGET}"; fi
-        is_integer ${VIRTPORT}; is_addr_port ${TARGET} "TARGET"
-        TARGET_ALREADY_INSERTED=$(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} 2>/dev/null | grep -c "\b${TARGET}\b")
-        if [ ${TARGET_ALREADY_INSERTED} -eq 1 ]; then error_msg "TARGET=${TARGET} was already inserted"; fi
+        [[ ! -z ${VIRTPORT} && -z ${TARGET} ]] && TARGET="127.0.0.1:${VIRTPORT}"
+        TARGET_ADDR=$(echo "${TARGET}" | cut -d ':' -f1)
+        TARGET_PORT=$(echo "${TARGET}" | cut -d ':' -f2)
+        [[ ! -z ${TARGET} && ${TARGET_ADDR} -eq ${TARGET_PORT} || "${TARGET_ADDR}" == "localhost" ]] && TARGET="127.0.0.1:${TARGET_PORT}"
+        TARGET_ALREADY_INSERTED=$(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} 2>/dev/null | grep -c "HiddenServicePort .*${TARGET}$")
+        [[ ${TARGET_ALREADY_INSERTED} -eq 1 ]] && error_msg "TARGET=${TARGET} was already inserted"
+        is_integer ${VIRTPORT}; valid_addr_port=0; is_addr_port ${TARGET} "TARGET"
         ## Optional
         VIRTPORT2="${6}"
         TARGET2="${7}"
-        TARGET2_ADDR_DOTS=$(echo "${TARGET2}" | awk -F '.' '{ print NF - 1 }')
-        TARGET2_TEXT_LOCALHOST=$(echo "${TARGET2}" | cut -d ':' -f1)
-        if [ -z ${TARGET2} ]; then TARGET2=${VIRTPORT2}; fi
-        if [[ "${TARGET2_TEXT_LOCALHOST}" != "localhost" && ${TARGET2_ADDR_DOTS} -eq 0 ]]; then TARGET2="127.0.0.1:"${VIRTPORT2}; fi
         if [ ! -z ${VIRTPORT2} ]; then
-          if [ -z ${TARGET2} ]; then TARGET2="127.0.0.1:"${VIRTPORT2}; fi
-          is_integer ${VIRTPORT2}; is_addr_port ${TARGET2} "TARGET2"
-          if [ "${TARGET}" == "${TARGET2}" ]; then error_msg "TARGET is the same as TARGET2"; fi
-          TARGET2_ALREADY_INSERTED=$(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} 2>/dev/null | grep -c "\b${TARGET2}\b")
-          if [ ${TARGET2_ALREADY_INSERTED} -eq 1 ]; then error_msg "The TARGET2=${TARGET2} was already inserted"; fi
+          if [ -z ${TARGET2} ]; then
+            TARGET2="127.0.0.1:${VIRTPORT2}"
+          else
+            TARGET2_ADDR=$(echo "${TARGET2}" | cut -d ':' -f1)
+            TARGET2_PORT=$(echo "${TARGET2}" | cut -d ':' -f2)
+            if [[ ${TARGET2_ADDR} -eq ${TARGET2_PORT} || "${TARGET2_ADDR}" == "localhost" ]]; then TARGET2="127.0.0.1:${TARGET2_PORT}"; fi
+          fi
+          [[ "${TARGET}" == "${TARGET2}" ]] && error_msg "TARGET is the same as TARGET2"
+          TARGET2_ALREADY_INSERTED=$(sudo -u ${CONF_DIR_OWNER} cat ${TORRC} 2>/dev/null | grep -c "HiddenServicePort .*${TARGET2}$")
+          [[ ${TARGET2_ALREADY_INSERTED} -eq 1 ]] && error_msg "The TARGET2=${TARGET2} was already inserted"
+          is_integer ${VIRTPORT2};  valid_addr_port=0; is_addr_port ${TARGET2} "TARGET2"
         fi
 
-        if [ ${fail_log} -eq 1 ]; then
-          echo "Check the error message above before running this script again."
+        ## delete any old entry for that servive
+        sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
+        ## add configuration block, empty line after and before it
+        echo; echo "# Including Hidden Service configuration in ${TORRC}"
+        if [ ! -z ${VIRTPORT2} ]; then
+          echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}" | sudo tee -a ${TORRC}
         else
-          ## delete any old entry for that servive
-          sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
-          ## add configuration block, empty line after and before it
-          echo; echo "# Including Hidden Service configuration in ${TORRC}"
-          if [ ! -z ${VIRTPORT2} ]; then
-            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}" | sudo tee -a ${TORRC}
-          else
-            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n" | sudo tee -a ${TORRC}
-          fi
-          finish_service_activation
+          echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n" | sudo tee -a ${TORRC}
         fi
+        finish_service_activation
       ;;
 
       unix)
         echo "# Checking if command is valid..."
-        VIRTPORT="${4}"; if [ -z ${VIRTPORT} ]; then error_msg "VIRTPORT"; else is_integer ${VIRTPORT}; fi
-        VIRTPORT2="${5}"; if [ ! -z ${VIRTPORT2} ]; then is_integer ${VIRTPORT2}; fi ## var not mandatory
+        VIRTPORT="${4}"; [[ -z ${VIRTPORT} ]] && error_msg "VIRTPORT" || is_integer ${VIRTPORT}
+        VIRTPORT2="${5}"; [[ ! -z ${VIRTPORT2} ]] && is_integer ${VIRTPORT2} ## var not mandatory
 
-        if [ ${fail_log} -eq 1 ]; then
-          echo "Check the error message above before running this script again."
+        ## delete any old entry for that servive
+        sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
+        ## add configuration block, empty line after and before it
+        echo; echo "# Including Hidden Service configuration in ${TORRC}"
+        UNIX_PATH="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock"
+        UNIX_PATH2="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT2}.sock"
+        if [ ! -z ${VIRTPORT2} ]; then
+          echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\nHiddenServicePort ${VIRTPORT2} ${UNIX_PATH2}" | sudo tee -a ${TORRC}
         else
-          ## delete any old entry for that servive
-          sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" ${TORRC}
-          ## add configuration block, empty line after and before it
-          echo; echo "# Including Hidden Service configuration in ${TORRC}"
-          UNIX_PATH="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock"
-          UNIX_PATH2="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT2}.sock"
-          if [ ! -z ${VIRTPORT2} ]; then
-            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\nHiddenServicePort ${VIRTPORT2} ${UNIX_PATH2}" | sudo tee -a ${TORRC}
-          else
-            echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\n" | sudo tee -a ${TORRC}
-          fi
-          finish_service_activation
+          echo -e "\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\n" | sudo tee -a ${TORRC}
         fi
+        finish_service_activation
       ;;
 
       *)
@@ -431,13 +409,14 @@ case ${COMMAND} in
             }
             instructions_auth(){
                 echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-                echo -e "\n# Instructions client side:\n"
+                echo -e "\n# Instructions client side:"
                 echo
-                echo "# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, inser it:"
+                echo "# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, insert it:"
                 echo "ClientOnionAuthDir /var/lib/tor/onion_auth"
+                echo "[[ $(grep -c "ClientOnionAuthDir" /etc/tor/torrc) -eq 0 ]] && echo -e '\nClientOnionAuthDir /var/lib/tor/onion_auth\n'"
                 echo
                 echo "# Create the auth file inside <ClientOnionAuthDir>"
-                echo "echo \${PRIV_KEY_CONFIG} | sudo tee -a /var/lib/tor/onion_auth/${SERVICE}-${TOR_HOSTNAME}.auth_private"
+                echo "echo \${PRIV_KEY_CONFIG} | sudo tee -a /var/lib/tor/onion_auth/\${SERVICE}-\${TOR_HOSTNAME}.auth_private"
                 echo
                 echo "# Reload tor"
                 echo "sudo chown -R debian-tor:debian-tor /var/lib/tor"
@@ -542,12 +521,13 @@ case ${COMMAND} in
       service_existent=0; test_service_exists ${SERVICE}
       if [ ${service_existent} -eq 1 ]; then
         echo "# Renewing service ${SERVICE}"
+        OLD_HOSTNAME=${TOR_HOSTNAME}
         echo "Current = "${TOR_HOSTNAME}
         ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
         create_auth_list ${SERVICE}
         ## delete the service folder
         #sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/
-        ## delete service public and private keys
+        ## delete service public and secret keys
         sudo rm -f ${DATA_DIR_HS}/${SERVICE}/hs_ed25519_secret_key
         sudo rm -f ${DATA_DIR_HS}/${SERVICE}/hs_ed25519_public_key
         ## delete authorized clients
@@ -560,9 +540,14 @@ case ${COMMAND} in
           bash ${0} auth server on ${SERVICE} ${CLIENT_NAME_LIST}
         fi
         test_service_exists ${SERVICE}
+        NEW_HOSTNAME=${TOR_HOSTNAME}
         echo "New     = "${TOR_HOSTNAME}
-        echo "# Service renewed."
-        echo
+        if [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ]; then
+          qrencode -m 2 -t ANSIUTF8 ${NEW_HOSTNAME}
+          echo "# Service renewed."; echo
+        else
+          error_msg
+        fi
       fi
     }
 
@@ -746,7 +731,7 @@ WantedBy=multi-user.target
         sudo systemctl enable vanguards@default.service
         sudo systemctl start vanguards@default.service
         echo; echo "# Check logs with:"
-        echo"   sudo tail -f -n 25 /var/log/tor/vanguards.log"
+        echo "   sudo tail -f -n 25 /var/log/tor/vanguards.log"
         success_msg
       ;;
       update)

@@ -325,31 +325,31 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
 
         if [ "${SOCKET_CHOICE}" == "UNIX" ]; then
           # Required
-          SERVICE_NAME=$(echo "$(whiptail --inputbox "${SERVICE_MSG}" 10 50 3>&1 1>&2 2>&3)" | tr -d ' ')
+          SERVICE_NAME=$(whiptail --inputbox "${SERVICE_MSG}" 10 50 3>&1 1>&2 2>&3)
           if [ ! -z ${SERVICE_NAME} ]; then
-            VIRTPORT=$(echo "$(whiptail --inputbox "${VIRTPORT_MSG}" 10 50 3>&1 1>&2 2>&3)" | tr -d ' ')
+            VIRTPORT=$(whiptail --inputbox "${VIRTPORT_MSG}" 10 50 3>&1 1>&2 2>&3)
             if [ ! -z ${VIRTPORT} ]; then
               ## Optional
-              VIRTPORT2=$(echo "$(whiptail --inputbox "${VIRTPORT2_MSG}" 10 50 3>&1 1>&2 2>&3)" | tr -d ' ')
-              bash onion-service.sh on unix-socket ${SERVICE_NAME} ${VIRTPORT} ${VIRTPORT2}
+              VIRTPORT2=$(whiptail --inputbox "${VIRTPORT2_MSG}" 10 50 3>&1 1>&2 2>&3)
+              bash onion-service.sh on unix ${SERVICE_NAME} ${VIRTPORT} ${VIRTPORT2}
             fi
           fi
 
         elif [ "${SOCKET_CHOICE}" == "TCP" ]; then
           # Required
-          SERVICE_NAME=$(echo "$(whiptail --inputbox "${SERVICE_MSG}" 10 50 3>&1 1>&2 2>&3)" | tr -d ' ')
+          SERVICE_NAME=$(whiptail --inputbox "${SERVICE_MSG}" 10 50 3>&1 1>&2 2>&3)
           if [ ! -z ${SERVICE_NAME} ]; then
-            VIRTPORT=$(echo "$(whiptail --inputbox "${VIRTPORT_MSG}" 10 50 3>&1 1>&2 2>&3)" | tr -d ' ')
+            VIRTPORT=$(whiptail --inputbox "${VIRTPORT_MSG}" 10 50 3>&1 1>&2 2>&3)
             if [ ! -z ${VIRTPORT} ]; then
-              TARGET=$(echo "$(whiptail --inputbox "${TARGET_MSG}" 10 50 3>&1 1>&2 2>&3)" | tr -d ' ')
+              TARGET=$(whiptail --inputbox "${TARGET_MSG}" 10 50 3>&1 1>&2 2>&3)
               if [ ! -z ${TARGET} ]; then
                 # Optional
-                VIRTPORT2=$(echo "$(whiptail --inputbox "${VIRTPORT2_MSG}" 10 50 3>&1 1>&2 2>&3)" | tr -d ' ')
+                VIRTPORT2=$(whiptail --inputbox "${VIRTPORT2_MSG}" 10 50 3>&1 1>&2 2>&3)
                 if [ ! -z ${VIRTPORT2} ]; then
-                  TARGET2=$(echo "$(whiptail --inputbox "${TARGET2_MSG}" 10 50 3>&1 1>&2 2>&3)" | tr -d ' ')
+                  TARGET2=$(whiptail --inputbox "${TARGET2_MSG}" 10 50 3>&1 1>&2 2>&3)
                 fi
               fi
-              bash onion-service.sh on tcp-socket ${SERVICE_NAME} ${VIRTPORT} ${TARGET} ${VIRTPORT2} ${TARGET2}
+              bash onion-service.sh on tcp ${SERVICE_NAME} ${VIRTPORT} ${TARGET} ${VIRTPORT2} ${TARGET2}
             fi
           fi
         fi
