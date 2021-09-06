@@ -65,6 +65,7 @@ SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
 
 ## GENERAL
 LOCAL_IP=$(hostname -I | awk '{print $1}')
+PKG_MANAGER_INSTALL="sudo apt install -y"
 USER_DIR="/home/${USER}"
 CONTROL_PORT=9051
 SOCKS_PORT=9050
@@ -79,7 +80,7 @@ CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
 VANGUARDS_COMMIT_HASH=10942de
 
 ## BACKUP
-DATE_TIME=`date +%Y-%m-%d-%H'h'-%M'm'`
+DATE_TIME=$(date +%Y-%m-%d-%H'h'-%M'm')
 HS_BK_TAR=tor-hs-bk-${DATE_TIME}.tar.gz
 HS_BK_DIR="${USER_DIR}/tor-hs-bk"
 LOCAL_DOWNLOAD_PATH="${USER_DIR}/Downloads/tor-backup"
@@ -95,10 +96,10 @@ FIRST_ONION_RUN=0
 ######## FUNCTIONS ###########
 
 set_owner_permission(){
-  sudo chown -R ${DATA_DIR_OWNER}:${DATA_DIR_OWNER} ${DATA_DIR}
-  sudo chown ${CONF_DIR_OWNER}:${CONF_DIR_OWNER} ${TORRC}
-  sudo chmod 700 ${DATA_DIR}
-  sudo chmod 644 ${TORRC}
+  sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
+  sudo chown "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC}"
+  sudo chmod 700 "${DATA_DIR}"
+  sudo chmod 644 "${TORRC}"
 }
 
 if [ ${FIRST_ONION_RUN} -eq 1 ]; then
@@ -158,13 +159,13 @@ restarting_tor()
   SOURCE_SCRIPT=$1
   ACTION=$2
   set_owner_permission
-  if [ "${ACTION}" == "force" ]; then
+  if [ "${ACTION}" = "force" ]; then
     echo -e "${RED}[+] Restarting tor!${NOCOLOR}"
     sudo systemctl restart tor@default
     echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
     echo -e "    Starting Anonymizing overlay network for TCP..."
     echo -e "    At the end, you should see \"Bootstrapped 100% (done): Done\"."
-  elif [ "${ACTION}" == "" ]; then
+  elif [ "${ACTION}" = "" ]; then
     echo -e "${RED}[+] Reloading tor!${NOCOLOR}"
     sudo pkill -sighup tor
     echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
