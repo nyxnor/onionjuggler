@@ -10,30 +10,38 @@ If you want extra functionalities to be a relay, bridge or connect to a bridge e
 
 ## INSTRUCTIONS
 
-Use the menu:
+Clone the repository:
+```sh
+cd
+git clone https://github.com/nyxnor/onion-cli.git
+cd onion-cli
+```
 
-```bash
+Use the menu (only bash):
+```sh
 bash onion-menu.sh
 ```
 
 Read the manual:
-
-```bash
+```sh
 man ./text/onion-cli.man
 ```
 
 Read a small description of the script:
-
-```bash
-bash onion-service.sh
+```sh
+sh onion-service.sh
 ```
 
-More detailed description of each functionality coming soon.
+### TECHNICAL
 
-### Goal
+Now that you have read the manual, the insructions and optionally tested the menu, you are prepared to understand what it does behind the curtains.
+Read [TECHNICAL.md](https://github.com/nyxnor/onion-cli/tree/main/TECHNICAL.md) for advanced usage.
 
-KYSS, portability to different systems, customize path, ports.
-Written to be used in **bash**.
+### GOAL
+
+* KYSS, portability to different systems, customize path, ports.
+* The library (onion.lib) main script (onion-service.sh) is aiming to be fully POSIX compliant, verification being done with [shellcheck](https://github.com/koalaman/shellcheck)
+* The menu will neve be POSIX compliant cause it is bashism (whiptail), but this does not compromise any function of the main script, which can be run entirely independent from the menu, just needing the library.
 
 ## BUGS
 
@@ -43,6 +51,7 @@ There are no accidents - Master Oogway
 
 ## TODO
 
+* [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) for study
 * [Test with shellcheck](https://github.com/koalaman/shellcheck)
 * [Bash completion](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
