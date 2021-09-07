@@ -2,18 +2,25 @@
 
 Now that you have read the manual, the insructions and optionally tested the menu, you are prepared to understand what it does behind the curtains.
 
-Important files:
+## Important files:
+
+You can run all of this standalone with these files below:
+
 * the library -> `onion.lib`
 * the main script -> `onion-service.sh`
 
-* SERV = service name
-* SERV1,SERV2,.. = listed service names (ssh,xmpp,nextcloud)
-* CLIENT = client name
-* CLIENT1,CLIENT2,... = listed service names (alice,bob)
-* VIRTPORT = virtual port
-* TARGET = target can be tcp or unix socket that will receive requests from the VIRTPORT
-* all-services = run the command for all services existent
-* all-clients = run the command for all clients of the indicated services (can be combine with all-services or a list)
+##Variables description:
+
+* **SERV** = service name
+* **SERV1,SERV2,..** = listed service names (ssh,xmpp,nextcloud)
+* **CLIENT** = client name
+* **CLIENT1,CLIENT2,...** = listed service names (alice,bob)
+* **VIRTPORT** = virtual port
+* **TARGET** = target can be tcp or unix socket that will receive requests from the VIRTPORT
+* **all-services** = run the command for all services existent
+* **all-clients** = run the command for all clients of the indicated services (can be combine with all-services or a list)
+* **unix** = service will use unix sockets
+* **tcp** = server will use tcp sockets
 
 As an example, we will be using:
 * SERVICE=ssh,xmpp,nextcloud
@@ -53,50 +60,44 @@ HiddenServicePort 80 127.0.0.1:80
 
 ### Usage:
 
-1. Localhost with one virtual port:
+1. Localhost with one virtual port (the commands below will have the same effect):
 ```sh
 bash onion-service.sh on tcp ssh 22
 bash onion-service.sh on tcp ssh 22 22
 bash onion-service.sh on tcp ssh 22 localhost:22
 bash onion-service.sh on tcp ssh 22 127.0.0.1:22
 ```
-1. 1. The commands above will have the same effect:
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
 HiddenServicePort 22 127.0.0.1:22
 ```
 
-1. Localhost with two virtual ports:
+2. Localhost with two virtual ports (the commands above will have the same effect):
 ```sh
 bash onion-service.sh on tcp ssh 22 22 80
 bash onion-service.sh on tcp ssh 22 22 80 80
 bash onion-service.sh on tcp ssh 22 localhost:22 80 localhost:80
 bash onion-service.sh on tcp ssh 22 127.0.0.1:22 80 127.0.0.1:80
 ```
-1. 1. The commands above will have the same effect:
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
 HiddenServicePort 22 127.0.0.1:22
 HiddenServicePort 80 127.0.0.1:80
 ```
 
-1. Remote target with one virtual port
+3. Remote target with one virtual port
 ```sh
 bash onion-service.sh on tcp ssh 22 192.168.0.10:22
-bash onion-service.sh on tcp ssh 22 [IPV6]:22
 ```
-1. 1. Result:
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
 HiddenServicePort 22 192.168.0.10:22
 ```
 
-1. Remote target with two virtual ports:
+4. Remote target with two virtual ports:
 ```sh
-bash onion-service.sh on tcp ssh 22 192.168.0.10:22
-bash onion-service.sh on tcp ssh 22 [IPV6]:22
+bash onion-service.sh on tcp ssh 22 192.168.0.10:22 80 192.168.0.10:80
 ```
-1. 1. Result:
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
 HiddenServicePort 22 192.168.0.10:22
@@ -143,11 +144,15 @@ HiddenServicePort 80 /var/run/tor-hs-ssh-80.sock
 
 Dectivates a service by deleting the HiddenService configuration lines (HiddenServiceDir and HiddenServicePort) in the torrc.
 
-WARNING: HiddenService lines should be in block between empty lines. The script automatically insert the configuration lines in the correct format. If it is not between empty lines, other configuration lines might be deleted. The format is:
+**WARNING**: HiddenService lines should be in block between empty lines. The script automatically insert the configuration lines in the correct format. If it is not between empty lines, other configuration lines might be deleted. The format is:
 
-Note: The Hidden Service directory will not be deleted by default, if you want to delete the entire folder (hostname, hs_ed25519_public_key, hs_ed25519_secret_key, authorized_clients/), you must give the argument **purge**. If you want to activate the service with the same keys, you must backup the `hs_ed25519_secret_key`.
+**Note**: The Hidden Service directory will not be deleted by default, if you want to delete the entire folder (hostname, hs_ed25519_public_key, hs_ed25519_secret_key, authorized_clients/), you must give the argument **purge**. If you want to activate the service with the same keys, you must backup the `hs_ed25519_secret_key`.
 
 ```
+
+HiddenServiceDir /var/lib/tor/services/test
+HiddenServicePort 80 /var/run/tor-hs-test-5000.sock
+HiddenServicePort 443 /var/run/tor-hs-ssh-50001.sock
 
 HiddenServiceDir /var/lib/tor/services/ssh
 HiddenServicePort 22 /var/run/tor-hs-ssh-22.sock
@@ -161,20 +166,17 @@ Syntax:
 
 ## Usage:
 
-Deactivate the service:
+Deactivate the service (delete torrc's lines which are in the same block as the service):
 ```sh
 bash onion-service.sh off ssh,xmpp,nextcloud
 ```
-Effect:
-Delete torrc's lines which are in the same block as the service.
 
 Deactivate the service and delete the service directory (keys will be deleted):
+* delete torrc's lines which are in the same block as the service.
+* delete the Hidden Service directory.
 ```sh
 bash onion-service.sh off ssh,xmpp,nextcloud purge
 ```
-Effect:
-Delete torrc's lines which are in the same block as the service.
-Delete the Hidden Service directory.
 
 # Renewal of service address - renew
 
@@ -562,6 +564,11 @@ bash onion-service.sh vanguards intall
 ## Logs - vanguards logs
 
 Print to stdout vanguards logs.
+Vanguards running by itself already protect against onion service deanonymization attacks, but for some people this might not be enough and is recommended to monitor your onion service reachiability.
+
+Best documentation is the official one:
+* [Security recommendations](https://github.com/mikeperry-tor/vanguards/blob/master/README_SECURITY.md)
+* [Technical details](https://github.com/mikeperry-tor/vanguards/blob/master/README_TECHNICAL.md)
 
 ### Usage:
 
@@ -581,7 +588,7 @@ bash onion-service.sh vanguards upgrade
 
 ## Remove - vanguards remove
 
-Remove "uninstall" vanguards by removing its git directory.
+"Uninstall" vanguards by removing its git directory.
 
 ### Usage:
 
