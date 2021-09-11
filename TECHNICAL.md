@@ -212,7 +212,7 @@ An authenticated onion service is an onion service that requires the client to p
 
 Once you have configured client authorization, anyone with the address will not be able to access it from this point on. If no authorization is configured, the service will be accessible to anyone with the onion address.
 
-## Authorize a client - auth server on
+### Authorize a client - auth server on
 
 It is posible to add to:
 * a list of services (ssh,xmpp,nextcloud)
@@ -223,7 +223,7 @@ Syntax:
 
 **auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]**
 
-### Usage:
+#### Usage:
 
 Add authorization of one or a list of services and one or a list of clients:
 ```sh
@@ -294,7 +294,7 @@ sudo pkill -sighup tor
 # Done
 ```
 
-## Remove authorization of a client - auth server off
+### Remove authorization of a client - auth server off
 
 It is posible to remove from:
 * a list of services (ssh,xmpp,nextcloud)
@@ -306,7 +306,7 @@ Syntax:
 
 **auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]**
 
-### Usage:
+#### Usage:
 
 Remove authorization of one or a list of services and one or a list of clients:
 ```sh
@@ -493,7 +493,7 @@ Syntax:
 
 View onion location guide for your test hidden service:
 ```sh
-bash onion-service.sh location test
+bash onion-service.sh location torbox.ch
 ```
 
 # Backup - backup
