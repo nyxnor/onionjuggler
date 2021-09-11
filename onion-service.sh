@@ -52,29 +52,33 @@ Usage: bash ${0} COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
 
-  on tcp [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>         activate a service targeting tcp socket
+  on tcp [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                            activate a service targeting tcp socket
 
-  on unix [SERV] [VIRTPORT] <VIRTPORT2>                           activate a service targeting unix socket
+  on unix [SERV] [VIRTPORT] <VIRTPORT2>                                              activate a service targeting unix socket
 
-  off [SERV1,SERV2,...] <purge>                                   deactivate a service and optionally purge its directory
+  off [SERV1,SERV2,...] <purge>                                                      deactivate a service and optionally purge its directory
 
-  renew [all-services|SERV1,SERV2,...]                            renew indicated|all services addresses
+  renew [all-services|SERV1,SERV2,...]                                               renew indicated|all services addresses
 
-  auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]
-                                                                  add authorization of client access
+  auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]                add authorization of client access
 
-  auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]
-                                                                  remove authorization of client access
+  auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]   remove authorization of client access
 
-  auth client [on|off] [AUTH_FILE] <AUTH_PRIV_KEY>                add or remove your client key, key not needed when removing
+  auth server list [SERV1,SERV2,...]                                                 list clients for indicated service
 
-  credentials [all-services|SERV1,SERV2,...]                      see credentials from indicated services
+  auth client on [AUTH_FILE] [AUTH_PRIV_KEY]                                         add your client key
 
-  location [SERV]                                                 onion-location guide, not execution
+  auth client off [AUTH_FILE]                                                        remote your client key
 
-  backup [create|integrate]                                       create backup or import backup and integrate the files
+  auth client list                                                                   list your keys as a client
 
-  vanguards [install|logs|upgrade|remove]                         install, upgrade, remove or see logs for vanguards addon
+  credentials [all-services|SERV1,SERV2,...]                                         see credentials from indicated services
+
+  location [SERV]                                                                    onion-location guide, no execution
+
+  backup [create|integrate]                                                          create backup or import backup and integrate the files
+
+  vanguards [install|logs|upgrade|remove]                                            install, upgrade, remove or see logs for vanguards addon
 
 '# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs.\n"
@@ -220,6 +224,7 @@ create_service_list(){
 ##   loop_array_dynamic auth_client_remove "${AUTH_FILE_NAME}"
 ##  bash onion-service.sh renew ssh,xmpp,nextcloud
 ##   loop_array_dynamic renew_service_address "${SERVICE}"
+## DONT LIKE THE VARIBLES NAMES? GIVE ME SOME SUGGESTIONS, THE VAR IS USED FOR DIFFERENT THINGS
 loop_array_dynamic(){
   CALL_FUNCTION="${1}"
   VAR_ONE="${2}"
@@ -255,6 +260,7 @@ loop_array_dynamic(){
 ## tor needs to be running to create services and renew addresses (on, renew)
 ## tor does not need to be running to delete service, authorize or remove authorization from clients or see credentials (off, auth, credentials)
 #check_tor
+sudo cp "${TORRC}" "${TORRC}".bak
 
 case "${COMMAND}" in
 
@@ -262,6 +268,7 @@ case "${COMMAND}" in
   ## it is raw, services variables should be separated by an empty line per service, else you might get other non-related configuration deleted.
   ## purge is optional, it deletes the <HiddenServiceDir>
   ## will not check if folder or configuration exist, this is cleanup mode
+  ## will not use 'all-services'. Purge is dangerous, purging all service is even more dangerous. Always backup.
   off)
     PURGE="${3}"
     delete_service(){
@@ -269,15 +276,20 @@ case "${COMMAND}" in
       PURGE="${2}"
       ## remove service service data
       if [ "${PURGE}" = "purge" ]; then
-        printf %s"# Deleting Hidden Service data in ${DATA_DIR_HS}\n"
-        sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"
+        #read -p "# WARNING: Permanently delete the HiddenServiceDir of ${SERVICE}, keys included)? (yes/no) " -n 1 -r PURGE_RESPONSE
+        #if [ "${PURGE_RESPONSE}" = "y" ]; then
+          printf %s"\n# Deleting Hidden Service data in ${DATA_DIR_HS}/${SERVICE}\n"
+          sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"
+        #else
+        #  printf %s"\n# HiddenServiceDiretory was kept"
+        #fi
       fi
       ## remove service paragraph in torrc
       printf %s"# Deleting Hidden Service configuration in ${TORRC}\n"
       sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
       ## substitute multiple sequential empty lines to a single one per sequence
       awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
-      printf %s"# Removed service  ${SERVICE}\n"
+      printf %s"# Removed service  ${SERVICE}\n\n"
     }
     loop_array_dynamic delete_service "${SERVICE}" "${PURGE}"
     success_msg reload
@@ -485,6 +497,21 @@ case "${COMMAND}" in
             success_msg reload
           ;;
 
+          list)
+            auth_server_list(){
+              SERVICE="${1}"
+              service_existent=0; test_service_exists "${SERVICE}"
+              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+              printf %s"# Authorized clients for hidden service:\n\n"
+              printf %s"Service    = ${SERVICE}\n"
+              create_client_list "${SERVICE}"
+              printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
+            }
+            loop_array_dynamic auth_server_list "${SERVICE}"
+            printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+            success_msg
+          ;;
+
           *)
             error_msg "Invalid auth server status: ${STATUS}"
         esac
@@ -519,10 +546,10 @@ case "${COMMAND}" in
           ;;
 
           list)
-            printf "# ClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n"
+            printf %s"# ClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n"
             for AUTH in $(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}"); do
-              printf "\n# File name: ${AUTH}\n"
-              sudo -u "${DATA_DIR_OWNER}" cat "${CLIENT_ONION_AUTH_DIR}/${AUTH}"
+              printf %s"\n# File name: ${AUTH}\n"
+              sudo -u "${DATA_DIR_OWNER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}"
             done
             printf "\n"
             success_msg
@@ -547,6 +574,7 @@ case "${COMMAND}" in
       SERVICE="${1}"
       service_existent=0; test_service_exists "${SERVICE}"
       if [ ${service_existent} -eq 1 ]; then
+        printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
         printf %s"\n# Renewing service ${SERVICE}\n"
         OLD_HOSTNAME="${TOR_HOSTNAME}"
         printf %s"Current = ${TOR_HOSTNAME}\n"
@@ -570,6 +598,7 @@ case "${COMMAND}" in
         [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ] \
         && { qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}" && printf "# Service renewed.\n"; } \
         || printf %s"# Failed to renew service: ${SERVICE}\n"
+        printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
       fi
     }
     if [ "${SERVICE}" = "all-services" ]; then
