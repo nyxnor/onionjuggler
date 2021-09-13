@@ -29,21 +29,17 @@ As an example, we will be using:
 * VIRTPORT=80
 * TARGET=127.0.0.1:80
 
-## CORRECTIONS
+## Automatic corrections
 
 The script tries its best to avoid inputting incorrect lines to torrc, that would make tor fail. Because of this, any incorrect command flagged show the error mesage to understand what is the cause of the error and display the commands help option, finally exit the script without modifying the torrc.
 
 #  Activation
 
+## tcp
+
 Activates a service by inserting the HiddenService configuration lines (HiddenServiceDir and HiddenServicePort) in the torrc.
 Deletes previous HiddenService lines which refers to a service with the same name.
 The only file edited is the `torrc`.
-
-## tcp
-
-Syntax:
-
-**on tcp [SERV] [VIRTPORT] < TARGET > < VIRTPORT2 > < TARGET2 >**
 
 HiddenServicePort's target will use tcp sockets. This socket type **leaks** the onion address to the local network.
 The TARGET port does not need to be the same as the VIRTPORT (virtual port).
@@ -64,6 +60,8 @@ HiddenServicePort 80 127.0.0.1:80
 ```
 
 **Usage:**
+
+Syntax: *on tcp [SERV] [VIRTPORT] < TARGET > < VIRTPORT2 > < TARGET2 >*
 
 1. Localhost with one virtual port (the commands below will have the same effect):
 ```sh
@@ -122,9 +120,7 @@ HiddenServicePort 80 unix:/var/run/tor-hs-SERVICE-VIRTPORT.sock
 
 **Usage:**
 
-Syntax:
-
-**on unix [SERV] [VIRTPORT] < VIRTPORT2 >**
+Syntax: *on unix [SERV] [VIRTPORT] < VIRTPORT2 >*
 
 * Target with one virtual ports:
 ```sh
@@ -165,11 +161,9 @@ HiddenServicePort 80 /var/run/tor-hs-ssh-80.sock
 
 ```
 
-Syntax:
-
-**off [SERV1,SERV2,...] < purge >**
-
 **Usage:**
+
+Syntax: *off [SERV1,SERV2,...] < purge >*
 
 Deactivate the service (delete torrc's lines which are in the same block as the service):
 ```sh
@@ -193,11 +187,9 @@ It is posible to renew:
 * a list of services (ssh,xmpp,nextcloud)
 * all services (all-services)
 
-Syntax:
-
-**renew [all-services|SERV1,SERV2,...]**
-
 **Usage:**
+
+Syntax: *renew [all-services|SERV1,SERV2,...]*
 
 Renew one or a list of services:
 ```sh
@@ -224,11 +216,9 @@ It is posible to add to:
 * all services (all-services)
 * a list of clients (alice,bob)
 
-Syntax:
-
-**auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]**
-
 **Usage:**
+
+Syntax: *auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]*
 
 Add authorization of one or a list of services and one or a list of clients:
 ```sh
@@ -307,11 +297,9 @@ It is posible to remove from:
 * a list of clients (alice,bob)
 * all clients (all-clients)
 
-Syntax:
-
-**auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]**
-
 **Usage:**
+
+Syntax: *auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]*
 
 Remove authorization of one or a list of services and one or a list of clients:
 ```sh
@@ -333,17 +321,15 @@ Remove authorization of one or a list of services and all clients from them:
 bash onion-service.sh auth server off ssh,xmpp,nextcloud all-clients
 ```
 
-## Onion service client - auth client
+## Onion service client
 
 You can get the access credentials from the onion service operator. Reach out to the operator and request access. You may authenticate yourself directly in the Tor Browser. When accessing an authenticated onion service, Tor Browser will show in the URL bar an icon of a little gray key, accompanied by a tooltip. Enter your valid client private key into the input field. [TPO guide](https://tb-manual.torproject.org/onion-services/#onion-service-authentication).
-
-Syntax:
-
-**auth client [on] [AUTH_FILE] < AUTH_PRIV_KEY >**
 
 ### Add your authorization as client - auth server on
 
 **Usage:**
+
+Syntax: *auth client on [AUTH_FILE] < AUTH_PRIV_KEY >*
 
 You are the tor client and the onion service oprator has provided you with the key in the following format:
 ```
@@ -364,11 +350,9 @@ bash onion-service on fritz-culinaire-blog fe4avn4qtxht5wighyii62n2nw72spfabzv6d
 
 To remove your key that authenticated you tor (daemon) normally to a site no more operational or keys expired (note you only need to speficy the file name when deleting).
 
-Syntax:
-
-**auth client [off] [AUTH_FILE]**
-
 **Usage:**
+
+Syntax: *auth client [off] [AUTH_FILE]*
 
 Remove your authentication file:
 ```sh
@@ -380,11 +364,9 @@ bash onion-service auth client off fritz-culinaire-blog
 Send to stdout the file name and its content.
 Use case is when removing files and you want to see which onions you are already authenticated with.
 
-Syntax:
-
-**auth client list**
-
 **Usage:**
+
+Syntax: *auth client list*
 
 See all your '.auth_private' files and its contents:
 ```sh
@@ -414,11 +396,9 @@ Print to stdout relevant information about the service configuration:
 * status `active` if torrc block exists and service directory does exist
 * stauts `inactive` if torrc block does not exist but service directory does exist
 
-Syntax:
-
-**credentials [all-services|SERV1,SERV2,...]**
-
 **Usage:**
+
+Syntax: *credentials [all-services|SERV1,SERV2,...]*
 
 View credentials of one or a list of services:
 ```sh
@@ -490,11 +470,9 @@ Status     = inactive
 
 Guide to add onion-location to your plainnet site, referring to your own onion service so a tor user can be redirected at will or automatically. The guide will use the indicated service hostname to facilitate copy and pasting the headers with your onion serivce already filled. It succintly describes, but enough to configure, the web servers Nginx and Apache2 and the file in HTML.
 
-Syntax:
-
-**location [SERV]**
-
 **Usage:**
+
+Syntax: *location [SERV]*
 
 View onion location guide for your test hidden service:
 ```sh
@@ -507,9 +485,7 @@ There are two functionalities available for backup:
 * create a backup
 * integrate backup
 
-Syntax:
-
-**backup [create|integrate]**
+Syntax: *backup [create|integrate]*
 
 ## Create
 
@@ -552,9 +528,7 @@ This addon protects against guard discovery and related traffic analysis attacks
 A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
 Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
 
-Syntax:
-
-**vanguards [install|logs|upgrade|remove]**
+**Syntax:** *vanguards [install|logs|upgrade|remove]*
 
 ## Install
 

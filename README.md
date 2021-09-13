@@ -37,12 +37,13 @@ bash onion-service.sh
 Now that you have read the manual, the insructions and optionally tested the menu, you are prepared to understand what it does behind the curtains.
 Read [TECHNICAL.md](https://github.com/nyxnor/onion-cli/tree/main/TECHNICAL.md) for advanced usage.
 
-### GOAL
+## GOAL
 
 * KYSS, portability to different systems, customize path, ports.
 * The [library](onion.lib) and [main script](onion-service.sh) is aiming to be fully POSIX compliant studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible)
-* The [menu](onion-menu.sh) will never be POSIX compliant as it uses bashism such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible). This does not compromise any function of the main script, which can be run entirely independent from the menu, just needing the library.
-* Shell verification being done with [shellcheck](https://github.com/koalaman/shellcheck)
+* The [menu](onion-menu.sh) will never be POSIX compliant as it uses bashism such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible).
+* The [library](onion.lib) and [main script](onion-service.sh) can run entirely by themselves, menu if just an addon that calls the main script.
+* Shell synxtax verification being done with [shellcheck](https://github.com/koalaman/shellcheck)
 
 ## BUGS
 
