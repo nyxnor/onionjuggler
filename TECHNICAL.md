@@ -1,6 +1,6 @@
 # TECHNICAL OVERVIEW
 
-Now that you have read the manual, the insructions and optionally tested the menu, you are prepared to understand what it does behind the curtains.
+Now that you have read the [manual](text/onion-cli.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [bash menu](onion-menu.sh), you are prepared to understand what it does behind the curtains.
 
 ## Important files:
 
@@ -9,7 +9,7 @@ You can run all of this standalone with these files below:
 * the library -> `onion.lib`
 * the main script -> `onion-service.sh`
 
-##Variables description:
+## Variables description:
 
 * **SERV** = service name
 * **SERV1,SERV2,..** = listed service names (ssh,xmpp,nextcloud)
@@ -19,16 +19,21 @@ You can run all of this standalone with these files below:
 * **TARGET** = target can be tcp or unix socket that will receive requests from the VIRTPORT
 * **all-services** = run the command for all services existent
 * **all-clients** = run the command for all clients of the indicated services (can be combine with all-services or a list)
-* **unix** = service will use unix sockets
-* **tcp** = server will use tcp sockets
+* **unix** = unix sockets
+* **tcp** = tcp sockets
+
+## Variables example:
 
 As an example, we will be using:
 * SERVICE=ssh,xmpp,nextcloud
 * VIRTPORT=80
 * TARGET=127.0.0.1:80
 
+## CORRECTIONS
 
-#  Activation - on
+The script tries its best to avoid inputting incorrect lines to torrc, that would make tor fail. Because of this, any incorrect command flagged show the error mesage to understand what is the cause of the error and display the commands help option, finally exit the script without modifying the torrc.
+
+#  Activation
 
 Activates a service by inserting the HiddenService configuration lines (HiddenServiceDir and HiddenServicePort) in the torrc.
 Deletes previous HiddenService lines which refers to a service with the same name.
@@ -38,7 +43,7 @@ The only file edited is the `torrc`.
 
 Syntax:
 
-**on tcp [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>**
+**on tcp [SERV] [VIRTPORT] < TARGET > < VIRTPORT2 > < TARGET2 >**
 
 HiddenServicePort's target will use tcp sockets. This socket type **leaks** the onion address to the local network.
 The TARGET port does not need to be the same as the VIRTPORT (virtual port).
@@ -58,7 +63,7 @@ torrc syntax: `HiddenServicePort VIRTPORT TARGET` (TARGET=addr:port)
 HiddenServicePort 80 127.0.0.1:80
 ```
 
-### Usage:
+**Usage:**
 
 1. Localhost with one virtual port (the commands below will have the same effect):
 ```sh
@@ -115,11 +120,11 @@ torrc syntax: `HiddenServicePort VIRTPORT` (TARGET=unix:path)
 HiddenServicePort 80 unix:/var/run/tor-hs-SERVICE-VIRTPORT.sock
 ```
 
-### Usage:
+**Usage:**
 
 Syntax:
 
-**on unix [SERV] [VIRTPORT] <VIRTPORT2>**
+**on unix [SERV] [VIRTPORT] < VIRTPORT2 >**
 
 * Target with one virtual ports:
 ```sh
@@ -140,7 +145,7 @@ HiddenServicePort 22 /var/run/tor-hs-ssh-22.sock
 HiddenServicePort 80 /var/run/tor-hs-ssh-80.sock
 ```
 
-# Deactivation - off
+# Deactivation
 
 Dectivates a service by deleting the HiddenService configuration lines (HiddenServiceDir and HiddenServicePort) in the torrc.
 
@@ -162,9 +167,9 @@ HiddenServicePort 80 /var/run/tor-hs-ssh-80.sock
 
 Syntax:
 
-**off [SERV1,SERV2,...] <purge>**
+**off [SERV1,SERV2,...] < purge >**
 
-## Usage:
+**Usage:**
 
 Deactivate the service (delete torrc's lines which are in the same block as the service):
 ```sh
@@ -178,7 +183,7 @@ Deactivate the service and delete the service directory (keys will be deleted):
 bash onion-service.sh off ssh,xmpp,nextcloud purge
 ```
 
-# Renewal of service address - renew
+# Renewal of service address
 
 Renew the hostname (onion address or .onion domain) by deleting the public and private keys (hd_ed25119_public_key and hs_ed25519_secret_key). Reloads tor and it will automatically generate new keys and replacing the hostname file.
 
@@ -192,7 +197,7 @@ Syntax:
 
 **renew [all-services|SERV1,SERV2,...]**
 
-## Usage:
+**Usage:**
 
 Renew one or a list of services:
 ```sh
@@ -204,15 +209,15 @@ Renew all services:
 bash onion-service.sh renew all-services
 ```
 
-# Onion authentication/authorization - auth
+# Onion authentication/authorization
 
 An authenticated onion service is an onion service that requires the client to provide an authentication credential to connect to the onion service. For v3 onion services, this method works with a pair of keys (a public and a private). The service side is configured with a public key and the client can only access it with a private key. The client private key is not transmitted to the service, and it's only used to decrypt its descriptor locally. Source ([1]( https://support.torproject.org/onionservices/client-auth/)) ([2](https://community.torproject.org/onion-services/advanced/client-auth/))
 
-## Onion service operator - auth server
+## Onion service operator
 
 Once you have configured client authorization, anyone with the address will not be able to access it from this point on. If no authorization is configured, the service will be accessible to anyone with the onion address.
 
-### Authorize a client - auth server on
+### Authorize a client
 
 It is posible to add to:
 * a list of services (ssh,xmpp,nextcloud)
@@ -223,7 +228,7 @@ Syntax:
 
 **auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]**
 
-#### Usage:
+**Usage:**
 
 Add authorization of one or a list of services and one or a list of clients:
 ```sh
@@ -306,7 +311,7 @@ Syntax:
 
 **auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]**
 
-#### Usage:
+**Usage:**
 
 Remove authorization of one or a list of services and one or a list of clients:
 ```sh
@@ -334,11 +339,11 @@ You can get the access credentials from the onion service operator. Reach out to
 
 Syntax:
 
-**auth client [on] [AUTH_FILE] <AUTH_PRIV_KEY>**
+**auth client [on] [AUTH_FILE] < AUTH_PRIV_KEY >**
 
 ### Add your authorization as client - auth server on
 
-#### Usage:
+**Usage:**
 
 You are the tor client and the onion service oprator has provided you with the key in the following format:
 ```
@@ -355,19 +360,19 @@ The operator is named fritz and his site is about culinaire (create unique names
 bash onion-service on fritz-culinaire-blog fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd:descriptor:x25519:UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
 ```
 
-### Remove your authorization as a client - auth server off
+### Remove your authorization as a client
 
 To remove your key that authenticated you tor (daemon) normally to a site no more operational or keys expired (note you only need to speficy the file name when deleting).
 
 Syntax:
 
-**auth client [on] [AUTH_FILE] <AUTH_PRIV_KEY>**
+**auth client [off] [AUTH_FILE]**
 
-#### Usage:
+**Usage:**
 
 Remove your authentication file:
 ```sh
-bash onion-service off fritz-culinaire-blog
+bash onion-service auth client off fritz-culinaire-blog
 ```
 
 ### List your authorization as client
@@ -379,7 +384,7 @@ Syntax:
 
 **auth client list**
 
-#### Usage:
+**Usage:**
 
 See all your '.auth_private' files and its contents:
 ```sh
@@ -400,7 +405,7 @@ fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd:descriptor:x25519:IB6SV
 ```
 
 
-# View services credentials - credentials
+# View services credentials
 
 Print to stdout relevant information about the service configuration:
 * QR encoded hostname
@@ -413,7 +418,7 @@ Syntax:
 
 **credentials [all-services|SERV1,SERV2,...]**
 
-## Usage:
+**Usage:**
 
 View credentials of one or a list of services:
 ```sh
@@ -481,7 +486,7 @@ Status     = inactive
 ```
 
 
-# Onion-Location - location
+# Onion-Location
 
 Guide to add onion-location to your plainnet site, referring to your own onion service so a tor user can be redirected at will or automatically. The guide will use the indicated service hostname to facilitate copy and pasting the headers with your onion serivce already filled. It succintly describes, but enough to configure, the web servers Nginx and Apache2 and the file in HTML.
 
@@ -489,7 +494,7 @@ Syntax:
 
 **location [SERV]**
 
-## Usage:
+**Usage:**
 
 View onion location guide for your test hidden service:
 ```sh
@@ -506,7 +511,7 @@ Syntax:
 
 **backup [create|integrate]**
 
-## Create - backup create
+## Create
 
 Create backup that contains:
 * All of the Hidden Service blocks inside `torrc`
@@ -517,14 +522,14 @@ Print to stdout the how to transfer via `scp` to a remote host by:
 * running scp from remote to import to local machine
 * running scp from local to export to remote machine
 
-## Usage:
+**Usage:**
 
 Create a backup:
 ```sh
 bash onion-service.sh backup create
 ```
 
-## Integrate - backup integrate
+## Integrate
 
 Import backup from specified directory. Will place the files/folders in the correct place:
 * `torrc`
@@ -540,7 +545,7 @@ Integrate a backup:
 bash onion-service.sh backup integrate
 ```
 
-# Vanguards - vanguards
+# Vanguards
 
 [Vanguards TECHNICAL.md](https://github.com/mikeperry-tor/vanguards/blob/master/README_TECHNICAL.md)
 This addon protects against guard discovery and related traffic analysis attacks.
@@ -551,17 +556,17 @@ Syntax:
 
 **vanguards [install|logs|upgrade|remove]**
 
-## Install - vanguards install
+## Install
 
 As there is no recent Vanguards release and the debian package is old, will clone the repository `git reset --hard VANGUARDS_COMMIT_HASH`, the commit hash being set inside `onion.lib`.
 
-### Usage:
+**Usage:**
 
 ```sh
 bash onion-service.sh vanguards intall
 ```
 
-## Logs - vanguards logs
+## Log
 
 Print to stdout vanguards logs.
 Vanguards running by itself already protect against onion service deanonymization attacks, but for some people this might not be enough and is recommended to monitor your onion service reachiability.
@@ -570,27 +575,27 @@ Best documentation is the official one:
 * [Security recommendations](https://github.com/mikeperry-tor/vanguards/blob/master/README_SECURITY.md)
 * [Technical details](https://github.com/mikeperry-tor/vanguards/blob/master/README_TECHNICAL.md)
 
-### Usage:
+**Usage:**
 
 ```sh
 bash onion-service.sh vanguards logs
 ```
 
-## Upgrade - vanguards upgrade
+## Upgrade
 
 As explained on vanguards installation above, vanguards "version" is a commit hash. If there is a new commit, you may edit `onion.lib` and sed a new `VANGUARDS_COMMIT_HASH` first.
 
-### Usage:
+**Usage:**
 
 ```sh
 bash onion-service.sh vanguards upgrade
 ```
 
-## Remove - vanguards remove
+## Remove
 
 "Uninstall" vanguards by removing its git directory.
 
-### Usage:
+**Usage:**
 
 ```sh
 bash onion-service.sh vanguards remove

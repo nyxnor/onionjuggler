@@ -27,9 +27,9 @@ Read the manual:
 man ./text/onion-cli.man
 ```
 
-Read a small description of the script:
+Read a small description of the main script:
 ```sh
-sh onion-service.sh
+bash onion-service.sh
 ```
 
 ### TECHNICAL
@@ -40,20 +40,20 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onion-cli/tree/main/TECHNICAL.md) 
 ### GOAL
 
 * KYSS, portability to different systems, customize path, ports.
-* The library (onion.lib) main script (onion-service.sh) is aiming to be fully POSIX compliant, verification being done with [shellcheck](https://github.com/koalaman/shellcheck)
-* The menu will neve be POSIX compliant cause it is bashism (whiptail), but this does not compromise any function of the main script, which can be run entirely independent from the menu, just needing the library.
+* The [library](onion.lib) and [main script](onion-service.sh) is aiming to be fully POSIX compliant studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible)
+* The [menu](onion-menu.sh) will never be POSIX compliant as it uses bashism such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible). This does not compromise any function of the main script, which can be run entirely independent from the menu, just needing the library.
+* Shell verification being done with [shellcheck](https://github.com/koalaman/shellcheck)
 
 ## BUGS
 
 There are no accidents - Master Oogway
+Bugs, you may find - Master Yoda
 
 * Please report the bug, open an issue with enough description to reproduce the steps and solve the problem.
 
 ## TODO
 
-* [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) for study
-* [Test with shellcheck](https://github.com/koalaman/shellcheck)
-* [Bash completion](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
+* Bash completion [official package](https://github.com/scop/bash-completion/) [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
 * [Vanguards](https://github.com/mikeperry-tor/vanguards) menu option
 * [Ronn-ng](https://github.com/apjanke/ronn-ng/) to build man pages from markdown instead of writing them manually :(
