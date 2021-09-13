@@ -41,9 +41,7 @@
 ##   auth client     Create or remove '.auth_private' files inside <ClientOnionAuthDir>
 ##   credentials     No modification, reads the <torrc> and <HiddenServiceDir>/
 ##
-## Necessary
-##
-## command info
+## COMMAND INFO
 onion_usage(){
   printf %s"
 Configure an Onion Service
@@ -88,6 +86,10 @@ It does not imply the code worked, you should always pay attention for errors in
 ###########################
 ######## FUNCTIONS ########
 
+[ "$EUID" -eq 0 ] && { printf "Not as root !!!\n" && exit 1; }
+
+{ [ "$#" -eq 0 ] || [ -z "${2}" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
+
 ## include lib
 source onion.lib
 
@@ -102,15 +104,9 @@ command -v qrencode >/dev/null || ${PKG_MANAGER_INSTALL} qrencode
 command -v pandoc >/dev/null || ${PKG_MANAGER_INSTALL} pandoc
 command -v lynx >/dev/null || ${PKG_MANAGER_INSTALL} lynx
 
-
-[ "$EUID" -eq 0 ] && { printf "Not as root !!!\n" && exit 1; }
-
-{ [ "$#" -eq 0 ] || [ -z "${2}" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
-
 ## display error message with instructions to use the script correctly.
 error_msg(){
-  [ -n "${1}" ] && printf %s"ERROR: ${1}\n\n"
-  onion_usage
+  [ -n "${1}" ] && { printf %s"ERROR: ${1}\n\n"; onion_usage; }
 }
 
 
@@ -121,45 +117,38 @@ success_msg(){
   printf "\n"
   printf "# Done\n"
   #read -n 1 -s -r -p "Press any key to continue"
-  #printf "\n"
   #exit 1
 }
 
 
 ## check if variable is integer
 is_integer(){
-  printf %d "${1}" >/dev/null 2>&1 \
-  || { printf %s"Not an integer: ${1}\n" && exit 1; }
+  printf %d "${1}" >/dev/null 2>&1 || { printf %s"Not an integer: ${1}\n" && exit 1; }
 }
+
 
 ## checks if the TARGET is valid.
 ## Address range from 0.0.0.0 to 255.255.255.255. Port ranges from 0 to 65535
 ## accept localhos:port if port is valid.
 ## this is not perfect but it is better than nothing
 is_addr_port(){
-  ADDR="${1}"
-  DEFINED_VAR="${2}"
+  ADDR_PORT="${1}"
+  ADDR=$(printf %s"${ADDR_PORT}" | cut -d ':' -f1)
+  ADDR_1=$(printf %s"${ADDR_PORT}" | cut -d '.' -f1)
+  ADDR_2=$(printf %s"${ADDR_PORT}" | cut -d '.' -f2)
+  ADDR_3=$(printf %s"${ADDR_PORT}" | cut -d '.' -f3)
+  ADDR_4=$(printf %s"${ADDR_PORT}" | cut -d '.' -f4 | cut -d ':' -f1)
+  PORT=$(printf %s"${ADDR_PORT}" | cut -d ':' -f2)
 
-  ADDR=$(printf %s"${ADDR}" | cut -d ':' -f1)
-  ADDR_1=$(printf %s"${ADDR}" | cut -d '.' -f1)
-  ADDR_2=$(printf %s"${ADDR}" | cut -d '.' -f2)
-  ADDR_3=$(printf %s"${ADDR}" | cut -d '.' -f3)
-  ADDR_4=$(printf %s"${ADDR}" | cut -d '.' -f4 | cut -d ':' -f1)
-  PORT=$(printf %s"${1}" | cut -d ':' -f2)
+  is_integer "${ADDR_1}"; is_integer "${ADDR_2}"; is_integer "${ADDR_3}"; is_integer "${ADDR_4}"; is_integer "${PORT}"
 
-  is_integer ${ADDR_1}
-  is_integer ${ADDR_2}
-  is_integer ${ADDR_3}
-  is_integer ${ADDR_4}
-  is_integer ${PORT}
-
-  { [ ${PORT} -gt 0 ] && [ ${PORT} -le 65535 ] ; } \
+  { [ "${PORT}" -gt 0 ] && [ "${PORT}" -le 65535 ] ; } \
   || { printf %s"PORT=${PORT} \n"; error_msg "PORT is not within range: 0 < PORT <= 65535" ; }
 
-  { { [ ${ADDR_1} -ge 0 ] && [ ${ADDR_1} -le 255 ] ; } \
-  && { [ ${ADDR_2} -ge 0 ] && [ ${ADDR_2} -le 255 ] ; } \
-  && { [ ${ADDR_3} -ge 0 ] && [ ${ADDR_3} -le 255 ] ; } \
-  && { [ ${ADDR_4} -ge 0 ] && [ ${ADDR_4} -le 255 ] ; } ; } \
+  { { [ "${ADDR_1}" -ge 0 ] && [ "${ADDR_1}" -le 255 ] ; } \
+  && { [ "${ADDR_2}" -ge 0 ] && [ "${ADDR_2}" -le 255 ] ; } \
+  && { [ "${ADDR_3}" -ge 0 ] && [ "${ADDR_3}" -le 255 ] ; } \
+  && { [ "${ADDR_4}" -ge 0 ] && [ "${ADDR_4}" -le 255 ] ; } ; } \
   || { printf %s"ADDR=${ADDR}\n"; error_msg "TARGET address is not within range: 0.0.0.0 to 255.255.255.255" ; }
 }
 
@@ -231,29 +220,28 @@ loop_array_dynamic(){
   VAR_TWO="${3}"
   VAR_THREE="${4}"
 
-  VAR_ONE=$(cut -f1- -d ',' --output-delimiter=' ' <<< "${VAR_ONE}")
+  VAR_ONE=$(printf %s"${VAR_ONE}" | cut -f1- -d ',' --output-delimiter=' ')
   IFS=' ' read -r -a VAR_ONE_ARRAY <<< "${VAR_ONE}"
   VAR_ONE_COUNT=${#VAR_ONE_ARRAY[@]}
 
   VAR_ONE_NUMBER_CURRENT=$((VAR_ONE_COUNT-1))
   while [ ${VAR_ONE_NUMBER_CURRENT} -ge 0 ]; do
-    VAR_ONE=("${VAR_ONE_ARRAY[${VAR_ONE_NUMBER_CURRENT}]}")
     if [ -z "${VAR_THREE}" ]; then
-      "${CALL_FUNCTION}" "${VAR_ONE}" "${VAR_TWO}"
+      "${CALL_FUNCTION}" "${VAR_ONE_ARRAY[VAR_ONE_NUMBER_CURRENT]}" "${VAR_TWO}"
     else
-      VAR_TWO=$(cut -f1- -d ',' --output-delimiter=' ' <<< "${VAR_TWO}")
+      VAR_TWO=$(printf %s"${VAR_TWO}" | cut -f1- -d ',' --output-delimiter=' ')
       IFS=' ' read -r -a VAR_TWO_ARRAY <<< "${VAR_TWO}"
       VAR_TWO_COUNT=${#VAR_TWO_ARRAY[@]}
       VAR_TWO_NUMBER_CURRENT=$((VAR_TWO_COUNT-1))
       while [ ${VAR_TWO_NUMBER_CURRENT} -ge 0 ]; do
-        VAR_TWO_NAME_LIST=("${VAR_TWO_ARRAY[${VAR_TWO_NUMBER_CURRENT}]}")
-        "${CALL_FUNCTION}" "${VAR_ONE}" "${VAR_TWO_NAME_LIST}"
+        "${CALL_FUNCTION}" "${VAR_ONE_ARRAY[VAR_ONE_NUMBER_CURRENT]}" "${VAR_TWO_ARRAY[VAR_TWO_NUMBER_CURRENT]}"
         VAR_TWO_NUMBER_CURRENT=$((VAR_TWO_NUMBER_CURRENT-1))
       done
     fi
     VAR_ONE_NUMBER_CURRENT=$((VAR_ONE_NUMBER_CURRENT-1))
   done
 }
+
 
 ###########################
 
@@ -311,7 +299,7 @@ case "${COMMAND}" in
     finish_service_activation(){
       ## remove double empty lines
       awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
-      printf "\n# Reloading tor to activate the Hidden Service...\n"
+      printf "# Reloading tor to activate the Hidden Service...\n"
       sudo systemctl reload-or-restart tor@default
       sleep 3
 
@@ -331,16 +319,23 @@ case "${COMMAND}" in
     case "${SOCKET}" in
 
       tcp)
+        ## tor-manual: By default, this option maps the virtual port to the same port on 127.0.0.1 over TCP
+        ## Because of that, this project lets the user leave TARGET="" and write TARGET as 127.0.0.1:VIRTPORT
+        ## Also, substitutes localhost:PORT for 127.0.0.1:PORT
+        ## This measures avoid using the same local port for different services
+        ## grep torrc TARGET to see if port is already in use and by which service, reading the file in reverse
         printf "# Checking if command is valid...\n"
         ## Required
-        VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
+        VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing" || is_integer "${VIRTPORT}"
         TARGET="${5}"
-        { [ ! -z "${VIRTPORT}" ] && [ -z "${TARGET}" ]; } && TARGET="127.0.0.1:${VIRTPORT}"
+        { [ -n "${VIRTPORT}" ] && [ -z "${TARGET}" ]; } && TARGET="127.0.0.1:${VIRTPORT}"
         TARGET_ADDR=$(printf %s"${TARGET}" | cut -d ':' -f1)
         TARGET_PORT=$(printf %s"${TARGET}" | cut -d ':' -f2)
-        { [ ! -z "${TARGET}" ] && [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
-        TARGET_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" cat "${TORRC}" 2>/dev/null | grep -c "HiddenServicePort .*${TARGET}$")
-        [ "${TARGET_ALREADY_INSERTED}" -eq 1 ] && error_msg "TARGET=${TARGET} was already inserted"
+        { [ -n "${TARGET}" ] && [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
+        TARGET_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" grep -c "HiddenServicePort .*${TARGET}$" "${TORRC}")
+        TARGET_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
+        TARGET_ALREADY_INSERTED_SERVICE=${TARGET_ALREADY_INSERTED_BLOCK##*/}
+        [ "${TARGET_ALREADY_INSERTED}" -gt 0 ] && error_msg "TARGET=${TARGET} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}"
         is_integer "${VIRTPORT}"; is_addr_port "${TARGET}" "TARGET"
         ## Optional
         VIRTPORT2="${6}"
@@ -354,8 +349,10 @@ case "${COMMAND}" in
             { [ "${TARGET2_ADDR}" -eq "${TARGET2_PORT}" ] || [ "${TARGET2_ADDR}" = "localhost" ]; } && TARGET2="127.0.0.1:${TARGET2_PORT}"
           fi
           [ "${TARGET}" = "${TARGET2}" ] && error_msg "TARGET is the same as TARGET2"
-          TARGET2_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" cat "${TORRC}" 2>/dev/null | grep -c "HiddenServicePort .*${TARGET2}$")
-          [ "${TARGET2_ALREADY_INSERTED}" -eq 1 ] && error_msg "The TARGET2=${TARGET2} was already inserted"
+          TARGET2_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" grep -c "HiddenServicePort .*${TARGET2}$" "${TORRC}")
+          TARGET2_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET2}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
+          TARGET2_ALREADY_INSERTED_SERVICE=${TARGET2_ALREADY_INSERTED_BLOCK##*/}
+          [ "${TARGET2_ALREADY_INSERTED}" -gt 0 ] && error_msg "TARGET2=${TARGET2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
           is_integer "${VIRTPORT2}"; is_addr_port "${TARGET2}" "TARGET2"
         fi
 
@@ -364,15 +361,15 @@ case "${COMMAND}" in
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${TORRC}\n"
         [ -n "${VIRTPORT2}" ] \
-        && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}\n" | sudo tee -a "${TORRC}" \
-        || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n" | sudo tee -a "${TORRC}"
+        && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}\n\n" | sudo tee -a "${TORRC}" \
+        || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n\n" | sudo tee -a "${TORRC}"
         finish_service_activation
       ;;
 
       unix)
         printf "# Checking if command is valid...\n"
         VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing" || is_integer "${VIRTPORT}"
-        VIRTPORT2="${5}"; [ ! -z "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
+        VIRTPORT2="${5}"; [ -n "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
 
         ## delete any old entry for that servive
         sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
@@ -381,13 +378,13 @@ case "${COMMAND}" in
         UNIX_PATH="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT}.sock"
         UNIX_PATH2="unix:/var/run/tor-hs-${SERVICE}-${VIRTPORT2}.sock"
         [ -n "${VIRTPORT2}" ] \
-        && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\nHiddenServicePort ${VIRTPORT2} ${UNIX_PATH2}\n" | sudo tee -a "${TORRC}" \
-        || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\n" | sudo tee -a "${TORRC}"
+        && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\nHiddenServicePort ${VIRTPORT2} ${UNIX_PATH2}\n\n" | sudo tee -a "${TORRC}" \
+        || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${UNIX_PATH}\n\n" | sudo tee -a "${TORRC}"
         finish_service_activation
       ;;
 
       *)
-        error_msg "Invalid socket type: ${SOCKET}"
+        error_msg "Invalid '${COMMAND}' argument: ${SOCKET}"
     esac
   ;;
 
@@ -416,7 +413,7 @@ case "${COMMAND}" in
               if [ "${service_existent}" -eq 1 ]; then
                 ## Generate pem and derive pub and priv keys
                 openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
-                cat /tmp/k1.prv.pem | grep -v " PRIVATE KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
+                grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
                 openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
                 ## save variables
                 PUB_KEY=$(cat /tmp/k1.pub.key)
@@ -468,7 +465,7 @@ case "${COMMAND}" in
               SERVICE="${1}"
               CLIENT="${2}"
               printf %s"Service  = ${SERVICE}\n"
-              [ ! -z "${CLIENT}" ] \
+              [ -n "${CLIENT}" ] \
               && { printf %s"Client   = ${CLIENT}\n\n" ; \
               sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth ; } \
               || sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/
@@ -485,7 +482,7 @@ case "${COMMAND}" in
                 loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}" 1
               fi
             else
-              printf "# Removing client authorization for the services: ${SERVICE}\n"
+              printf %s"# Removing client authorization for the services: ${SERVICE}\n"
               if [ "${CLIENT}" = "all-clients" ]; then
                 printf "# All clients will be removed and the service will be accessible to anyone with the onion address.\n\n"
                 loop_array_dynamic auth_server_remove_clients "${SERVICE}"
@@ -502,7 +499,7 @@ case "${COMMAND}" in
               SERVICE="${1}"
               service_existent=0; test_service_exists "${SERVICE}"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
-              printf %s"# Authorized clients for hidden service:\n\n"
+              printf "# Authorized clients for hidden service:\n\n"
               printf %s"Service    = ${SERVICE}\n"
               create_client_list "${SERVICE}"
               printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
@@ -513,7 +510,7 @@ case "${COMMAND}" in
           ;;
 
           *)
-            error_msg "Invalid auth server status: ${STATUS}"
+            error_msg "Invalid '${COMMAND} ${HOST} ${STATUS}' argument: ${STATUS}"
         esac
       ;;
 
@@ -556,7 +553,7 @@ case "${COMMAND}" in
           ;;
 
           *)
-            error_msg "Invalid auth client status: ${STATUS}"
+            error_msg "Invalid '${COMMAND} ${HOST} ${STATUS}' argument: ${STATUS}"
         esac
       ;;
 
@@ -626,7 +623,7 @@ case "${COMMAND}" in
         printf %s"Address    = ${TOR_HOSTNAME}\n"
         printf %s"Name       = ${SERVICE}\n"
         [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
-        [ "$(sudo grep -c "HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 1 ] \
+        [ -n "$(sudo grep -c "HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" ] \
         && { printf "Status     = active\n" \
           && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed '/^[[:space:]]*$/d' ; } \
         || printf "Status     = inactive\n"
@@ -652,13 +649,91 @@ case "${COMMAND}" in
     SERVICE="${2}"
     METHOD="${3}"
     service_existent=0; test_service_exists "${SERVICE}"
-    if [ ${service_existent} -eq 1 ]; then
-      cp samples/ONION-LOCATION-CUSTOM.md /tmp/ONION-LOCATION-CUSTOM.md
-      sed -i 's/TOR_HOSTNAME/'"${TOR_HOSTNAME}"'/g' /tmp/ONION-LOCATION-CUSTOM.md
-      #cat /tmp/ONION-LOCATION-CUSTOM.md
-      pandoc /tmp/ONION-LOCATION-CUSTOM.md | lynx -stdin
-      sudo rm -f /tmp/ONION-LOCATION-CUSTOM.md
-    fi
+    # if [ ${service_existent} -eq 1 ]; then
+    #   cp samples/ONION-LOCATION-CUSTOM.md /tmp/ONION-LOCATION-CUSTOM.md
+    #   sed -i 's/TOR_HOSTNAME/'"${TOR_HOSTNAME}"'/g' /tmp/ONION-LOCATION-CUSTOM.md
+    #   cat /tmp/ONION-LOCATION-CUSTOM.md
+    #   #pandoc /tmp/ONION-LOCATION-CUSTOM.md | lynx -stdin
+    #   sudo rm -f /tmp/ONION-LOCATION-CUSTOM.md
+    # fi
+
+    #location  [SERV] [NGINX|APACHE|HTML]
+
+start_location(){
+  printf %s"# Onion-Location guided steps
+
+* The below output is printing text, no file was modified by this script, therefore, user needs to manually configure.
+* For web servers, include header line inside the plainnet ssl block (port 443).
+* It assumes you know how to run a plainnet server, configuration is an example and should be adapted to your needs.
+
+## Add to your "${METHOD}" configuration:
+"
+}
+
+finish_location(){
+  printf "## Test redirection
+
+* Open the web site in Tor Browser and a purple pill will appear in the address bar; or
+* Fetch the web site HTTP headers and look for onion-location entry and the onion service address:
+
+  wget --server-response --spider your-website.tld
+"
+}
+
+    case "${METHOD}" in
+
+      nginx)
+        start_location
+        printf '%s\n' "
+  server {
+      listen 443 ssl http2;
+      add_header Onion-Location http://${TOR_HOSTNAME}$request_uri;
+  }
+
+## Reload web server:
+
+  sudo nginx -t
+  sudo nginx -s reload
+"
+        finish_location
+      ;;
+
+      apache)
+        start_location
+  #set -x
+        printf '%s\n' "
+  <VirtualHost *:443>
+          Header set Onion-Location "\"http://${TOR_HOSTNAME}%{REQUEST_URI}s"\"
+  </Virtualhost>
+
+## Enable headers and rewrite modules:
+
+  sudo a2enmod headers rewrite
+
+## Reload web server:
+
+  sudo systemctl reload apache
+"
+        finish_location
+      ;;
+
+      html)
+        start_location
+        printf '%s\n' "
+  <meta http-equiv="\"onion-location"\" content="\"http://${TOR_HOSTNAME}"\"/>
+
+## Reload web server that you use:
+
+  sudo nginx -t && sudo nginx -s reload
+  sudo systemctl reload apache
+"
+        finish_location
+      ;;
+
+      *)
+        error_msg "Invalid '${COMMAND}' argument: ${METHOD}"
+    esac
+
   ;;
 
 
@@ -736,7 +811,7 @@ case "${COMMAND}" in
       ;;
 
       *)
-        error_msg "Invalid backup option: ${METHOD}"
+        error_msg "Invalid '${COMMAND}' argument: ${METHOD}"
     esac
   ;;
 
