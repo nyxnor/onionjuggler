@@ -113,9 +113,8 @@ error_msg(){
 ## '# Done': You should always see it at the end, else something unexpected occured.
 ## It does not imply the code worked, you should always pay attention for errors in the logs."
 success_msg(){
-  [ "${1}" = "reload" ] && { set_owner_permission && sudo systemctl reload-or-restart tor@default; }
-  printf "\n"
-  printf "# Done\n"
+  [ "${1}" = "reload" ] && restarting_tor
+  printf "\n# Done\n"
   #read -n 1 -s -r -p "Press any key to continue"
   #exit 1
 }
@@ -300,7 +299,7 @@ case "${COMMAND}" in
       ## remove double empty lines
       awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       printf "# Reloading tor to activate the Hidden Service...\n"
-      sudo systemctl reload-or-restart tor@default
+      restarting_tor
       sleep 3
 
       ## show the Hidden Service address
@@ -432,7 +431,7 @@ case "${COMMAND}" in
                 printf %s"CLIENT_PUB_KEY=${CLIENT_PUB_KEY}"
                 printf %s"CLIENT_PUB_KEY_CONFIG=descriptor:x25519:${CLIENT_PUB_KEY}"
                 printf %s"CLIENT_PRIV_KEY=${PRIV_KEY}\n"
-                printf %s"CLIENT_PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
+                printf %s"CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
                 printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n"
                 ## Delete pem and keys
                 sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
@@ -450,7 +449,7 @@ case "${COMMAND}" in
               printf "\n"
               printf "# Reload tor\n"
               printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
-              printf " sudo systemctl reload tor\n"
+              printf " sudo systemctl reload-or-restart-tor tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             }
             [ "${SERVICE}" = "all-services" ] && { create_service_list ; SERVICE="${SERVICE_NAME_LIST}" ; }
@@ -462,7 +461,7 @@ case "${COMMAND}" in
               CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
               printf %s"${CLIENT_PUB_KEY_CONFIG}" | sudo tee "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
               printf "\n# Server side authorization configured\n\n"
-              printf " CLIENT_PUB_KEY_CONFIG=${CLIENT_PUB_KEY_CONFIG}\n"
+              printf %s" CLIENT_PUB_KEY_CONFIG=${CLIENT_PUB_KEY_CONFIG}\n"
               printf "\n# As you inserted the public key manually, we expect that the client already has the private key\n"
             else
               loop_array_dynamic auth_server_add "${SERVICE}" "${CLIENT}" 1
@@ -479,8 +478,7 @@ case "${COMMAND}" in
               CLIENT="${2}"
               printf %s"Service  = ${SERVICE}\n"
               [ -n "${CLIENT}" ] \
-              && { printf %s"Client   = ${CLIENT}\n\n" ; \
-              sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth ; } \
+              && { printf %s"Client   = ${CLIENT}\n\n" ; sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth ; } \
               || sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/
             }
             if [ "${SERVICE}" = "all-services" ]; then
@@ -562,8 +560,8 @@ case "${COMMAND}" in
               printf %s"${PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
               printf "# Client side authorization configured\n"
               printf "# This is your private key, keep it safe, keep it hidden:\n\n"
-              printf " PRIV_KEY=${PRIV_KEY}\n"
-              printf " PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
+              printf %s" PRIV_KEY=${PRIV_KEY}\n"
+              printf %s" PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
               printf "\n# Now it depends on the service operator to authorize you client public key\n\n"
               ## Server side configuration
               printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
@@ -572,18 +570,18 @@ case "${COMMAND}" in
               printf %s" PUB_KEY=${PUB_KEY}\n"
               printf %s" PUB_KEY_CONFIG=descriptor:x25519:${PUB_KEY}\n\n"
               printf "# Create a file with the client name (eg. alice) using the suffix '.auth' (eg. alice.auth) inside the folder\n"
-              printf "#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${ONION_HOSTNAME}\n\n"
-              printf %s" printf "\"${PUB_KEY_CONFIG}"\" | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
+              printf %s"#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${ONION_HOSTNAME}\n\n"
+              printf %s" printf "\""${PUB_KEY_CONFIG}""\" | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
               printf "# Reload tor\n\n"
               printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
-              printf " sudo systemctl reload tor\n"
+              printf " sudo systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             else
               ONION_HOSTNAME_WITHOUT_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -c1-56)
               PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
               printf %s"${PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
               printf "\n# Client side authorization configured\n"
-              printf "\n PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
+              printf %s"\n PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
               printf "\n# As you inserted the private key manually, we expect that you have already sent/received the public key to/from the onion service operator\n"
             fi
             success_msg
@@ -644,7 +642,7 @@ case "${COMMAND}" in
         ## delete authorized clients
         sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*
         ## reload tor now so auth option can get the new hostname
-        sudo systemctl reload-or-restart tor@default
+        restarting_tor
         sleep 3
         ## generate auth for clients
         [ -n "${CLIENT_NAME_LIST}" ] && { bash "${0}" auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
@@ -715,7 +713,7 @@ start_location(){
 * For web servers, include header line inside the plainnet ssl block (port 443).
 * It assumes you know how to run a plainnet server, configuration is an example and should be adapted to your needs.
 
-## Add to your "${METHOD}" configuration:
+## Add to your "\"${METHOD}"\" configuration:
 "
 }
 
@@ -736,7 +734,7 @@ finish_location(){
         printf '%s\n' "
   server {
       listen 443 ssl http2;
-      add_header Onion-Location http://${ONION_HOSTNAME}$request_uri;
+      add_header Onion-Location http://"${ONION_HOSTNAME}"\$request_uri;
   }
 
 ## Reload web server:
@@ -749,10 +747,9 @@ finish_location(){
 
       apache)
         start_location
-  #set -x
         printf '%s\n' "
   <VirtualHost *:443>
-          Header set Onion-Location "\"http://${ONION_HOSTNAME}%{REQUEST_URI}s"\"
+          Header set Onion-Location "\"http://"${ONION_HOSTNAME}"%{REQUEST_URI}s"\"
   </Virtualhost>
 
 ## Enable headers and rewrite modules:
@@ -769,7 +766,7 @@ finish_location(){
       html)
         start_location
         printf '%s\n' "
-  <meta http-equiv="\"onion-location"\" content="\"http://${ONION_HOSTNAME}"\"/>
+  <meta http-equiv="\"onion-location"\" content="\"http://"${ONION_HOSTNAME}""\"/>
 
 ## Reload web server that you use:
 
@@ -918,7 +915,7 @@ WantedBy=multi-user.target
         success_msg
       ;;
       logs)
-        sudo tail -f -n 25 /var/log/tor/vanguards.log
+        sudo tail -f -n 25 "${VANGUARDS_LOG}"
       ;;
       *)
         error_msg "Invalid vanguards argument: ${ACTION}"
