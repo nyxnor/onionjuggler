@@ -1,4 +1,4 @@
-# ONION-CLI
+# onion-cli
 
 **An easy to use Tor Hidden Service (Onion Services) manager**
 
@@ -8,7 +8,9 @@ If you want extra functionalities to be a relay, bridge or connect to a bridge e
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location**
 
-## INSTRUCTIONS
+## Usage
+
+### Instructions
 
 Clone the repository:
 ```sh
@@ -32,27 +34,46 @@ Read a small description of the main script:
 bash onion-service.sh
 ```
 
-### TECHNICAL
+### Technical
 
-Now that you have read the manual, the insructions and optionally tested the menu, you are prepared to understand what it does behind the curtains.
+Now that you have read the [manual](text/onion-cli.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [bash menu](onion-menu.sh), you are prepared to understand what it does behind the curtains.
 Read [TECHNICAL.md](https://github.com/nyxnor/onion-cli/tree/main/TECHNICAL.md) for advanced usage.
 
-## GOAL
+### Requirements
 
-* KYSS, portability to different systems, customize path, ports.
-* The [library](onion.lib) and [main script](onion-service.sh) is aiming to be fully POSIX compliant studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible)
-* The [menu](onion-menu.sh) will never be POSIX compliant as it uses bashism such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible).
-* The [library](onion.lib) and [main script](onion-service.sh) can run entirely by themselves, menu if just an addon that calls the main script.
-* Shell synxtax verification being done with [shellcheck](https://github.com/koalaman/shellcheck)
+* Unix system (paths break on windows cause they use \ for path)
+* tor >= 0.3.5
+  * HiddenServiceVersion 3 (for onion authentication)
+* openssl >= 1.1+ (for onion authentication)
+* basez >= 1.6.2 (for onion authentication)
+* git >= 2.0+ (for cloning the repo and vanguards)
+* qrencode >= 4.1.1 (for printing the hostname)
+* bash under /bin/bash (soon the [main script](onion-service.sh) aims to be POSIX compliant)
+* leave blank lines between Hidden Services torrc lines - script create it correctly, no change needed when using this script, just be aware when importing your torrc and deactivating a service, it will delete every line within the same block
+* systemd for vanguards control
+* user with root privileges
+* Reserved words and Utilities - function, printf, command, while, for, do, done, case, esac, in, IFS, if, elif, else, fi, cp, mv, rm, sed, cut, grep, tail, tee.
 
-## BUGS
+##
 
-There are no accidents - Master Oogway
-Bugs, you may find - Master Yoda
+## Goal
+
+* **KISS** - Keep It Simple Stupid
+* **Portability** - POSIXE compliant to work on different shells, customize path, ports.
+* **POSIX compliant** - The [library](onion.lib) and [main script](onion-service.sh) is aiming to be fully POSIX compliant studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible). The hard part is not using arrays cause it is not compliant to the spec.
+* **Bashism** - The [menu](onion-menu.sh) will never be POSIX compliant as it uses bashism such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible).
+* **Autonomy** - The [library](onion.lib) and [main script](onion-service.sh) can run entirely by themselves, menu if just an addon that calls the main script.
+* **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
+
+## Bugs
+
+* There are no accidents - Master Oogway
+* Bugs, you may find - Master Yoda
+* It is the program that should fear your commands and not the other way aroung - Mix of Pai Mei with Richard M. Stallman
 
 * Please report the bug, open an issue with enough description to reproduce the steps and solve the problem.
 
-## TODO
+## To-do
 
 * Bash completion [official package](https://github.com/scop/bash-completion/) [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
