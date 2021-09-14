@@ -58,21 +58,23 @@ Options:
 
   renew [all-services|SERV1,SERV2,...]                                               renew indicated|all services addresses
 
+  auth server on [SERV] [CLIENT] <CLIENT_PUB_KEY>                                    when auth content is especified, use the public key given by the client
+
   auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]                add authorization of client access
 
   auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]   remove authorization of client access
 
   auth server list [SERV1,SERV2,...]                                                 list clients for indicated service
 
-  auth client on [AUTH_FILE] [AUTH_PRIV_KEY]                                         add your client key
+  auth client on [ONION_DOMAIN] <CLIENT_PRIV_KEY>                                    add your client key, if no key specified, will create one
 
-  auth client off [AUTH_FILE]                                                        remote your client key
+  auth client off [ONION_DOMAIN]                                                     remote your client key
 
   auth client list                                                                   list your keys as a client
 
   credentials [all-services|SERV1,SERV2,...]                                         see credentials from indicated services
 
-  location [SERV]                                                                    onion-location guide, no execution
+  location [SERV] [nginx|apache|html]                                                onion-location guide, no execution
 
   backup [create|integrate]                                                          create backup or import backup and integrate the files
 
@@ -101,8 +103,6 @@ command -v openssl >/dev/null || ${PKG_MANAGER_INSTALL} openssl
 command -v basez >/dev/null || ${PKG_MANAGER_INSTALL} basez
 command -v git >/dev/null || ${PKG_MANAGER_INSTALL} git
 command -v qrencode >/dev/null || ${PKG_MANAGER_INSTALL} qrencode
-command -v pandoc >/dev/null || ${PKG_MANAGER_INSTALL} pandoc
-command -v lynx >/dev/null || ${PKG_MANAGER_INSTALL} lynx
 
 ## display error message with instructions to use the script correctly.
 error_msg(){
@@ -163,7 +163,7 @@ test_service_exists(){
     service_existent=0
     exit 1
   else
-    TOR_HOSTNAME=$(sudo -u "${DATA_DIR_OWNER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname)
+    ONION_HOSTNAME=$(sudo -u "${DATA_DIR_OWNER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname)
     service_existent=1
   fi
 }
@@ -307,9 +307,9 @@ case "${COMMAND}" in
       service_existent=0; test_service_exists "${SERVICE}"
       if [ "${service_existent}" -eq 1 ]; then
         printf "\n# Tor Hidden Service information:\n"
-        qrencode -m 2 -t ANSIUTF8 "${TOR_HOSTNAME}"
+        qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
         printf %s"Service name    = ${SERVICE}\n"
-        printf %s"Service address = ${TOR_HOSTNAME}\n"
+        printf %s"Service address = ${ONION_HOSTNAME}\n"
         printf %s"Virtual port    = ${VIRTPORT}\n"
         [ -n "${VIRTPORT2}" ] && printf %s"Virtual port    = ${VIRTPORT2}\n"
         success_msg
@@ -416,21 +416,23 @@ case "${COMMAND}" in
                 grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
                 openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
                 ## save variables
-                PUB_KEY=$(cat /tmp/k1.pub.key)
-                PRIV_KEY=$(cat /tmp/k1.prv.key)
-                TOR_HOSTNAME_WITHOUT_ONION=$(printf %s"${TOR_HOSTNAME}" | cut -c1-56)
-                PRIV_KEY_CONFIG="${TOR_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${PRIV_KEY}"
-                TORRC_SERVER_KEY="descriptor:x25519:${PUB_KEY}"
+                CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
+                CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
+                ONION_HOSTNAME_WITHOUT_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -c1-56)
+                CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+                CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
                 # Server side configuration
-                printf %s"${TORRC_SERVER_KEY}\n" | sudo tee "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
+                printf %s"${PUB_KEY_CONFIG}\n" | sudo tee "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
                 ## Client side configuration
                 printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
                 printf "# Declare the variables\n"
                 printf %s"SERVICE=${SERVICE}\n"
                 printf %s"CLIENT=${CLIENT}\n"
-                printf %s"TOR_HOSTNAME=${TOR_HOSTNAME}\n"
-                printf %s"PRIV_KEY=${PRIV_KEY}\n"
-                printf %s"PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
+                printf %s"ONION_HOSTNAME=${ONION_HOSTNAME}\n"
+                printf %s"CLIENT_PUB_KEY=${CLIENT_PUB_KEY}"
+                printf %s"CLIENT_PUB_KEY_CONFIG=descriptor:x25519:${CLIENT_PUB_KEY}"
+                printf %s"CLIENT_PRIV_KEY=${PRIV_KEY}\n"
+                printf %s"CLIENT_PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
                 printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n"
                 ## Delete pem and keys
                 sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
@@ -438,23 +440,34 @@ case "${COMMAND}" in
             }
             instructions_auth(){
               printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
-              printf "# Instructions client side:\n"
+              printf "# Send these instructions to the client:\n"
               printf "\n"
               printf "# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, insert it: ClientOnionAuthDir /var/lib/tor/onion_auth\n"
-              printf "[ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf '%sClientOnionAuthDir /var/lib/tor/onion_auth' | sudo tee -a /etc/tor/torrc ; }\n"
+              printf " [ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf "\"ClientOnionAuthDir"\" /var/lib/tor/onion_auth | sudo tee -a /etc/tor/torrc ; }\n"
               printf "\n"
-              printf "# Create the auth file inside <ClientOnionAuthDir>\n"
-              printf "printf \${PRIV_KEY_CONFIG} | sudo tee -a /var/lib/tor/onion_auth/\${SERVICE}-\${TOR_HOSTNAME}.auth_private\n"
+              printf "# Create a file with the suffix '.auth_private' inside <ClientOnionAuthDir>\n"
+              printf " printf "\"\${CLIENT_PRIV_KEY_CONFIG}"\" | sudo tee /var/lib/tor/onion_auth/\${SERVICE}-\${ONION_HOSTNAME}.auth_private\n"
               printf "\n"
               printf "# Reload tor\n"
-              printf "sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
-              printf "sudo pkill -sighup tor\n"
+              printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
+              printf " sudo systemctl reload tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             }
             [ "${SERVICE}" = "all-services" ] && { create_service_list ; SERVICE="${SERVICE_NAME_LIST}" ; }
             [ "${CLIENT}" = "all-clients" ] && error_msg "Client name cannot be equal to: all-clients"
-            loop_array_dynamic auth_server_add "${SERVICE}" "${CLIENT}" 1
-            instructions_auth
+            CLIENT_PUB_KEY="${6}"
+            if [ "${CLIENT_PUB_KEY}" != "" ]; then
+              test_service_exists "${SERVICE}"
+              ONION_HOSTNAME_WITHOUT_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -c1-56)
+              CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
+              printf %s"${CLIENT_PUB_KEY_CONFIG}" | sudo tee "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
+              printf "\n# Server side authorization configured\n\n"
+              printf " CLIENT_PUB_KEY_CONFIG=${CLIENT_PUB_KEY_CONFIG}\n"
+              printf "\n# As you inserted the public key manually, we expect that the client already has the private key\n"
+            else
+              loop_array_dynamic auth_server_add "${SERVICE}" "${CLIENT}" 1
+              instructions_auth
+            fi
             success_msg reload
           ;;
 
@@ -519,25 +532,71 @@ case "${COMMAND}" in
         case "${STATUS}" in
 
           ## as the onion service client, add a key given by the onion service operator to authenticate yourself inside ClientOnionAuthDir
-          ## just the client name. '.auth_private' should not be mentioned, it will be automatically inserted
+          ## The suffix '.auth_private' should not be mentioned, it will be automatically inserted when mentioning the name of the file.
           ## private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>
+          ## use the onion hostname as the file name, this avoid overriding the file by mistake and it indicates outside of the file for which service it refers to (of course it is written inside also)
           ## adding to Tor Browser automatically not supported yet
           on)
-            AUTH_FILE_NAME="${4}"
-            AUTH_PRIV_KEY="${5}"
-            printf %s"${AUTH_PRIV_KEY}\n" | sudo tee -a "${CLIENT_ONION_AUTH_DIR}"/"${AUTH_FILE_NAME}".auth_private >/dev/null
-            printf "\n# Client side authorization added\n"
+            ONION_HOSTNAME="${4}"
+            CLIENT_PRIV_KEY="${5}"
+            ONION_HOSTNAME_WITHOUT_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -d '.' -f1)
+            ONION_HOSTNAME_WITHOUT_ONION_LENGTH=${#ONION_HOSTNAME_WITHOUT_ONION}
+            SUFFIX_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -d '.' -f2)
+            [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
+            [ "${ONION_HOSTNAME_WITHOUT_ONION_LENGTH}" = "56" ] || error_msg "ONION_DOMAIN is invalid, length is different than 56 characters"
+            [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
+            if [ "${CLIENT_PRIV_KEY}" = "" ]; then
+              ## Generate pem and derive pub and priv keys
+              openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
+              grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
+              openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
+              ## save variables
+              PUB_KEY=$(cat /tmp/k1.pub.key)
+              PRIV_KEY=$(cat /tmp/k1.prv.key)
+              ONION_HOSTNAME_WITHOUT_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -c1-56)
+              PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${PRIV_KEY}"
+              PUB_KEY_CONFIG="descriptor:x25519:${PUB_KEY}"
+              ## Delete pem and keys
+              sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
+              # Client side configuration
+              printf %s"${PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
+              printf "# Client side authorization configured\n"
+              printf "# This is your private key, keep it safe, keep it hidden:\n\n"
+              printf " PRIV_KEY=${PRIV_KEY}\n"
+              printf " PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
+              printf "\n# Now it depends on the service operator to authorize you client public key\n\n"
+              ## Server side configuration
+              printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+              printf "# Send these instructions to the onion service operator\n\n"
+              printf %s" ONION_HOSTNAME=${ONION_HOSTNAME}\n"
+              printf %s" PUB_KEY=${PUB_KEY}\n"
+              printf %s" PUB_KEY_CONFIG=descriptor:x25519:${PUB_KEY}\n\n"
+              printf "# Create a file with the client name (eg. alice) using the suffix '.auth' (eg. alice.auth) inside the folder\n"
+              printf "#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${ONION_HOSTNAME}\n\n"
+              printf %s" printf "\"${PUB_KEY_CONFIG}"\" | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
+              printf "# Reload tor\n\n"
+              printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
+              printf " sudo systemctl reload tor\n"
+              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+            else
+              ONION_HOSTNAME_WITHOUT_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -c1-56)
+              PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+              printf %s"${PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
+              printf "\n# Client side authorization configured\n"
+              printf "\n PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
+              printf "\n# As you inserted the private key manually, we expect that you have already sent/received the public key to/from the onion service operator\n"
+            fi
             success_msg
           ;;
 
           ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
           off)
             auth_client_remove  (){
-              AUTH_FILE_NAME="${1}"
-              sudo rm -f "${CLIENT_ONION_AUTH_DIR}"/"${AUTH_FILE_NAME}".auth_private
+              ONION_HOSTNAME="${1}"
+              sudo rm -f "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private
             }
-            AUTH_FILE_NAME="${4}"
-            loop_array_dynamic auth_client_remove "${AUTH_FILE_NAME}"
+            ONION_HOSTNAME="${4}"
+            loop_array_dynamic auth_client_remove "${ONION_HOSTNAME}"
             printf "\n# Client side authorization removed\n"
             success_msg
           ;;
@@ -573,8 +632,8 @@ case "${COMMAND}" in
       if [ ${service_existent} -eq 1 ]; then
         printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
         printf %s"\n# Renewing service ${SERVICE}\n"
-        OLD_HOSTNAME="${TOR_HOSTNAME}"
-        printf %s"Current = ${TOR_HOSTNAME}\n"
+        OLD_HOSTNAME="${ONION_HOSTNAME}"
+        printf %s"Current = ${ONION_HOSTNAME}\n"
         ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
         create_client_list "${SERVICE}"
         ## delete the service folder
@@ -590,8 +649,8 @@ case "${COMMAND}" in
         ## generate auth for clients
         [ -n "${CLIENT_NAME_LIST}" ] && { bash "${0}" auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
         test_service_exists "${SERVICE}"
-        NEW_HOSTNAME="${TOR_HOSTNAME}"
-        printf %s"New     = ${TOR_HOSTNAME}\n"
+        NEW_HOSTNAME="${ONION_HOSTNAME}"
+        printf %s"New     = ${ONION_HOSTNAME}\n"
         [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ] \
         && { qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}" && printf "# Service renewed.\n"; } \
         || printf %s"# Failed to renew service: ${SERVICE}\n"
@@ -619,8 +678,8 @@ case "${COMMAND}" in
         ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
         create_client_list "${SERVICE}"
         printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
-        qrencode -m 2 -t ANSIUTF8 "${TOR_HOSTNAME}"
-        printf %s"Address    = ${TOR_HOSTNAME}\n"
+        qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
+        printf %s"Address    = ${ONION_HOSTNAME}\n"
         printf %s"Name       = ${SERVICE}\n"
         [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
         [ -n "$(sudo grep -c "HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" ] \
@@ -643,21 +702,11 @@ case "${COMMAND}" in
 
   ## guide to add onion-location to redirect tor users when using your plainnet site to the onion service address
   location)
-    #pandoc file.md | lynx -stdin
-    #pandoc ONION-LOCATION.md | lynx -stdin
     ## https://matt.traudt.xyz/posts/website-setup/
     SERVICE="${2}"
     METHOD="${3}"
     service_existent=0; test_service_exists "${SERVICE}"
-    # if [ ${service_existent} -eq 1 ]; then
-    #   cp samples/ONION-LOCATION-CUSTOM.md /tmp/ONION-LOCATION-CUSTOM.md
-    #   sed -i 's/TOR_HOSTNAME/'"${TOR_HOSTNAME}"'/g' /tmp/ONION-LOCATION-CUSTOM.md
-    #   cat /tmp/ONION-LOCATION-CUSTOM.md
-    #   #pandoc /tmp/ONION-LOCATION-CUSTOM.md | lynx -stdin
-    #   sudo rm -f /tmp/ONION-LOCATION-CUSTOM.md
-    # fi
-
-    #location  [SERV] [NGINX|APACHE|HTML]
+    if [ ${service_existent} -eq 1 ]; then
 
 start_location(){
   printf %s"# Onion-Location guided steps
@@ -687,7 +736,7 @@ finish_location(){
         printf '%s\n' "
   server {
       listen 443 ssl http2;
-      add_header Onion-Location http://${TOR_HOSTNAME}$request_uri;
+      add_header Onion-Location http://${ONION_HOSTNAME}$request_uri;
   }
 
 ## Reload web server:
@@ -703,7 +752,7 @@ finish_location(){
   #set -x
         printf '%s\n' "
   <VirtualHost *:443>
-          Header set Onion-Location "\"http://${TOR_HOSTNAME}%{REQUEST_URI}s"\"
+          Header set Onion-Location "\"http://${ONION_HOSTNAME}%{REQUEST_URI}s"\"
   </Virtualhost>
 
 ## Enable headers and rewrite modules:
@@ -720,7 +769,7 @@ finish_location(){
       html)
         start_location
         printf '%s\n' "
-  <meta http-equiv="\"onion-location"\" content="\"http://${TOR_HOSTNAME}"\"/>
+  <meta http-equiv="\"onion-location"\" content="\"http://${ONION_HOSTNAME}"\"/>
 
 ## Reload web server that you use:
 
@@ -733,7 +782,7 @@ finish_location(){
       *)
         error_msg "Invalid '${COMMAND}' argument: ${METHOD}"
     esac
-
+fi
   ;;
 
 

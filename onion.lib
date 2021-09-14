@@ -65,19 +65,25 @@ SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
 
 ## GENERAL
 LOCAL_IP=$(hostname -I | awk '{print $1}')
+VANGUARDS_COMMIT_HASH=10942de
 PKG_MANAGER_INSTALL="sudo apt install -y"
+
 USER_DIR="/home/${USER}"
 CONTROL_PORT=9051
 SOCKS_PORT=9050
 CONF_DIR_OWNER="${USER}"
 DATA_DIR_OWNER="debian-tor"
+
 TORRC_ROOT="/etc/tor"
 TORRC="${TORRC_ROOT}/torrc"
 DATA_DIR_ROOT="/var/lib"
 DATA_DIR="${DATA_DIR_ROOT}/tor"
 DATA_DIR_HS="${DATA_DIR}/services"
 CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
-VANGUARDS_COMMIT_HASH=10942de
+
+BROWSER_DATA_DIR="/home/${USER}/.local/share/torbrowser/tbb/$(uname -m)/tor-browser_en-US/Browser/TorBrowser/Data/Tor"
+BROWSER_TORRC="${BROWSER_DATA_DIR}/torrc"
+BROWSER_ONION_AUTH_DIR="${BROWSER_DATA_DIR}/onion-auth"
 
 ## BACKUP
 DATE_TIME=$(date +%Y-%m-%d-%H'h'-%M'm')
