@@ -77,8 +77,8 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onion-cli/tree/main/TECHNICAL.md) 
   * **Create** -  Backup of your torrc lines containing hidden service configuration, all of your directories of HiddenServiceDir and ClientOnionAuthDir. Guide to export the backup to a remote host with scp.
   * **Integrate** - Integrate hidden serivces lines configuration from torrc and the directories HiddenServiceDir and ClientOnionAuthDir to your current system. This option should be used after creating a backup and importing to the current host. Guide to import backup to the current host with scp.
 * **Vanguards** - This addon protects against guard discovery and related traffic analysis attacks. A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
-* **Bulk** - Some commands can be bulked with `all-clients`, `all-services`, [SERV1,SERV2,...] and [CLIENT1,CLIENT2,...], the command will loop the variables and apply the combination.
-* **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected.
+* **Bulk** - Some commands can be bulked with `all-clients`, `all-services`, `[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
+* **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected. They are specified inside `<>` (e.g. `<VIRTPORT2>`)
 
 ## Bugs
 
