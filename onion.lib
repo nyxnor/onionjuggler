@@ -66,6 +66,7 @@ SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
 ## GENERAL
 LOCAL_IP=$(hostname -I | awk '{print $1}')
 VANGUARDS_COMMIT_HASH=10942de
+VANGUARDS_LOG="/var/log/tor/vanguards.log"
 PKG_MANAGER_INSTALL="sudo apt install -y"
 
 USER_DIR="/home/${USER}"
@@ -95,11 +96,12 @@ SCP_TARGET_IP="192.168.1.10"
 SCP_TARGET_PATH="/home/admin/my-bk"
 SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" # '[USER]@[SERVER]:[SERVER_DIR]'
 
-## DO NOT EDIT
+## DO NOT EDIT - first run should be 1
 FIRST_ONION_RUN=0
 
 ##############################
 ######## FUNCTIONS ###########
+
 
 set_owner_permission(){
   sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
@@ -107,6 +109,7 @@ set_owner_permission(){
   sudo chmod 700 "${DATA_DIR}"
   sudo chmod 644 "${TORRC}"
 }
+
 
 if [ ${FIRST_ONION_RUN} -eq 1 ]; then
   sudo apt install -y tor
@@ -117,6 +120,7 @@ if [ ${FIRST_ONION_RUN} -eq 1 ]; then
   set_owner_permission
   sed -i '0,/FIRST_ONION_RUN=.*/s//FIRST_ONION_RUN=0/' ./onion.lib
 fi
+
 
 # check_tor()
 # Used predefined variables: RED, NOCOLOR
@@ -144,7 +148,7 @@ clear
 online_check()
 {
   clear
-  echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
+  printf "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR} \n"
   JUMPTO=$1
   clear
   OCHECK=$(curl -m 5 -s $CHECK_URL1)
@@ -166,18 +170,10 @@ restarting_tor()
   ACTION=$2
   set_owner_permission
   if [ "${ACTION}" = "force" ]; then
-    echo -e "${RED}[+] Restarting tor!${NOCOLOR}"
-    sudo systemctl restart tor@default
-    echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-    echo -e "    Starting Anonymizing overlay network for TCP..."
-    echo -e "    At the end, you should see \"Bootstrapped 100% (done): Done\"."
+    printf "${AMBER}# Restarting tor!${NOCOLOR} \n"
+    sudo systemctl restart tor@default.service
   elif [ "${ACTION}" = "" ]; then
-    echo -e "${RED}[+] Reloading tor!${NOCOLOR}"
-    sudo pkill -sighup tor
-    echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-    echo -e "   Received reload signal (hup). Reloading config and resetting internal state!"
+    printf "${AMBER}# Reloading tor!${NOCOLOR} \n"
+    sudo systemctl reload-or-restart tor@default.service
   fi
-  #echo -e "    You can leave the progress report with CTRL-C."
-  #trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
-  #sudo journalctl -fu tor@default
 }
