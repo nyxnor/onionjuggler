@@ -4,7 +4,7 @@
 
 The goal is to manage services on the the tor configuration level, not the web server level. Also need to be as portable as possible, so the variables for paths are only container inside onion.lib.
 
-If you want extra functionalities to be a relay, bridge or connect to a bridge easily, you should check out [Torbox](https://github.com/radio24/TorBox).
+If you want extra functionalities to be a relay, bridge or connect to a bridge easily, you should check out [TorBox](https://github.com/radio24/TorBox).
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location**
 
@@ -19,19 +19,26 @@ git clone https://github.com/nyxnor/onionservice.git
 cd onionservice
 ```
 
+#### Setup
+
+This step is necessary. It is ready for debian users, other distro may need to edit the `required` variables section inside `onionservice-cli`. For the menu, you also need to edit `onion.lib`.
 Setup custom tor enviroment:
 ```sh
 sh onionservice-cli setup env
 ```
+
+#### Easy menu
 
 Use the menu (only bash):
 ```sh
 bash onionservice-tui
 ```
 
+#### Understanding
+
 Read the manual:
 ```sh
-man ./text/onionservice.man
+man text/onionservice.man
 ```
 
 Read a small description of the main script:
@@ -39,9 +46,31 @@ Read a small description of the main script:
 sh onionservice-cli
 ```
 
+#### Recovery
+
 Restore latest torrc backup:
 ```sh
 sh onionservice-cli setup torrc
+```
+
+#### Nice to have
+
+If you want to call the script as you would call any program, from any folder just tiping its name, you should add the script to path:
+
+Export script on path:
+```sh
+mkdir ~/.local/bin
+cp onionservice-cli ~/.local/bin
+cp onionservice-tui ~/.local/bin
+printf "PATH=\$PATH:~/.local/bin\n" >> ~/.${SHELL##*/}rc
+. ~/.local/bin
+```
+
+Now you can call the `onionservice-cli` from any directory you are without prepending with the shell name (e.g. *bash onionservice-cli, sh onionservice-cli, zsh onionservice-cli).
+Try it out:
+```sh
+cd
+onionservice-cli
 ```
 
 ### Technical
@@ -57,12 +86,11 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 * basez >= 1.6.2 (for onion authentication)
 * git >= 2.0+ (for cloning the repo and vanguards)
 * qrencode >= 4.1.1 (for printing the hostname)
-* dash under /bin/sh
+* dash under /bin/sh (or the closest to POSIX complian shell you want)
 * bash under /bin/bash (for the [whiptail menu](onionservice-tui))
 * systemd (for vanguards control)
 * user with root privileges
-* leave blank lines between Hidden Services torrc lines - script create it correctly, no change needed when using this script, just be aware when importing your torrc and deactivating a service, it will delete every line within the same block
-* Reserved words and Utilities - function, printf, command, while, for, do, done, case, esac, in, IFS, if, elif, else, fi, cp, mv, rm, sed, cut, grep, tail, tee.
+* leave blank lines between Hidden Services torrc lines - the cli script create it correctly, no change needed when using this project, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block
 
 ## Goal
 
@@ -100,7 +128,7 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 
 ## To-do
 
-* Bash completion [official package](https://github.com/scop/bash-completion/) [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
+* Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
 * [Vanguards](https://github.com/mikeperry-tor/vanguards) menu option
 * [Ronn-ng](https://github.com/apjanke/ronn-ng/) to build man pages from markdown instead of writing them manually :(
