@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ## This file is part of onionservice, an easy to use Tor hidden services manager.
 ##
@@ -27,27 +27,17 @@
 ## This file lets you manage your hidden services
 ##
 ## SYNTAX
-## bash onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
-##
-## string   --> Command and is necessary
-## [string] --> Necessary
-## <string> --> Optional
-##
-## Changes applied to X modify Y:
-##   on              Create <torrc> config, tor will create <HiddenServiceDir>
-##   off             Delete <torrc> config, optionally purge <HiddenServiceDir>
-##   renew:          Remove <HiddenServiceDir>/* (contents: keys, hostname, authorized_clients)
-##   auth server     Create or remove '.auth' files inside <HiddenServiceDir>/authorized_clients/
-##   auth client     Create or remove '.auth_private' files inside <ClientOnionAuthDir>
-##   credentials     No modification, reads the <torrc> and <HiddenServiceDir>/
+## sh onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
 ##
 ## COMMAND INFO
 onion_usage(){
   printf %s"Configure an Onion Service
 
-Usage: bash ${0} COMMAND [REQUIRED] <OPTIONAL>
+Usage: ${0} COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
+
+  setup [env|torrc]                                                                  setup tor (one time run) or restore latest torrc
 
   on tcp [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                            activate a service targeting tcp socket
 
@@ -86,36 +76,127 @@ It does not imply the code worked, you should always pay attention for errors in
   exit 1
 }
 
+[ "${USER}" = "root" ] && { printf %s"${RED}Not as root !!!\n${NOCOLOR}" && exit 1; }
+
+{ [ -z "${#}" ] || [ -z "${2}" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
+
+###########################
+######## VARIABLES ########
+
+## EDIT REQUIRED - if not debian and derived systems
+DATA_DIR_OWNER="debian-tor"
+PKG_MANAGER_INSTALL="sudo apt install -y" ## use the 'yes' flag
+TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
+
+## EDIT OPTIONAL
+## Vanguards
+VANGUARDS_COMMIT_HASH=10942de
+VANGUARDS_LOG="/var/log/tor/vanguards.log"
+## Backup
+SCP_TARGET_USER="remoteUser"
+SCP_TARGET_IP="remoteIp"
+SCP_TARGET_PATH="${HOME}/remote/path"
+SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" ## '[USER]@[SERVER]:[SERVER_DIR]'
+HS_BK_TAR=tor-hs-${DATE_TIME}.tar.gz
+HS_BK_DIR="${HOME}/tor-hs-backup"
+LOCAL_DOWNLOAD_PATH="${HOME}/Downloads/tor-hs-backup"
+DATE_TIME=$(date +%Y-%m-%d-%H'h'-%M'm')
+LOCAL_IP=$(hostname -I | awk '{print $1}')
+## tor defaults
+TORRC_ROOT="/etc/tor"
+TORRC="${TORRC_ROOT}/torrc"
+DATA_DIR_ROOT="/var/lib"
+DATA_DIR="${DATA_DIR_ROOT}/tor"
+DATA_DIR_HS="${DATA_DIR}/services"
+CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
+CONF_DIR_OWNER="${USER}"
+CONTROL_PORT=9051
+SOCKS_PORT=9050
+CHECK_URL1="http://debian.org"
+
+## DO NOT EDIT
+## Colors
+NOCOLOR='\033[0m'
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+AMBER='\033[0;33m'
+WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
+
+
 ###########################
 ######## FUNCTIONS ########
 
-[ "$EUID" -eq 0 ] && { printf "${RED}Not as root !!!${NOCOLOR}\n" && exit 1; }
+install_package(){
+  for PACKAGE in "${@}"; do
+    command -v "${PACKAGE}" >/dev/null || "${PKG_MANAGER_INSTALL}" "${PACKAGE}"
+  done
+}
 
-{ [ "$#" -eq 0 ] || [ -z "${2}" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
+set_owner_permission(){
+  sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
+  sudo chown "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC}"
+  sudo chmod 700 "${DATA_DIR}"
+  sudo chmod 644 "${TORRC}"
+}
 
-## include lib
-source onion.lib
+# check_tor()
+# Used predefined variables: RED, NOCOLOR
+# This function checks the status on https://check.torproject.org/
+check_tor()
+{
+  printf %s"${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}\n"
+  TOR_SERVICE=$(curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 -c Congratulations)
+  if [ "${TOR_SERVICE}" -eq 1 ]; then
+    TOR_STATUS="Tor is working"
+  else
+    TOR_STATUS=""
+  fi
+}
 
-#clear
-COMMAND="${1}"
-SERVICE="${2}"
 
-command -v openssl >/dev/null || ${PKG_MANAGER_INSTALL} openssl
-command -v basez >/dev/null || ${PKG_MANAGER_INSTALL} basez
-command -v git >/dev/null || ${PKG_MANAGER_INSTALL} git
-command -v qrencode >/dev/null || ${PKG_MANAGER_INSTALL} qrencode
+# online_check()
+# Syntax online_check <source_script>
+# Used predefined variables: RED, NOCOLOR, MENU_HEIGHT_15 MENU_WIDTH
+# This function checks the internet connection and exits to <source_script> if none.
+online_check()
+{
+  printf %s"${RED}[+] Checking internet connectivity - please wait...${NOCOLOR} \n"
+  OCHECK=$(curl -m 5 -s "${CHECK_URL1}")
+  if [ "${OCHECK}" -gt 0 ]; then
+    printf "\n\nIt seems that your Tor is not properly connected to the internet! For this operation, Tor has to properly connected with the internet!"
+    exit 0
+  fi
+}
+
+
+# restarting_tor(<source script>)
+# This function reload tor by default or forces to restart
+# Nyxnor: Why this name restart when it reload by default? I dont know a better name.
+restarting_tor()
+{
+  ACTION="${1}"
+  set_owner_permission
+  if [ "${ACTION}" = "force" ]; then
+    printf %s"${AMBER}# Restarting tor!${NOCOLOR} \n"
+    sudo systemctl restart "${TOR_SERVICE}"
+  elif [ "${ACTION}" = "" ]; then
+    printf %s"${AMBER}# Reloading tor!${NOCOLOR} \n"
+    sudo systemctl reload-or-restart "${TOR_SERVICE}"
+  fi
+}
+
 
 ## display error message with instructions to use the script correctly.
 error_msg(){
-  [ -n "${1}" ] && printf %s"${RED}ERROR: ${1}${NOCOLOR}\n\n"
+  [ ! -z "${1}" ] && printf %s"${RED}ERROR: ${1}${NOCOLOR}\n\n"
   onion_usage
 }
-
 
 ## '# Done': You should always see it at the end, else something unexpected occured.
 ## It does not imply the code worked, you should always pay attention for errors in the logs."
 success_msg(){
-  [ "${1}" = "reload" ] && restarting_tor
+  [ "${1}" = "reload" ] && restarting_tor reload
   printf %s"${GREEN}\n# Done\n${NOCOLOR}"
   #read -n 1 -s -r -p "Press any key to continue"
   #exit 1
@@ -123,9 +204,7 @@ success_msg(){
 
 
 ## check if variable is integer
-is_integer(){
-  printf %d "${1}" >/dev/null 2>&1 || { error_msg "Not an integer: ${1}"; onion_usage; }
-}
+is_integer(){ printf %d "${1}" >/dev/null 2>&1 || { error_msg "Not an integer: ${1}"; onion_usage; } }
 
 
 ## checks if the TARGET is valid.
@@ -133,13 +212,12 @@ is_integer(){
 ## accept localhos:port if port is valid.
 ## this is not perfect but it is better than nothing
 is_addr_port(){
-  ADDR_PORT="${1}"
-  ADDR=$(printf %s"${ADDR_PORT}" | cut -d ':' -f1)
-  ADDR_1=$(printf %s"${ADDR_PORT}" | cut -d '.' -f1)
-  ADDR_2=$(printf %s"${ADDR_PORT}" | cut -d '.' -f2)
-  ADDR_3=$(printf %s"${ADDR_PORT}" | cut -d '.' -f3)
-  ADDR_4=$(printf %s"${ADDR_PORT}" | cut -d '.' -f4 | cut -d ':' -f1)
-  PORT=$(printf %s"${ADDR_PORT}" | cut -d ':' -f2)
+  ADDR=$(printf %s"${1}" | cut -d ':' -f1)
+  ADDR_1=$(printf %s"${1}" | cut -d '.' -f1)
+  ADDR_2=$(printf %s"${1}" | cut -d '.' -f2)
+  ADDR_3=$(printf %s"${1}" | cut -d '.' -f3)
+  ADDR_4=$(printf %s"${1}" | cut -d '.' -f4 | cut -d ':' -f1)
+  PORT=$(printf %s"${1}" | cut -d ':' -f2)
 
   is_integer "${ADDR_1}"; is_integer "${ADDR_2}"; is_integer "${ADDR_3}"; is_integer "${ADDR_4}"; is_integer "${PORT}"
 
@@ -210,55 +288,61 @@ create_service_list(){
 ## $2 normally is service, but can be any other parameter (accepts list -> serv1,serv2,...)
 ## $3 normally is client, but can be any other (accepts list -> client1,client2...)
 ## $4 if $3 is a list (client1,client2,...), fill it with "1" (anything non zero)
-## Examples:
-##  bash onionservice-cli off ssh,xmpp,nextcloud purge
-##   loop_array_dynamic delete_service "${SERVICE}" "${PURGE}"
-##  bash onionservice-cli auth server on ssh,xmpp,nextcloud alice,bob
-##   loop_array_dynamic auth_server_add "${SERVICE}" "${CLIENT}" 1
-##  bash onionservice-cli auth server purge ssh,xmpp,nextcloud
-##   loop_array_dynamic auth_server_purge "${SERVICE}"
-##  bash onionservice-cli auth client off bob-ssh-service
-##   loop_array_dynamic auth_client_remove "${AUTH_FILE_NAME}"
-##  bash onionservice-cli renew ssh,xmpp,nextcloud
-##   loop_array_dynamic renew_service_address "${SERVICE}"
-## DONT LIKE THE VARIBLES NAMES? GIVE ME SOME SUGGESTIONS, THE VAR IS USED FOR DIFFERENT THINGS
 loop_array_dynamic(){
   CALL_FUNCTION="${1}"
-  VAR_ONE="${2}"
-  VAR_TWO="${3}"
-  VAR_THREE="${4}"
+  SERVICE_LIST=$(printf %s"${2}" | sed "s/\,/ /g")
+  CLIENT_LIST=$(printf %s"${3}" | sed "s/\,/ /g")
+  BOOLEAN="${4}"
 
-  VAR_ONE=$(printf %s"${VAR_ONE}" | cut -f1- -d ',' --output-delimiter=' ')
-  IFS=' ' read -r -a VAR_ONE_ARRAY <<< "${VAR_ONE}"
-  VAR_ONE_COUNT=${#VAR_ONE_ARRAY[@]}
-
-  VAR_ONE_NUMBER_CURRENT=$((VAR_ONE_COUNT-1))
-  while [ ${VAR_ONE_NUMBER_CURRENT} -ge 0 ]; do
+  for ITEM in ${SERVICE_LIST}; do
     if [ -z "${VAR_THREE}" ]; then
-      "${CALL_FUNCTION}" "${VAR_ONE_ARRAY[VAR_ONE_NUMBER_CURRENT]}" "${VAR_TWO}"
+      "${CALL_FUNCTION}" "${ITEM}" "${CLIENT_LIST}"
     else
-      VAR_TWO=$(printf %s"${VAR_TWO}" | cut -f1- -d ',' --output-delimiter=' ')
-      IFS=' ' read -r -a VAR_TWO_ARRAY <<< "${VAR_TWO}"
-      VAR_TWO_COUNT=${#VAR_TWO_ARRAY[@]}
-      VAR_TWO_NUMBER_CURRENT=$((VAR_TWO_COUNT-1))
-      while [ ${VAR_TWO_NUMBER_CURRENT} -ge 0 ]; do
-        "${CALL_FUNCTION}" "${VAR_ONE_ARRAY[VAR_ONE_NUMBER_CURRENT]}" "${VAR_TWO_ARRAY[VAR_TWO_NUMBER_CURRENT]}"
-        VAR_TWO_NUMBER_CURRENT=$((VAR_TWO_NUMBER_CURRENT-1))
+      for SUBITEM in ${CLIENT_LIST}; do
+        "${CALL_FUNCTION}" "${ITEM}" "${SUBITEM}"
       done
     fi
-    VAR_ONE_NUMBER_CURRENT=$((VAR_ONE_NUMBER_CURRENT-1))
   done
 }
 
-
 ###########################
+########## MAIN ###########
 
 ## tor needs to be running to create services and renew addresses (on, renew)
 ## tor does not need to be running to delete service, authorize or remove authorization from clients or see credentials (off, auth, credentials)
 #check_tor
+COMMAND="${1}"
+SERVICE="${2}"
+sudo sed -i 's/\/$//' "${TORRC}" ## no config should end with '/' to find exact match.
 sudo cp "${TORRC}" "${TORRC}".bak
 
 case "${COMMAND}" in
+
+  ## deactivated the service wrongly and don't remember the ports? no worries, will restore the latest torrc.bak
+  ## beaware this only works for the torrc, if you deleted your data directory with command "off" and "purge" option, the keys will not be restored, insteadm new ones will be created
+  setup)
+    ACTION="${2}"
+    case "${ACTION}" in
+
+      env)
+        install_package tor openssl basez git qrencode
+        sudo adduser "${USER}" "${DATA_DIR_OWNER}"
+        sudo -u "${DATA_DIR_OWNER}" mkdir -p "${DATA_DIR_HS}"
+        sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
+        set_owner_permission
+        success_msg
+      ;;
+
+      torrc)
+        sudo cp "${TORRC}".bak "${TORRC}"
+        success_msg reload
+      ;;
+
+      *)
+        error_msg "Invalid ${COMMAND} argument: ${ACTION}"
+      ;;
+    esac
+  ;;
 
   ## deactivate a service by removing service torrc's block.
   ## it is raw, services variables should be separated by an empty line per service, else you might get other non-related configuration deleted.
@@ -287,7 +371,7 @@ case "${COMMAND}" in
       ## substitute multiple sequential empty lines to a single one per sequence
       #awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
-      printf %s"# Removed service  ${SERVICE}\n\n"
+      printf %s"# Deactivated service: ${SERVICE}\n\n"
     }
     loop_array_dynamic delete_service "${SERVICE}" "${PURGE}"
     success_msg reload
@@ -322,7 +406,7 @@ case "${COMMAND}" in
         printf %s"Service name    = ${SERVICE}\n"
         printf %s"Service address = ${ONION_HOSTNAME}\n"
         printf %s"Virtual port    = ${VIRTPORT}\n"
-        [ -n "${VIRTPORT2}" ] && printf %s"Virtual port    = ${VIRTPORT2}\n"
+        [ ! -z "${VIRTPORT2}" ] && printf %s"Virtual port    = ${VIRTPORT2}\n"
         success_msg
       fi
     }
@@ -336,12 +420,12 @@ case "${COMMAND}" in
         ## This measures avoid using the same local port for different services
         ## grep torrc TARGET to see if port is already in use and by which service, reading the file in reverse
         ## Required
-        VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing" || is_integer "${VIRTPORT}"
-        TARGET="${5}"
-        { [ -n "${VIRTPORT}" ] && [ -z "${TARGET}" ]; } && TARGET="127.0.0.1:${VIRTPORT}"
+        VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
+        TARGET="${5}" ## optional, if null then map to 127.0.0.1:VIRTPORT
+        [ -z "${TARGET}" ] && TARGET="127.0.0.1:${VIRTPORT}"
         TARGET_ADDR=$(printf %s"${TARGET}" | cut -d ':' -f1)
         TARGET_PORT=$(printf %s"${TARGET}" | cut -d ':' -f2)
-        { [ -n "${TARGET}" ] && [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
+        { [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
         TARGET_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" grep -c "HiddenServicePort .*${TARGET}$" "${TORRC}")
         TARGET_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
         TARGET_ALREADY_INSERTED_SERVICE=${TARGET_ALREADY_INSERTED_BLOCK##*/}
@@ -350,7 +434,7 @@ case "${COMMAND}" in
         ## Optional
         VIRTPORT2="${6}"
         TARGET2="${7}"
-        if [ -n "${VIRTPORT2}" ]; then
+        if [ ! -z "${VIRTPORT2}" ]; then
           if [ -z "${TARGET2}" ]; then
             TARGET2="127.0.0.1:${VIRTPORT2}"
           else
@@ -370,15 +454,15 @@ case "${COMMAND}" in
         sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${TORRC}\n"
-        [ -n "${VIRTPORT2}" ] \
-        && { printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}\n\n" | sudo tee -a "${TORRC}" ; }\
-        || { printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n\n" | sudo tee -a "${TORRC}" ; }
+        [ ! -z "${VIRTPORT2}" ] && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}\n\n" | sudo tee -a "${TORRC}"
+        [ ! -z "${VIRTPORT2}" ] || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n\n" | sudo tee -a "${TORRC}"
         finish_service_activation
       ;;
 
       unix)
-        VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing" || is_integer "${VIRTPORT}"
-        VIRTPORT2="${5}"; [ -n "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
+        VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
+        VIRTPORT2="${5}"; [ ! -z "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
+        is_integer "${VIRTPORT}"
 
         ## delete any old entry for that servive
         sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
@@ -387,9 +471,8 @@ case "${COMMAND}" in
         UNIX_PATH="unix:/var/run/tor-hs-${SERVICE}"
         SOCK_FILE="${UNIX_PATH}-${VIRTPORT}.sock"
         SOCK2_FILE="${UNIX_PATH}-${VIRTPORT2}.sock"
-        [ -n "${VIRTPORT2}" ] \
-        && { printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\nHiddenServicePort ${VIRTPORT2} ${SOCK2_FILE}\n\n" | sudo tee -a "${TORRC}" ; } \
-        || { printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\n\n" | sudo tee -a "${TORRC}" ; }
+        [ ! -z "${VIRTPORT2}" ] && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\nHiddenServicePort ${VIRTPORT2} ${SOCK2_FILE}\n\n" | sudo tee -a "${TORRC}"
+        [ ! -z "${VIRTPORT2}" ] || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\n\n" | sudo tee -a "${TORRC}"
         finish_service_activation
       ;;
 
@@ -453,10 +536,10 @@ case "${COMMAND}" in
               printf "# Send these instructions to the client:\n"
               printf "\n"
               printf "# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, insert it: ClientOnionAuthDir /var/lib/tor/onion_auth\n"
-              printf " [ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf "\"ClientOnionAuthDir"\" /var/lib/tor/onion_auth | sudo tee -a /etc/tor/torrc ; }\n"
+              printf " [ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf 'ClientOnionAuthDir /var/lib/tor/onion_auth\n' | sudo tee -a /etc/tor/torrc ; }\n"
               printf "\n"
               printf "# Create a file with the suffix '.auth_private' inside <ClientOnionAuthDir>\n"
-              printf " printf "\"\${CLIENT_PRIV_KEY_CONFIG}"\" | sudo tee /var/lib/tor/onion_auth/\${SERVICE}-\${ONION_HOSTNAME}.auth_private\n"
+              printf " printf '\${CLIENT_PRIV_KEY_CONFIG}' | sudo tee /var/lib/tor/onion_auth/\${SERVICE}-\${ONION_HOSTNAME}.auth_private\n"
               printf "\n"
               printf "# Reload tor\n"
               printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
@@ -489,16 +572,19 @@ case "${COMMAND}" in
               SERVICE="${1}"
               CLIENT="${2}"
               printf %s"Service  = ${SERVICE}\n"
-              [ -n "${CLIENT}" ] \
-              && { printf %s"Client   = ${CLIENT}\n\n" ; sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth ; } \
-              || sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/
+              if [ "${CLIENT}" = "all-clients" ]; then
+                sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/
+              else
+                printf %s"Client   = ${CLIENT}\n\n"
+                sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth
+              fi
             }
             if [ "${SERVICE}" = "all-services" ]; then
               printf "# Removing client authorization for all services\n"
               if [ "${CLIENT}" = "all-clients" ]; then
                 printf "# All clients will be removed and the service will be accessible to anyone with the onion address.\n\n"
                 create_service_list; SERVICE="${SERVICE_NAME_LIST}"
-                loop_array_dynamic auth_server_remove_clients "${SERVICE}"
+                loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}" 1
               else
                 printf "# If any client remains, the service will still be authenticated.\n\n"
                 create_service_list; SERVICE="${SERVICE_NAME_LIST}"
@@ -508,7 +594,7 @@ case "${COMMAND}" in
               printf %s"# Removing client authorization for the services: ${SERVICE}\n"
               if [ "${CLIENT}" = "all-clients" ]; then
                 printf "# All clients will be removed and the service will be accessible to anyone with the onion address.\n\n"
-                loop_array_dynamic auth_server_remove_clients "${SERVICE}"
+                loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}" 1
               else
                 printf "# If any client remains, the service will still be authenticated.\n\n"
                 loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}" 1
@@ -583,7 +669,7 @@ case "${COMMAND}" in
               printf %s" PUB_KEY_CONFIG=descriptor:x25519:${PUB_KEY}\n\n"
               printf "# Create a file with the client name (eg. alice) using the suffix '.auth' (eg. alice.auth) inside the folder\n"
               printf %s"#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${ONION_HOSTNAME}\n\n"
-              printf %s" printf "\""${PUB_KEY_CONFIG}""\" | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
+              printf %s" printf '${PUB_KEY_CONFIG}' | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
               printf "# Reload tor\n\n"
               printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
               printf " sudo systemctl reload-or-restart tor\n"
@@ -656,7 +742,7 @@ case "${COMMAND}" in
         restarting_tor
         sleep 3
         ## generate auth for clients
-        [ -n "${CLIENT_NAME_LIST}" ] && { bash "${0}" auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
+        [ ! -z "${CLIENT_NAME_LIST}" ] && { sh "$(realpath "${0}")" auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
         test_service_exists "${SERVICE}"
         NEW_HOSTNAME="${ONION_HOSTNAME}"
         printf %s"New     = ${ONION_HOSTNAME}\n"
@@ -691,9 +777,11 @@ case "${COMMAND}" in
         printf %s"Address    = ${ONION_HOSTNAME}\n"
         printf %s"Name       = ${SERVICE}\n"
         [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
-        [ "$(sudo grep -c "HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ] \
-        && printf "Status     = inactive\n" \
-        || { printf "Status     = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed '/^[[:space:]]*$/d' ; }
+        if [ "$(sudo grep -c "HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then
+          printf "Status     = inactive\n"
+        else
+          printf "Status     = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed '/^[[:space:]]*$/d'
+        fi
         printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
       fi
     }
@@ -712,7 +800,7 @@ case "${COMMAND}" in
   location)
     ## https://matt.traudt.xyz/posts/website-setup/
     SERVICE="${2}"
-    METHOD="${3}"
+    ACTION="${3}"
     service_existent=0; test_service_exists "${SERVICE}"
     if [ ${service_existent} -eq 1 ]; then
 
@@ -723,7 +811,7 @@ start_location(){
 * For web servers, include header line inside the plainnet ssl block (port 443).
 * It assumes you know how to run a plainnet server, configuration is an example and should be adapted to your needs.
 
-## Add to your "\"${METHOD}"\" configuration:
+## Add to your \"${ACTION}\" configuration:
 "
 }
 
@@ -737,14 +825,14 @@ finish_location(){
 "
 }
 
-    case "${METHOD}" in
+    case "${ACTION}" in
 
       nginx)
         start_location
         printf '%s\n' "
   server {
       listen 443 ssl http2;
-      add_header Onion-Location http://"${ONION_HOSTNAME}"\$request_uri;
+      add_header Onion-Location http://""${ONION_HOSTNAME}""\$request_uri;
   }
 
 ## Reload web server:
@@ -759,7 +847,7 @@ finish_location(){
         start_location
         printf '%s\n' "
   <VirtualHost *:443>
-          Header set Onion-Location "\"http://"${ONION_HOSTNAME}"%{REQUEST_URI}s"\"
+          Header set Onion-Location \"http://${ONION_HOSTNAME}%{REQUEST_URI}s\"
   </Virtualhost>
 
 ## Enable headers and rewrite modules:
@@ -776,7 +864,7 @@ finish_location(){
       html)
         start_location
         printf '%s\n' "
-  <meta http-equiv="\"onion-location"\" content="\"http://"${ONION_HOSTNAME}""\"/>
+  <meta http-equiv=\"onion-location\" content=\"http://${ONION_HOSTNAME}\"/>
 
 ## Reload web server that you use:
 
@@ -787,15 +875,15 @@ finish_location(){
       ;;
 
       *)
-        error_msg "Invalid '${COMMAND}' argument: ${METHOD}"
+        error_msg "Invalid '${COMMAND}' argument: ${ACTION}"
     esac
 fi
   ;;
 
 
   backup)
-    METHOD="${2}"
-    case "${METHOD}" in
+    ACTION="${2}"
+    case "${ACTION}" in
 
       ## backup tar file will be extracted and integrated into their respective tor folders
       ## scp instructions to import backup from remote host
@@ -868,7 +956,7 @@ fi
       ;;
 
       *)
-        error_msg "Invalid '${COMMAND}' argument: ${METHOD}"
+        error_msg "Invalid '${COMMAND}' argument: ${ACTION}"
     esac
   ;;
 
