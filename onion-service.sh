@@ -549,11 +549,11 @@ case "${COMMAND}" in
           ## adding to Tor Browser automatically not supported yet
           on)
             CLIENT_PRIV_KEY="${5}" ## optional
-            ONION_HOSTNAME_WITHOUT_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -d '.' -f1)
+            ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
             ONION_HOSTNAME_WITHOUT_ONION_LENGTH=${#ONION_HOSTNAME_WITHOUT_ONION}
             SUFFIX_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -d '.' -f2)
             [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
-            [ "${ONION_HOSTNAME_WITHOUT_ONION_LENGTH}" = "56" ] || error_msg "ONION_DOMAIN is invalid, length is different than 56 characters"
+            [ "${ONION_HOSTNAME_WITHOUT_ONION_LENGTH}" = "56" ] || error_msg "ONION_DOMAIN is invalid, length is different than 56 characters (discarding .onion)"
             [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
             if [ "${CLIENT_PRIV_KEY}" = "" ]; then
               ## Generate pem and derive pub and priv keys
@@ -807,7 +807,7 @@ fi
         sudo cp -rf "${HS_BK_DIR}"/backup-restoration.tbx"${DATA_DIR_HS}"/* "${DATA_DIR_HS}"/ >/dev/null
         sudo cp -rf "${HS_BK_DIR}"/backup-restoration.tbx"${CLIENT_ONION_AUTH_DIR}"/* "${CLIENT_ONION_AUTH_DIR}"/ >/dev/null
         ## avoid duplication of services, it will keep the current machine config lines for safety
-        for SERVICE in $(sudo -u "${CONF_DIR_OWNER}" cat "${TORRC}" | grep "HiddenServiceDir" | cut -d ' ' -f2); do
+        for SERVICE in $(sudo -u "${CONF_DIR_OWNER}" grep "HiddenServiceDir" "${TORRC}" | cut -d ' ' -f2); do
           SERVICE_NAME=$(printf %s"${SERVICE##*/}")
           sed -n "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{p}" "${TORRC}" > "${TORRC}".tmp
           sed -i "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{d}" "${TORRC}"
