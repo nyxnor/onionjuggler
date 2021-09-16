@@ -56,7 +56,7 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 ## Goal
 
 * **Autonomy** - The onion service operator should have full control of tor functionalities and if he does not know how, he can learn reading the scripts. It also helps typing less commands and when not remembering full directories paths or file syntax. Client option to add '.auth_private' option also possible.
-* **KISS** - Keep It Simple Stupid (At least I try). Source [wikipedia](https://en.wikipedia.org/wiki/KISS_principle), [video](https://www.youtube.com/watch?v=EFMD7Usflbg).
+* **KISS** - Keep It Simple Stupid (At least I try). Source [wikipedia](https://en.wikipedia.org/wiki/KISS_principle).
 * **Portability** - POSIX compliant to work on different shells, customize path, ports. The [library](onion.lib) and [main script](onionservice-cli) is aiming to be fully POSIX compliant studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible). The hard part is not using arrays cause it is not compliant to the spec. Source [wikipedia](https://en.wikipedia.org/wiki/POSIX), [gnu guide](https://www.gnu.org/software/guile/manual/html_node/POSIX.html)
 * **Bashism** - The [menu](onionservice-tui) will never be POSIX compliant as it uses bashism such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible). Source [wikipedia](https://en.wikipedia.org/wiki/Bash_(Unix_shell).
 * **Autonomy** - The [library](onion.lib) and [main script](onionservice-cli) can run entirely by themselves, menu if just an addon that calls the main script.
