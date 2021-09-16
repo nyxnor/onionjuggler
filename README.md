@@ -1,4 +1,4 @@
-# onion-cli
+# onionservice
 
 **An easy to use Tor Hidden Service (Onion Services) manager**
 
@@ -15,29 +15,29 @@ If you want extra functionalities to be a relay, bridge or connect to a bridge e
 Clone the repository:
 ```sh
 cd
-git clone https://github.com/nyxnor/onion-cli.git
-cd onion-cli
+git clone https://github.com/nyxnor/onionservice.git
+cd onionservice
 ```
 
 Use the menu (only bash):
 ```sh
-bash onion-menu.sh
+bash onionservice-tui
 ```
 
 Read the manual:
 ```sh
-man ./text/onion-cli.man
+man ./text/onionservice.man
 ```
 
 Read a small description of the main script:
 ```sh
-bash onion-service.sh
+bash onionservice-cli
 ```
 
 ### Technical
 
-Now that you have read the [manual](text/onion-cli.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [bash menu](onion-menu.sh), you are prepared to understand what it does behind the curtains.
-Read [TECHNICAL.md](https://github.com/nyxnor/onion-cli/tree/main/TECHNICAL.md) for advanced usage.
+Now that you have read the [manual](text/onionservice.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [bash menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
+Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.md) for advanced usage.
 
 ### Requirements
 
@@ -47,7 +47,7 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onion-cli/tree/main/TECHNICAL.md) 
 * basez >= 1.6.2 (for onion authentication)
 * git >= 2.0+ (for cloning the repo and vanguards)
 * qrencode >= 4.1.1 (for printing the hostname)
-* bash under /bin/bash (soon the [main script](onion-service.sh) aims to be POSIX compliant)
+* bash under /bin/bash (soon the [main script](onionservice-cli) aims to be POSIX compliant)
 * leave blank lines between Hidden Services torrc lines - script create it correctly, no change needed when using this script, just be aware when importing your torrc and deactivating a service, it will delete every line within the same block
 * systemd for vanguards control
 * user with root privileges
@@ -57,9 +57,9 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onion-cli/tree/main/TECHNICAL.md) 
 
 * **Autonomy** - The onion service operator should have full control of tor functionalities and if he does not know how, he can learn reading the scripts. It also helps typing less commands and when not remembering full directories paths or file syntax. Client option to add '.auth_private' option also possible.
 * **KISS** - Keep It Simple Stupid (At least I try). Source [wikipedia](https://en.wikipedia.org/wiki/KISS_principle), [video](https://www.youtube.com/watch?v=EFMD7Usflbg).
-* **Portability** - POSIX compliant to work on different shells, customize path, ports. The [library](onion.lib) and [main script](onion-service.sh) is aiming to be fully POSIX compliant studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible). The hard part is not using arrays cause it is not compliant to the spec. Source [wikipedia](https://en.wikipedia.org/wiki/POSIX), [gnu guide](https://www.gnu.org/software/guile/manual/html_node/POSIX.html)
-* **Bashism** - The [menu](onion-menu.sh) will never be POSIX compliant as it uses bashism such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible). Source [wikipedia](https://en.wikipedia.org/wiki/Bash_(Unix_shell).
-* **Autonomy** - The [library](onion.lib) and [main script](onion-service.sh) can run entirely by themselves, menu if just an addon that calls the main script.
+* **Portability** - POSIX compliant to work on different shells, customize path, ports. The [library](onion.lib) and [main script](onionservice-cli) is aiming to be fully POSIX compliant studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible). The hard part is not using arrays cause it is not compliant to the spec. Source [wikipedia](https://en.wikipedia.org/wiki/POSIX), [gnu guide](https://www.gnu.org/software/guile/manual/html_node/POSIX.html)
+* **Bashism** - The [menu](onionservice-tui) will never be POSIX compliant as it uses bashism such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible). Source [wikipedia](https://en.wikipedia.org/wiki/Bash_(Unix_shell).
+* **Autonomy** - The [library](onion.lib) and [main script](onionservice-cli) can run entirely by themselves, menu if just an addon that calls the main script.
 * **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
 
 ## Features

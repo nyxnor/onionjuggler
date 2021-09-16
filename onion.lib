@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This file is part of onion-cli, an easy to use Tor hidden services manager.
+# This file is part of onionservice, an easy to use Tor hidden services manager.
 # Portions of this file was source from TorBox, an easy to use anonymizing router based on Raspberry Pi.
 #
 # Copyright (C) 2021 Patrick Truffer

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## This file is part of onion-cli, an easy to use Tor hidden services manager.
+## This file is part of onionservice, an easy to use Tor hidden services manager.
 ##
 ## Copyright (C) 2018-2021 openoms, rootzoll, frennkie, nolith (MIT)
 ## Github: https://github.com/openoms, https://github.com/rootzoll, https://github.com/frennkie, https://github.com/nolith
@@ -27,7 +27,7 @@
 ## This file lets you manage your hidden services
 ##
 ## SYNTAX
-## bash onion-service.sh COMMAND [REQ_OPTION] <OPTIONAL>
+## bash onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
 ##
 ## string   --> Command and is necessary
 ## [string] --> Necessary
@@ -211,15 +211,15 @@ create_service_list(){
 ## $3 normally is client, but can be any other (accepts list -> client1,client2...)
 ## $4 if $3 is a list (client1,client2,...), fill it with "1" (anything non zero)
 ## Examples:
-##  bash onion-service.sh off ssh,xmpp,nextcloud purge
+##  bash onionservice-cli off ssh,xmpp,nextcloud purge
 ##   loop_array_dynamic delete_service "${SERVICE}" "${PURGE}"
-##  bash onion-service.sh auth server on ssh,xmpp,nextcloud alice,bob
+##  bash onionservice-cli auth server on ssh,xmpp,nextcloud alice,bob
 ##   loop_array_dynamic auth_server_add "${SERVICE}" "${CLIENT}" 1
-##  bash onion-service.sh auth server purge ssh,xmpp,nextcloud
+##  bash onionservice-cli auth server purge ssh,xmpp,nextcloud
 ##   loop_array_dynamic auth_server_purge "${SERVICE}"
-##  bash onion-service.sh auth client off bob-ssh-service
+##  bash onionservice-cli auth client off bob-ssh-service
 ##   loop_array_dynamic auth_client_remove "${AUTH_FILE_NAME}"
-##  bash onion-service.sh renew ssh,xmpp,nextcloud
+##  bash onionservice-cli renew ssh,xmpp,nextcloud
 ##   loop_array_dynamic renew_service_address "${SERVICE}"
 ## DONT LIKE THE VARIBLES NAMES? GIVE ME SOME SUGGESTIONS, THE VAR IS USED FOR DIFFERENT THINGS
 loop_array_dynamic(){

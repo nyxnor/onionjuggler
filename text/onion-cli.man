@@ -1,12 +1,12 @@
-.\" Manpage for onion-cli.
+.\" Manpage for onionservice.
 .\" Contact nyxnor@protonmail to correct errors or typos.
-.TH man 8 "06 September 2069" "1.0" "onion-cli man page"
+.TH man 8 "06 September 2069" "1.0" "onionservice man page"
 .SH NAME
-onion-cli \- dinamically manage your onion services with bash
+onionservice \- dinamically manage your onion services with bash
 .SH SYNOPSIS
-.B onion-cli [COMMAND]... <OPTION>...
+.B onionservice [COMMAND]... <OPTION>...
 .SH DESCRIPTION
-onion-cli is a dynamic menu that reads the onion services folders to faciliate usage of hidden services. Activating, deactivating (optionally purging keys), renewing hostnames, configuring client authorization as a server and add the file as a client, see its credentials and QR code. Tor is reloaded when torrc is edited and just restarts if it fails to reload.
+onionservice is a dynamic menu that reads the onion services folders to faciliate usage of hidden services. Activating, deactivating (optionally purging keys), renewing hostnames, configuring client authorization as a server and add the file as a client, see its credentials and QR code. Tor is reloaded when torrc is edited and just restarts if it fails to reload.
 
 The project is composed by 3 scripts, one being the menu, one being the library and the last one being the main handler. The menu is dynamically produced depending on how much services (<HiddenServicesDataDir>/<HiddenServiceDir>) or clients you have (<HiddenServiceDir>/authorized_clients/) or clients you are (ClientOnionAuthDir). The library is used to source the global variables to be used in the other scripts, such as where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used. The main script is where all the magic happens, in fact, menu script just build the variables with a graphical interface by the user checklisting or writing with a input box to be organized to call the main script by non technical users.
 
@@ -205,13 +205,13 @@ All of the files from the indicate server for the given command [renew|off] will
 .RE
 
 .SH OPTIONS
-The onion-cli does not take any options. However, you can supply username.
+The onionservice does not take any options. However, you can supply username.
 .SH SEE ALSO
 tor(1), bash(1)
 .SH BUGS
 There are no accidents, just huge mistakes.
 
-Report bugs at https://github.com/nyxnor/onion-cli
+Report bugs at https://github.com/nyxnor/onionservice
 .SH COPYRIGHT
 COPYRIGHT
 Copyright  ©  2021  nyxnor.   License  GPLv3+:  GNU  GPL  version  3 or later <https://gnu.org/licenses/gpl.html>.

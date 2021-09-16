@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This file is part of onion-cli, an easy to use Tor hidden services manager.
+# This file is part of onionservice, an easy to use Tor hidden services manager.
 #
 # Copyright (C) 2021 nyxnor
 # Contact: nyxnor@protonmail.com
@@ -21,7 +21,7 @@
 #
 # DESCRIPTION
 # This file lets you manage your authorized clients for hidden services
-# It is a CLI for the onion-service.sh with everything integrated in this menu
+# It is a CLI for the onionservice-cli with everything integrated in this menu
 #
 # SYNTAX
 # bash menu-onion-main
@@ -242,7 +242,7 @@ MENU="Manage your onion services"
 
 if [ -z "$(sudo -u ${DATA_DIR_OWNER} ls -A ${DATA_DIR_HS}/)" ]; then
   CHOICE_MAIN=$(whiptail --menu "${MENU}" --title "${TITLE}" ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
-    "MAN" "Manual pages for the onion-cli" \
+    "MAN" "Manual pages for the onionservice" \
     "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
     "CREATE" "Create and host a hidden service" \
     "IMPORT" "Import your hidden service data directory" \
@@ -250,7 +250,7 @@ if [ -z "$(sudo -u ${DATA_DIR_OWNER} ls -A ${DATA_DIR_HS}/)" ]; then
     3>&1 1>&2 2>&3)
 else
   CHOICE_MAIN=$(whiptail --menu "${MENU}" --title "${TITLE}" ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
-    "MAN" "Manual pages for the onion-cli" \
+    "MAN" "Manual pages for the onionservice" \
     "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
     "CREATE" "Host a hidden service" \
     "DELETE" "Delete chosen onion service" \
@@ -269,7 +269,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
   case ${CHOICE_MAIN} in
 
     MAN)
-      man ./text/onion-cli.man
+      man ./text/onionservice.man
     ;;
 
     GUIDES)
@@ -279,30 +279,30 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
     DELETE)
       service_menu
       if [ ! -z ${SERVICE_NAME_LIST} ]; then
-        bash onion-service.sh off ${SERVICE_NAME_LIST}
+        bash onionservice-cli off ${SERVICE_NAME_LIST}
       fi
     ;;
 
     RENEW)
       service_menu
       if [ ! -z ${SERVICE_NAME_LIST} ]; then
-        bash onion-service.sh renew ${SERVICE_NAME_LIST}
+        bash onionservice-cli renew ${SERVICE_NAME_LIST}
       fi
     ;;
 
     CREDENTIALS)
       service_menu
       if [ ! -z ${SERVICE_NAME_LIST} ]; then
-        bash onion-service.sh credentials ${SERVICE_NAME_LIST}
+        bash onionservice-cli credentials ${SERVICE_NAME_LIST}
       fi
     ;;
 
     IMPORT)
-      bash onion-service.sh backup import
+      bash onionservice-cli backup import
     ;;
 
     EXPORT)
-      bash onion-service.sh backup export
+      bash onionservice-cli backup export
     ;;
 
     CREATE)
@@ -331,7 +331,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
             if [ ! -z ${VIRTPORT} ]; then
               ## Optional
               VIRTPORT2=$(whiptail --inputbox "${VIRTPORT2_MSG}" 10 50 3>&1 1>&2 2>&3)
-              bash onion-service.sh on unix ${SERVICE_NAME} ${VIRTPORT} ${VIRTPORT2}
+              bash onionservice-cli on unix ${SERVICE_NAME} ${VIRTPORT} ${VIRTPORT2}
             fi
           fi
 
@@ -349,7 +349,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
                   TARGET2=$(whiptail --inputbox "${TARGET2_MSG}" 10 50 3>&1 1>&2 2>&3)
                 fi
               fi
-              bash onion-service.sh on tcp ${SERVICE_NAME} ${VIRTPORT} ${TARGET} ${VIRTPORT2} ${TARGET2}
+              bash onionservice-cli on tcp ${SERVICE_NAME} ${VIRTPORT} ${TARGET} ${VIRTPORT2} ${TARGET2}
             fi
           fi
         fi
@@ -380,7 +380,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
       fi
 
       if [ ! -z ${CLIENT_NAME_LIST} ]; then
-        bash onion-service.sh auth server ${AUTH_STATUS} ${SERVICE_NAME_LIST} ${CLIENT_NAME_LIST}
+        bash onionservice-cli auth server ${AUTH_STATUS} ${SERVICE_NAME_LIST} ${CLIENT_NAME_LIST}
       fi
     ;;
 
@@ -401,13 +401,13 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
           AUTH_PRIV_KEY=("$(whiptail --inputbox "${DESCRIPTION}" 15 70 3>&1 1>&2 2>&3)")
           AUTH_PRIV_KEY=$(echo ${AUTH_PRIV_KEY} | tr -d ' ')
           if [ ! -z ${AUTH_PRIV_KEY} ]; then
-            bash onion-service.sh auth client on ${AUTH_FILE_NAME} ${AUTH_PRIV_KEY}
+            bash onionservice-cli auth client on ${AUTH_FILE_NAME} ${AUTH_PRIV_KEY}
           fi
         fi
       elif [ "${AUTH_TYPE}" == "DEL" ]; then
         auth_client_menu
         if [ ! -z ${ONION_AUTH_NAME_LIST} ]; then
-          bash onion-service.sh auth client off ${ONION_AUTH_NAME_LIST}
+          bash onionservice-cli auth client off ${ONION_AUTH_NAME_LIST}
         fi
       fi
     ;;

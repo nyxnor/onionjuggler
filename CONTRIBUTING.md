@@ -17,8 +17,8 @@ First, learn the commands used:
 Second, fork this upstream repo, clone your fork, create a new branch and edit your changes there:
 
 ```sh
-git clone https://github.com/<YOUR_USERNAME>/onion-cli.git
-cd onion-cli https://github.com/nyxnor/onion-cli.git
+git clone https://github.com/<YOUR_USERNAME>/onionservice.git
+cd onionservice https://github.com/nyxnor/onionservice.git
 git checkout main
 git checkout -b <NEW_BRANCH>
 git add <FILE_EDITED>
