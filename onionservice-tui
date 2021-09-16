@@ -77,7 +77,7 @@ service_menu(){
 }
 
 
-AUTH_SERVER_menu(){
+auth_server_menu(){
   prepare_derived_menu
 
 for SERVICE in $(sudo -u ${DATA_DIR_OWNER} ls ${DATA_DIR_HS}/); do
@@ -173,7 +173,7 @@ done
 }
 
 
-AUTH_CLIENT_menu(){
+auth_client_menu(){
   prepare_derived_menu
 
   for ONION_AUTH in $(sudo -u ${DATA_DIR_OWNER} ls -A ${CLIENT_ONION_AUTH_DIR}/ | cut -d '.' -f1); do
@@ -376,7 +376,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
         fi
       elif [ "${AUTH_TYPE}" == "DEL" ]; then
         AUTH_STATUS="off"
-        AUTH_SERVER_menu
+        auth_server_menu
       fi
 
       if [ ! -z ${CLIENT_NAME_LIST} ]; then
@@ -405,7 +405,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
           fi
         fi
       elif [ "${AUTH_TYPE}" == "DEL" ]; then
-        AUTH_CLIENT_menu
+        auth_client_menu
         if [ ! -z ${ONION_AUTH_NAME_LIST} ]; then
           bash onion-service.sh auth client off ${ONION_AUTH_NAME_LIST}
         fi
