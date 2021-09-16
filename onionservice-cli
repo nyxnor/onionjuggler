@@ -295,7 +295,7 @@ loop_array_dynamic(){
   BOOLEAN="${4}"
 
   for ITEM in ${SERVICE_LIST}; do
-    if [ -z "${VAR_THREE}" ]; then
+    if [ -z "${BOOLEAN}" ]; then
       "${CALL_FUNCTION}" "${ITEM}" "${CLIENT_LIST}"
     else
       for SUBITEM in ${CLIENT_LIST}; do
