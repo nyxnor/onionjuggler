@@ -52,14 +52,12 @@ YELLOW='\033[1;93m'
 #Connectivity check
 CHECK_URL1="http://debian.org"
 PING_SERVER="debian.org"
-
-DISTRIBUTION=$(lsb_release -sc)
-
+## deb onion sources
 SOURCES_DEB_SECURITY_ONION="http://5ajw6aqf3ep7sijnscdzw77t7xq4xjpsy335yb2wiwgouo7yfxtjlmid.onion/"
 SOURCES_DEB_UPDATE_ONION="http://2s4yqjx5ul6okpp3f2gaunr2syex5jgbfpfvhxxbbjwnrsvbk5v3qbid.onion/"
 SOURCES_DEB_SECURITY_PLAIN="https://deb.debian.org/"
 SOURCES_DEB_UPDATE_PLAIN="https://deb.debian.org/"
-
+## tpo onion sources
 SOURCES_TOR_UPDATE_ONION="http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
 SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
 

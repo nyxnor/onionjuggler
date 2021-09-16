@@ -128,6 +128,7 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 
 ## To-do
 
+* Shellcheck the tui, it burns shellcheck brain.
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
 * [Vanguards](https://github.com/mikeperry-tor/vanguards) menu option
