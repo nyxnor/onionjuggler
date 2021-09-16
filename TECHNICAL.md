@@ -65,10 +65,10 @@ Syntax: *on tcp [SERV] [VIRTPORT] < TARGET > < VIRTPORT2 > < TARGET2 >*
 
 1. Localhost with one virtual port (the commands below will have the same effect):
 ```sh
-bash onionservice-cli on tcp ssh 22
-bash onionservice-cli on tcp ssh 22 22
-bash onionservice-cli on tcp ssh 22 localhost:22
-bash onionservice-cli on tcp ssh 22 127.0.0.1:22
+sh onionservice-cli on tcp ssh 22
+sh onionservice-cli on tcp ssh 22 22
+sh onionservice-cli on tcp ssh 22 localhost:22
+sh onionservice-cli on tcp ssh 22 127.0.0.1:22
 ```
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
@@ -77,10 +77,10 @@ HiddenServicePort 22 127.0.0.1:22
 
 2. Localhost with two virtual ports (the commands above will have the same effect):
 ```sh
-bash onionservice-cli on tcp ssh 22 22 80
-bash onionservice-cli on tcp ssh 22 22 80 80
-bash onionservice-cli on tcp ssh 22 localhost:22 80 localhost:80
-bash onionservice-cli on tcp ssh 22 127.0.0.1:22 80 127.0.0.1:80
+sh onionservice-cli on tcp ssh 22 22 80
+sh onionservice-cli on tcp ssh 22 22 80 80
+sh onionservice-cli on tcp ssh 22 localhost:22 80 localhost:80
+sh onionservice-cli on tcp ssh 22 127.0.0.1:22 80 127.0.0.1:80
 ```
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
@@ -90,7 +90,7 @@ HiddenServicePort 80 127.0.0.1:80
 
 3. Remote target with one virtual port
 ```sh
-bash onionservice-cli on tcp ssh 22 192.168.0.10:22
+sh onionservice-cli on tcp ssh 22 192.168.0.10:22
 ```
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
@@ -99,7 +99,7 @@ HiddenServicePort 22 192.168.0.10:22
 
 4. Remote target with two virtual ports:
 ```sh
-bash onionservice-cli on tcp ssh 22 192.168.0.10:22 80 192.168.0.10:80
+sh onionservice-cli on tcp ssh 22 192.168.0.10:22 80 192.168.0.10:80
 ```
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
@@ -124,7 +124,7 @@ Syntax: *on unix [SERV] [VIRTPORT] < VIRTPORT2 >*
 
 * Target with one virtual ports:
 ```sh
-bash onionservice-cli on unix ssh 22
+sh onionservice-cli on unix ssh 22
 ```
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
@@ -133,7 +133,7 @@ HiddenServicePort 22 /var/run/tor-hs-ssh-22.sock
 
 * Target with two virtual ports:
 ```sh
-bash onionservice-cli on unix ssh 22 80
+sh onionservice-cli on unix ssh 22 80
 ```
 ```
 HiddenServiceDir /var/lib/tor/services/ssh
@@ -167,14 +167,14 @@ Syntax: *off [SERV1,SERV2,...] < purge >*
 
 Deactivate the service (delete torrc's lines which are in the same block as the service):
 ```sh
-bash onionservice-cli off ssh,xmpp,nextcloud
+sh onionservice-cli off ssh,xmpp,nextcloud
 ```
 
 Deactivate the service and delete the service directory (keys will be deleted):
 * delete torrc's lines which are in the same block as the service.
 * delete the Hidden Service directory.
 ```sh
-bash onionservice-cli off ssh,xmpp,nextcloud purge
+sh onionservice-cli off ssh,xmpp,nextcloud purge
 ```
 
 # Renewal of service address
@@ -193,12 +193,12 @@ Syntax: *renew [all-services|SERV1,SERV2,...]*
 
 Renew one or a list of services:
 ```sh
-bash onionservice-cli renew ssh,xmpp,nextcloud
+sh onionservice-cli renew ssh,xmpp,nextcloud
 ```
 
 Renew all services:
 ```sh
-bash onionservice-cli renew all-services
+sh onionservice-cli renew all-services
 ```
 
 # Onion authentication/authorization
@@ -228,7 +228,7 @@ Syntax: *auth server on [SERV] [CLIENT] < CLIENT_PUB_KEY >*
 
 Client sent you his public key `5BMZSEZCMD7XUWC4UQITPDZAFP322ZNNJXHYISUWALNVJCOH3FCA` for the `xmpp` service:
 ```shell
-bash onionservice-cli auth server on xmpp 5BMZSEZCMD7XUWC4UQITPDZAFP322ZNNJXHYISUWALNVJCOH3FCA
+sh onionservice-cli auth server on xmpp 5BMZSEZCMD7XUWC4UQITPDZAFP322ZNNJXHYISUWALNVJCOH3FCA
 ```
 
 #### Server creating key pair
@@ -241,17 +241,17 @@ Syntax: *auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]*
 
 Add authorization of one or a list of services and one or a list of clients:
 ```sh
-bash onionservice-cli auth server on ssh,xmpp,nextcloud alice,bob
+sh onionservice-cli auth server on ssh,xmpp,nextcloud alice,bob
 ```
 
 Add authorization of all services and one or a list of clients:
 ```sh
-bash onionservice-cli auth server on all-services alice,bob
+sh onionservice-cli auth server on all-services alice,bob
 ```
 
 Example:
 ```sh
-bash onionservice-cli auth server on test,xmpp alice,bob
+sh onionservice-cli auth server on test,xmpp alice,bob
 ```
 Effect:
 ```
@@ -322,22 +322,22 @@ Syntax: *auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLI
 
 Remove authorization of one or a list of services and one or a list of clients:
 ```sh
-bash onionservice-cli auth server off ssh,xmpp,nextcloud alice,bob
+sh onionservice-cli auth server off ssh,xmpp,nextcloud alice,bob
 ```
 
 Remove authorization of all services and one or a list of clients:
 ```sh
-bash onionservice-cli auth server off all-services alice,bob
+sh onionservice-cli auth server off all-services alice,bob
 ```
 
 Remove authorization of all services and all clients:
 ```sh
-bash onionservice-cli auth server off all-services all-clients
+sh onionservice-cli auth server off all-services all-clients
 ```
 
 Remove authorization of one or a list of services and all clients from them:
 ```sh
-bash onionservice-cli auth server off ssh,xmpp,nextcloud all-clients
+sh onionservice-cli auth server off ssh,xmpp,nextcloud all-clients
 ```
 
 ## Onion service client
@@ -355,7 +355,7 @@ If you already have the private key, given by the onion service operator or gene
 Syntax: *auth client on [ONION_DOMAIN] < AUTH_PRIV_KEY >*
 
 ```sh
-bash onionservice-cli auth client on fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion VCICPGI65GPP2BZECMO4M3J63WREWWUAO2PJA6TXMWZB5D4XQZJA
+sh onionservice-cli auth client on fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion VCICPGI65GPP2BZECMO4M3J63WREWWUAO2PJA6TXMWZB5D4XQZJA
 ```
 
 This will create a '.auth_private' file inside ClietOnionAuthDir named with the onion domain for uniqueness.
@@ -381,7 +381,7 @@ fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd:descriptor:x25519:UBVCL
 
 The onion address in the name of the file for uniqueness. To add your key to authentication with tor (daemon):
 ```sh
-bash onionservice-cli auth client on fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
+sh onionservice-cli auth client on fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
 ```
 
 This will create a '.auth_private' file inside ClietOnionAuthDir named with the onion domain for uniqueness.
@@ -399,7 +399,7 @@ Syntax: *auth client [off] [ONION_DOMAIN]*
 
 Remove your authentication file:
 ```sh
-bash onionservice-cli auth client off fritz-culinaire-blog
+sh onionservice-cli auth client off fritz-culinaire-blog
 ```
 
 ### List your authorization as client
@@ -413,7 +413,7 @@ Syntax: *auth client list*
 
 See all your '.auth_private' files and its contents:
 ```sh
-bash onionservice-cli auth client list
+sh onionservice-cli auth client list
 ```
 Effect:
 ```
@@ -445,12 +445,12 @@ Syntax: *credentials [all-services|SERV1,SERV2,...]*
 
 View credentials of one or a list of services:
 ```sh
-bash onionservice-cli credentials ssh,xmpp,nextcloud
+sh onionservice-cli credentials ssh,xmpp,nextcloud
 ```
 
 View credentials of all services:
 ```sh
-bash onionservice-cli credentials all-services
+sh onionservice-cli credentials all-services
 ```
 
 ```
@@ -519,7 +519,7 @@ Syntax: *location [SERV] [nginx|apache|html]*
 
 View onion location guide for your test hidden service:
 ```sh
-bash onionservice-cli location torbox.ch nginx
+sh onionservice-cli location torbox.ch nginx
 ```
 
 # Backup
@@ -545,7 +545,7 @@ Print to stdout the how to transfer via `scp` to a remote host by:
 
 Create a backup:
 ```sh
-bash onionservice-cli backup create
+sh onionservice-cli backup create
 ```
 
 ## Integrate backup
@@ -561,7 +561,7 @@ Print to stdout the how to transfer via `scp` from a remote host by:
 
 Integrate a backup:
 ```sh
-bash onionservice-cli backup integrate
+sh onionservice-cli backup integrate
 ```
 
 # Vanguards
@@ -580,7 +580,7 @@ As there is no recent Vanguards release and the debian package is old, will clon
 **Usage:**
 
 ```sh
-bash onionservice-cli vanguards intall
+sh onionservice-cli vanguards intall
 ```
 
 ## Log vanguards
@@ -595,7 +595,7 @@ Best documentation is the official one:
 **Usage:**
 
 ```sh
-bash onionservice-cli vanguards logs
+sh onionservice-cli vanguards logs
 ```
 
 ## Upgrade vanguards
@@ -605,7 +605,7 @@ As explained on vanguards installation above, vanguards "version" is a commit ha
 **Usage:**
 
 ```sh
-bash onionservice-cli vanguards upgrade
+sh onionservice-cli vanguards upgrade
 ```
 
 ## Remove vanguards
@@ -615,5 +615,5 @@ bash onionservice-cli vanguards upgrade
 **Usage:**
 
 ```sh
-bash onionservice-cli vanguards remove
+sh onionservice-cli vanguards remove
 ```

@@ -4,7 +4,7 @@
 .SH NAME
 onionservice \- dinamically manage your onion services with bash
 .SH SYNOPSIS
-.B onionservice [COMMAND]... <OPTION>...
+.B onionservice-cli [COMMAND]... <OPTION>...
 .SH DESCRIPTION
 onionservice is a dynamic menu that reads the onion services folders to faciliate usage of hidden services. Activating, deactivating (optionally purging keys), renewing hostnames, configuring client authorization as a server and add the file as a client, see its credentials and QR code. Tor is reloaded when torrc is edited and just restarts if it fails to reload.
 
@@ -207,7 +207,7 @@ All of the files from the indicate server for the given command [renew|off] will
 .SH OPTIONS
 The onionservice does not take any options. However, you can supply username.
 .SH SEE ALSO
-tor(1), bash(1)
+tor(1), bash(1), dash(1)
 .SH BUGS
 There are no accidents, just huge mistakes.
 

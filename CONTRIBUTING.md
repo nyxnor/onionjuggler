@@ -8,10 +8,10 @@ This project is not perfect and never will be, don't be afraid to correct anyone
 ## Learn the commands used:
 
 * Intrinsic
-  * bash, tor
+  * sh, bash (tui), tor
 * GNU utilities:
   * set, cat, ls, printf, sed, awk, cut, cp, mv, rm, tee, tar, mkdir, chown, chmod,
-* Shell keywords (bash):
+* Shell keywords:
   * if then elif else fi, while, for, case esac, do done, function, basename, realpath
 * Extras:
   * git, qrencode, openssl, basez

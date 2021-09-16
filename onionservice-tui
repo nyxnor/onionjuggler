@@ -423,4 +423,4 @@ fi
 #     exit 0
 # fi
 
-# bash ${0}
+# bash $(realpath ${0})

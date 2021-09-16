@@ -178,10 +178,10 @@ restarting_tor()
   ACTION="${1}"
   set_owner_permission
   if [ "${ACTION}" = "force" ]; then
-    printf %s"${AMBER}# Restarting tor!${NOCOLOR} \n"
+    printf "# Restarting tor!\n"
     sudo systemctl restart "${TOR_SERVICE}"
   elif [ "${ACTION}" = "" ]; then
-    printf %s"${AMBER}# Reloading tor!${NOCOLOR} \n"
+    printf "# Reloading tor!\n"
     sudo systemctl reload-or-restart "${TOR_SERVICE}"
   fi
 }
@@ -325,12 +325,11 @@ case "${COMMAND}" in
     case "${ACTION}" in
 
       env)
-        install_package tor openssl basez git qrencode
+        install_package tor openssl basez git qrencode grep sed
         sudo adduser "${USER}" "${DATA_DIR_OWNER}"
         sudo -u "${DATA_DIR_OWNER}" mkdir -p "${DATA_DIR_HS}"
         sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
-        set_owner_permission
-        success_msg
+        success_msg reload
       ;;
 
       torrc)

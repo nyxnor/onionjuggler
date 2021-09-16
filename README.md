@@ -19,6 +19,11 @@ git clone https://github.com/nyxnor/onionservice.git
 cd onionservice
 ```
 
+Setup custom tor enviroment:
+```sh
+sh onionservice-cli setup env
+```
+
 Use the menu (only bash):
 ```sh
 bash onionservice-tui
@@ -31,12 +36,17 @@ man ./text/onionservice.man
 
 Read a small description of the main script:
 ```sh
-bash onionservice-cli
+sh onionservice-cli
+```
+
+Restore latest torrc backup:
+```sh
+sh onionservice-cli setup torrc
 ```
 
 ### Technical
 
-Now that you have read the [manual](text/onionservice.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [bash menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
+Now that you have read the [manual](text/onionservice.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [whiptail menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
 Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.md) for advanced usage.
 
 ### Requirements
@@ -47,19 +57,20 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 * basez >= 1.6.2 (for onion authentication)
 * git >= 2.0+ (for cloning the repo and vanguards)
 * qrencode >= 4.1.1 (for printing the hostname)
-* bash under /bin/bash (soon the [main script](onionservice-cli) aims to be POSIX compliant)
-* leave blank lines between Hidden Services torrc lines - script create it correctly, no change needed when using this script, just be aware when importing your torrc and deactivating a service, it will delete every line within the same block
-* systemd for vanguards control
+* dash under /bin/sh
+* bash under /bin/bash (for the [whiptail menu](onionservice-tui))
+* systemd (for vanguards control)
 * user with root privileges
+* leave blank lines between Hidden Services torrc lines - script create it correctly, no change needed when using this script, just be aware when importing your torrc and deactivating a service, it will delete every line within the same block
 * Reserved words and Utilities - function, printf, command, while, for, do, done, case, esac, in, IFS, if, elif, else, fi, cp, mv, rm, sed, cut, grep, tail, tee.
 
 ## Goal
 
 * **Autonomy** - The onion service operator should have full control of tor functionalities and if he does not know how, he can learn reading the scripts. It also helps typing less commands and when not remembering full directories paths or file syntax. Client option to add '.auth_private' option also possible.
 * **KISS** - Keep It Simple Stupid (At least I try). Source [wikipedia](https://en.wikipedia.org/wiki/KISS_principle).
-* **Portability** - POSIX compliant to work on different shells, customize path, ports. The [library](onion.lib) and [main script](onionservice-cli) is aiming to be fully POSIX compliant studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible). The hard part is not using arrays cause it is not compliant to the spec. Source [wikipedia](https://en.wikipedia.org/wiki/POSIX), [gnu guide](https://www.gnu.org/software/guile/manual/html_node/POSIX.html)
-* **Bashism** - The [menu](onionservice-tui) will never be POSIX compliant as it uses bashism such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible). Source [wikipedia](https://en.wikipedia.org/wiki/Bash_(Unix_shell).
-* **Autonomy** - The [library](onion.lib) and [main script](onionservice-cli) can run entirely by themselves, menu if just an addon that calls the main script.
+* **Portability** - POSIX compliant to work on different shells, customize path, ports. The [library](onion.lib) and the [cli]](onionservice-cli) is fully [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible).
+* **Bashism** - The [menu](onionservice-tui) will never be POSIX compliant as it uses [bashism](https://en.wikipedia.org/wiki/Bash_(Unix_shell)) such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible).
+* **Autonomy** - The [cli](onionservice-cli) can run standalone, menu is just an addon that calls the main script.
 * **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
 
 ## Features
@@ -73,8 +84,8 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
   * **Client** - Generate key pair or add public part, list your `<ClientOnionAuthDir>/<SOME_ONION>.auth_private`.
 * **Onion-Location** - For public onion services You can redirect your plainnet users to your onion service with this guide for nginx, apache2 and html header attributes.
 * **Backup** - Better be safe.
-  * **Create** -  Backup of your torrc lines containing hidden service configuration, all of your directories of HiddenServiceDir and ClientOnionAuthDir. Guide to export the backup to a remote host with scp.
-  * **Integrate** - Integrate hidden serivces lines configuration from torrc and the directories HiddenServiceDir and ClientOnionAuthDir to your current system. This option should be used after creating a backup and importing to the current host. Guide to import backup to the current host with scp.
+  * **Create** -  Backup of your `torrc` lines containing hidden service configuration, all of your directories of `HiddenServiceDir` and `ClientOnionAuthDir`. Guide to export the backup to a remote host with scp.
+  * **Integrate** - Integrate hidden serivces lines configuration from `torrc` and the directories `HiddenServiceDir` and `ClientOnionAuthDir` to your current system. This option should be used after creating a backup and importing to the current host. Guide to import backup to the current host with scp.
 * **Vanguards** - This addon protects against guard discovery and related traffic analysis attacks. A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
 * **Bulk** - Some commands can be bulked with `all-clients`, `all-services`, `[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected. They are specified inside `<>` (e.g. `<VIRTPORT2>`)
