@@ -55,9 +55,9 @@ Options:
 
   auth server list [SERV1,SERV2,...]                                                 list clients for indicated service
 
-  auth client on [ONION_DOMAIN] <CLIENT_PRIV_KEY>                                    add your client key, if no key specified, will create one
+  auth client on [ONION] <CLIENT_PRIV_KEY>                                           add your client key, if no key specified, will create one
 
-  auth client off [ONION_DOMAIN]                                                     remote your client key
+  auth client off [ONION1,ONION2,...]                                                remote your client key
 
   auth client list                                                                   list your keys as a client
 
@@ -69,7 +69,7 @@ Options:
 
   vanguards [install|logs|upgrade|remove]                                            install, upgrade, remove or see logs for vanguards addon
 
-  [-h|-help|--help]                                                                  display this help message
+  [-h|-help|--help|help]                                                             display this help message
 
 '# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs.\n"
@@ -78,7 +78,7 @@ It does not imply the code worked, you should always pay attention for errors in
 
 [ "${USER}" = "root" ] && { printf %s"${RED}Not as root !!!\n${NOCOLOR}" && exit 1; }
 
-{ [ -z "${#}" ] || [ -z "${2}" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
+{ [ -z "${#}" ] || [ -z "${2}" ] || [ "${1}" = "help" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
 
 ###########################
 ######## VARIABLES ########
@@ -127,12 +127,20 @@ YELLOW='\033[1;93m'
 ###########################
 ######## FUNCTIONS ########
 
+
+## install space separated list of packages (e.g. install_package tor openssl git)
 install_package(){
   for PACKAGE in "${@}"; do
     command -v "${PACKAGE}" >/dev/null || "${PKG_MANAGER_INSTALL}" "${PACKAGE}"
   done
 }
 
+is_service_dir_empty(){
+  [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
+}
+
+
+## set correct permissions for tor directories and files
 set_owner_permission(){
   sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
   sudo chown "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC}"
@@ -140,8 +148,7 @@ set_owner_permission(){
   sudo chmod 644 "${TORRC}"
 }
 
-# check_tor()
-# Used predefined variables: RED, NOCOLOR
+
 # This function checks the status on https://check.torproject.org/
 check_tor()
 {
@@ -155,9 +162,6 @@ check_tor()
 }
 
 
-# online_check()
-# Syntax online_check <source_script>
-# Used predefined variables: RED, NOCOLOR, MENU_HEIGHT_15 MENU_WIDTH
 # This function checks the internet connection and exits to <source_script> if none.
 online_check()
 {
@@ -170,7 +174,6 @@ online_check()
 }
 
 
-# restarting_tor(<source script>)
 # This function reload tor by default or forces to restart
 # Nyxnor: Why this name restart when it reload by default? I dont know a better name.
 restarting_tor()
@@ -178,19 +181,22 @@ restarting_tor()
   ACTION="${1}"
   set_owner_permission
   if [ "${ACTION}" = "force" ]; then
-    printf "# Restarting tor!\n"
+    printf "# Restarting tor...\n"
     sudo systemctl restart "${TOR_SERVICE}"
+    printf "# Restarted tor succesfully!\n"
   elif [ "${ACTION}" = "" ]; then
-    printf "# Reloading tor!\n"
+    printf "# Reloading tor...\n"
     sudo systemctl reload-or-restart "${TOR_SERVICE}"
+    printf "# Reloaded tor succesfully!\n"
   fi
 }
 
 
 ## display error message with instructions to use the script correctly.
 error_msg(){
-  [ ! -z "${1}" ] && printf %s"${RED}ERROR: ${1}${NOCOLOR}\n\n"
-  onion_usage
+  [ ! -z "${1}" ] && printf %s"${RED}ERROR: ${1}${NOCOLOR}\n"
+  exit 1
+  #onion_usage
 }
 
 ## '# Done': You should always see it at the end, else something unexpected occured.
@@ -284,26 +290,22 @@ create_service_list(){
 
 
 ## loops the parameters
-## $1 CALL_FUNCTION must be the function to loop
+## $1 must be the function to loop
 ## $2 normally is service, but can be any other parameter (accepts list -> serv1,serv2,...)
 ## $3 normally is client, but can be any other (accepts list -> client1,client2...)
 ## $4 if $3 is a list (client1,client2,...), fill it with "1" (anything non zero)
 loop_array_dynamic(){
-  CALL_FUNCTION="${1}"
-  SERVICE_LIST=$(printf %s"${2}" | sed "s/\,/ /g")
-  CLIENT_LIST=$(printf %s"${3}" | sed "s/\,/ /g")
-  BOOLEAN="${4}"
-
-  for ITEM in ${SERVICE_LIST}; do
-    if [ -z "${BOOLEAN}" ]; then
-      "${CALL_FUNCTION}" "${ITEM}" "${CLIENT_LIST}"
+  for ITEM in $(printf %s"${2}" | sed "s/\,/ /g"); do
+    if [ -z "${3}" ]; then
+      "${1}" "${ITEM}" "${2}"
     else
-      for SUBITEM in ${CLIENT_LIST}; do
-        "${CALL_FUNCTION}" "${ITEM}" "${SUBITEM}"
+      for SUBITEM in $(printf %s"${3}" | sed "s/\,/ /g"); do
+        "${1}" "${ITEM}" "${SUBITEM}"
       done
     fi
   done
 }
+
 
 ###########################
 ########## MAIN ###########
@@ -329,11 +331,13 @@ case "${COMMAND}" in
         sudo adduser "${USER}" "${DATA_DIR_OWNER}"
         sudo -u "${DATA_DIR_OWNER}" mkdir -p "${DATA_DIR_HS}"
         sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
+        printf "\n# Tor enviroment is ready\n"
         success_msg reload
       ;;
 
       torrc)
         sudo cp "${TORRC}".bak "${TORRC}"
+        printf "# Restored torrc with its latest backup\n"
         success_msg reload
       ;;
 
@@ -393,14 +397,12 @@ case "${COMMAND}" in
       ## remove double empty lines
       #awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
-      printf "# Reloading tor to activate the Hidden Service...\n"
       restarting_tor
-      sleep 3
 
       ## show the Hidden Service address
       service_existent=0; test_service_exists "${SERVICE}"
       if [ "${service_existent}" -eq 1 ]; then
-        printf "\n# Tor Hidden Service information:\n"
+        printf "\n# Hidden Service information:\n"
         qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
         printf %s"Service name    = ${SERVICE}\n"
         printf %s"Service address = ${ONION_HOSTNAME}\n"
@@ -484,12 +486,13 @@ case "${COMMAND}" in
   auth)
     HOST="${2}"
     STATUS="${3}"; [ -z "${STATUS}" ] && error_msg "STATUS is missing"
-    SERVICE="${4}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
-    CLIENT="${5}"
     case "${HOST}" in
 
       server)
-
+        is_service_dir_empty
+        SERVICE="${4}"
+        CLIENT="${5}"
+        [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
         case "${STATUS}" in
 
           ## as the onion service operator, make your onion authenticated by generating a pair or public and private keys,
@@ -545,6 +548,7 @@ case "${COMMAND}" in
               printf " sudo systemctl reload-or-restart-tor tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             }
+            [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
             [ "${SERVICE}" = "all-services" ] && { create_service_list ; SERVICE="${SERVICE_NAME_LIST}" ; }
             [ "${CLIENT}" = "all-clients" ] && error_msg "Client name cannot be equal to: all-clients"
             CLIENT_PUB_KEY="${6}"
@@ -557,7 +561,7 @@ case "${COMMAND}" in
               printf %s" CLIENT_PUB_KEY_CONFIG=${CLIENT_PUB_KEY_CONFIG}\n"
               printf "\n# As you inserted the public key manually, we expect that the client already has the private key\n"
             else
-              loop_array_dynamic auth_server_add "${SERVICE}" "${CLIENT}" 1
+              loop_array_dynamic auth_server_add "${SERVICE}" "${CLIENT}"
               instructions_auth
             fi
             success_msg reload
@@ -578,27 +582,24 @@ case "${COMMAND}" in
                 sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth
               fi
             }
+            [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
             if [ "${SERVICE}" = "all-services" ]; then
               printf "# Removing client authorization for all services\n"
+              create_service_list; SERVICE="${SERVICE_NAME_LIST}"
               if [ "${CLIENT}" = "all-clients" ]; then
                 printf "# All clients will be removed and the service will be accessible to anyone with the onion address.\n\n"
-                create_service_list; SERVICE="${SERVICE_NAME_LIST}"
-                loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}" 1
               else
                 printf "# If any client remains, the service will still be authenticated.\n\n"
-                create_service_list; SERVICE="${SERVICE_NAME_LIST}"
-                loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}" 1
               fi
             else
               printf %s"# Removing client authorization for the services: ${SERVICE}\n"
               if [ "${CLIENT}" = "all-clients" ]; then
                 printf "# All clients will be removed and the service will be accessible to anyone with the onion address.\n\n"
-                loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}" 1
               else
                 printf "# If any client remains, the service will still be authenticated.\n\n"
-                loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}" 1
               fi
             fi
+            loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}"
             success_msg reload
           ;;
 
@@ -606,14 +607,14 @@ case "${COMMAND}" in
             auth_server_list(){
               SERVICE="${1}"
               service_existent=0; test_service_exists "${SERVICE}"
-              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
-              printf "# Authorized clients for hidden service:\n\n"
-              printf %s"Service    = ${SERVICE}\n"
               create_client_list "${SERVICE}"
-              printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
+              if [ "${CLIENT_COUNT}" -gt 0 ]; then
+                printf %s"Service    = ${SERVICE}\n"
+                printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
+              fi
             }
+            printf "# Authorized clients for hidden service:\n\n"
             loop_array_dynamic auth_server_list "${SERVICE}"
-            printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             success_msg
           ;;
 
@@ -624,7 +625,7 @@ case "${COMMAND}" in
 
 
       client)
-        ONION_HOSTNAME="${4}"; [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
+        ONION_HOSTNAME="${4}"
         case "${STATUS}" in
 
           ## as the onion service client, add a key given by the onion service operator to authenticate yourself inside ClientOnionAuthDir
@@ -633,6 +634,7 @@ case "${COMMAND}" in
           ## use the onion hostname as the file name, this avoid overriding the file by mistake and it indicates outside of the file for which service it refers to (of course it is written inside also)
           ## adding to Tor Browser automatically not supported yet
           on)
+            [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
             CLIENT_PRIV_KEY="${5}" ## optional
             ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
             ONION_HOSTNAME_WITHOUT_ONION_LENGTH=${#ONION_HOSTNAME_WITHOUT_ONION}
@@ -646,39 +648,38 @@ case "${COMMAND}" in
               grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
               openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
               ## save variables
-              PUB_KEY=$(cat /tmp/k1.pub.key)
-              PRIV_KEY=$(cat /tmp/k1.prv.key)
+              CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
+              CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
               ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
-              PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${PRIV_KEY}"
-              PUB_KEY_CONFIG="descriptor:x25519:${PUB_KEY}"
+              CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+              CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
               ## Delete pem and keys
               sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
               # Client side configuration
-              printf %s"${PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
+              printf %s"${CLIENT_PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
               printf "# Client side authorization configured\n"
               printf "# This is your private key, keep it safe, keep it hidden:\n\n"
-              printf %s" PRIV_KEY=${PRIV_KEY}\n"
-              printf %s" PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
+              printf %s" CLIENT_PRIV_KEY=${CLIENT_PRIV_KEY}\n"
+              printf %s" CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
               printf "\n# Now it depends on the service operator to authorize you client public key\n\n"
               ## Server side configuration
               printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
-              printf "# Send these instructions to the onion service operator\n\n"
+              printf "# Send the public key and instructions to the onion service operator\n\n"
               printf %s" ONION_HOSTNAME=${ONION_HOSTNAME}\n"
-              printf %s" PUB_KEY=${PUB_KEY}\n"
-              printf %s" PUB_KEY_CONFIG=descriptor:x25519:${PUB_KEY}\n\n"
+              printf %s" CLIENT_PUB_KEY=${CLIENT_PUB_KEY}\n"
+              printf %s" CLIENT_PUB_KEY_CONFIG=descriptor:x25519:${CLIENT_PUB_KEY}\n\n"
               printf "# Create a file with the client name (eg. alice) using the suffix '.auth' (eg. alice.auth) inside the folder\n"
               printf %s"#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${ONION_HOSTNAME}\n\n"
-              printf %s" printf '${PUB_KEY_CONFIG}' | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
+              printf %s" printf '${CLIENT_PUB_KEY_CONFIG}' | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
               printf "# Reload tor\n\n"
               printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
               printf " sudo systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             else
-              ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
-              PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
-              printf %s"${PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
+              CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+              printf %s"${CLIENT_PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
               printf "\n# Client side authorization configured\n"
-              printf %s"\n PRIV_KEY_CONFIG=${PRIV_KEY_CONFIG}\n"
+              printf %s"\n CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
               printf "\n# As you inserted the private key manually, we expect that you have already sent/received the public key to/from the onion service operator\n"
             fi
             success_msg
@@ -688,21 +689,31 @@ case "${COMMAND}" in
           off)
             auth_client_remove  (){
               ONION_HOSTNAME="${1}"
+              printf %s"\n# Removing ${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME}.auth_private"
               sudo rm -f "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private
             }
-            loop_array_dynamic auth_client_remove "${ONION_HOSTNAME}"
-            printf "\n# Client side authorization removed\n"
-            success_msg
+            [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
+            if [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
+              loop_array_dynamic auth_client_remove "${ONION_HOSTNAME}"
+              printf "\n# Client side authorization removed\n"
+              success_msg
+            else
+              printf %s"${RED}INFO: ClientOnionAuthDir is empty\n${NOCOLOR}"
+            fi
           ;;
 
           list)
-            printf %s"# ClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n"
-            for AUTH in $(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}"); do
-              printf %s"\n# File name: ${AUTH}\n"
-              sudo -u "${DATA_DIR_OWNER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}"
-            done
-            printf "\n"
-            success_msg
+            if [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
+              printf %s"# ClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n"
+              for AUTH in $(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}"); do
+                printf %s"\n# File name: ${AUTH}\n"
+                sudo -u "${DATA_DIR_OWNER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}"
+              done
+              printf "\n"
+              success_msg
+            else
+              printf %s"${RED}INFO: ClientOnionAuthDir is empty\n${NOCOLOR}"
+            fi
           ;;
 
           *)
@@ -720,6 +731,7 @@ case "${COMMAND}" in
   ## <HiddenServiceDir>/authorized_clients/ because the would need to update their '.auth_private' file with the new onion address anyway and for security reasons.
   ## all-services will read through all services folders and execute the commands.
   renew)
+    is_service_dir_empty
     renew_service_address(){
       SERVICE="${1}"
       service_existent=0; test_service_exists "${SERVICE}"
@@ -739,7 +751,6 @@ case "${COMMAND}" in
         sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*
         ## reload tor now so auth option can get the new hostname
         restarting_tor
-        sleep 3
         ## generate auth for clients
         [ ! -z "${CLIENT_NAME_LIST}" ] && { sh "$(realpath "${0}")" auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
         test_service_exists "${SERVICE}"
@@ -765,6 +776,7 @@ case "${COMMAND}" in
   ## show the clients names and quantity, as well as the service torrc's block
   ## all-services will read through all services folders and execute the commands
   credentials)
+    is_service_dir_empty
     get_credentials(){
       SERVICE="${1}"
       service_existent=0; test_service_exists "${SERVICE}"
@@ -797,6 +809,7 @@ case "${COMMAND}" in
 
   ## guide to add onion-location to redirect tor users when using your plainnet site to the onion service address
   location)
+    is_service_dir_empty
     ## https://matt.traudt.xyz/posts/website-setup/
     SERVICE="${2}"
     ACTION="${3}"
