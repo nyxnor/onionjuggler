@@ -30,39 +30,16 @@
 # Hopefully, this way the scripts stay short and clear.
 #
 # SYNTAX
-# . onion.lib
+# source onion.lib
 #
-##### SET VARIABLES ######
-#
-#Set the the variables for the menu
+###########################
+######## VARIABLES ########
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 
-#Colors
-NOCOLOR='\033[0m'
-RED='\033[1;31m'
-GREEN='\033[1;32m'
-AMBER='\033[0;33m'
-WHITE='\033[1;37m'
-YELLOW='\033[1;93m'
-
-#Connectivity check
-CHECK_URL1="http://debian.org"
-PING_SERVER="debian.org"
-## deb onion sources
-SOURCES_DEB_SECURITY_ONION="http://5ajw6aqf3ep7sijnscdzw77t7xq4xjpsy335yb2wiwgouo7yfxtjlmid.onion/"
-SOURCES_DEB_UPDATE_ONION="http://2s4yqjx5ul6okpp3f2gaunr2syex5jgbfpfvhxxbbjwnrsvbk5v3qbid.onion/"
-SOURCES_DEB_SECURITY_PLAIN="https://deb.debian.org/"
-SOURCES_DEB_UPDATE_PLAIN="https://deb.debian.org/"
-## tpo onion sources
-SOURCES_TOR_UPDATE_ONION="http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
-SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
-
-###########################
-######## VARIABLES ########
 
 ## EDIT REQUIRED - if not debian and derived systems
 DATA_DIR_OWNER="debian-tor"
@@ -94,15 +71,46 @@ CONF_DIR_OWNER="${USER}"
 CONTROL_PORT=9051
 SOCKS_PORT=9050
 CHECK_URL1="http://debian.org"
-
 BROWSER_DATA_DIR="/home/${USER}/.local/share/torbrowser/tbb/$(uname -m)/tor-browser_en-US/Browser/TorBrowser/Data/Tor"
 BROWSER_TORRC="${BROWSER_DATA_DIR}/torrc"
 BROWSER_ONION_AUTH_DIR="${BROWSER_DATA_DIR}/onion-auth"
 
-##############################
-######## FUNCTIONS ###########
+## deb onion sources
+SOURCES_DEB_SECURITY_ONION="http://5ajw6aqf3ep7sijnscdzw77t7xq4xjpsy335yb2wiwgouo7yfxtjlmid.onion/"
+SOURCES_DEB_UPDATE_ONION="http://2s4yqjx5ul6okpp3f2gaunr2syex5jgbfpfvhxxbbjwnrsvbk5v3qbid.onion/"
+SOURCES_DEB_SECURITY_PLAIN="https://deb.debian.org/"
+SOURCES_DEB_UPDATE_PLAIN="https://deb.debian.org/"
+## tpo onion sources
+SOURCES_TOR_UPDATE_ONION="http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
+SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
+
+## DO NOT EDIT
+## Colors
+NOCOLOR='\033[0m'
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+AMBER='\033[0;33m'
+WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 
 
+###########################
+######## FUNCTIONS ########
+
+
+## install space separated list of packages (e.g. install_package tor openssl git)
+install_package(){
+  for PACKAGE in "${@}"; do
+    command -v "${PACKAGE}" >/dev/null || "${PKG_MANAGER_INSTALL}" "${PACKAGE}"
+  done
+}
+
+is_service_dir_empty(){
+  [ "$(sudo -u "${DATA_DIR_OWNER}" dir "${DATA_DIR_HS}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
+}
+
+
+## set correct permissions for tor directories and files
 set_owner_permission(){
   sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
   sudo chown "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC}"
@@ -111,69 +119,45 @@ set_owner_permission(){
 }
 
 
-if [ ${FIRST_ONION_RUN} -eq 1 ]; then
-  sudo apt install -y tor
-  sudo adduser ${USER} ${DATA_DIR_OWNER}
-  sudo -u ${DATA_DIR_OWNER} mkdir -p ${DATA_DIR_HS}
-  sudo -u ${DATA_DIR_OWNER} mkdir -p ${CLIENT_ONION_AUTH_DIR}
-  sudo sed -i 's/\/$//' ${TORRC} ## no config should end with '/' to find exact match.
-  set_owner_permission
-  sed -i '0,/FIRST_ONION_RUN=.*/s//FIRST_ONION_RUN=0/' $(realpath ${0})
-fi
-
-
-# check_tor()
-# Used predefined variables: RED, NOCOLOR
 # This function checks the status on https://check.torproject.org/
 check_tor()
 {
-#clear
-echo -e "${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}"
-TOR_SERVICE=$(curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
-TOR_SERVICE=$(cut -d "." -f1 <<< $TOR_SERVICE)
-
-if [ "$TOR_SERVICE" = "Congratulations" ]; then
-  TOR_STATUS="Tor is working"
-else
-  TOR_STATUS=""
-fi
-clear
+  printf %s"${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}\n"
+  TOR_SERVICE=$(curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 -c Congratulations)
+  if [ "${TOR_SERVICE}" -eq 1 ]; then
+    TOR_STATUS="Tor is working"
+  else
+    TOR_STATUS=""
+  fi
 }
 
 
-# online_check()
-# Syntax online_check <source_script>
-# Used predefined variables: RED, NOCOLOR, MENU_HEIGHT_15 MENU_WIDTH
 # This function checks the internet connection and exits to <source_script> if none.
 online_check()
 {
-  clear
-  printf "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR} \n"
-  JUMPTO=$1
-  clear
-  OCHECK=$(curl -m 5 -s $CHECK_URL1)
-  if [ $? -gt 0 ]; then
-    whiptail --title "Tor - INFO" --msgbox "\n\nIt seems that your Tor is not properly connected to the internet! For this operation, TorBox has to properly connected with the internet!" $MENU_HEIGHT_15 $MENU_WIDTH
-    trap "bash $JUMPTO; exit 0" EXIT
+  printf %s"${RED}[+] Checking internet connectivity - please wait...${NOCOLOR} \n"
+  OCHECK=$(curl -m 5 -s "${CHECK_URL1}")
+  if [ "${OCHECK}" -gt 0 ]; then
+    printf "\n\nIt seems that your Tor is not properly connected to the internet! For this operation, Tor has to properly connected with the internet!"
     exit 0
   fi
 }
 
 
-# restarting_tor(<source script>)
 # This function reload tor by default or forces to restart
 # Nyxnor: Why this name restart when it reload by default? I dont know a better name.
 restarting_tor()
 {
-  #clear
-  SOURCE_SCRIPT=$1
-  ACTION=$2
+  ACTION="${1}"
   set_owner_permission
   if [ "${ACTION}" = "force" ]; then
-    printf "${AMBER}# Restarting tor!${NOCOLOR} \n"
-    sudo systemctl restart tor@default.service
+    printf "# Restarting tor...\n"
+    sudo systemctl restart "${TOR_SERVICE}"
+    printf "# Restarted tor succesfully!\n"
   elif [ "${ACTION}" = "" ]; then
-    printf "${AMBER}# Reloading tor!${NOCOLOR} \n"
-    sudo systemctl reload-or-restart tor@default.service
+    printf "# Reloading tor...\n"
+    sudo systemctl reload-or-restart "${TOR_SERVICE}"
+    printf "# Reloaded tor succesfully!\n"
   fi
 }
+
