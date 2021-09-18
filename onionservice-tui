@@ -1,5 +1,6 @@
-#!/bin/bash
-
+#!/bin/sh
+set -x
+set -e
 # This file is part of onionservice, an easy to use Tor hidden services manager.
 #
 # Copyright (C) 2021 nyxnor
@@ -30,7 +31,7 @@
 ######## FUNCTIONS ########
 
 ## include lib
-. onion.lib
+. "$(dirname "${0}")"/onion.lib
 
 
 prepare_derived_menu(){
@@ -44,35 +45,36 @@ prepare_derived_menu(){
 
 service_menu(){
   prepare_derived_menu
-
   for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
     i=$((i+1))
     SERVICE_ARRAY+=("${i}" "${SERVICE}" OFF)
   done
 
-  CHOICE_SERVICE=$(whiptail --separate-output \
-    --checklist "${INSTRUCTIONS}" \
-    ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
-    "${SERVICE_ARRAY[@]}" \
-    3>&1 1>&2 2>&3)
+  #CHOICE_SERVICE=$(whiptail --separate-output \
+  #  --checklist "${INSTRUCTIONS}" \
+  #  ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
+  #  "${SERVICE_ARRAY[@]}" \
+  #  3>&1 1>&2 2>&3)
 
-  #CHOICE_SERVICE=$(dialog --title "${TITLE}" \
-  #           --checklist "${INSTRUCTIONS}" \
-  #           ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
-  #           "${SERVICE_ARRAY[@]}" 2>&1 >/dev/tty)
+  CHOICE_SERVICE=$(dialog --title "${TITLE}" \
+             --checklist "${INSTRUCTIONS}" \
+             ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
+             "${SERVICE_ARRAY[@]}" 2>&1 >/dev/tty)
 
   if [ ! -z "${CHOICE_SERVICE}" ]; then
     SERVICE_NAME_LIST=""
     while [ "${i}" -gt 0 ]; do
-      check=0; check=$(echo "${CHOICE_SERVICE}" | grep -c "${i}")
+      check=0
+      check=$(echo "${CHOICE_SERVICE}" | grep -c "${i}")
+      printf %s"check mate = ${check}\n"
       k=$((i * 3 -2))
       if [ "${check}" -eq 1 ]; then
         SERVICE=("${SERVICE_ARRAY[$k]}")
         SERVICE_NAME_LIST="${SERVICE_NAME_LIST},${SERVICE}"
       fi
-      i=$((i+1))
+      i=$((i-1))
     done
-      SERVICE_NAME_LIST=$(echo "${SERVICE_NAME_LIST}" | sed 's/^,//g')
+    SERVICE_NAME_LIST=$(printf %s"${SERVICE_NAME_LIST}" | sed 's/^,//g')
   fi
 }
 
@@ -109,7 +111,7 @@ done
 
     if [ ! -z "${CHOICE_SERVICE}" ]; then
 
-        AUTH_CLEAN_LIST=$(echo "${AUTH_RAW_ARRAY[@]}" | tr ' ' '\n' | cut -d '.' -f1  | sort | uniq -c | tr -s ' ' | tr '\n' ' ' | tr -s ' ' | sed 's/^ //g')
+        AUTH_CLEAN_LIST=$(printf %s"${AUTH_RAW_ARRAY[@]}" | tr ' ' '\n' | cut -d '.' -f1  | sort | uniq -c | tr -s ' ' | tr '\n' ' ' | tr -s ' ' | sed 's/^ //g')
         AUTH_CLEAN_ARRAY+=("${AUTH_CLEAN_LIST}")
         COUNT_AUTH_CLEAN_ARRAY=${#AUTH_CLEAN_ARRAY[@]}
 
@@ -146,7 +148,7 @@ done
         if [ ! -z "${CHOICE_CLIENT}" ]; then
           SERVICE_NAME_LIST=""
           while [ "${i}" -gt 0 ]; do
-            check=0; check=$(echo "${CHOICE_SERVICE}" | grep -c "${i}")
+            check=0; check=$(printf %s"${CHOICE_SERVICE}" | grep -c "${i}")
             k=$((i * 3 -2))
             if [ "${check}" -eq 1 ]; then
               SERVICE=("${SERVICE_ARRAY[$k]}")
@@ -154,11 +156,11 @@ done
             fi
             i=$((i-1))
           done
-          SERVICE_NAME_LIST=$(echo "${SERVICE_NAME_LIST}" | sed 's/^,//g')
+          SERVICE_NAME_LIST=$(printf %s"${SERVICE_NAME_LIST}" | sed 's/^,//g')
 
           CLIENT_NAME_LIST=""
           while [ "${z}" -gt 0 ]; do
-              check=0; check=$(echo "${CHOICE_CLIENT}" | grep -c "${z}")
+              check=0; check=$(printf %s"${CHOICE_CLIENT}" | grep -c "${z}")
               k=$((z * 3 -2))
               if [ "${check}" -eq 1 ]; then
                 CLIENT=("${AUTH_FINAL_ARRAY[$k]}")
@@ -166,7 +168,7 @@ done
               fi
               z=$((z-1))
           done
-          CLIENT_NAME_LIST=$(echo "${CLIENT_NAME_LIST}" | sed 's/^,//g')
+          CLIENT_NAME_LIST=$(printf %s"${CLIENT_NAME_LIST}" | sed 's/^,//g')
         fi
       fi
     fi
@@ -199,7 +201,7 @@ auth_client_menu(){
     if [ ! -z "${CHOICE_ONION_AUTH}" ]; then
       ONION_AUTH_NAME_LIST=""
       while [ "${i}" -gt 0 ]; do
-        check=0; check=$(echo "${CHOICE_ONION_AUTH}" | grep -c "${i}")
+        check=0; check=$(printf %s"${CHOICE_ONION_AUTH}" | grep -c "${i}")
         k=$((i * 3 -2))
         if [ "${check}" -eq 1 ]; then
           ONION_AUTH=("${ONION_AUTH_ARRAY[$k]}")
@@ -207,18 +209,16 @@ auth_client_menu(){
         fi
         i=$((i-1))
       done
-      ONION_AUTH_NAME_LIST=$(echo "${ONION_AUTH_NAME_LIST}" | sed 's/^,//g')
+      ONION_AUTH_NAME_LIST=$(printf %s"${ONION_AUTH_NAME_LIST}" | sed 's/^,//g')
     fi
   fi
 }
 
 
 md_menu(){
-  i=0
   for MD in ./text/*.md; do
-    i=$((i+1))
     MD_PATH=${MD%*/}
-    MD_NAME=$(echo "${MD_PATH##*/}" | cut -f1 -d '.')
+    MD_NAME=$(printf %s"${MD_PATH##*/}" | cut -f1 -d '.')
     MD_ARRAY+=("${MD_NAME}" " ")
   done
 
@@ -235,22 +235,23 @@ md_menu(){
 
 
 TITLE="Onion Services Main Menu"
-HEIGHT=20
+HEIGHT=25
 WIDTH=80
-CHOICE_HEIGHT=10
+CHOICE_HEIGHT=15
 MENU="Manage your onion services"
 
 if [ -z "$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/)" ]; then
   CHOICE_MAIN=$(whiptail --menu "${MENU}" --title "${TITLE}" ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
-    "MAN" "Manual pages for the onionservice" \
+    "MAN" "Manual pages for the onionservice-cli" \
     "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
     "CREATE" "Create and host a hidden service" \
     "IMPORT" "Import your hidden service data directory" \
+    "VANGUARDS" "Add to protect against traffic analysis" \
     "AUTH_CLIENT" "Manage your client key of someonelse's service" \
     3>&1 1>&2 2>&3)
 else
   CHOICE_MAIN=$(whiptail --menu "${MENU}" --title "${TITLE}" ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
-    "MAN" "Manual pages for the onionservice" \
+    "MAN" "Manual pages for the onionservice-cli" \
     "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
     "CREATE" "Host a hidden service" \
     "DELETE" "Delete chosen onion service" \
@@ -258,6 +259,8 @@ else
     "AUTH_SERVER" "Add or Remove client authorization from your service" \
     "AUTH_CLIENT" "Manage your client key of someonelse's service" \
     "CREDENTIALS" "See credentials (onion address, authorized clients)" \
+    "VANGUARDS" "Add to protect against traffic analysis" \
+    "LOCATION" "Guided steps to add onion-location to your plainnet website" \
     "IMPORT" "Import your hidden service data from another machine" \
     "EXPORT" "Export your hidden service data to another machine" \
     3>&1 1>&2 2>&3)
@@ -269,7 +272,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
   case "${CHOICE_MAIN}" in
 
     MAN)
-      man ./text/onionservice.man
+      man ./text/onionservice-cli.1
     ;;
 
     GUIDES)
@@ -294,6 +297,32 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
       service_menu
       if [ ! -z "${SERVICE_NAME_LIST}" ]; then
         sh onionservice-cli credentials "${SERVICE_NAME_LIST}"
+      fi
+    ;;
+
+    LOCATION)
+        service_menu
+        if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+          CHOICE_ACTION=$(whiptail --menu "${MENU}" --title "${TITLE}" ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
+          "nginx" "Nginx web server header" \
+          "apache" "Apache web server header" \
+          "html" "hmtl <meta> http-equiv attribute" \
+          3>&1 1>&2 2>&3)
+          if [ ! -z "${CHOICE_ACTION}" ]; then
+            sh onionservice-cli "${SERVICE}" "${ACTION}"
+          fi
+        fi
+    ;;
+
+    VANGUARDS)
+      CHOICE_ACTION=$(whiptail --menu "${MENU}" --title "${TITLE}" ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
+      "install" "Install Vanguards protection" \
+      "logs" "Follow vanguards logs" \
+      "upgrade" "git reset --hard to the set commit hash" \
+      "remove" "Delete the Vanguards directory" \
+      3>&1 1>&2 2>&3)
+      if [ ! -z "${CHOICE_ACTION}" ]; then
+        sh onionservice-cli vanguards "${ACTION}"
       fi
     ;;
 
@@ -331,7 +360,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
             if [ ! -z "${VIRTPORT}" ]; then
               ## Optional
               VIRTPORT2=$(whiptail --inputbox "${VIRTPORT2_MSG}" 10 50 3>&1 1>&2 2>&3)
-              bash onionservice-cli on unix "${SERVICE_NAME}" "${VIRTPORT}" "${VIRTPORT2}"
+              sh onionservice-cli on unix "${SERVICE_NAME}" "${VIRTPORT}" "${VIRTPORT2}"
             fi
           fi
 
@@ -372,7 +401,7 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
           CLIENT_NAME_LIST=("$(whiptail --inputbox "${DESCRIPTION}" 10 50 3>&1 1>&2 2>&3)")
           ## separate spaced words by comma and delete sequential commas and spaces
           CLIENT_NAME_LIST=$(cut -f1- -d ' ' --output-delimiter=',' <<< "${CLIENT_NAME_LIST}")
-          CLIENT_NAME_LIST=$(echo "${CLIENT_NAME_LIST}" | tr -d ' ' | tr -s ',' ',')
+          CLIENT_NAME_LIST=$(printf %s"${CLIENT_NAME_LIST}" | tr -d ' ' | tr -s ',' ',')
         fi
       elif [ "${AUTH_TYPE}" = "DEL" ]; then
         AUTH_STATUS="off"
@@ -395,11 +424,9 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
       if [ "${AUTH_TYPE}" = "ADD" ]; then
         DESCRIPTION="Insert file name without '.auth_private'. Recommendation is to refer to the authenticated service."
         AUTH_FILE_NAME=("$(whiptail --inputbox "${DESCRIPTION}" 15 70 3>&1 1>&2 2>&3)")
-        AUTH_FILE_NAME=$(echo "${AUTH_FILE_NAME}" | tr -d ' ')
         if [ ! -z "${AUTH_FILE_NAME}" ]; then
           DESCRIPTION="Insert private key as instructed by the service operator.\nFormat: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>"
           AUTH_PRIV_KEY=("$(whiptail --inputbox "${DESCRIPTION}" 15 70 3>&1 1>&2 2>&3)")
-          AUTH_PRIV_KEY=$(echo "${AUTH_PRIV_KEY}" | tr -d ' ')
           if [ ! -z "${AUTH_PRIV_KEY}" ]; then
             sh onionservice-cli auth client on "${AUTH_FILE_NAME}" "${AUTH_PRIV_KEY}"
           fi
@@ -423,4 +450,4 @@ fi
 #     exit 0
 # fi
 
-# bash $(realpath ${0})
+# sh $(realpath ${0})

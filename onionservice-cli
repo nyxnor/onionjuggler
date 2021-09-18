@@ -33,7 +33,7 @@
 onion_usage(){
   printf %s"Configure an Onion Service
 
-Usage: ${0} COMMAND [REQUIRED] <OPTIONAL>
+Usage: $(basename "${0}") COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
 
@@ -76,121 +76,11 @@ It does not imply the code worked, you should always pay attention for errors in
   exit 1
 }
 
-[ "${USER}" = "root" ] && { printf %s"${RED}Not as root !!!\n${NOCOLOR}" && exit 1; }
+. "$(dirname "$(realpath "${0}")")"/onion.lib
+
+[ "${USER}" = "root" ] && { printf %s"${RED}Do not run with the root user!!!\n${NOCOLOR}" && exit 1; }
 
 { [ -z "${#}" ] || [ -z "${2}" ] || [ "${1}" = "help" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
-
-###########################
-######## VARIABLES ########
-
-## EDIT REQUIRED - if not debian and derived systems
-DATA_DIR_OWNER="debian-tor"
-PKG_MANAGER_INSTALL="sudo apt install -y" ## use the 'yes' flag
-TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
-
-## EDIT OPTIONAL
-## Vanguards
-VANGUARDS_COMMIT_HASH=10942de
-VANGUARDS_LOG="/var/log/tor/vanguards.log"
-## Backup
-SCP_TARGET_USER="remoteUser"
-SCP_TARGET_IP="remoteIp"
-SCP_TARGET_PATH="${HOME}/remote/path"
-SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" ## '[USER]@[SERVER]:[SERVER_DIR]'
-HS_BK_TAR=tor-hs-${DATE_TIME}.tar.gz
-HS_BK_DIR="${HOME}/tor-hs-backup"
-LOCAL_DOWNLOAD_PATH="${HOME}/Downloads/tor-hs-backup"
-DATE_TIME=$(date +%Y-%m-%d-%H'h'-%M'm')
-LOCAL_IP=$(hostname -I | awk '{print $1}')
-## tor defaults
-TORRC_ROOT="/etc/tor"
-TORRC="${TORRC_ROOT}/torrc"
-DATA_DIR_ROOT="/var/lib"
-DATA_DIR="${DATA_DIR_ROOT}/tor"
-DATA_DIR_HS="${DATA_DIR}/services"
-CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
-CONF_DIR_OWNER="${USER}"
-CONTROL_PORT=9051
-SOCKS_PORT=9050
-CHECK_URL1="http://debian.org"
-
-## DO NOT EDIT
-## Colors
-NOCOLOR='\033[0m'
-RED='\033[1;31m'
-GREEN='\033[1;32m'
-AMBER='\033[0;33m'
-WHITE='\033[1;37m'
-YELLOW='\033[1;93m'
-
-
-###########################
-######## FUNCTIONS ########
-
-
-## install space separated list of packages (e.g. install_package tor openssl git)
-install_package(){
-  for PACKAGE in "${@}"; do
-    command -v "${PACKAGE}" >/dev/null || "${PKG_MANAGER_INSTALL}" "${PACKAGE}"
-  done
-}
-
-is_service_dir_empty(){
-  [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
-}
-
-
-## set correct permissions for tor directories and files
-set_owner_permission(){
-  sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
-  sudo chown "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC}"
-  sudo chmod 700 "${DATA_DIR}"
-  sudo chmod 644 "${TORRC}"
-}
-
-
-# This function checks the status on https://check.torproject.org/
-check_tor()
-{
-  printf %s"${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}\n"
-  TOR_SERVICE=$(curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 -c Congratulations)
-  if [ "${TOR_SERVICE}" -eq 1 ]; then
-    TOR_STATUS="Tor is working"
-  else
-    TOR_STATUS=""
-  fi
-}
-
-
-# This function checks the internet connection and exits to <source_script> if none.
-online_check()
-{
-  printf %s"${RED}[+] Checking internet connectivity - please wait...${NOCOLOR} \n"
-  OCHECK=$(curl -m 5 -s "${CHECK_URL1}")
-  if [ "${OCHECK}" -gt 0 ]; then
-    printf "\n\nIt seems that your Tor is not properly connected to the internet! For this operation, Tor has to properly connected with the internet!"
-    exit 0
-  fi
-}
-
-
-# This function reload tor by default or forces to restart
-# Nyxnor: Why this name restart when it reload by default? I dont know a better name.
-restarting_tor()
-{
-  ACTION="${1}"
-  set_owner_permission
-  if [ "${ACTION}" = "force" ]; then
-    printf "# Restarting tor...\n"
-    sudo systemctl restart "${TOR_SERVICE}"
-    printf "# Restarted tor succesfully!\n"
-  elif [ "${ACTION}" = "" ]; then
-    printf "# Reloading tor...\n"
-    sudo systemctl reload-or-restart "${TOR_SERVICE}"
-    printf "# Reloaded tor succesfully!\n"
-  fi
-}
-
 
 ## display error message with instructions to use the script correctly.
 error_msg(){
@@ -218,14 +108,15 @@ is_integer(){ printf %d "${1}" >/dev/null 2>&1 || { error_msg "Not an integer: $
 ## accept localhos:port if port is valid.
 ## this is not perfect but it is better than nothing
 is_addr_port(){
-  ADDR=$(printf %s"${1}" | cut -d ':' -f1)
-  ADDR_1=$(printf %s"${1}" | cut -d '.' -f1)
-  ADDR_2=$(printf %s"${1}" | cut -d '.' -f2)
-  ADDR_3=$(printf %s"${1}" | cut -d '.' -f3)
-  ADDR_4=$(printf %s"${1}" | cut -d '.' -f4 | cut -d ':' -f1)
-  PORT=$(printf %s"${1}" | cut -d ':' -f2)
+  PORT=${1/*:/}
+  ADDR=${1/:*}
+  ADDR_1=${ADDR/.*/}
+  ADDR_MID=${ADDR/${ADDR_1}./}
+  ADDR_2=${ADDR_MID/.*/}
+  ADDR_3=${ADDR_MID/*./}
+  ADDR_4=${ADDR/*./}
 
-  is_integer "${ADDR_1}"; is_integer "${ADDR_2}"; is_integer "${ADDR_3}"; is_integer "${ADDR_4}"; is_integer "${PORT}"
+  is_integer "${PORT}"; is_integer "${ADDR_1}"; is_integer "${ADDR_2}"; is_integer "${ADDR_3}"; is_integer "${ADDR_4}"
 
   { [ "${PORT}" -gt 0 ] && [ "${PORT}" -le 65535 ] ; } \
   || error_msg "PORT is not within range: 0 < PORT <= 65535: ${PORT}"
@@ -259,7 +150,7 @@ create_client_list(){
   ## obliterate loop
   #CLIENT_NAME_LIST=$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
   #CLIENT_NAME_LIST=$(printf "${CLIENT_NAME_LIST}" | cut -d '.' -f1)
-  #CLIENT_NAME_LIST=$(echo ${CLIENT_NAME_LIST} | sed 's/ /,/g')    ## how to do this with printf?
+  #CLIENT_NAME_LIST=$(echo ${CLIENT_NAME_LIST} | sed "s/ /,/g")    ## how to do this with printf?
 
   for AUTHORIZATION in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/); do
     AUTHORIZATION_NAME=${AUTHORIZATION##*/}
@@ -277,7 +168,7 @@ create_service_list(){
   SERVICE_NAME_LIST=""
 
   ## obliterate loop
-  #SERVICE_NAME_LIST=$(echo $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/) | sed 's/ /,/g') ## how to do this with printf?
+  #SERVICE_NAME_LIST=$(echo $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/) | sed "s/ /,/g") ## how to do this with printf?
 
   for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
     SERVICE_NAME=${SERVICE##*/}
@@ -293,11 +184,10 @@ create_service_list(){
 ## $1 must be the function to loop
 ## $2 normally is service, but can be any other parameter (accepts list -> serv1,serv2,...)
 ## $3 normally is client, but can be any other (accepts list -> client1,client2...)
-## $4 if $3 is a list (client1,client2,...), fill it with "1" (anything non zero)
-loop_array_dynamic(){
+loop_list(){
   for ITEM in $(printf %s"${2}" | sed "s/\,/ /g"); do
     if [ -z "${3}" ]; then
-      "${1}" "${ITEM}" "${2}"
+      "${1}" "${ITEM}"
     else
       for SUBITEM in $(printf %s"${3}" | sed "s/\,/ /g"); do
         "${1}" "${ITEM}" "${SUBITEM}"
@@ -326,9 +216,10 @@ case "${COMMAND}" in
     ACTION="${2}"
     case "${ACTION}" in
 
+      ## missing: shell completion
       env)
         install_package tor openssl basez git qrencode grep sed
-        sudo adduser "${USER}" "${DATA_DIR_OWNER}"
+        sudo usermod -aG "${DATA_DIR_OWNER}" "${USER}"
         sudo -u "${DATA_DIR_OWNER}" mkdir -p "${DATA_DIR_HS}"
         sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
         printf "\n# Tor enviroment is ready\n"
@@ -346,6 +237,7 @@ case "${COMMAND}" in
       ;;
     esac
   ;;
+
 
   ## deactivate a service by removing service torrc's block.
   ## it is raw, services variables should be separated by an empty line per service, else you might get other non-related configuration deleted.
@@ -376,7 +268,7 @@ case "${COMMAND}" in
       cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       printf %s"# Deactivated service: ${SERVICE}\n\n"
     }
-    loop_array_dynamic delete_service "${SERVICE}" "${PURGE}"
+    loop_list delete_service "${SERVICE}" "${PURGE}"
     success_msg reload
   ;;
 
@@ -424,8 +316,8 @@ case "${COMMAND}" in
         VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
         TARGET="${5}" ## optional, if null then map to 127.0.0.1:VIRTPORT
         [ -z "${TARGET}" ] && TARGET="127.0.0.1:${VIRTPORT}"
-        TARGET_ADDR=$(printf %s"${TARGET}" | cut -d ':' -f1)
-        TARGET_PORT=$(printf %s"${TARGET}" | cut -d ':' -f2)
+        TARGET_ADDR=${TARGET/:*/}
+        TARGET_PORT=${TARGET/*:/}
         { [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
         TARGET_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" grep -c "HiddenServicePort .*${TARGET}$" "${TORRC}")
         TARGET_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
@@ -439,8 +331,8 @@ case "${COMMAND}" in
           if [ -z "${TARGET2}" ]; then
             TARGET2="127.0.0.1:${VIRTPORT2}"
           else
-            TARGET2_ADDR=$(printf %s"${TARGET2}" | cut -d ':' -f1)
-            TARGET2_PORT=$(printf %s"${TARGET2}" | cut -d ':' -f2)
+            TARGET2_ADDR=${TARGET2/:*/}
+            TARGET2_PORT=${TARGET2/*:/}
             { [ "${TARGET2_ADDR}" -eq "${TARGET2_PORT}" ] || [ "${TARGET2_ADDR}" = "localhost" ]; } && TARGET2="127.0.0.1:${TARGET2_PORT}"
           fi
           [ "${TARGET}" = "${TARGET2}" ] && error_msg "TARGET is the same as TARGET2"
@@ -508,8 +400,8 @@ case "${COMMAND}" in
               if [ "${service_existent}" -eq 1 ]; then
                 ## Generate pem and derive pub and priv keys
                 openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
-                grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
-                openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
+                grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
+                openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
                 ## save variables
                 CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
                 CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
@@ -561,7 +453,7 @@ case "${COMMAND}" in
               printf %s" CLIENT_PUB_KEY_CONFIG=${CLIENT_PUB_KEY_CONFIG}\n"
               printf "\n# As you inserted the public key manually, we expect that the client already has the private key\n"
             else
-              loop_array_dynamic auth_server_add "${SERVICE}" "${CLIENT}"
+              loop_list auth_server_add "${SERVICE}" "${CLIENT}"
               instructions_auth
             fi
             success_msg reload
@@ -599,7 +491,7 @@ case "${COMMAND}" in
                 printf "# If any client remains, the service will still be authenticated.\n\n"
               fi
             fi
-            loop_array_dynamic auth_server_remove_clients "${SERVICE}" "${CLIENT}"
+            loop_list auth_server_remove_clients "${SERVICE}" "${CLIENT}"
             success_msg reload
           ;;
 
@@ -614,7 +506,7 @@ case "${COMMAND}" in
               fi
             }
             printf "# Authorized clients for hidden service:\n\n"
-            loop_array_dynamic auth_server_list "${SERVICE}"
+            loop_list auth_server_list "${SERVICE}"
             success_msg
           ;;
 
@@ -638,10 +530,10 @@ case "${COMMAND}" in
             CLIENT_PRIV_KEY="${5}" ## optional
             ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
             ONION_HOSTNAME_WITHOUT_ONION_LENGTH=${#ONION_HOSTNAME_WITHOUT_ONION}
-            SUFFIX_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -d '.' -f2)
+            SUFFIX_ONION=${ONION_HOSTNAME/*.onion/.onion}
             [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${ONION_HOSTNAME_WITHOUT_ONION_LENGTH}" = "56" ] || error_msg "ONION_DOMAIN is invalid, length is different than 56 characters (discarding .onion)"
-            [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
+            [ "${SUFFIX_ONION}" = ".onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
             if [ "${CLIENT_PRIV_KEY}" = "" ]; then
               ## Generate pem and derive pub and priv keys
               openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
@@ -694,7 +586,7 @@ case "${COMMAND}" in
             }
             [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
             if [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
-              loop_array_dynamic auth_client_remove "${ONION_HOSTNAME}"
+              loop_list auth_client_remove "${ONION_HOSTNAME}"
               printf "\n# Client side authorization removed\n"
               success_msg
             else
@@ -767,7 +659,7 @@ case "${COMMAND}" in
         renew_service_address "${SERVICE}"
       done
     else
-      loop_array_dynamic renew_service_address "${SERVICE}"
+      loop_list renew_service_address "${SERVICE}"
     fi
     success_msg reload
   ;;
@@ -791,7 +683,7 @@ case "${COMMAND}" in
         if [ "$(sudo grep -c "HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then
           printf "Status     = inactive\n"
         else
-          printf "Status     = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed '/^[[:space:]]*$/d'
+          printf "Status     = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
         fi
         printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
       fi
@@ -801,7 +693,7 @@ case "${COMMAND}" in
         get_credentials "${SERVICE}"
       done
     else
-      loop_array_dynamic get_credentials "${SERVICE}"
+      loop_list get_credentials "${SERVICE}"
     fi
     success_msg
   ;;
