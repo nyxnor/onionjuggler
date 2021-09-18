@@ -1,5 +1,9 @@
 # TECHNICAL OVERVIEW
 
+## Notes
+
+Sacrificing some code legibility for speed is acceptable.
+
 ## Important files:
 
 You can run all of this standalone with these files below:

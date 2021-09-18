@@ -1,12 +1,20 @@
 # onionservice
 
-**An easy to use Tor Hidden Service (Onion Services) manager**
-
-The goal is to manage services on the the tor configuration level, not the web server level. Also need to be as portable as possible, so the variables for paths are only container inside onion.lib.
-
-If you want extra functionalities to be a relay, bridge or connect to a bridge easily, you should check out [TorBox](https://github.com/radio24/TorBox).
+### An easy to use Tor Hidden Service (Onion Services) manager
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location**
+
+The goal is to manage services on the the tor configuration level, not the web server level. Also need to be as portable as possible, so the variables for paths are only contained inside onion.lib.
+
+## Shells
+
+Work on various operating systems and shells, not only one function, but all of the scripts.
+Tested shells:
+* dash - to be close to POSIX compliant
+* bash
+* zsh
+
+Abanon arrays to be posix compliant is not easy, but if it runs the fastest, therefore having the best performand, mostly because it is calling a light shell such as dash (/bin/sh symlinked to /bin/dash) on the shebang of the scripts.
 
 ## Usage
 
@@ -48,7 +56,7 @@ sh onionservice-cli
 
 #### Recovery
 
-Restore latest torrc backup:
+Restore the latest torrc backup:
 ```sh
 sh onionservice-cli setup torrc
 ```
@@ -57,17 +65,18 @@ sh onionservice-cli setup torrc
 
 If you want to call the script as you would call any program, from any folder just tiping its name, you should add the script to path:
 
-Export script on path:
+Export script to path:
 ```sh
-mkdir ~/.local/bin
-cp onionservice-cli ~/.local/bin
-cp onionservice-tui ~/.local/bin
-printf "PATH=\$PATH:~/.local/bin\n" >> ~/.${SHELL##*/}rc
-. ~/.local/bin
+mkdir ~/scripts
+ls -s onionservice-cli ~/scripts/
+ls -s onion.lib ~/scripts/
+ls -s onionservice-cli.bash_completion ~/scripts/
+printf "PATH=\$PATH:~scripts\n" >> ~/.${SHELL##*/}rc
+. ~/scripts
 ```
 
 Now you can call the `onionservice-cli` from any directory you are without prepending with the shell name (e.g. *bash onionservice-cli, sh onionservice-cli, zsh onionservice-cli).
-Try it out:
+Try it out, go to any folder and press `TAB`:
 ```sh
 cd
 onionservice-cli
@@ -86,7 +95,7 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 * basez >= 1.6.2 (for onion authentication)
 * git >= 2.0+ (for cloning the repo and vanguards)
 * qrencode >= 4.1.1 (for printing the hostname)
-* dash under /bin/sh (or the closest to POSIX complian shell you want)
+* sh under /bin/sh (or the closest to POSIX complian shell you want)
 * bash under /bin/bash (for the [whiptail menu](onionservice-tui))
 * systemd (for vanguards control)
 * user with root privileges
@@ -95,10 +104,10 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 ## Goal
 
 * **Autonomy** - The onion service operator should have full control of tor functionalities and if he does not know how, he can learn reading the scripts. It also helps typing less commands and when not remembering full directories paths or file syntax. Client option to add '.auth_private' option also possible.
-* **KISS** - Keep It Simple Stupid (At least I try). Source [wikipedia](https://en.wikipedia.org/wiki/KISS_principle).
-* **Portability** - POSIX compliant to work on different shells, customize path, ports. The [library](onion.lib) and the [cli]](onionservice-cli) is fully [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible).
-* **Bashism** - The [menu](onionservice-tui) will never be POSIX compliant as it uses [bashism](https://en.wikipedia.org/wiki/Bash_(Unix_shell)) such as whiptail, it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible).
-* **Autonomy** - The [cli](onionservice-cli) can run standalone, menu is just an addon that calls the main script.
+* **KISS** - Keep It Simple Stupid (At least I try). [Source](https://en.wikipedia.org/wiki/KISS_principle).
+* **Portability** - POSIX compliant to work on different shells, customize path, ports. The [library](onion.lib) and the [cli]](onionservice-cli) is fully [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible). Even though there is no shellcheck for `zsh`, the tests pass on `sh`,`bash` and `zsh`.
+* **TUI** - The [menu](onionservice-tui) will have a hard time to make it POSIX compliant as it uses arrays for whiptail (arrays are undefined in POSIX), so it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible), but making some adjustments to fit `zsh` in the for loop as an example.
+* **Standalone** - The [cli](onionservice-cli) can run standalone, menu is just an addon that calls the main script.
 * **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
 
 ## Features
