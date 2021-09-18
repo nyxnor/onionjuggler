@@ -1,0 +1,3 @@
+# https://github.com/scop/bash-completion/blob/master/.shellcheckrc
+shell=sh
+disable=SC2236  # does not consider the var is not an integer
