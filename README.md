@@ -4,6 +4,8 @@
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location**
 
+*The TUI is not finished, still need to remove the arrays and make the script faster, beside adjusting the position of the dialog boxes. The CLI is stable now but need better error handling when using the `auth` command. *
+
 The goal is to manage services on the the tor configuration level, not the web server level. Also need to be as portable as possible, so the variables for paths are only contained inside onion.lib.
 
 ## Shells
@@ -100,6 +102,7 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 * systemd (for vanguards control)
 * user with root privileges
 * leave blank lines between Hidden Services torrc lines - the cli script create it correctly, no change needed when using this project, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block
+* HiddenServiceDir different root path than DatDir (faciliates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
 
 ## Goal
 
@@ -133,7 +136,7 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 * There are no accidents - Master Oogway
 * Bugs, you may find - Master Yoda
 * It is the program that should fear your commands and not the other way around - Mix of Pai Mei with Richard M. Stallman
-* Please report the bug, open an issue with enough description to reproduce the steps and solve the problem.
+* Please report the bug (after I remove the warning on top of this README), open an issue with enough description to reproduce the steps and solve the problem.
 
 ## To-do
 
