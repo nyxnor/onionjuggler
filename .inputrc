@@ -1,3 +1,0 @@
-set show-all-if-ambiguous on ## allow single tab completion as opposed to requiring a double tab
-set visible-stats on ## suffix each returned file completion with a character denoting its type
-set page-completions off ## turns off the use of the internal pager when returning long completion lists
