@@ -70,7 +70,7 @@ title_color = (CYAN,BLACK,ON)
 border_color = (BLACK,BLACK,ON)
 
 # Active button color
-button_active_color = (BLACK,CYAN,ON)
+button_active_color = (WHITE,CYAN,ON)
 
 # Inactive button color
 button_inactive_color = dialog_color
@@ -82,10 +82,10 @@ button_key_active_color = button_active_color
 button_key_inactive_color = (RED,BLACK,OFF)
 
 # Active button label color
-button_label_active_color = (BLACK,CYAN,ON)
+button_label_active_color = (WHITE,CYAN,ON)
 
 # Inactive button label color
-button_label_inactive_color = (RED,BLACK,ON)
+button_label_inactive_color = (CYAN,BLACK,ON)
 
 # Input box color
 inputbox_color = dialog_color
