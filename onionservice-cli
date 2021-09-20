@@ -2,9 +2,6 @@
 
 ## This file is part of onionservice, an easy to use Tor hidden services manager.
 ##
-## Copyright (C) 2018-2021 Raspiblitz Developers (MIT)
-## Source: https://github.com/rootzoll/raspiblitz/tree/v1.7/home.admin/config.scripts/internet.hiddenservice.sh
-##
 ## Copyright (C) 2021 onionservice developers (GPLv3)
 ## Github:  https://github.com/nyxnor/onionservice
 ##
