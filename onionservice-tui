@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x
+
 ## This file is part of onionservice, an easy to use Tor hidden services manager.
 ##
 ## Copyright (C) 2021 onionservice developers (GPLv3)
@@ -416,11 +416,8 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
     *)
       exit 0
   esac
-
+else
+  exit 0
 fi
 
-# if [ $? -eq 0 ]; then
-#     exit 0
-# fi
-
-# sh $(realpath ${0})
+sh "${ONIONSERVCE_PWD}"/"${0}"
