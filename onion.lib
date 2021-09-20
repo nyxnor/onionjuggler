@@ -74,7 +74,6 @@ CHECK_URL1="http://debian.org"
 BROWSER_DATA_DIR="/home/${USER}/.local/share/torbrowser/tbb/$(uname -m)/tor-browser_en-US/Browser/TorBrowser/Data/Tor"
 BROWSER_TORRC="${BROWSER_DATA_DIR}/torrc"
 BROWSER_ONION_AUTH_DIR="${BROWSER_DATA_DIR}/onion-auth"
-
 ## deb onion sources
 SOURCES_DEB_SECURITY_ONION="http://5ajw6aqf3ep7sijnscdzw77t7xq4xjpsy335yb2wiwgouo7yfxtjlmid.onion/"
 SOURCES_DEB_UPDATE_ONION="http://2s4yqjx5ul6okpp3f2gaunr2syex5jgbfpfvhxxbbjwnrsvbk5v3qbid.onion/"
@@ -84,10 +83,12 @@ SOURCES_DEB_UPDATE_PLAIN="https://deb.debian.org/"
 SOURCES_TOR_UPDATE_ONION="http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
 SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
 
-## dialog
-DIALOGRC="$(dirname "$(realpath "${0}")")/.dialogrc"
 
 ## DO NOT EDIT
+## onionservice-cli path
+ONIONSERVCE_PWD="$(dirname "$(realpath "${0}")")"
+## Dialog
+export DIALOGRC="${ONIONSERVCE_PWD}/.dialogrc"
 ## Colors
 NOCOLOR='\033[0m'
 RED='\033[1;31m'

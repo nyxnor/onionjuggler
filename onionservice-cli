@@ -59,7 +59,7 @@ Options:
 
   auth client list                                                                   list your keys as a client
 
-  credentials [all-services|SERV1,SERV2,...]                                         see credentials from indicated services
+  credentials [all-services|SERV1,SERV2,...] no-qr                                   see credentials from indicated services
 
   location [SERV] [nginx|apache|html]                                                onion-location guide, no execution
 
@@ -106,12 +106,15 @@ is_integer(){ printf %d "${1}" >/dev/null 2>&1 || { error_msg "Not an integer: $
 ## accept localhos:port if port is valid.
 ## this is not perfect but it is better than nothing
 is_addr_port(){
-  PORT=$(printf %s"${1}" | cut -d ':' -f2)
-  ADDR=$(printf %s"${1}" | cut -d ':' -f1)
-  ADDR_1=$(printf %s"${ADDR}" | cut -d '.' -f1)
-  ADDR_2=$(printf %s"${ADDR}" | cut -d '.' -f2)
-  ADDR_3=$(printf %s"${ADDR}" | cut -d '.' -f3)
-  ADDR_4=$(printf %s"${ADDR}" | cut -d '.' -f4)
+  ADDR_PORT=${1}
+  PORT=${ADDR_PORT##*:}
+  ADDR=${ADDR_PORT%%:*}
+  ADDR_1=${ADDR%%.*}
+  ADDR_MID=${ADDR##*${ADDR_1}.}
+  ADDR_2=${ADDR_MID%%.*}
+  ADDR_4=${ADDR_MID##*.}
+  ADDR_MID=${ADDR_MID##*${ADDR_2}.}
+  ADDR_3=${ADDR_MID%%.*}
 
   is_integer "${PORT}"; is_integer "${ADDR_1}"; is_integer "${ADDR_2}"; is_integer "${ADDR_3}"; is_integer "${ADDR_4}"
 
@@ -209,12 +212,12 @@ case "${COMMAND}" in
 
   ## deactivated the service wrongly and don't remember the ports? no worries, will restore the latest torrc.bak
   ## beaware this only works for the torrc, if you deleted your data directory with command "off" and "purge" option, the keys will not be restored, insteadm new ones will be created
-  setup | SETUP )
+  setup|SETUP)
     ACTION="${2}"
     case "${ACTION}" in
 
       ## missing: shell completion
-      env | ENV)
+      env|ENV)
         install_package tor openssl basez git qrencode grep sed
         sudo usermod -aG "${DATA_DIR_OWNER}" "${USER}"
         sudo -u "${DATA_DIR_OWNER}" mkdir -p "${DATA_DIR_HS}"
@@ -223,7 +226,7 @@ case "${COMMAND}" in
         success_msg reload
       ;;
 
-      torrc | TORRC )
+      torrc|TORRC)
         sudo cp "${TORRC}".bak "${TORRC}"
         printf "# Restored torrc with its latest backup\n"
         success_msg reload
@@ -241,22 +244,16 @@ case "${COMMAND}" in
   ## purge is optional, it deletes the <HiddenServiceDir>
   ## will not check if folder or configuration exist, this is cleanup mode
   ## will not use 'all-services'. Purge is dangerous, purging all service is even more dangerous. Always backup.
-  off | OFF)
+  off|OFF)
     PURGE="${3}" ## optional
-    { [ ! -z "${PURGE}" ] && [ "${PURGE}" != "purge" ]; } && error_msg "Invalid 'off' argument: PURGE=${PURGE}"
     delete_service(){
       SERVICE="${1}"
       PURGE="${2}"
       ## remove service service data
-      if [ "${PURGE}" = "purge" ]; then
-        #read -p "# WARNING: Permanently delete the HiddenServiceDir of ${SERVICE}, keys included)? (yes/no) " -n 1 -r PURGE_RESPONSE
-        #if [ "${PURGE_RESPONSE}" = "y" ]; then
-          printf %s"${RED}\n# Deleting Hidden Service data in ${DATA_DIR_HS}/${SERVICE}\n${NOCOLOR}"
-          sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"
-        #else
-        #  printf %s"\n# HiddenServiceDiretory was kept"
-        #fi
-      fi
+      { [ "${PURGE}" = "purge" ] || [ "${PURGE}" = "PURGE" ]; } \
+      && { printf %s"${RED}\n# Deleting Hidden Service data in ${DATA_DIR_HS}/${SERVICE}\n${NOCOLOR}"; \
+        sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"; } \
+      || printf %s"\n# HiddenServiceDiretory was kept"
       ## remove service paragraph in torrc
       printf %s"# Deleting Hidden Service configuration in ${TORRC}\n"
       sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
@@ -278,7 +275,7 @@ case "${COMMAND}" in
   ##  if TARGET is not specified, will use the same port from VIRTPORT and bind to localhost.
   ##  if TARGET only contains the port number and not the address, will bind to localhost.
   ## VIRTPORT2 and TARGET 2 are optional
-  on | ON )
+  on|ON)
     SOCKET="${2}"; [ -z "${SOCKET}" ] && error_msg "SOCKET is missing"
     SERVICE="${3}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
 
@@ -303,7 +300,7 @@ case "${COMMAND}" in
 
     case "${SOCKET}" in
 
-      tcp | TCP )
+      tcp|TCP)
         ## tor-manual: By default, this option maps the virtual port to the same port on 127.0.0.1 over TCP
         ## Because of that, this project lets the user leave TARGET="" and write TARGET as 127.0.0.1:VIRTPORT
         ## Also, substitutes localhost:PORT for 127.0.0.1:PORT
@@ -349,7 +346,7 @@ case "${COMMAND}" in
         finish_service_activation
       ;;
 
-      unix | UNIX )
+      unix|UNIX)
         VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
         VIRTPORT2="${5}"; [ ! -z "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
         is_integer "${VIRTPORT}"
@@ -372,12 +369,12 @@ case "${COMMAND}" in
   ;;
 
 
-  auth | AUTH )
+  auth|AUTH)
     HOST="${2}"
     STATUS="${3}"; [ -z "${STATUS}" ] && error_msg "STATUS is missing"
     case "${HOST}" in
 
-      server | SERVER )
+      server|SERVER)
         is_service_dir_empty
         SERVICE="${4}"
         CLIENT="${5}"
@@ -388,7 +385,7 @@ case "${COMMAND}" in
           ## the client pub key is automatically saved inside <HiddenServiceDir>/authorized_clients/alice.auth
           ## the client private key is shown in the screen and the key file deleted
           ## the onion service operator should send the private key for the desired client
-          on | ON )
+          on|ON)
             #printf "\n# Generating keys to access onion service (Client Authorization) ...\n"
             auth_server_add(){
               SERVICE="${1}"
@@ -458,7 +455,7 @@ case "${COMMAND}" in
 
           ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
           ## if no clients are present, the service will be available to anyone that has the onion service address
-          off | OFF )
+          off|OFF)
             { [ "${SERVICE}" = "" ] || [ "${CLIENT}" = "" ] ; } && error_msg "SERVICE name or CLIENT name is/are missing"
             auth_server_remove_clients(){
               SERVICE="${1}"
@@ -492,7 +489,7 @@ case "${COMMAND}" in
             success_msg reload
           ;;
 
-          list | LIST )
+          list|LIST)
             auth_server_list(){
               SERVICE="${1}"
               service_existent=0; test_service_exists "${SERVICE}"
@@ -513,7 +510,7 @@ case "${COMMAND}" in
       ;;
 
 
-      client | CLIENT )
+      client|CLIENT)
         ONION_HOSTNAME="${4}"
         case "${STATUS}" in
 
@@ -522,15 +519,15 @@ case "${COMMAND}" in
           ## private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>
           ## use the onion hostname as the file name, this avoid overriding the file by mistake and it indicates outside of the file for which service it refers to (of course it is written inside also)
           ## adding to Tor Browser automatically not supported yet
-          on | ON )
+          on|ON)
             [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
             CLIENT_PRIV_KEY="${5}" ## optional
             ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
-            ONION_HOSTNAME_WITHOUT_ONION_LENGTH=${#ONION_HOSTNAME_WITHOUT_ONION}
-            SUFFIX_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -d '.' -f1)
+            #ONION_HOSTNAME_WITHOUT_ONION_LENGTH=${#ONION_HOSTNAME_WITHOUT_ONION}
+            SUFFIX_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -d '.' -f2)
             [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
-            [ "${ONION_HOSTNAME_WITHOUT_ONION_LENGTH}" = "56" ] || error_msg "ONION_DOMAIN is invalid, length is different than 56 characters (discarding .onion)"
-            [ "${SUFFIX_ONION}" = ".onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
+            [ "${#ONION_HOSTNAME}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#ONION_HOSTNAME} is different than 62 characters (<56-char-base32>.onion)"
+            [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
             if [ "${CLIENT_PRIV_KEY}" = "" ]; then
               ## Generate pem and derive pub and priv keys
               openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
@@ -575,7 +572,7 @@ case "${COMMAND}" in
           ;;
 
           ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
-          off | OFF )
+          off|OFF)
             auth_client_remove  (){
               ONION_HOSTNAME="${1}"
               printf %s"\n# Removing ${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME}.auth_private"
@@ -591,12 +588,12 @@ case "${COMMAND}" in
             fi
           ;;
 
-          list | LIST )
+          list|LIST)
             if [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
               printf %s"# ClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n"
               for AUTH in $(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}"); do
                 printf %s"\n# File name: ${AUTH}\n"
-                sudo -u "${DATA_DIR_OWNER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}"
+                printf %s"# Content:   $(sudo -u "${DATA_DIR_OWNER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}")"
               done
               printf "\n"
               success_msg
@@ -619,7 +616,7 @@ case "${COMMAND}" in
   ## change service hostname by deleting its ed25519 pub and priv keys.
   ## <HiddenServiceDir>/authorized_clients/ because the would need to update their '.auth_private' file with the new onion address anyway and for security reasons.
   ## all-services will read through all services folders and execute the commands.
-  renew | RENEW )
+  renew|RENEW)
     is_service_dir_empty
     renew_service_address(){
       SERVICE="${1}"
@@ -641,7 +638,7 @@ case "${COMMAND}" in
         ## reload tor now so auth option can get the new hostname
         restarting_tor
         ## generate auth for clients
-        [ ! -z "${CLIENT_NAME_LIST}" ] && { sh "$(realpath "${0}")" auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
+        [ ! -z "${CLIENT_NAME_LIST}" ] && { sh "${ONIONSERVCE_PWD}"/"${0}" auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
         test_service_exists "${SERVICE}"
         NEW_HOSTNAME="${ONION_HOSTNAME}"
         printf %s"New     = ${ONION_HOSTNAME}\n"
@@ -664,40 +661,41 @@ case "${COMMAND}" in
   ## show all the necessary information to access the service such as the hostname and the QR encoded hostname to scan for Tor Browser Mobile
   ## show the clients names and quantity, as well as the service torrc's block
   ## all-services will read through all services folders and execute the commands
-  credentials | CREDENTIALS )
+  credentials|CREDENTIALS)
     is_service_dir_empty
     get_credentials(){
       SERVICE="${1}"
+      NO_QR="${2}"
       service_existent=0; test_service_exists "${SERVICE}"
       if [ "${service_existent}" -eq 1 ]; then
         ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
         create_client_list "${SERVICE}"
-        printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
-        qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
+        printf "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n"
+        [ "${NO_QR}" = "no-qr" ] || qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
         printf %s"Address    = ${ONION_HOSTNAME}\n"
         printf %s"Name       = ${SERVICE}\n"
         [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
-        if [ "$(sudo grep -c "HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then
+        if [ "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then
           printf "Status     = inactive\n"
         else
           printf "Status     = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
         fi
-        printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
       fi
     }
+    NO_QR="${3}"
     if [ "${SERVICE}" = "all-services" ]; then
       for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
-        get_credentials "${SERVICE}"
+        get_credentials "${SERVICE}" "${NO_QR}"
       done
     else
-      loop_list get_credentials "${SERVICE}"
+      loop_list get_credentials "${SERVICE}" "${NO_QR}"
     fi
     success_msg
   ;;
 
 
   ## guide to add onion-location to redirect tor users when using your plainnet site to the onion service address
-  location | LOCATION )
+  location|LOCATION)
     is_service_dir_empty
     ## https://matt.traudt.xyz/posts/website-setup/
     SERVICE="${2}"
@@ -728,7 +726,7 @@ finish_location(){
 
     case "${ACTION}" in
 
-      nginx | NGINX )
+      nginx|NGINX)
         start_location
         printf '%s\n' "
   server {
@@ -744,7 +742,7 @@ finish_location(){
         finish_location
       ;;
 
-      apache | APACHE )
+      apache|APACHE)
         start_location
         printf '%s\n' "
   <VirtualHost *:443>
@@ -762,7 +760,7 @@ finish_location(){
         finish_location
       ;;
 
-      html | HTML )
+      html|HTML)
         start_location
         printf '%s\n' "
   <meta http-equiv=\"onion-location\" content=\"http://${ONION_HOSTNAME}\"/>
@@ -782,13 +780,13 @@ fi
   ;;
 
 
-  backup | BACKUP )
+  backup|BACKUP)
     ACTION="${2}"
     case "${ACTION}" in
 
       ## backup tar file will be extracted and integrated into their respective tor folders
       ## scp instructions to import backup from remote host
-      integrate | INTEGRATE )
+      integrate|INTEGRATE)
         ## RESTORE
         sudo mkdir -p "${HS_BK_DIR}"/backup-restoration.tbx
         sudo tar -xpzvf "${HS_BK_DIR}"/*.tar.gz -C "${HS_BK_DIR}"/backup-restoration.tbx
@@ -812,12 +810,10 @@ fi
         set_owner_permission
         ## RESTORE BACKUP FROM REMOTE
         printf "# Restore your configuration importing from a remote machine.\n"
-        printf "## Backup the services dir, onion_auth dir and the torrc\n"
-        printf
+        printf "## Backup the services dir, onion_auth dir and the torrc\n\n"
         ## upload from remote to this instane
         printf "## Import backup file uploading from remote. On the remote terminal, run:\n"
-        printf %s"  sudo scp -r ${HS_BK_TAR} ${USER}@${LOCAL_IP}:${HS_BK_DIR}/\n"
-        printf
+        printf %s"  sudo scp -r ${HS_BK_TAR} ${USER}@${LOCAL_IP}:${HS_BK_DIR}/\n\n"
         ## download from this instance
         printf "## Import backup file downloading from remote. On this terminal instance, run:\n"
         printf %s"  sudo scp -r ${SCP_TARGET_FULL} ${HS_BK_DIR}/${HS_BK_TAR}\n"
@@ -827,11 +823,10 @@ fi
       ## full backup needede to restore all of your hidden services and client keys
       ## folders/files included: <torrc>, <DataDir>/services/, <DataDir>/onion_auth/
       ## scp instructions to export backup to remote host
-      create | CREATE )
+      create|CREATE)
         ## CREATE BACKUP
         printf "# Backup your configuration and export it to a remote machine.\n"
-        printf "## Backing up the services dir, onion_auth dir and the torrc\n"
-        printf
+        printf "## Backing up the services dir, onion_auth dir and the torrc\n\n"
         sudo -u "${USER}" mkdir -p "${HS_BK_DIR}${TORRC_ROOT}"
         sudo -u "${USER}" touch "${HS_BK_DIR}${TORRC}"
         sudo cp "${TORRC}" "${TORRC}".rest
@@ -848,8 +843,7 @@ fi
         printf %s"\nsha512sum=${SHA512SUM}"; printf %s" \nsha256sum=${SHA256SUM}\n\n"
         ## upload to remote
         printf "## Export backup file uploading to remote. On this terminal instance, run:\n"
-        printf %s"  sudo scp -r ${HS_BK_DIR}/${HS_BK_TAR} ${SCP_TARGET_FULL}\n"
-        printf
+        printf %s"  sudo scp -r ${HS_BK_DIR}/${HS_BK_TAR} ${SCP_TARGET_FULL}\n\n"
         ## download from this instance on remote
         printf "## Export backup file downloading from remote. On the remote terminal, run:\n"
         printf %s"  sudo scp -r ${USER}@${LOCAL_IP}:${HS_BK_DIR}/${HS_BK_TAR} .\n"
@@ -863,10 +857,10 @@ fi
   ## This addon protects against guard discovery and related traffic analysis attacks.
   ## A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
   ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
-  vanguards | VANGUARDS )
+  vanguards|VANGUARDS)
     ACTION="${2}"
     case ${ACTION} in
-      install | INSTALL )
+      install|INSTALL)
         printf "# Installing Vanguards...\n"
         sudo git clone https://github.com/mikeperry-tor/vanguards.git "${DATA_DIR}"
         sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
@@ -905,7 +899,7 @@ WantedBy=multi-user.target
         success_msg
       ;;
 
-      update | UPDATE )
+      update|UPDATE)
         printf "# Upgrading Vanguards...\n"
         sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards pull -p
         sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards reset --hard "${VANGUARDS_COMMIT_HASH}"
@@ -913,13 +907,13 @@ WantedBy=multi-user.target
         success_msg
       ;;
 
-      remove | REMOVE )
+      remove|REMOVE)
         printf "# Removing Vanguards...\n"
         sudo rm -rf "${DATA_DIR}"/vanguards
         success_msg
       ;;
 
-      logs | LOGS )
+      logs|LOGS)
         sudo tail -f -n 25 "${VANGUARDS_LOG}"
       ;;
 
