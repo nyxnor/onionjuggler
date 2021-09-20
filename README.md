@@ -4,17 +4,15 @@
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location**
 
-*The TUI is not finished, still need to remove the arrays and make the script faster, beside adjusting the position of the dialog boxes. The CLI is stable now but need better error handling when using the `auth` command. *
-
 The goal is to manage services on the the tor configuration level, not the web server level. Also need to be as portable as possible, so the variables for paths are only contained inside onion.lib.
 
 ## Shells
 
 Work on various operating systems and shells, not only one function, but all of the scripts.
 Tested shells:
-* dash - to be close to POSIX compliant
+* (d)ash - to be close to POSIX compliant
 * bash
-* zsh
+* zsh - currently not working with the TUI
 
 Abanon arrays to be posix compliant is not easy, but if it runs the fastest, therefore having the best performand, mostly because it is calling a light shell such as dash (/bin/sh symlinked to /bin/dash) on the shebang of the scripts.
 
@@ -39,9 +37,9 @@ sh onionservice-cli setup env
 
 #### Easy menu
 
-Use the menu (only bash):
+Use the menu (not working with `zsh` currently):
 ```sh
-bash onionservice-tui
+sh onionservice-tui
 ```
 
 #### Understanding
@@ -77,8 +75,8 @@ printf "PATH=\$PATH:~scripts\n" >> ~/.${SHELL##*/}rc
 . ~/scripts
 ```
 
-Now you can call the `onionservice-cli` from any directory you are without prepending with the shell name (e.g. *bash onionservice-cli, sh onionservice-cli, zsh onionservice-cli).
-Try it out, go to any folder and press `TAB`:
+Now you can call the `onionservice-cli` from any directory you are without prepending with the shell name:
+Try it out, go to any folder call the script:
 ```sh
 cd
 onionservice-cli
@@ -97,18 +95,17 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 * basez >= 1.6.2 (for onion authentication)
 * git >= 2.0+ (for cloning the repo and vanguards)
 * qrencode >= 4.1.1 (for printing the hostname)
-* sh under /bin/sh (or the closest to POSIX complian shell you want)
-* bash under /bin/bash (for the [whiptail menu](onionservice-tui))
+* sh under /bin/sh (or the closest to POSIX complian shell you want, ash, dash)
 * systemd (for vanguards control)
 * user with root privileges
 * leave blank lines between Hidden Services torrc lines - the cli script create it correctly, no change needed when using this project, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block
-* HiddenServiceDir different root path than DatDir (faciliates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
+* HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
 
 ## Goal
 
 * **Autonomy** - The onion service operator should have full control of tor functionalities and if he does not know how, he can learn reading the scripts. It also helps typing less commands and when not remembering full directories paths or file syntax. Client option to add '.auth_private' option also possible.
 * **KISS** - Keep It Simple Stupid (At least I try). [Source](https://en.wikipedia.org/wiki/KISS_principle).
-* **Portability** - POSIX compliant to work on different shells, customize path, ports. The [library](onion.lib) and the [cli]](onionservice-cli) is fully [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible). Even though there is no shellcheck for `zsh`, the tests pass on `sh`,`bash` and `zsh`.
+* **Portability** - POSIX compliant to work on different shells, customize path and ports with a sourced library. The [library](onion.lib) and the [cli]](onionservice-cli) and the [menu](onionservice-tui) are [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), made possible studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible). CLI tests pass on `sh`,`bash` and `zsh`. TUI tests pass on `sh` and `bash`, but not on `zsh`.
 * **TUI** - The [menu](onionservice-tui) will have a hard time to make it POSIX compliant as it uses arrays for whiptail (arrays are undefined in POSIX), so it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible), but making some adjustments to fit `zsh` in the for loop as an example.
 * **Standalone** - The [cli](onionservice-cli) can run standalone, menu is just an addon that calls the main script.
 * **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
@@ -136,7 +133,7 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 * There are no accidents - Master Oogway
 * Bugs, you may find - Master Yoda
 * It is the program that should fear your commands and not the other way around - Mix of Pai Mei with Richard M. Stallman
-* Please report the bug (after I remove the warning on top of this README), open an issue with enough description to reproduce the steps and solve the problem.
+* Please report the bug, open an issue with enough description to reproduce the steps and solve the problem.
 
 ## To-do
 
