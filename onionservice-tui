@@ -1,6 +1,5 @@
 #!/bin/sh
 set -x
-set -e
 ## This file is part of onionservice, an easy to use Tor hidden services manager.
 ##
 ## Copyright (C) 2021 onionservice developers (GPLv3)
@@ -32,189 +31,131 @@ set -e
 ## include lib
 . "$(dirname "$(realpath "${0}")")"/onion.lib
 
-
-prepare_derived_menu(){
-  i=0
-  INSTRUCTIONS="Use spacebar to select"
-  HEIGHT=19
-  WIDTH=50
-  CHOICE_HEIGHT=$((CHOICE_HEIGHT-2))
-}
-
+i=0
 
 service_menu(){
-  prepare_derived_menu
-
+  DIALOG_TYPE="${1}"
   for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
     i=$((i+1))
-    SERVICE_ARRAY+=("${i}" "${SERVICE}" 0)
+    ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${DATA_DIR_OWNER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d '.' -f1)
+    if [ "${DIALOG_TYPE}" = "checklist" ]; then
+      SERVICE_LIST=$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)
+    elif [ "${DIALOG_TYPE}" = "menu" ]; then
+      SERVICE_LIST=$(printf "%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}")
+    fi
   done
 
-  # SERVICE_ARRAY=""
-  # for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
-  #   i=$((i+1))
-  #   SERVICE_ARRAY=$("${SERVICE_ARRAY}" "${i}" "${SERVICE}" "0")
-  # done
+  TITLE="Onion Services"
+  CHOICE_SERVICE=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
+  "$((i+7))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)
 
-  CHOICE_SERVICE=$(dialog --title "${TITLE}" --checklist "${INSTRUCTIONS}" \
-  ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} "${SERVICE_ARRAY[@]}" 2>&1 >/dev/tty)
-
-  if [ ! -z "${CHOICE_SERVICE}" ]; then
-    SERVICE_NAME_LIST=""
-    while [ "${i}" -gt 0 ]; do
-      check=0
-      check=$(echo "${CHOICE_SERVICE}" | grep -c "${i}")
-      printf %s"check mate = ${check}\n"
-      k=$((i * 3 -2))
-      if [ "${check}" -eq 1 ]; then
-        SERVICE=("${SERVICE_ARRAY[$k]}")
-        SERVICE_NAME_LIST="${SERVICE_NAME_LIST},${SERVICE}"
-      fi
-      i=$((i-1))
-    done
-    SERVICE_NAME_LIST=$(printf %s"${SERVICE_NAME_LIST}" | sed 's/^,//g')
-  fi
+  [ ! -z "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST=$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")
 }
 
 
 auth_server_menu(){
-  prepare_derived_menu
-
+  i=0
   for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
-    ## only include services that has at least one .auth
-    if [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | wc -l)" -gt 0 ]; then
+    ## only include services that have at least one client
+    CLIENT_CURRENT=$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | cut -d '.' -f1)
+    if [ "${CLIENT_CURRENT}" != "" ]; then
       i=$((i+1))
-      SERVICE_ARRAY+=("${i}" "${SERVICE}" OFF)
-      AUTH_NAME_LIST=$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | cut -d '.' -f1)
-      AUTH_RAW_ARRAY+=("${AUTH_NAME_LIST}")
+      ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${DATA_DIR_OWNER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d '.' -f1)
+      if [ -z "${CLIENT_LIST}" ]; then
+        SERVICE_LIST=$(printf "%s\n%s\n%s\n" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)
+        CLIENT_LIST=$(printf "%s\n" "${CLIENT_CURRENT}")
+      else
+        SERVICE_LIST=$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)
+        CLIENT_LIST=$(printf "%s\n%s\n" "${CLIENT_LIST}" "${CLIENT_CURRENT}")
+      fi
     fi
   done
 
-  if [ ${#SERVICE_ARRAY[@]} -eq 0 ]; then
+  if [ -z "${SERVICE_LIST}" ]; then
     TITLE="Onion Service - INFO"
-    TEXT_NO_CLIENT="None of your services has client authorization."
-    dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
+    MENU="\nNone of your services have client authorization."
+    dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${MENU}" 10 50
   else
-    CHOICE_SERVICE=$(dialog --title "${TITLE}" --checklist "${INSTRUCTIONS}" \
-    ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} "${SERVICE_ARRAY[@]}" 2>&1 >/dev/tty)
+    TITLE="Client Authorization - Server - Deletion"
+    MENU="Use spacebar to select:"
+    CHOICE_SERVICE=$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+    "$((i+7))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)
   fi
 
   if [ ! -z "${CHOICE_SERVICE}" ]; then
-
-      AUTH_CLEAN_LIST=$(printf "${AUTH_RAW_ARRAY[@]}" | tr ' ' '\n' | cut -d '.' -f1  | sort | uniq -c | tr -s ' ' | tr '\n' ' ' | tr -s ' ' | sed 's/^ //g')
-      AUTH_CLEAN_ARRAY+=("${AUTH_CLEAN_LIST}")
-      COUNT_AUTH_CLEAN_ARRAY=${#AUTH_CLEAN_ARRAY[@]}
-
-      z=0
-      j=$((COUNT_AUTH_CLEAN_ARRAY/2))
-      while [ ${j} -gt 0 ]; do
-          q=$((j * 2 -2 ))
-          n=$((j * 2 -1 ))
-          AUTH_QUANTITY=("${AUTH_CLEAN_ARRAY[$q]}")
-          AUTH_NAME=("${AUTH_CLEAN_ARRAY[$n]}")
-          if [ "${i}" = "${AUTH_QUANTITY}" ]; then
-            z=$((z+1))
-            AUTH_FINAL_ARRAY+=("${z}" "${AUTH_NAME}" OFF)
-          fi
-          j=$((j-1))
-      done
-
-      if [ "${#AUTH_FINAL_ARRAY[@]}" -eq 0 ]; then
-        TITLE="Onion Service - INFO"
-        TEXT_NO_CLIENT="No client exist within the ntersection of the chosen services."
-        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
+    ## intersection of clients on the chosen services
+    SERVICE_TOTAL=$(IFS=' '; set -f -- ${CHOICE_SERVICE}; printf %s"${#}")
+    #CLIENT_INTERSECTION=$(printf %s"${CLIENT_LIST}" | tr " " "\n" | sort | uniq -c | tr -s " " | grep " ${SERVICE_TOTAL} " | sed "s/ ${SERVICE_TOTAL} //g" | tr "\n" " ")
+    CLIENT_LIST=""
+    i=0
+    for CLIENT in $(printf %s"${CLIENT_LIST}" | tr " " "\n" | sort | uniq -c | tr -s " " | grep " ${SERVICE_TOTAL} " | sed "s/ ${SERVICE_TOTAL} //g" | tr "\n" " "); do
+      i=$((i+1))
+      if [ -z "${CLIENT_LIST}" ]; then
+        CLIENT_LIST=$(printf "%s\n%s\n%s\n" "${CLIENT}" "." 0)
       else
-        CHOICE_CLIENT=$(dialog --title "${TITLE}" --checklist "${INSTRUCTIONS}" \
-        ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} "${AUTH_FINAL_ARRAY[@]}" 2>&1 >/dev/tty)
-      if [ ! -z "${CHOICE_CLIENT}" ]; then
-        SERVICE_NAME_LIST=""
-        while [ "${i}" -gt 0 ]; do
-          check=0; check=$(printf %s"${CHOICE_SERVICE}" | grep -c "${i}")
-          k=$((i * 3 -2))
-          if [ "${check}" -eq 1 ]; then
-            SERVICE=("${SERVICE_ARRAY[$k]}")
-            SERVICE_NAME_LIST="${SERVICE_NAME_LIST},${SERVICE}"
-          fi
-          i=$((i-1))
-        done
-        SERVICE_NAME_LIST=$(printf %s"${SERVICE_NAME_LIST}" | sed 's/^,//g')
-
-        CLIENT_NAME_LIST=""
-        while [ "${z}" -gt 0 ]; do
-            check=0; check=$(printf %s"${CHOICE_CLIENT}" | grep -c "${z}")
-            k=$((z * 3 -2))
-            if [ "${check}" -eq 1 ]; then
-              CLIENT=("${AUTH_FINAL_ARRAY[$k]}")
-              CLIENT_NAME_LIST="${CLIENT_NAME_LIST},${CLIENT}"
-            fi
-            z=$((z-1))
-        done
-        CLIENT_NAME_LIST=$(printf %s"${CLIENT_NAME_LIST}" | sed 's/^,//g')
+        CLIENT_LIST=$(printf "%s\n%s\n%s\n%s\n" "${CLIENT_LIST}" "${CLIENT}" "." 0)
       fi
+    done
+
+    if [ -z "${CLIENT_LIST}" ]; then
+      TITLE="Onion Service - INFO"
+      TEXT_NO_CLIENT="\nNo client exist inside the intersection of the chosen services."
+      dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
+    else
+      CHOICE_CLIENT=$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+      "$((i+7))" 50 "${CHOICE_HEIGHT}" ${CLIENT_LIST} 2>&1 >/dev/tty)
+    fi
+
+    if [ ! -z "${CHOICE_CLIENT}" ]; then
+      SERVICE_NAME_LIST=$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")
+      CLIENT_NAME_LIST=$(printf %s"${CHOICE_CLIENT}" | sed 's/ /,/g')
     fi
   fi
 }
 
 
 auth_client_menu(){
-  prepare_derived_menu
-
   for ONION_AUTH in $(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d '.' -f1); do
-  i=$((i+1))
-  ONION_AUTH_ARRAY+=("${i}" "${ONION_AUTH}" OFF)
+    i=$((i+1))
+    ONION_AUTH_LIST=$(printf "%s\n%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" "." 0)
   done
 
-  if [ "${#ONION_AUTH_ARRAY[@]}" -eq 0 ]; then
+  if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
     TITLE="Onion Service - INFO"
-    TEXT_NO_CLIENT="The folder ${CLIENT_ONION_AUTH_DIR} is empty. You don't have '.auth_private' file."
+    TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${CLIENT_ONION_AUTH_DIR}"
     dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
   else
-    CHOICE_ONION_AUTH=$(dialog --title "${TITLE}" \
-    --checklist "${INSTRUCTIONS}" \
-    ${HEIGHT} ${WIDTH} ${CHOICE_HEIGHT} \
-    "${ONION_AUTH_ARRAY[@]}" 2>&1 >/dev/tty)
-
-    if [ ! -z "${CHOICE_ONION_AUTH}" ]; then
-      ONION_AUTH_NAME_LIST=""
-      while [ "${i}" -gt 0 ]; do
-        check=0; check=$(printf %s"${CHOICE_ONION_AUTH}" | grep -c "${i}")
-        k=$((i * 3 -2))
-        if [ "${check}" -eq 1 ]; then
-          ONION_AUTH=("${ONION_AUTH_ARRAY[$k]}")
-          ONION_AUTH_NAME_LIST="${ONION_AUTH_NAME_LIST},${ONION_AUTH}"
-        fi
-        i=$((i-1))
-      done
-      ONION_AUTH_NAME_LIST=$(printf %s"${ONION_AUTH_NAME_LIST}" | sed 's/^,//g')
-    fi
+    MENU="Use spacebar to select:"
+    TITLE="Onion Service - INFO"
+    CHOICE_ONION_AUTH=$(dialog --title "${TITLE}" --checklist "${MENU}" \
+    "$((i+7))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)
+    [ ! -z "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST=$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")
   fi
 }
 
 
 md_menu(){
-  for MD in ./text/*.md; do
-    MD_PATH=${MD%*/}
-    MD_NAME=$(printf %s"${MD_PATH##*/}" | cut -f1 -d '.')
-    MD_ARRAY+=("${MD_NAME}" " ")
+  for MD in "$(dirname "$(realpath "${0}")")"/text/*.md; do
+    i=$((i+1))
+    MD_LIST=$(printf "%s\n%s\n%s\n" "${MD_LIST}" "${MD##*/}" ".")
   done
 
   TITLE="Markdown guides"
-  MENU="select one guide"
-  CHOICE_MD=$(dialog --title "${TITLE}" --menu "${MENU}" 18 40 10 "${MD_ARRAY[@]}" 3>&1 1>&2 2>&3)
+  MENU="Select a guide:"
+  CHOICE_MD=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+  --menu "${MENU}" "$((i+7))" 50 10 ${MD_LIST} 2>&1 >/dev/tty)
 
-  if [ ! -z "${CHOICE_MD}" ]; then
-    pandoc "text/${CHOICE_MD}.md" | lynx -stdin
-  fi
+  [ ! -z "${CHOICE_MD}" ] && pandoc "${ONIONSERVCE_PWD}"/text/"${CHOICE_MD}" | lynx -stdin
 }
 
 ###########################
 
 
-TITLE="Onion Services - Main Menu"
 HEIGHT=19
 WIDTH=80
 CHOICE_HEIGHT=15
-MENU="Select an option:"
+TITLE="Onion Services - Main Menu"
+MENU="Use spacepar to select:"
 BACKTITLE="Onion Services Manager"
 
 if [ -z "$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/)" ]; then
@@ -222,26 +163,26 @@ if [ -z "$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/)" ]; then
   --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" "${HEIGHT}" "${WIDTH}" "${CHOICE_HEIGHT}" \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
-  "CREATE" "Create and host a hidden service" \
-  "IMPORT" "Import your hidden service data directory" \
-  "VANGUARDS" "Add to protect against traffic analysis" \
+  "ACTIVATE" "Activate a hidden service" \
   "AUTH_CLIENT" "Manage your client key of someonelse's service" \
+  "VANGUARDS" "Add to protect against traffic analysis" \
+  "IMPORT" "Import your hidden service data directory" \
   2>&1 >/dev/tty)
 else
 	CHOICE_MAIN=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
   --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" "${HEIGHT}" "${WIDTH}" "${CHOICE_HEIGHT}" \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
-  "CREATE" "Host a hidden service" \
-  "DELETE" "Delete chosen onion service" \
+  "ACTIVATE" "Activate a hidden service" \
+  "DEACTIVATE" "Deactivate chosen onion service" \
   "RENEW" "Renew onion service address" \
   "AUTH_SERVER" "Add or Remove client authorization from your service" \
   "AUTH_CLIENT" "Manage your client key of someonelse's service" \
   "CREDENTIALS" "See credentials (onion address, authorized clients)" \
   "VANGUARDS" "Add to protect against traffic analysis" \
   "LOCATION" "Guided steps to add onion-location to your plainnet website" \
-  "IMPORT" "Import your hidden service data from another machine" \
-  "EXPORT" "Export your hidden service data to another machine" \
+  "IMPORT" "Import backup from another machine" \
+  "EXPORT" "Export backup to another machine" \
   2>&1 >/dev/tty)
 fi
 
@@ -250,62 +191,75 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
 
   case "${CHOICE_MAIN}" in
 
+
     MAN)
-      man ./text/onionservice-cli.1
+      man "${ONIONSERVCE_PWD}"/text/onionservice-cli.1
     ;;
+
 
     GUIDES)
       md_menu
     ;;
 
-    DELETE)
-      service_menu
-      [ ! -z "${SERVICE_NAME_LIST}" ] && sh onionservice-cli off "${SERVICE_NAME_LIST}"
+    ## TODO: purge
+    DEACTIVATE)
+      service_menu checklist
+      [ ! -z "${SERVICE_NAME_LIST}" ] && sh "${ONIONSERVCE_PWD}"/onionservice-cli off "${SERVICE_NAME_LIST}"
     ;;
+
 
     RENEW)
-      service_menu
-      [ ! -z "${SERVICE_NAME_LIST}" ] && sh onionservice-cli renew "${SERVICE_NAME_LIST}"
+      service_menu checklist
+      [ ! -z "${SERVICE_NAME_LIST}" ] && sh "${ONIONSERVCE_PWD}"/onionservice-cli renew "${SERVICE_NAME_LIST}"
     ;;
+
 
     CREDENTIALS)
-      service_menu
-      [ ! -z "${SERVICE_NAME_LIST}" ] && sh onionservice-cli credentials "${SERVICE_NAME_LIST}"
+      service_menu checklist
+      [ ! -z "${SERVICE_NAME_LIST}" ] && sh "${ONIONSERVCE_PWD}"/onionservice-cli credentials "${SERVICE_NAME_LIST}"
     ;;
+
 
     LOCATION)
-        service_menu
-        if [ ! -z "${SERVICE_NAME_LIST}" ]; then
-          CHOICE_MAIN=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-          --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" "${HEIGHT}" "${WIDTH}" "${CHOICE_HEIGHT}" \
-          "NGINX" "Nginx web server header" \
-          "APACHE" "Apache web server header" \
-          "HTML" "hmtl <meta> http-equiv attribute" \
-          2>&1 >/dev/tty)
-          [ ! -z "${CHOICE_ACTION}" ] && sh onionservice-cli "${SERVICE}" "${ACTION}"
-        fi
+      ## this should be only one service
+      service_menu menu
+      if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+        TITLE="Onion-Location"
+        CHOICE_ACTION=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+        --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 10 50 "${CHOICE_HEIGHT}" \
+        "NGINX" "Nginx web server header" \
+        "APACHE" "Apache web server header" \
+        "HTML" "hmtl <meta> http-equiv attribute" \
+        2>&1 >/dev/tty)
+        [ ! -z "${CHOICE_ACTION}" ] && sh "${ONIONSERVCE_PWD}"/onionservice-cli location "${SERVICE_NAME_LIST}" "${CHOICE_ACTION}"
+      fi
     ;;
 
+
     VANGUARDS)
-      CHOICE_MAIN=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" "${HEIGHT}" "${WIDTH}" "${CHOICE_HEIGHT}" \
-      "INSTALL" "Install Vanguards protection" \
+      TITLE="Vanguards"
+      CHOICE_ACTION=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 11 50 "${CHOICE_HEIGHT}" \
+      "INSTALL" "Use Vanguards protections" \
       "LOGS" "Follow vanguards logs" \
       "UPGRADE" "Uprade and rever to commit hash" \
       "REMOVE" "Delete the Vanguards directory" \
       2>&1 >/dev/tty)
-      [ ! -z "${CHOICE_ACTION}" ] && sh onionservice-cli vanguards "${ACTION}"
+      [ ! -z "${CHOICE_ACTION}" ] && sh "${ONIONSERVCE_PWD}"/onionservice-cli vanguards "${CHOICE_ACTION}"
     ;;
+
 
     IMPORT)
-      sh onionservice-cli backup integrate
+      sh "${ONIONSERVCE_PWD}"/onionservice-cli backup integrate
     ;;
+
 
     EXPORT)
-      sh onionservice-cli backup create
+      sh "${ONIONSERVCE_PWD}"/onionservice-cli backup create
     ;;
 
-    CREATE)
+
+    ACTIVATE)
 
       TITLE="Service Activation"
       MENU="Choose socket type:"
@@ -316,88 +270,105 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
       "TCP" "addr:port (leak onion address to the local network)" \
       3>&1 1>&2 2>&3)
 
-      if [ ! -z "${SOCKET_CHOICE}" ]; then
+      SERVICE_MSG="\nName your service directory in one string and no space.\n(e.g.: torbox.ch)"
+      UNIX_PORT_MSG="\nYou are able to configure up to two virtual ports. Insert them separated by space. (e.g.: 80 443)"
+      TCP_PORT_MSG="\nYou are able to configure up to two virtual ports and targets, being only one virtual port required to create a service.
+      \nInsert them separated by space in the following order:\nVIRPORT TARGET VIRTPORT2 TARGET2\n(e.g.: 80 5000 443 5001) (e.g.: 80 192.168.5.10:5000 443 192.168.5.10:5001)"
 
-        SERVICE_MSG="Name your service (one string, no space. Eg: torbox.ch)"
-        VIRTPORT_MSG="Listening on the 1st virtual port number:"
-        VIRTPORT2_MSG="Listening on the 2st virtual port number:"
-        TARGET_MSG="OPTIONAL -> Redirect incoming traffic to 1st target addr:port"
-        TARGET2_MSG="OPTIONAL -> Redirect incoming traffic to 2nd target addr:port2"
+      case "${SOCKET_CHOICE}" in
 
-        if [ "${SOCKET_CHOICE}" = "UNIX" ]; then
-          # Required
+        UNIX)
           SERVICE_NAME=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${SERVICE_MSG}" 10 60 3>&1 1>&2 2>&3)
           if [ ! -z "${SERVICE_NAME}" ]; then
-            VIRTPORT=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-            --inputbox "${VIRTPORT_MSG}" 10 50 3>&1 1>&2 2>&3)
-            if [ ! -z "${VIRTPORT}" ]; then
-              ## Optional
-              VIRTPORT2=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-              --inputbox "${VIRTPORT2_MSG}" 10 50 3>&1 1>&2 2>&3)
-              sh onionservice-cli on unix "${SERVICE_NAME}" "${VIRTPORT}" "${VIRTPORT2}"
-            fi
+            SERVICE_PORTS=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+            --inputbox "${UNIX_PORT_MSG}" 10 60 3>&1 1>&2 2>&3)
+            [ ! -z "${SERVICE_PORTS}" ] \
+            && sh "${ONIONSERVCE_PWD}"/onionservice-cli on unix "${SERVICE_NAME}" ${SERVICE_PORTS}
           fi
+        ;;
 
-        elif [ "${SOCKET_CHOICE}" = "TCP" ]; then
-          # Required
+        TCP)
           SERVICE_NAME=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-          --inputbox "${SERVICE_MSG}" 10 50 3>&1 1>&2 2>&3)
+          --inputbox "${SERVICE_MSG}" 10 60 3>&1 1>&2 2>&3)
           if [ ! -z "${SERVICE_NAME}" ]; then
-            VIRTPORT=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-            --inputbox "${VIRTPORT_MSG}" 10 50 3>&1 1>&2 2>&3)
-            if [ ! -z "${VIRTPORT}" ]; then
-              TARGET=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-             --inputbox "${TARGET_MSG}" 10 50 3>&1 1>&2 2>&3)
-              if [ ! -z "${TARGET}" ]; then
-                # Optional
-                VIRTPORT2=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-                --inputbox "${VIRTPORT2_MSG}" 10 50 3>&1 1>&2 2>&3)
-                if [ ! -z "${VIRTPORT2}" ]; then
-                  TARGET2=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-                  --inputbox "${TARGET2_MSG}" 10 50 3>&1 1>&2 2>&3)
-                fi
-              fi
-              sh onionservice-cli on tcp "${SERVICE_NAME}" "${VIRTPORT}" "${TARGET}" "${VIRTPORT2}" "${TARGET2}"
-            fi
+            SERVICE_PORTS=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+            --inputbox "${TCP_PORT_MSG}" 13 80 3>&1 1>&2 2>&3)
+            [ ! -z "${SERVICE_PORTS}" ] \
+            && sh "${ONIONSERVCE_PWD}"/onionservice-cli on tcp "${SERVICE_NAME}" ${SERVICE_PORTS}
           fi
-        fi
-      fi
+        ;;
+
+        *)
+          exit 0
+      esac
     ;;
+
 
     AUTH_SERVER)
       TITLE="Client Authorization - Server"
-      MENU="As the onion service operator: Would you like to 'add' or 'remove' authorization from a client?"
+      MENU="\nAs the onion service operator, manage client authorization to your services"
       AUTH_TYPE=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 10 50 2 \
+      --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 13 60 2 \
       "LIST" "List all clients for specific HiddenService" \
       "GEN" "Generate a new key pair (public and private key)" \
       "PUB" "Register the client public key" \
       "DEL" "Remove a client" \
       2>&1 >/dev/tty)
 
-      if [ "${AUTH_TYPE}" = "ADD" ]; then
-        service_menu
-        if [ ! -z "${SERVICE_NAME_LIST}" ]; then
-          AUTH_STATUS="on"
-          TITLE="Client Authorization - Server - Add"
-          DESCRIPTION="Client(s) name(s) delimited by space or/and comma (e.g.: alice, bob, carol)"
-          CLIENT_NAME_LIST=("$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-          --inputbox "${DESCRIPTION}" 10 50 3>&1 1>&2 2>&3)")
-          ## separate spaced words by comma and delete sequential commas and spaces
-          CLIENT_NAME_LIST=$(cut -f1- -d ' ' --output-delimiter=',' <<< "${CLIENT_NAME_LIST}")
-          CLIENT_NAME_LIST=$(printf %s"${CLIENT_NAME_LIST}" | tr -d ' ' | tr -s ',' ',')
-        fi
-      elif [ "${AUTH_TYPE}" = "DEL" ]; then
-        AUTH_STATUS="off"
-        auth_server_menu
-      fi
 
-      [ ! -z "${CLIENT_NAME_LIST}" ] && sh onionservice-cli auth server "${AUTH_STATUS}" "${SERVICE_NAME_LIST}" "${CLIENT_NAME_LIST}"
+      case "${AUTH_TYPE}" in
+
+        LIST)
+          service_menu checklist
+          [ ! -z "${SERVICE_NAME_LIST}" ] && sh "${ONIONSERVCE_PWD}"/onionservice-cli auth server list "${SERVICE_NAME_LIST}"
+        ;;
+
+        GEN)
+          service_menu checklist
+          if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+            TITLE="Client Authorization - Server - Generate"
+            MENU="Client(s) name(s) delimited by space or/and comma (e.g.: alice, bob, carol)"
+            CLIENT_NAME_LIST=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+            --inputbox "${MENU}" 10 50 3>&1 1>&2 2>&3)
+            ## separate spaced strings by comma and delete sequential commas and spaces
+            CLIENT_NAME_LIST=$(printf %s"${CLIENT_NAME_LIST}" | cut -f1- -d ' ' --output-delimiter=',')
+            CLIENT_NAME_LIST=$(printf %s"${CLIENT_NAME_LIST}" | tr -d ' ' | tr -s ',' ',')
+          fi
+          { [ ! -z "${SERVICE_NAME_LIST}" ] || [ ! -z "${CLIENT_NAME_LIST}" ]; }\
+          && sh "${ONIONSERVCE_PWD}"/onionservice-cli auth server on "${SERVICE_NAME_LIST}" ${CLIENT_NAME_LIST}
+        ;;
+
+
+        PUB)
+          service_menu menu
+          if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+            TITLE="Client Authorization - Server - Pub"
+            MENU="Client name (e.g.: alice)"
+            CLIENT_NAME_LIST=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+            --inputbox "${MENU}" 10 50 3>&1 1>&2 2>&3)
+            TITLE="Client Authorization - Server - Pub"
+            MENU="Client public key in base32:"
+            CLIENT_PUB_KEY=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+            --inputbox "${MENU}" 10 50 3>&1 1>&2 2>&3)
+          fi
+          { [ ! -z "${SERVICE_NAME_LIST}" ] || [ ! -z "${CLIENT_NAME_LIST}" ] || [ ! -z "${CLIENT_PUB_KEY}" ]; } \
+          && sh "${ONIONSERVCE_PWD}"/onionservice-cli auth server on "${SERVICE_NAME_LIST}" ${CLIENT_NAME_LIST} "${CLIENT_PUB_KEY}"
+        ;;
+
+        DEL)
+          auth_server_menu
+          [ ! -z "${CLIENT_NAME_LIST}" ] && sh "${ONIONSERVCE_PWD}"/onionservice-cli auth server on "${SERVICE_NAME_LIST}" "${CLIENT_NAME_LIST}"
+        ;;
+
+        *)
+          exit 0
+      esac
     ;;
 
+
     AUTH_CLIENT)
-      TITLE="Client Authorization - Client - ClientOnionAuthDir"
+      TITLE="Client Authorization - Client"
       MENU="As the onion service client: Would you like to 'add' or 'remove' authorization from a client?"
       AUTH_TYPE=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 12 80 4 \
@@ -407,28 +378,43 @@ if [ ! -z "${CHOICE_MAIN}" ]; then
       "DEL" "Remove expired authorization" \
       2>&1 >/dev/tty)
 
-      if [ "${AUTH_TYPE}" = "GEN" ]; then
-        DESCRIPTION="Insert file name without the suffix '.auth_private'. Recommendation is to refer to the authenticated service."
-        AUTH_FILE_NAME=("$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-        --inputbox "${DESCRIPTION}" 10 80 3>&1 1>&2 2>&3)")
-        if [ ! -z "${AUTH_FILE_NAME}" ]; then
-          DESCRIPTION="Insert private key as instructed by the service operator.\nFormat: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>"
-          AUTH_PRIV_KEY=("$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-          --inputbox "${DESCRIPTION}" 10 80 3>&1 1>&2 2>&3)")
-          if [ ! -z "${AUTH_PRIV_KEY}" ]; then
-            sh onionservice-cli auth client on "${AUTH_FILE_NAME}" "${AUTH_PRIV_KEY}"
-          fi
-        fi
-      elif [ "${AUTH_TYPE}" = "DEL" ]; then
-        auth_client_menu
-        [ ! -z "${ONION_AUTH_NAME_LIST}" ] && sh onionservice-cli auth client off "${ONION_AUTH_NAME_LIST}"
+      case "${AUTH_TYPE}" in
 
-      fi
+        LIST)
+          sh "${ONIONSERVCE_PWD}"/onionservice-cli auth client list
+        ;;
+
+        GEN)
+          MENU="\nInsert the onion address of the service you want to authenticate:"
+          ONION_HOSTNAME=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+          --inputbox "${MENU}" 9 80 3>&1 1>&2 2>&3)
+          [ ! -z "${ONION_HOSTNAME}" ] && sh "${ONIONSERVCE_PWD}"/onionservice-cli auth client on "${ONION_HOSTNAME}"
+        ;;
+
+        PRIV)
+          MENU="\nInsert the onion address of the service you want to authenticate:"
+          ONION_HOSTNAME=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+          --inputbox "${MENU}" 9 80 3>&1 1>&2 2>&3)
+          MENU="Insert the client's private key:"
+          CLIENT_PRIV_KEY=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+          --inputbox "${MENU}" 9 80 3>&1 1>&2 2>&3)
+          { [ ! -z "${ONION_HOSTNAME}" ] || [ ! -z "${CLIENT_PRIV_KEY}" ]; } \
+          && sh "${ONIONSERVCE_PWD}"/onionservice-cli auth client on "${ONION_HOSTNAME}" "${CLIENT_PRIV_KEY}"
+        ;;
+
+        DEL)
+          auth_client_menu
+          [ ! -z "${ONION_AUTH_NAME_LIST}" ] && sh "${ONIONSERVCE_PWD}"/onionservice-cli auth client off "${ONION_AUTH_NAME_LIST}"
+        ;;
+
+        *)
+          exit 0
+      esac
     ;;
+
 
     *)
       exit 0
-
   esac
 
 fi
