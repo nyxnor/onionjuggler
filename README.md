@@ -6,43 +6,47 @@
 
 The goal is to manage services on the the tor configuration level, not the web server level. Also need to be as portable as possible, so the variables for paths are only contained inside onion.lib.
 
-## Shells
-
-Work on various operating systems and shells, not only one function, but all of the scripts.
-Tested shells:
-* (d)ash - to be close to POSIX compliant
-* bash
-* zsh - currently not working with the TUI
-
-Abanon arrays to be posix compliant is not easy, but if it runs the fastest, therefore having the best performand, mostly because it is calling a light shell such as dash (/bin/sh symlinked to /bin/dash) on the shebang of the scripts.
-
 ## Usage
 
 ### Instructions
 
-Clone the repository:
+Three easy steps to fully setup this project:
+
+1. Clone the repository:
 ```sh
 cd
 git clone https://github.com/nyxnor/onionservice.git
 cd onionservice
 ```
 
-#### Setup
-
-This step is necessary. It is ready for debian users, other distro may need to edit the `required` variables section inside `onionservice-cli`. For the menu, you also need to edit `onion.lib`.
-Setup custom tor enviroment:
+2. Edit the required variables to fit your system inside `onion.lib`. Don't worry, there is only 4 variables that need to be set and they have examples and explanation.
+Open the `lib` with any editor:
 ```sh
-sh onionservice-cli setup env
+nano onion.lib
+```
+Edit the required variables:
+```sh
+## [ EDIT REQUIRED ]
+DATA_DIR_OWNER="debian-tor" ## [debian-tor|tor]
+PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
+TLS_CERT="/etc/ssl/certs/localhost.crt" ## optional (leave it blank if not using), only used to show 'credentials' option in the CLI
 ```
 
-#### Easy menu
-
-Use the menu (not working with `zsh` currently):
+3. Setup custom tor enviroment:
 ```sh
-sh onionservice-tui
+sh setup.sh
 ```
 
-#### Understanding
+Now you can call the `onionservice-cli` as a command from any directory you are without prepending with the shell name:
+Try it out, go to any folder and call the `cli`:
+```sh
+cd
+onionservice-cli
+onionservice-tui
+```
+
+#### Helper
 
 Read the manual:
 ```sh
@@ -54,38 +58,15 @@ Read a small description of the main script:
 sh onionservice-cli
 ```
 
-#### Recovery
-
 Restore the latest torrc backup:
 ```sh
 sh onionservice-cli setup torrc
 ```
 
-#### Nice to have
-
-If you want to call the script as you would call any program, from any folder just tiping its name, you should add the script to path:
-
-Export script to path:
-```sh
-mkdir ~/scripts
-ls -s onionservice-cli ~/scripts/
-ls -s onion.lib ~/scripts/
-ls -s onionservice-cli.bash_completion ~/scripts/
-printf "PATH=\$PATH:~scripts\n" >> ~/.${SHELL##*/}rc
-. ~/scripts
-```
-
-Now you can call the `onionservice-cli` from any directory you are without prepending with the shell name:
-Try it out, go to any folder call the script:
-```sh
-cd
-onionservice-cli
-```
-
 ### Technical
 
 Now that you have read the [manual](text/onionservice.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [whiptail menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
-Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.md) for advanced usage.
+Read [TECHNICAL.md](TECHNICAL.md) for advanced usage.
 
 ### Requirements
 
@@ -101,12 +82,37 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 * leave blank lines between Hidden Services torrc lines - the cli script create it correctly, no change needed when using this project, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block
 * HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
 
+### Portability
+
+1. Operating systems:
+
+Works GNU/Linux operating systems, tested by the maintainer on Debian.
+Unfortunately commands such as `sed` are different on *nix systems compared to *BSD systems, therefore incompatible. Any volunteer to make the script portable to other operating systems is highly appreciated (I am thinking of a case stament where it detects the OS or inserted in the onion.lib then it adapts all necessary commands to it).
+
+1. Shells:
+
+* **CLI**:
+  * yash, dash, bash, zsh
+* **TUI**:
+  * dash, bash, zsh*
+
+*Note 1*: The best performance (most reliant, fastest and lightweight) you can get using these script is calling them with `sh` (not an actual shell. On Debian, `/bin/sh` has a symbolic-link pointing to `/bin/dash` (Debian Alqumist SHell)):
+```sh
+/bin/sh -> dash
+```
+You may call the scripts with:
+```sh
+sh onionservice-cli
+```
+
+*Note 2*: zsh is not POSIX compliant (works with the CLI but need workarounds when using the TUI). You can run the TUI with the Z Shell emulating a POSIX shell: `zsh --emulate sh -c onionservice-tui` or directly with /bin/sh using the following command: `/bin/sh -c onionservice-tui`.
+
 ## Goal
 
 * **Autonomy** - The onion service operator should have full control of tor functionalities and if he does not know how, he can learn reading the scripts. It also helps typing less commands and when not remembering full directories paths or file syntax. Client option to add '.auth_private' option also possible.
 * **KISS** - Keep It Simple Stupid (At least I try). [Source](https://en.wikipedia.org/wiki/KISS_principle).
-* **Portability** - POSIX compliant to work on different shells, customize path and ports with a sourced library. The [library](onion.lib) and the [cli]](onionservice-cli) and the [menu](onionservice-tui) are [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), made possible studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible). CLI tests pass on `sh`,`bash` and `zsh`. TUI tests pass on `sh` and `bash`, but not on `zsh`.
-* **TUI** - The [menu](onionservice-tui) will have a hard time to make it POSIX compliant as it uses arrays for whiptail (arrays are undefined in POSIX), so it follows the [pure-bash-bible](https://github.com/dylanaraps/pure-bash-bible), but making some adjustments to fit `zsh` in the for loop as an example.
+* **Portability** - POSIX compliant to work on different shells, customize path and ports with a sourced library. The [library](onion.lib) and the [cli]](onionservice-cli) and the [menu](onionservice-tui) are [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), made possible studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) and the [GNU AutoConf guide for portable scripts](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.70/autoconf.html#Introduction).
+* **TUI** - The [menu](onionservice-tui) only works with POSIX compliant shells, see [Portability above](README.md#portability).
 * **Standalone** - The [cli](onionservice-cli) can run standalone, menu is just an addon that calls the main script.
 * **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
 
@@ -137,8 +143,7 @@ Read [TECHNICAL.md](https://github.com/nyxnor/onionservice/tree/main/TECHNICAL.m
 
 ## To-do
 
-* Shellcheck the tui, it burns shellcheck brain.
+* Better detection if using `HashedControlPassword` or `CookieAuthentication` for Vanguards.
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
-* [Vanguards](https://github.com/mikeperry-tor/vanguards) menu option
 * [Ronn-ng](https://github.com/apjanke/ronn-ng/) to build man pages from markdown instead of writing them manually :(
