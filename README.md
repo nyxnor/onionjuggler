@@ -10,12 +10,9 @@ The goal is to manage services on the the tor configuration level, not the web s
 
 ### Video demo
 
-#### CLI
-![](media/cli.mp4)
+![CLI](media/cli.mp4)
 
-#### TUI
-
-![](media/tui.mp4)
+![TUI](media/tui.mp4)
 
 ### Instructions
 
