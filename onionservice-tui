@@ -29,7 +29,7 @@
 ######## FUNCTIONS ########
 
 ## include lib
-ONIONSERVICE_PWD="/home/nyxnor/Documents/git/onionservice"
+ONIONSERVICE_PWD=
 . "${ONIONSERVICE_PWD}"/onion.lib
 
 i=0

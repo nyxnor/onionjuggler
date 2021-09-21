@@ -151,7 +151,7 @@ create_client_list(){
   #CLIENT_NAME_LIST=$(printf "${CLIENT_NAME_LIST}" | cut -d '.' -f1)
   #CLIENT_NAME_LIST=$(echo ${CLIENT_NAME_LIST} | sed "s/ /,/g")    ## how to do this with printf?
 
-  CLIENT_CURRENT=$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | cut -d '.' -f1)
+  CLIENT_CURRENT=$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
   if [ "${CLIENT_CURRENT}" != "" ]; then
     for AUTHORIZATION in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/); do
       AUTHORIZATION_NAME=${AUTHORIZATION##*/}
@@ -301,9 +301,9 @@ case "${COMMAND}" in
         ## Required
         VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
         TARGET="${5}" ## optional, if null then map to 127.0.0.1:VIRTPORT
-        [ -z "${TARGET}" ] && TARGET="127.0.0.1:${VIRTPORT}"
-        TARGET_ADDR=$(printf %s"${TARGET}" | cut -d '.' -f1)
-        TARGET_PORT=$(printf %s"${TARGET}" | cut -d '.' -f2)
+        TARGET=${TARGET:-127.0.0.1:${VIRTPORT}}
+        TARGET_ADDR=${TARGET%%:*}
+        TARGET_PORT=${TARGET##*:}
         { [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
         TARGET_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" grep -c "HiddenServicePort .*${TARGET}$" "${TORRC}")
         TARGET_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
@@ -315,10 +315,10 @@ case "${COMMAND}" in
         TARGET2="${7}"
         if [ ! -z "${VIRTPORT2}" ]; then
           if [ -z "${TARGET2}" ]; then
-            TARGET2="127.0.0.1:${VIRTPORT2}"
+            TARGET2=${TARGET2:-127.0.0.1:${VIRTPORT2}}
           else
-            TARGET2_ADDR=$(printf %s"${TARGET2}" | cut -d '.' -f1)
-            TARGET2_PORT=$(printf %s"${TARGET2}" | cut -d '.' -f2)
+            TARGET2_ADDR=${TARGET2%%:*}
+            TARGET2_PORT=${TARGET2##*:}
             { [ "${TARGET2_ADDR}" -eq "${TARGET2_PORT}" ] || [ "${TARGET2_ADDR}" = "localhost" ]; } && TARGET2="127.0.0.1:${TARGET2_PORT}"
           fi
           [ "${TARGET}" = "${TARGET2}" ] && error_msg "TARGET is the same as TARGET2"
@@ -515,8 +515,7 @@ case "${COMMAND}" in
             [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
             CLIENT_PRIV_KEY="${5}" ## optional
             ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
-            #ONION_HOSTNAME_WITHOUT_ONION_LENGTH=${#ONION_HOSTNAME_WITHOUT_ONION}
-            SUFFIX_ONION=$(printf %s"${ONION_HOSTNAME}" | cut -d '.' -f2)
+            SUFFIX_ONION=${ONION_HOSTNAME##*.}
             [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#ONION_HOSTNAME}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#ONION_HOSTNAME} is different than 62 characters (<56-char-base32>.onion)"
             [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
