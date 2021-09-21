@@ -8,6 +8,15 @@ The goal is to manage services on the the tor configuration level, not the web s
 
 ## Usage
 
+### Video demo
+
+#### CLI
+![](media/cli.mp4)
+
+#### TUI
+
+![](media/tui.mp4)
+
 ### Instructions
 
 Three easy steps to fully setup this project:
