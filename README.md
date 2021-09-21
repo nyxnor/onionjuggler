@@ -65,7 +65,7 @@ sh onionservice-cli setup torrc
 
 ### Technical
 
-Now that you have read the [manual](text/onionservice.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [whiptail menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
+Now that you have read the [manual](text/onionservice.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [dialog menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
 Read [TECHNICAL.md](TECHNICAL.md) for advanced usage.
 
 ### Requirements
@@ -84,12 +84,12 @@ Read [TECHNICAL.md](TECHNICAL.md) for advanced usage.
 
 ### Portability
 
-1. Operating systems:
+#### Operating systems
 
 Works GNU/Linux operating systems, tested by the maintainer on Debian.
 Unfortunately commands such as `sed` are different on *nix systems compared to *BSD systems, therefore incompatible. Any volunteer to make the script portable to other operating systems is highly appreciated (I am thinking of a case stament where it detects the OS or inserted in the onion.lib then it adapts all necessary commands to it).
 
-1. Shells:
+#### Shells
 
 * **CLI**:
   * yash, dash, bash, zsh
@@ -105,15 +105,23 @@ You may call the scripts with:
 sh onionservice-cli
 ```
 
-*Note 2*: zsh is not POSIX compliant (works with the CLI but need workarounds when using the TUI). You can run the TUI with the Z Shell emulating a POSIX shell: `zsh --emulate sh -c onionservice-tui` or directly with /bin/sh using the following command: `/bin/sh -c onionservice-tui`.
+*Note 2*: zsh is not POSIX compliant (works with the CLI but need workarounds when using the TUI). You can run the TUI:
+* with the Z Shell emulating a POSIX shell:
+```sh
+zsh --emulate sh -c onionservice-tui
+```
+* directly with /bin/sh using the following command:
+```sh
+/bin/sh -c onionservice-tui
+```
 
 ## Goal
 
 * **Autonomy** - The onion service operator should have full control of tor functionalities and if he does not know how, he can learn reading the scripts. It also helps typing less commands and when not remembering full directories paths or file syntax. Client option to add '.auth_private' option also possible.
 * **KISS** - Keep It Simple Stupid (At least I try). [Source](https://en.wikipedia.org/wiki/KISS_principle).
-* **Portability** - POSIX compliant to work on different shells, customize path and ports with a sourced library. The [library](onion.lib) and the [cli]](onionservice-cli) and the [menu](onionservice-tui) are [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), made possible studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) and the [GNU AutoConf guide for portable scripts](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.70/autoconf.html#Introduction).
+* **Portability** - POSIX compliant to work on different shells, customize path and ports with a sourced library. The [library](onion.lib) and the [cli](onionservice-cli) and the [menu](onionservice-tui) are [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), made possible studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) and the [GNU AutoConf guide for portable scripts](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.70/autoconf.html#Introduction).
 * **TUI** - The [menu](onionservice-tui) only works with POSIX compliant shells, see [Portability above](README.md#portability).
-* **Standalone** - The [cli](onionservice-cli) can run standalone, menu is just an addon that calls the main script.
+* **Standalone** - The cli can run standalone, just need to source the [lib](onion.lib), or optionally input the variables inside one script if you want. menu is just an addon that calls the main script.
 * **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
 
 ## Features

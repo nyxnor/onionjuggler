@@ -1,5 +1,4 @@
 #!/bin/sh
-set -x
 
 ## This file is part of onionservice, an easy to use Tor hidden services manager.
 ##
@@ -30,7 +29,7 @@ set -x
 ######## FUNCTIONS ########
 
 ## include lib
-ONIONSERVICE_PWD=
+ONIONSERVICE_PWD="/home/nyxnor/Documents/git/onionservice"
 . "${ONIONSERVICE_PWD}"/onion.lib
 
 i=0
