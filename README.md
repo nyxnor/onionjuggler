@@ -4,7 +4,7 @@
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location**
 
-The goal is to manage services on the the tor configuration level, not the web server level. Also need to be as portable as possible, so the variables for paths are only contained inside onion.lib.
+The goal is to manage services on the the tor configuration level, not the web server level. Also need to be as portable as possible, so the variables for paths are only contained inside .onion.lib.
 
 ## Usage
 
@@ -25,10 +25,10 @@ git clone https://github.com/nyxnor/onionservice.git
 cd onionservice
 ```
 
-2. Edit the required variables to fit your system inside `onion.lib`. Don't worry, there is only 4 variables that need to be set and they have examples and explanation.
+2. Edit the required variables to fit your system inside `.onion.lib`. Don't worry, there is only 4 variables that need to be set and they have examples and explanation.
 Open the `lib` with any editor:
 ```sh
-nano onion.lib
+nano .onion.lib
 ```
 Edit the required variables:
 ```sh
@@ -93,7 +93,7 @@ Read [TECHNICAL.md](TECHNICAL.md) for advanced usage.
 #### Operating systems
 
 Works GNU/Linux operating systems, tested by the maintainer on Debian.
-Unfortunately commands such as `sed` are different on *nix systems compared to *BSD systems, therefore incompatible. Any volunteer to make the script portable to other operating systems is highly appreciated (I am thinking of a case stament where it detects the OS or inserted in the onion.lib then it adapts all necessary commands to it).
+Unfortunately commands such as `sed` are different on *nix systems compared to *BSD systems, therefore incompatible. Any volunteer to make the script portable to other operating systems is highly appreciated (I am thinking of a case stament where it detects the OS or inserted in the .onion.lib then it adapts all necessary commands to it).
 
 #### Shells
 
@@ -125,9 +125,9 @@ zsh --emulate sh -c onionservice-tui
 
 * **Autonomy** - The onion service operator should have full control of tor functionalities and if he does not know how, he can learn reading the scripts. It also helps typing less commands and when not remembering full directories paths or file syntax. Client option to add '.auth_private' option also possible.
 * **KISS** - Keep It Simple Stupid (At least I try). [Source](https://en.wikipedia.org/wiki/KISS_principle).
-* **Portability** - POSIX compliant to work on different shells, customize path and ports with a sourced library. The [library](onion.lib) and the [cli](onionservice-cli) and the [menu](onionservice-tui) are [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), made possible studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) and the [GNU AutoConf guide for portable scripts](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.70/autoconf.html#Introduction).
+* **Portability** - POSIX compliant to work on different shells, customize path and ports with a sourced library. The [library](.onion.lib) and the [cli](onionservice-cli) and the [menu](onionservice-tui) are [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), made possible studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) and the [GNU AutoConf guide for portable scripts](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.70/autoconf.html#Introduction).
 * **TUI** - The [menu](onionservice-tui) only works with POSIX compliant shells, see [Portability above](README.md#portability).
-* **Standalone** - The cli can run standalone, just need to source the [lib](onion.lib), or optionally input the variables inside one script if you want. menu is just an addon that calls the main script.
+* **Standalone** - The cli can run standalone, just need to source the [lib](.onion.lib), or optionally input the variables inside one script if you want. menu is just an addon that calls the main script.
 * **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
 
 ## Features

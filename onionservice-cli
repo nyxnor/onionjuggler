@@ -26,7 +26,7 @@
 ##
 ## INCLUDE LIB
 ONIONSERVICE_PWD=
-. "${ONIONSERVICE_PWD}"/onion.lib
+. "${ONIONSERVICE_PWD}"/.onion.lib
 
 ## COMMAND INFO
 onion_usage(){
@@ -486,7 +486,7 @@ case "${COMMAND}" in
               service_existent=0; test_service_exists "${SERVICE}"
               create_client_list "${SERVICE}"
               if [ "${CLIENT_COUNT}" -gt 0 ]; then
-                printf %s"Service    = ${SERVICE}\n"
+                printf %s"\nService    = ${SERVICE}\n"
                 printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
               fi
             }
@@ -615,7 +615,7 @@ case "${COMMAND}" in
       service_existent=0; test_service_exists "${SERVICE}"
       if [ ${service_existent} -eq 1 ]; then
         printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
-        printf %s"\n# Renewing service ${SERVICE}\n"
+        printf %s"\n# Renewing hostname (address) of the service: ${SERVICE}\n"
         OLD_HOSTNAME="${ONION_HOSTNAME}"
         ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
         create_client_list "${SERVICE}"

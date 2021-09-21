@@ -8,7 +8,7 @@ Sacrificing some code legibility for speed is acceptable.
 
 You can run all of this standalone with these files below:
 
-* the library -> `onion.lib`
+* the library -> `.onion.lib`
 * the main script -> `onionservice-cli`
 
 ## Variables description:
@@ -579,7 +579,7 @@ Once the guard node is known, traffic analysis attacks that can deanonymize an o
 
 ## Install vanguards
 
-As there is no recent Vanguards release and the debian package is old, will clone the repository `git reset --hard VANGUARDS_COMMIT_HASH`, the commit hash being set inside `onion.lib`.
+As there is no recent Vanguards release and the debian package is old, will clone the repository `git reset --hard VANGUARDS_COMMIT_HASH`, the commit hash being set inside `.onion.lib`.
 
 **Usage:**
 
@@ -604,7 +604,7 @@ sh onionservice-cli vanguards logs
 
 ## Upgrade vanguards
 
-As explained on vanguards installation above, vanguards "version" is a commit hash. If there is a new commit, you may edit `onion.lib` and sed a new `VANGUARDS_COMMIT_HASH` first.
+As explained on vanguards installation above, vanguards "version" is a commit hash. If there is a new commit, you may edit `.onion.lib` and sed a new `VANGUARDS_COMMIT_HASH` first.
 
 **Usage:**
 

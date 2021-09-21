@@ -30,7 +30,7 @@
 ## Hopefully, this way the scripts stay short and clear.
 ##
 ## SYNTAX
-## . onion.lib
+## . .onion.lib
 ##
 ###########################
 ######## VARIABLES ########
@@ -56,10 +56,10 @@ SCP_TARGET_USER="remoteUser"
 SCP_TARGET_IP="remoteIp"
 SCP_TARGET_PATH="${HOME}/remote/path"
 SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" ## '[USER]@[SERVER]:[SERVER_DIR]'
+DATE_TIME=$(date +%Y-%m-%d-%H'h'-%M'm')
 HS_BK_TAR=tor-hs-${DATE_TIME}.tar.gz
 HS_BK_DIR="${HOME}/tor-hs-backup"
 LOCAL_DOWNLOAD_PATH="${HOME}/Downloads/tor-hs-backup"
-DATE_TIME=$(date +%Y-%m-%d-%H'h'-%M'm')
 LOCAL_IP=$(hostname -I | awk '{print $1}')
 ## tor defaults
 TORRC_ROOT="/etc/tor"
