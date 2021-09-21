@@ -19,16 +19,20 @@
 ## along with this program. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## DESCRIPTION
-## This file lets you manage your hidden services
+## This file lets you manage your hidden services to all its capability
 ##
 ## SYNTAX
 ## sh onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
 ##
+## INCLUDE LIB
+ONIONSERVICE_PWD=
+. "${ONIONSERVICE_PWD}"/onion.lib
+
 ## COMMAND INFO
 onion_usage(){
   printf %s"Configure an Onion Service
 
-Usage: $(basename "${0}") COMMAND [REQUIRED] <OPTIONAL>
+Usage: "${0}" COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
 
@@ -71,15 +75,13 @@ It does not imply the code worked, you should always pay attention for errors in
   exit 1
 }
 
-. "$(dirname "$(realpath "${0}")")"/onion.lib
-
-[ "${USER}" = "root" ] && { printf %s"${RED}Do not run with the root user!!!\n${NOCOLOR}" && exit 1; }
+[ "${USER}" = "root" ] && { printf %s"${FOREGROUND_RED}Do not run with the root user!!!\n${UNSET_FORMAT}" && exit 1; }
 
 { [ -z "${#}" ] || [ -z "${2}" ] || [ "${1}" = "help" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
 
 ## display error message with instructions to use the script correctly.
 error_msg(){
-  [ ! -z "${1}" ] && printf %s"${RED}ERROR: ${1}${NOCOLOR}\n"
+  [ ! -z "${1}" ] && printf %s"${FOREGROUND_RED}ERROR: ${1}${UNSET_FORMAT}\n"
   exit 1
   #onion_usage
 }
@@ -88,7 +90,7 @@ error_msg(){
 ## It does not imply the code worked, you should always pay attention for errors in the logs."
 success_msg(){
   [ "${1}" = "reload" ] && restarting_tor reload
-  printf %s"${GREEN}\n# Done\n${NOCOLOR}"
+  printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
   #read -n 1 -s -r -p "Press any key to continue"
   #exit 1
 }
@@ -133,7 +135,7 @@ test_service_exists(){
   SERVICE="${1}"
   ONION_HOSTNAME=$(sudo -u "${DATA_DIR_OWNER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null)
   [ "${ONION_HOSTNAME}" = "" ] \
-  && { printf %s"${RED}ERROR: Service does not exist: ${SERVICE}\n${NOCOLOR}"; exit 1; } \
+  && { printf %s"${FOREGROUND_RED}ERROR: Service does not exist: ${SERVICE}\n${UNSET_FORMAT}"; exit 1; } \
   || service_existent=1
 }
 
@@ -149,14 +151,17 @@ create_client_list(){
   #CLIENT_NAME_LIST=$(printf "${CLIENT_NAME_LIST}" | cut -d '.' -f1)
   #CLIENT_NAME_LIST=$(echo ${CLIENT_NAME_LIST} | sed "s/ /,/g")    ## how to do this with printf?
 
-  for AUTHORIZATION in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/); do
-    AUTHORIZATION_NAME=${AUTHORIZATION##*/}
-    AUTHORIZATION_NAME=${AUTHORIZATION_NAME%.auth}
-    CLIENT_NAME_LIST="${CLIENT_NAME_LIST},${AUTHORIZATION_NAME}"
-    CLIENT_COUNT=$((CLIENT_COUNT+1))
-  done
-  CLIENT_NAME_LIST=${CLIENT_NAME_LIST#,}
-  [ "${CLIENT_NAME_LIST}" = "1" ] && CLIENT_NAME_LIST=""
+  CLIENT_CURRENT=$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | cut -d '.' -f1)
+  if [ "${CLIENT_CURRENT}" != "" ]; then
+    for AUTHORIZATION in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/); do
+      AUTHORIZATION_NAME=${AUTHORIZATION##*/}
+      AUTHORIZATION_NAME=${AUTHORIZATION_NAME%.auth}
+      CLIENT_NAME_LIST="${CLIENT_NAME_LIST},${AUTHORIZATION_NAME}"
+      CLIENT_COUNT=$((CLIENT_COUNT+1))
+    done
+    CLIENT_NAME_LIST=${CLIENT_NAME_LIST#,}
+    [ "${CLIENT_NAME_LIST}" = "1" ] && CLIENT_NAME_LIST=""
+  fi
 }
 
 
@@ -213,16 +218,6 @@ case "${COMMAND}" in
     ACTION="${2}"
     case "${ACTION}" in
 
-      ## missing: shell completion
-      env|ENV)
-        install_package tor openssl basez git qrencode grep sed
-        sudo usermod -aG "${DATA_DIR_OWNER}" "${USER}"
-        sudo -u "${DATA_DIR_OWNER}" mkdir -p "${DATA_DIR_HS}"
-        sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
-        printf "\n# Tor enviroment is ready\n"
-        success_msg reload
-      ;;
-
       torrc|TORRC)
         sudo cp "${TORRC}".bak "${TORRC}"
         printf "# Restored torrc with its latest backup\n"
@@ -248,11 +243,11 @@ case "${COMMAND}" in
       PURGE="${2}"
       ## remove service service data
       { [ "${PURGE}" = "purge" ] || [ "${PURGE}" = "PURGE" ]; } \
-      && { printf %s"${RED}\n# Deleting Hidden Service data in ${DATA_DIR_HS}/${SERVICE}\n${NOCOLOR}"; \
+      && { printf %s"${FOREGROUND_RED}\n# Deleted Hidden Service data in ${DATA_DIR_HS}/${SERVICE}\n${UNSET_FORMAT}"; \
         sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"; } \
-      || printf %s"\n# HiddenServiceDiretory was kept"
+      || printf "\n# HiddenServiceDiretory was kept\n"
       ## remove service paragraph in torrc
-      printf %s"# Deleting Hidden Service configuration in ${TORRC}\n"
+      printf %s"# Deleted Hidden Service configuration in ${TORRC}\n"
       sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
       ## substitute multiple sequential empty lines to a single one per sequence
       #awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
@@ -525,6 +520,8 @@ case "${COMMAND}" in
             [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#ONION_HOSTNAME}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#ONION_HOSTNAME} is different than 62 characters (<56-char-base32>.onion)"
             [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
+            [ $(grep -c "ClientOnionAuthDir" "${TORRC}") -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a ${TORRC}; }
+            sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
             if [ "${CLIENT_PRIV_KEY}" = "" ]; then
               ## Generate pem and derive pub and priv keys
               openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
@@ -581,7 +578,7 @@ case "${COMMAND}" in
               printf "\n# Client side authorization removed\n"
               success_msg
             else
-              printf %s"${RED}INFO: ClientOnionAuthDir is empty\n${NOCOLOR}"
+              printf %s"${FOREGROUND_RED}INFO: ClientOnionAuthDir is empty\n${UNSET_FORMAT}"
             fi
           ;;
 
@@ -595,7 +592,7 @@ case "${COMMAND}" in
               printf "\n"
               success_msg
             else
-              printf %s"${RED}INFO: ClientOnionAuthDir is empty\n${NOCOLOR}"
+              printf %s"${FOREGROUND_RED}INFO: ClientOnionAuthDir is empty\n${UNSET_FORMAT}"
             fi
           ;;
 
@@ -622,7 +619,6 @@ case "${COMMAND}" in
         printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
         printf %s"\n# Renewing service ${SERVICE}\n"
         OLD_HOSTNAME="${ONION_HOSTNAME}"
-        printf %s"Current = ${ONION_HOSTNAME}\n"
         ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
         create_client_list "${SERVICE}"
         ## delete the service folder
@@ -635,13 +631,17 @@ case "${COMMAND}" in
         ## reload tor now so auth option can get the new hostname
         restarting_tor
         ## generate auth for clients
-        [ ! -z "${CLIENT_NAME_LIST}" ] && { sh "${ONIONSERVCE_PWD}"/"${0}" auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
+        [ ! -z "${CLIENT_NAME_LIST}" ] \
+        && { printf %s"\n${FOREGROUND_YELLOW}# Command to renew services requires new authorization for your clients.\n${UNSET_FORMAT}" \
+        && sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
         test_service_exists "${SERVICE}"
         NEW_HOSTNAME="${ONION_HOSTNAME}"
+        printf %s"Current = ${OLD_HOSTNAME}\n"
         printf %s"New     = ${ONION_HOSTNAME}\n"
         [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ] \
-        && { qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}" && printf "# Service renewed.\n"; } \
-        || printf %s"# Failed to renew service: ${SERVICE}\n"
+        && { printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"; printf "\nService address QR encoded format:\n" \
+        && qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"; } \
+        || printf %s"${FOREGROUND_RED}# Failed to renew service: ${SERVICE}\n${UNSET_FORMAT}"
         printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
       fi
     }
@@ -669,14 +669,15 @@ case "${COMMAND}" in
         create_client_list "${SERVICE}"
         printf "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n"
         [ "${NO_QR}" = "no-qr" ] || qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
-        printf %s"Address    = ${ONION_HOSTNAME}\n"
-        printf %s"Name       = ${SERVICE}\n"
-        [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
+        printf %s"Address  = ${ONION_HOSTNAME}\n"
+        printf %s"Service  = ${SERVICE}\n"
+        [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
         if [ "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then
-          printf "Status     = inactive\n"
+          printf "Status   = inactive\n"
         else
-          printf "Status     = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
+          printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
         fi
+        [ ! -z "${TLS_CERT}" ] && printf %s"Certificate Fingerprint SHA-256 = ${TLS_CERT_FINGERPRINT}\n"
       fi
     }
     NO_QR="${3}"
