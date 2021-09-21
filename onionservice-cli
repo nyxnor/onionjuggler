@@ -91,7 +91,6 @@ error_msg(){
 success_msg(){
   [ "${1}" = "reload" ] && restarting_tor reload
   printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
-  #read -n 1 -s -r -p "Press any key to continue"
   #exit 1
 }
 
@@ -676,7 +675,7 @@ case "${COMMAND}" in
         else
           printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
         fi
-        [ ! -z "${TLS_CERT}" ] && printf %s"Certificate Fingerprint SHA-256 = ${TLS_CERT_FINGERPRINT}\n"
+        #[ ! -z "${TLS_CERT}" ] && printf %s"Certificate Fingerprint SHA-256 = ${TLS_CERT_FINGERPRINT}\n"
       fi
     }
     NO_QR="${3}"

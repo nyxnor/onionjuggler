@@ -46,11 +46,12 @@ case "${ACTION}" in
       sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-cli
       sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-tui
       printf %s"${FOREGROUND_BLUE}# OnionService enviroment is ready\n${UNSET_FORMAT}"
-      restarting_tor force
+      restarting_tor
   ;;
 
   release|RELEASE)
     . onion.lib
+    printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
     sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onion.lib
     sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-cli
     sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-tui
