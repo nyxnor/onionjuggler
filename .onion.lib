@@ -112,7 +112,7 @@ FOREGROUND_WHITE="\033[1;97m"
 ## install space separated list of packages (e.g.: install_package tor openssl git)
 install_package(){
   for PACKAGE in "${@}"; do
-    command -v "${PACKAGE}" >/dev/null || "${PKG_MANAGER_INSTALL}" "${PACKAGE}"
+    command -v "${PACKAGE}" >/dev/null || ${PKG_MANAGER_INSTALL} "${PACKAGE}"
   done
 }
 

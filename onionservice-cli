@@ -26,6 +26,7 @@
 ##
 ## INCLUDE LIB
 ONIONSERVICE_PWD=
+[ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mThe variable ONIONSERVICE_PWD is empty!\n\033[0m"; exit 0; }
 . "${ONIONSERVICE_PWD}"/.onion.lib
 
 ## COMMAND INFO
@@ -666,16 +667,13 @@ case "${COMMAND}" in
         ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
         create_client_list "${SERVICE}"
         [ "${NO_QR}" = "no-qr" ] || qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
-        printf %s"Address  = ${ONION_HOSTNAME}\n"
+        printf %s"\nAddress  = ${ONION_HOSTNAME}\n"
         printf %s"Service  = ${SERVICE}\n"
         [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
-        if [ "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then
-          printf "Status   = inactive\n"
-        else
-          printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
-        fi
+        if [ "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then printf "Status   = inactive\n"
+        else printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"; fi
         #[ ! -z "${TLS_CERT}" ] && printf %s"Certificate Fingerprint SHA-256 = ${TLS_CERT_FINGERPRINT}\n"
-        printf "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n"
+        printf "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
       fi
     }
     NO_QR="${3}"
