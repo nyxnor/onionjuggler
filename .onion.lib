@@ -39,9 +39,10 @@
 DATA_DIR_OWNER="debian-tor" ## [debian-tor|tor]
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
-TLS_CERT="" ## optional (leave it blank if not using), only used to show 'credentials' option in the CLI
 
 ## [ EDIT OPTIONAL ]
+## path to certificate. only used to show 'credentials' option in the CLI, leave it blank if not using
+TLS_CERT=""
 ## Vanguards
 VANGUARDS_COMMIT_HASH=10942de
 VANGUARDS_LOG="/var/log/tor/vanguards.log"

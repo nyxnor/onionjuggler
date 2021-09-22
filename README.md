@@ -36,7 +36,6 @@ Edit the required variables:
 DATA_DIR_OWNER="debian-tor" ## [debian-tor|tor]
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
-TLS_CERT="" ## optional path (leave it blank if not using), shown 'credentials' option in CLI
 ```
 
 3. Setup custom tor enviroment:
