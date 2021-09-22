@@ -35,7 +35,7 @@ case "${ACTION}" in
 
   setup|SETUP)
       . .onion.lib
-      install_package tor openssl basez git qrencode grep sed
+      install_package tor python3-stem openssl basez git qrencode grep sed
       sudo usermod -aG "${DATA_DIR_OWNER}" "${USER}"
       sudo -u "${DATA_DIR_OWNER}" mkdir -p "${DATA_DIR_HS}"
       sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
@@ -53,6 +53,9 @@ case "${ACTION}" in
   release|RELEASE)
     . .onion.lib
     printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
+    sed -i "s/set \-\x//g" .onion.lib
+    sed -i "s/set \-\x//g" onionservice-cli
+    sed -i "s/set \-\x//g" onionservice-tui
     sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" .onion.lib
     sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-cli
     sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-tui

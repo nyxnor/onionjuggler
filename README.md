@@ -36,7 +36,7 @@ Edit the required variables:
 DATA_DIR_OWNER="debian-tor" ## [debian-tor|tor]
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
-TLS_CERT="/etc/ssl/certs/localhost.crt" ## optional (leave it blank if not using), only used to show 'credentials' option in the CLI
+TLS_CERT="" ## optional path (leave it blank if not using), shown 'credentials' option in CLI
 ```
 
 3. Setup custom tor enviroment:
@@ -103,7 +103,7 @@ Unfortunately commands such as `sed` are different on *nix systems compared to *
 * **TUI**:
   * dash, bash, zsh*
 
-*Note 1*: The best performance (most reliant, fastest and lightweight) you can get using these script is calling them with `sh` (not an actual shell. On Debian, `/bin/sh` has a symbolic-link pointing to `/bin/dash` (Debian Alqumist SHell)):
+*Note 1*: The best performance (most reliant, fastest and lightweight) you can get using these script is calling them with `sh` (not an actual shell. On Debian, `/bin/sh` has a symbolic-link pointing to `/bin/dash` (Debian Alqumist SHell):
 ```sh
 /bin/sh -> dash
 ```
