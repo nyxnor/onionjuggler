@@ -78,11 +78,12 @@ Read [TECHNICAL.md](TECHNICAL.md) for advanced usage.
 
 * Unix system (paths break on windows cause they use \ for path)
 * tor >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
+* python3-stem >=1.8.0 (for Vanguards)
 * openssl >= 1.1+ (for onion authentication)
 * basez >= 1.6.2 (for onion authentication)
 * git >= 2.0+ (for cloning the repo and vanguards)
 * qrencode >= 4.1.1 (for printing the hostname)
-* sh under /bin/sh (or the closest to POSIX complian shell you want, ash, dash)
+* sh under /bin/sh (or the closest to POSIX compliant shell you want, ash, dash)
 * systemd (for vanguards control)
 * user with root privileges
 * leave blank lines between Hidden Services torrc lines - the cli script create it correctly, no change needed when using this project, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block
