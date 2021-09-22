@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ## This file is part of onionservice, an easy to use Tor hidden services manager.
 ## Portions of this file was source from TorBox, an easy to use anonymizing router based on Raspberry Pi.
@@ -34,12 +34,6 @@
 ##
 ###########################
 ######## VARIABLES ########
-MENU_WIDTH=80
-MENU_WIDTH_REDUX=60
-MENU_HEIGHT_15=15
-MENU_HEIGHT_20=20
-MENU_HEIGHT_25=25
-
 
 ## [ EDIT REQUIRED ]
 DATA_DIR_OWNER="debian-tor" ## [debian-tor|tor]
@@ -90,7 +84,7 @@ ONIONSERVICE_PWD=
 ## Dialog
 export DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
 ## cert fingerprint
-TLS_CERT_FINGERPRINT="$(openssl x509 -in ${TLS_CERT} -fingerprint -sha256 -noout | cut -d"=" -f2)"
+[ ! -z "${TLS_CERT}" ] && TLS_CERT_FINGERPRINT="$(openssl x509 -in ${TLS_CERT} -fingerprint -sha256 -noout | cut -d"=" -f2)"
 ## Color
 UNSET_FORMAT="\033[0m"
 FOREGROUND_DEFAULT="\033[1;39m"
@@ -114,8 +108,7 @@ FOREGROUND_WHITE="\033[1;97m"
 ###########################
 ######## FUNCTIONS ########
 
-
-## install space separated list of packages (e.g. install_package tor openssl git)
+## install space separated list of packages (e.g.: install_package tor openssl git)
 install_package(){
   for PACKAGE in "${@}"; do
     command -v "${PACKAGE}" >/dev/null || "${PKG_MANAGER_INSTALL}" "${PACKAGE}"
