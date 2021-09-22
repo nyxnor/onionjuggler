@@ -30,9 +30,9 @@ ONIONSERVICE_PWD=
 
 ## COMMAND INFO
 onion_usage(){
-  printf %s"Configure an Onion Service
+  printf "Configure an Onion Service
 
-Usage: "${0}" COMMAND [REQUIRED] <OPTIONAL>
+Usage: onionservice-cli COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
 
@@ -52,7 +52,7 @@ Options:
 
   auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]   remove authorization of client access
 
-  auth server list [SERV1,SERV2,...]                                                 list clients for indicated service
+  auth server list [all-services|SERV1,SERV2,...]                                    list clients for indicated service
 
   auth client on [ONION] <CLIENT_PRIV_KEY>                                           add your client key, if no key specified, will create one
 
@@ -79,12 +79,14 @@ It does not imply the code worked, you should always pay attention for errors in
 
 { [ -z "${#}" ] || [ -z "${2}" ] || [ "${1}" = "help" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
 
+
 ## display error message with instructions to use the script correctly.
 error_msg(){
   [ ! -z "${1}" ] && printf %s"${FOREGROUND_RED}ERROR: ${1}${UNSET_FORMAT}\n"
   exit 1
   #onion_usage
 }
+
 
 ## '# Done': You should always see it at the end, else something unexpected occured.
 ## It does not imply the code worked, you should always pay attention for errors in the logs."
@@ -243,7 +245,7 @@ case "${COMMAND}" in
       ## remove service service data
       { [ "${PURGE}" = "purge" ] || [ "${PURGE}" = "PURGE" ]; } \
       && { printf %s"${FOREGROUND_RED}\n# Deleted Hidden Service data in ${DATA_DIR_HS}/${SERVICE}\n${UNSET_FORMAT}"; \
-        sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"; } \
+        sudo rm -rfv "${DATA_DIR_HS}"/"${SERVICE}"; } \
       || printf "\n# HiddenServiceDiretory was kept\n"
       ## remove service paragraph in torrc
       printf %s"# Deleted Hidden Service configuration in ${TORRC}\n"
@@ -453,6 +455,7 @@ case "${COMMAND}" in
               CLIENT="${2}"
               printf %s"Service  = ${SERVICE}\n"
               if [ "${CLIENT}" = "all-clients" ]; then
+                printf "Client   = all-clients\n\n"
                 sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/
               else
                 printf %s"Client   = ${CLIENT}\n\n"
@@ -461,20 +464,16 @@ case "${COMMAND}" in
             }
             [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
             if [ "${SERVICE}" = "all-services" ]; then
-              printf "# Removing client authorization for all services\n"
+              printf "# Removing client authorization for all services.\n"
               create_service_list; SERVICE="${SERVICE_NAME_LIST}"
-              if [ "${CLIENT}" = "all-clients" ]; then
-                printf "# All clients will be removed and the service will be accessible to anyone with the onion address.\n\n"
-              else
-                printf "# If any client remains, the service will still be authenticated.\n\n"
-              fi
+              [ "${CLIENT}" = "all-clients" ] \
+              && printf "# Removing client authorization for all clients.\n# The service is now accessible for anyone with the onion address.\n\n" \
+              || printf "# If any client remains, the service will still be authenticated.\n\n"
             else
               printf %s"# Removing client authorization for the services: ${SERVICE}\n"
-              if [ "${CLIENT}" = "all-clients" ]; then
-                printf "# All clients will be removed and the service will be accessible to anyone with the onion address.\n\n"
-              else
-                printf "# If any client remains, the service will still be authenticated.\n\n"
-              fi
+              [ "${CLIENT}" = "all-clients" ] \
+              && printf "# Removing client authorization for all clients.\n# The service is now accessible for anyone with the onion address.\n\n" \
+              || printf "# If any client remains, the service will still be authenticated.\n\n"
             fi
             loop_list auth_server_remove_clients "${SERVICE}" "${CLIENT}"
             success_msg reload
@@ -491,6 +490,7 @@ case "${COMMAND}" in
               fi
             }
             printf "# Authorized clients for hidden service:\n\n"
+            [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
             loop_list auth_server_list "${SERVICE}"
             success_msg
           ;;
@@ -518,7 +518,7 @@ case "${COMMAND}" in
             [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#ONION_HOSTNAME}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#ONION_HOSTNAME} is different than 62 characters (<56-char-base32>.onion)"
             [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
-            [ $(grep -c "ClientOnionAuthDir" "${TORRC}") -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a ${TORRC}; }
+            [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a ${TORRC}; }
             sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
             if [ "${CLIENT_PRIV_KEY}" = "" ]; then
               ## Generate pem and derive pub and priv keys
@@ -568,7 +568,7 @@ case "${COMMAND}" in
             auth_client_remove  (){
               ONION_HOSTNAME="${1}"
               printf %s"\n# Removing ${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME}.auth_private"
-              sudo rm -f "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private
+              sudo rm -fv "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private
             }
             [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
             if [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
@@ -622,10 +622,10 @@ case "${COMMAND}" in
         ## delete the service folder
         #sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/
         ## delete service public and secret keys
-        sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_secret_key
-        sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_public_key
+        sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_secret_key
+        sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_public_key
         ## delete authorized clients
-        sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*
+        sudo rm -rfv "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*
         ## reload tor now so auth option can get the new hostname
         restarting_tor
         ## generate auth for clients
@@ -665,7 +665,6 @@ case "${COMMAND}" in
       if [ "${service_existent}" -eq 1 ]; then
         ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
         create_client_list "${SERVICE}"
-        printf "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n"
         [ "${NO_QR}" = "no-qr" ] || qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
         printf %s"Address  = ${ONION_HOSTNAME}\n"
         printf %s"Service  = ${SERVICE}\n"
@@ -676,6 +675,7 @@ case "${COMMAND}" in
           printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
         fi
         #[ ! -z "${TLS_CERT}" ] && printf %s"Certificate Fingerprint SHA-256 = ${TLS_CERT_FINGERPRINT}\n"
+        printf "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n"
       fi
     }
     NO_QR="${3}"
@@ -772,7 +772,7 @@ finish_location(){
       *)
         error_msg "Invalid '${COMMAND}' argument: ${ACTION}"
     esac
-fi
+    fi
   ;;
 
 
@@ -850,27 +850,25 @@ fi
     esac
   ;;
 
+
   ## This addon protects against guard discovery and related traffic analysis attacks.
   ## A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
   ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
+  ##
   vanguards|VANGUARDS)
     ACTION="${2}"
-    case ${ACTION} in
-      install|INSTALL)
-        printf "# Installing Vanguards...\n"
-        sudo git clone https://github.com/mikeperry-tor/vanguards.git "${DATA_DIR}"
-        sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
-        sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards reset --hard "${VANGUARDS_COMMIT_HASH}"
-        sudo -u "${DATA_DIR_OWNER}" cp "${DATA_DIR}"/vanguards/vanguards-example.conf "${DATA_DIR}"/vanguards/vanguards.conf
-        ## TODO: Better detection if using socket or control ip and port.
-        #sudo sed -i "s/^control_socket =.*/control_socket = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
-        #sudo sed -i "s/^control_port =.*/control_port = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
-        sudo sed -i "s/^logfile =.*/logfile = \/var\/log\/tor\/vanguards.log/" "${DATA_DIR}"/vanguards/vanguards.conf
-        [ "$(grep "ControlPort" "${TORRC}")" = "" ] && { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
-        { [ "$(grep "CookieAuthentication" "${TORRC}")" = "" ] && [ "$(grep "HashedControlPassword" "${TORRC}")" = "" ]; } \
-          && { printf "\CookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null; }
-        set_owner_permission
-        printf %s"
+
+    vanguards_config(){
+      ## TODO: Better detection if using socket or control ip and port.
+      #sudo sed -i "s/^control_socket =.*/control_socket = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
+      #sudo sed -i "s/^control_port =.*/control_port = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
+      sudo -u "${DATA_DIR_OWNER}" cp "${DATA_DIR}"/vanguards/vanguards-example.conf "${DATA_DIR}"/vanguards/vanguards.conf
+      sudo sed -i "s/^logfile =.*/logfile = \/var\/log\/tor\/vanguards.log/" "${DATA_DIR}"/vanguards/vanguards.conf
+      [ "$(grep "ControlPort" "${TORRC}")" = "" ] && { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
+      { [ "$(grep "CookieAuthentication" "${TORRC}")" = "" ] && [ "$(grep "HashedControlPassword" "${TORRC}")" = "" ]; } \
+        && { printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null; }
+      set_owner_permission
+      printf %s"
 [Unit]
 Description=Additional protections for Tor onion services
 Wants=${TOR_SERVICE}
@@ -878,7 +876,7 @@ After=network.target nss-lookup.target
 
 [Service]
 WorkingDirectory=${DATA_DIR}/vanguards
-ExecStart=/usr/bin/python3 src/vanguards.py --control_port ${CONTROL_PORT} #--control_socket /run/tor/control
+ExecStart=/usr/bin/python3 src/vanguards.py --control_port ${CONTROL_PORT}
 Environment=VANGUARDS_CONFIG=${DATA_DIR}/vanguards/vanguards.conf
 User=${DATA_DIR_OWNER}
 Group=${DATA_DIR_OWNER}
@@ -888,24 +886,33 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 \n" | sudo tee /etc/systemd/system/vanguards@default.service
-        sudo systemctl daemon-reload
-        sudo systemctl enable vanguards@default.service
-        sudo systemctl start vanguards@default.service
-        printf "\n# Check logs with:\n   sudo tail -f -n 25 /var/log/tor/vanguards.log\n"
-        success_msg
+      sudo systemctl daemon-reload
+      sudo systemctl enable vanguards@default.service
+      sudo systemctl start vanguards@default.service
+      sudo systemctl status vanguards@default.service --no-pager
+      success_msg
+    }
+
+    case ${ACTION} in
+      install|INSTALL)
+        printf "# Installing Vanguards...\n\n"
+        sudo -u "${DATA_DIR_OWNER}" git clone https://github.com/mikeperry-tor/vanguards.git "${DATA_DIR}/vanguards"
+        sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
+        sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards reset --hard "${VANGUARDS_COMMIT_HASH}"
+        vanguards_config
       ;;
 
-      update|UPDATE)
-        printf "# Upgrading Vanguards...\n"
+      upgrade|UPGRADE)
+        printf "# Upgrading Vanguards...\n\n"
         sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards pull -p
         sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards reset --hard "${VANGUARDS_COMMIT_HASH}"
         sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards show
-        success_msg
+        vanguards_config
       ;;
 
       remove|REMOVE)
-        printf "# Removing Vanguards...\n"
-        sudo rm -rf "${DATA_DIR}"/vanguards
+        printf "# Removing Vanguards...\n\n"
+        sudo rm -rfv "${DATA_DIR}"/vanguards
         success_msg
       ;;
 
