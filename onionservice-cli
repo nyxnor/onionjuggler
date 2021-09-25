@@ -26,7 +26,7 @@
 ##
 ## INCLUDE LIB
 ONIONSERVICE_PWD=
-[ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mThe variable ONIONSERVICE_PWD is empty!\n\033[0m"; exit 0; }
+[ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mThe variable ONIONSERVICE_PWD is empty!\n\033[0m"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onion.lib
 
 ## COMMAND INFO
@@ -62,6 +62,8 @@ Options:
   auth client list                                                                   list your keys as a client
 
   credentials [all-services|SERV1,SERV2,...] no-qr                                   see credentials from indicated services
+
+  nginx [SERV] [FOLDER]
 
   location [SERV] [nginx|apache|html]                                                onion-location guide, no execution
 
@@ -349,7 +351,7 @@ case "${COMMAND}" in
         sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${TORRC}\n"
-        UNIX_PATH="unix:/var/run/tor-hs-${SERVICE}"
+        UNIX_PATH="unix:/var/run/nginx-onion-${SERVICE}"
         SOCK_FILE="${UNIX_PATH}-${VIRTPORT}.sock"
         SOCK2_FILE="${UNIX_PATH}-${VIRTPORT2}.sock"
         [ ! -z "${VIRTPORT2}" ] && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\nHiddenServicePort ${VIRTPORT2} ${SOCK2_FILE}\n\n" | sudo tee -a "${TORRC}"
@@ -688,6 +690,27 @@ case "${COMMAND}" in
   ;;
 
 
+  nginx)
+    FOLDER="${3}"
+    [ -z "${FOLDER}" ] && error_msg "FOLDER is missing"
+    printf %s"Activating Nginx web server for the onion service: ${SERVICE}"
+    TARGETS=$(sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | grep HiddenServicePort | cut -d " " -f3)
+    SED_NO_SPECIAL_CHAR="$(printf "%s\n" "${TARGETS}" | sed -e 's`[][\\/.*^$]`\\&`g')"
+    TARGET=$(printf "%s\n" "${SED_NO_SPECIAL_CHAR}" | head -n 1)
+    #TARGET2=$(printf "%s\n" "${SED_NO_SPECIAL_CHAR}" | tail -n 1)
+    sudo cp -v "${ONIONSERVICE_PWD}"/nginx/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
+    sudo sed -i 's/SERVICE/'${SERVICE}'/g' /tmp/"${SERVICE}"-onion.conf
+    sudo sed -i 's/FOLDER/'${FOLDER}'/g' /tmp/"${SERVICE}"-onion.conf
+    sudo sed -i 's/TARGET/'${TARGET}'/g' /tmp/"${SERVICE}"-onion.conf
+    #[ ! -z "${TARGET2}" ] && sudo sed -i 's/TARGET2/"${TARGET2}"/g' /tmp/"${SERVICE}"-onion.conf
+    sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/nginx/sites-available/
+    sudo ln -sf /etc/nginx/sites-available/"${SERVICE}"-onion.conf /etc/nginx/sites-enabled/
+    sudo nginx -tq && sudo nginx -s reload || exit 1
+    #sudo rm -f /tmp/"${SERVICE}"-onion.conf
+    success_msg
+  ;;
+
+
   ## guide to add onion-location to redirect tor users when using your plainnet site to the onion service address
   location|LOCATION)
     is_service_dir_empty
@@ -852,7 +875,7 @@ finish_location(){
   ## This addon protects against guard discovery and related traffic analysis attacks.
   ## A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
   ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
-  ##
+  ## TODO: Add systemd hardening similar to tor@default: systemctl cat tor@default
   vanguards|VANGUARDS)
     ACTION="${2}"
 
@@ -915,7 +938,7 @@ WantedBy=multi-user.target
       ;;
 
       logs|LOGS)
-        sudo tail -f -n 25 "${VANGUARDS_LOG}"
+        sudo tail -f -n 25 /var/log/tor/vanguards.log
       ;;
 
       *)
