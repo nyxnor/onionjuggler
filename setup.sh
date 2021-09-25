@@ -24,10 +24,10 @@
 ## It also prepare for releases deleting my path ONIONSERVICE_PWD
 ##
 ## SYNTAX
-## sh setup.sh [S]
+## sh setup.sh [<setup>|release]
 
 { [ -f .onion.lib ] && [ -f onionservice-cli ]; } \
-|| { printf "\033[1;31mERROR: This command must be run from inside the onionservice cloned repository.\n"; exit 1; }
+|| { printf "\033[1;31mERROR: This script must be run from inside the onionservice cloned repository.\n"; exit 1; }
 
 ACTION=${1:-SETUP}
 

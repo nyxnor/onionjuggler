@@ -45,7 +45,6 @@ TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 TLS_CERT=""
 ## Vanguards
 VANGUARDS_COMMIT_HASH=10942de
-VANGUARDS_LOG="/var/log/tor/vanguards.log"
 ## Backup
 SCP_TARGET_USER="remoteUser"
 SCP_TARGET_IP="remoteIp"
@@ -157,6 +156,7 @@ online_check()
 
 # This function reload tor by default or forces to restart
 # Nyxnor: Why this name restart when it reload by default? I dont know a better name.
+## TODO: Improve timeout if reload get stuck, then restart. Restart if fail throws errors, reload timeout is 1min which is too long.
 restarting_tor()
 {
   ACTION="${1}"

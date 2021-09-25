@@ -259,7 +259,7 @@ case "${CHOICE_MAIN}" in
     if [ "${CHOICE_ACTION}" = "LOGS" ]; then
       clear
       trap 'sh "${ONIONSERVICE_PWD}"/onionservice-tui; exit 0' INT
-      sudo tail -f -n 25 "${VANGUARDS_LOG}"
+      sudo tail -f -n 25 /var/log/tor/vanguards.log
     elif [ ! -z "${CHOICE_ACTION}" ]; then
       clear
       sh "${ONIONSERVICE_PWD}"/onionservice-cli vanguards "${CHOICE_ACTION}"
