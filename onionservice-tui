@@ -30,7 +30,7 @@
 
 ## include lib
 ONIONSERVICE_PWD=
-. "${ONIONSERVICE_PWD}"/.onion.lib
+. "${ONIONSERVICE_PWD}"/.onionrc
 
 i=0
 

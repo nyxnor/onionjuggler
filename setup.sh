@@ -26,7 +26,7 @@
 ## SYNTAX
 ## sh setup.sh [<setup>|release]
 
-{ [ -f .onion.lib ] && [ -f onionservice-cli ]; } \
+{ [ -f .onionrc ] && [ -f onionservice-cli ]; } \
 || { printf "\033[1;31mERROR: This script must be run from inside the onionservice cloned repository.\n"; exit 1; }
 
 ACTION=${1:-SETUP}
@@ -34,7 +34,7 @@ ACTION=${1:-SETUP}
 case "${ACTION}" in
 
   setup|SETUP)
-      . .onion.lib
+      . .onionrc
       #python3-stem
       install_package tor openssl basez git qrencode grep sed
       sudo usermod -aG "${DATA_DIR_OWNER}" "${USER}"
@@ -44,7 +44,7 @@ case "${ACTION}" in
       sed -i "/.*## DO NOT EDIT. Inserted automatically by onionservice setup.sh/d" ~/.${SHELL##*/}rc
       printf %s"PATH=\"\${PATH}:${PWD}/\" ## DO NOT EDIT. Inserted automatically by onionservice setup.sh\n" >> ~/.${SHELL##*/}rc
       . ~/.${SHELL##*/}rc
-      sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" .onion.lib
+      sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" .onionrc
       sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-cli
       sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-tui
       printf %s"${FOREGROUND_BLUE}# OnionService enviroment is ready\n${UNSET_FORMAT}"
@@ -52,19 +52,19 @@ case "${ACTION}" in
   ;;
 
   release|RELEASE)
-    . .onion.lib
+    . .onionrc
     printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
-    sed -i "s/set \-\x//g" .onion.lib
+    sed -i "s/set \-\x//g" .onionrc
     sed -i "s/set \-\x//g" onionservice-cli
     sed -i "s/set \-\x//g" onionservice-tui
-    sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" .onion.lib
+    sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" .onionrc
     sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-cli
     sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-tui
     printf %s"${FOREGROUND_GREEN}# Done!\n"
   ;;
 
   *)
-    . .onion.lib
+    . .onionrc
     printf %s"${FOREGROUND_RED}ERROR: Invalid command: ${ACTION}.\n"
 
 esac

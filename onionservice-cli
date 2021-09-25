@@ -27,7 +27,7 @@
 ## INCLUDE LIB
 ONIONSERVICE_PWD=
 [ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mThe variable ONIONSERVICE_PWD is empty!\n\033[0m"; exit 1; }
-. "${ONIONSERVICE_PWD}"/.onion.lib
+. "${ONIONSERVICE_PWD}"/.onionrc
 
 ## COMMAND INFO
 onion_usage(){
