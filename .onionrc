@@ -1,0 +1,173 @@
+#!/bin/sh
+
+## This file is part of onionservice, an easy to use Tor hidden services manager.
+## Portions of this file was source from TorBox, an easy to use anonymizing router based on Raspberry Pi.
+##
+## Copyright (C) 2021 Patrick Truffer
+## Contact: anonym@torbox.ch
+## Website: https://www.torbox.ch
+## Github:  https://github.com/radio24/TorBox
+##
+## Copyright (C) 2021 onionservice developers (GPLv3)
+## Github:  https://github.com/nyxnor/onionservice
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it is useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program. If not, see <http://www.gnu.org/licenses/>.
+##
+## DESCRIPTION
+## This file is a library for the tor menus and scripts.
+## It contains functions which are used in several scripts.
+## Hopefully, this way the scripts stay short and clear.
+##
+## SYNTAX
+## . .onion.lib
+##
+###########################
+######## VARIABLES ########
+
+## [ EDIT REQUIRED ]
+DATA_DIR_OWNER="debian-tor" ## [debian-tor|tor]
+PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
+
+## [ EDIT OPTIONAL ]
+## path to certificate. only used to show 'credentials' option in the CLI, leave it blank if not using
+TLS_CERT=""
+## Vanguards
+VANGUARDS_COMMIT_HASH=10942de
+## Backup
+SCP_TARGET_USER="remoteUser"
+SCP_TARGET_IP="remoteIp"
+SCP_TARGET_PATH="${HOME}/remote/path"
+SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" ## '[USER]@[SERVER]:[SERVER_DIR]'
+DATE_TIME=$(date +%Y-%m-%d-%H'h'-%M'm')
+HS_BK_TAR=tor-hs-${DATE_TIME}.tar.gz
+HS_BK_DIR="${HOME}/tor-hs-backup"
+LOCAL_DOWNLOAD_PATH="${HOME}/Downloads/tor-hs-backup"
+LOCAL_IP=$(hostname -I | awk '{print $1}')
+## tor defaults
+TORRC_ROOT="/etc/tor"
+TORRC="${TORRC_ROOT}/torrc"
+DATA_DIR_ROOT="/var/lib"
+DATA_DIR="${DATA_DIR_ROOT}/tor"
+DATA_DIR_HS="${DATA_DIR}/services"
+CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
+CONF_DIR_OWNER="${USER}"
+CONTROL_PORT=9051
+SOCKS_PORT=9050
+CHECK_URL1="http://debian.org"
+BROWSER_DATA_DIR="/home/${USER}/.local/share/torbrowser/tbb/$(uname -m)/tor-browser_en-US/Browser/TorBrowser/Data/Tor"
+BROWSER_TORRC="${BROWSER_DATA_DIR}/torrc"
+BROWSER_ONION_AUTH_DIR="${BROWSER_DATA_DIR}/onion-auth"
+## deb onion sources
+SOURCES_DEB_SECURITY_ONION="http://5ajw6aqf3ep7sijnscdzw77t7xq4xjpsy335yb2wiwgouo7yfxtjlmid.onion/"
+SOURCES_DEB_UPDATE_ONION="http://2s4yqjx5ul6okpp3f2gaunr2syex5jgbfpfvhxxbbjwnrsvbk5v3qbid.onion/"
+SOURCES_DEB_SECURITY_PLAIN="https://deb.debian.org/"
+SOURCES_DEB_UPDATE_PLAIN="https://deb.debian.org/"
+## tpo onion sources
+SOURCES_TOR_UPDATE_ONION="http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
+SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
+
+## [ DO NOT EDIT ]
+## onionservice-cli path inserted by setup.sh
+ONIONSERVICE_PWD=
+## Dialog
+export DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
+## cert fingerprint
+[ ! -z "${TLS_CERT}" ] && TLS_CERT_FINGERPRINT="$(openssl x509 -in ${TLS_CERT} -fingerprint -sha256 -noout | cut -d"=" -f2)"
+## Color
+UNSET_FORMAT="\033[0m"
+FOREGROUND_DEFAULT="\033[1;39m"
+FOREGROUND_BLACK="\033[1;30m"
+FOREGROUND_RED="\033[1;31m"
+FOREGROUND_GREEN="\033[1;32m"
+FOREGROUND_YELLOW="\033[1;33m"
+FOREGROUND_BLUE="\033[1;34m"
+FOREGROUND_MAGENTA="\033[1;35m"
+FOREGROUND_CYAN="Default \033[1;36m"
+FOREGROUND_LIGHT_GRAY="\033[1;37m"
+FOREGROUND_DARK_GRAY="\033[1;90m"
+FOREGROUND_LIGHT_RED="\033[1;91m"
+FOREGROUND_LIGHT_GREEN="\033[1;92m"
+FOREGROUND_LIGHT_YELLOW="\033[1;93m"
+FOREGROUND_LIGHT_BLUE="\033[1;94m"
+FOREGROUND_LIGHT_MAGENTA="\033[1;95m"
+FOREGROUND_LIGHT_CYAN="\033[1;96m"
+FOREGROUND_WHITE="\033[1;97m"
+
+###########################
+######## FUNCTIONS ########
+
+## install space separated list of packages (e.g.: install_package tor openssl git)
+install_package(){
+  for PACKAGE in "${@}"; do
+    command -v "${PACKAGE}" >/dev/null || ${PKG_MANAGER_INSTALL} "${PACKAGE}"
+  done
+}
+
+is_service_dir_empty(){
+  [ "$(sudo -u "${DATA_DIR_OWNER}" dir "${DATA_DIR_HS}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
+}
+
+
+## set correct permissions for tor directories and files
+set_owner_permission(){
+  sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
+  sudo chown "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC}"
+  sudo chmod 700 "${DATA_DIR}"
+  sudo chmod 644 "${TORRC}"
+}
+
+
+# This function checks the status on https://check.torproject.org/
+check_tor()
+{
+  printf %s"${FOREGROUND_RED}[+] Checking connectivity to the Tor network - please wait...${UNSET_FORMAT}\n"
+  TOR_SERVICE=$(curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 -c Congratulations)
+  if [ "${TOR_SERVICE}" -eq 1 ]; then
+    TOR_STATUS="Tor is working"
+  else
+    TOR_STATUS=""
+  fi
+}
+
+
+# This function checks the internet connection and exits to <source_script> if none.
+online_check()
+{
+  printf %s"${FOREGROUND_RED}[+] Checking internet connectivity - please wait...${UNSET_FORMAT} \n"
+  OCHECK=$(curl -m 5 -s "${CHECK_URL1}")
+  if [ "${OCHECK}" -gt 0 ]; then
+    printf "\n\nIt seems that your Tor is not properly connected to the internet! For this operation, Tor has to properly connected with the internet!"
+    exit 0
+  fi
+}
+
+
+# This function reload tor by default or forces to restart
+# Nyxnor: Why this name restart when it reload by default? I dont know a better name.
+## TODO: Improve timeout if reload get stuck, then restart. Restart if fail throws errors, reload timeout is 1min which is too long.
+restarting_tor()
+{
+  ACTION="${1}"
+  set_owner_permission
+  if [ "${ACTION}" = "force" ]; then
+    printf "# Restarting tor...\n"
+    sudo systemctl restart "${TOR_SERVICE}"
+    printf %s"${FOREGROUND_GREEN}# Restarted tor succesfully!\n${UNSET_FORMAT}"
+  elif [ "${ACTION}" = "" ]; then
+    printf "# Reloading tor...\n"
+    sudo systemctl reload-or-restart "${TOR_SERVICE}"
+    printf %s"${FOREGROUND_GREEN}# Reloaded tor succesfully!\n${UNSET_FORMAT}"
+  fi
+}
