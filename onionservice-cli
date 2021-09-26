@@ -25,7 +25,7 @@
 ## sh onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
 ##
 ## INCLUDE LIB
-ONIONSERVICE_PWD=
+ONIONSERVICE_PWD="/home/nyxnor/Documents/git/onionservice"
 [ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mThe variable ONIONSERVICE_PWD is empty!\n\033[0m"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onionrc
 

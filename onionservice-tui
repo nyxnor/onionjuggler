@@ -29,7 +29,7 @@
 ######## FUNCTIONS ########
 
 ## include lib
-ONIONSERVICE_PWD=
+ONIONSERVICE_PWD="/home/nyxnor/Documents/git/onionservice"
 . "${ONIONSERVICE_PWD}"/.onionrc
 
 i=0
@@ -151,7 +151,7 @@ auth_client_menu(){
 
 
 md_menu(){
-  for MD in "${ONIONSERVICE_PWD}"/text/*.md; do
+  for MD in "${ONIONSERVICE_PWD}"/doc/*.md; do
     i=$((i+1))
     MD_LIST=$(printf "%s\n%s\n%s\n" "${MD_LIST}" "${MD##*/}" ".")
   done
@@ -161,7 +161,7 @@ md_menu(){
   CHOICE_MD=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
   --menu "${MENU}" "$((i+7))" 50 10 ${MD_LIST} 2>&1 >/dev/tty)
 
-  [ ! -z "${CHOICE_MD}" ] && pandoc "${ONIONSERVICE_PWD}"/text/"${CHOICE_MD}" | lynx -stdin
+  [ ! -z "${CHOICE_MD}" ] && pandoc "${ONIONSERVICE_PWD}"/doc/"${CHOICE_MD}" | lynx -stdin
 }
 
 ###########################
@@ -205,7 +205,7 @@ fi
 case "${CHOICE_MAIN}" in
 
   MAN)
-    man "${ONIONSERVICE_PWD}"/text/onionservice-cli.1
+    man "${ONIONSERVICE_PWD}"/doc/onionservice-cli.1
   ;;
 
 
