@@ -8,12 +8,6 @@ The goal is to manage services on the the tor configuration level, not the web s
 
 ## Usage
 
-### Video demo
-
-* ![CLI](media/cli.mp4) - Command Line Interface (Main script)
-
-* ![TUI](media/tui.mp4) - Terminal User Interface (Dialog Menu)
-
 ### Instructions
 
 Three easy steps to fully setup this project:
@@ -25,7 +19,7 @@ git clone https://github.com/nyxnor/onionservice.git
 cd onionservice
 ```
 
-2. Edit the required variables to fit your system inside `.onionrc`. Don't worry, there is only 3 variables that need to be set and they have examples and explanation.
+2. Edit the required variables to fit your system inside `.onionrc`. Don't worry, there is only a few variables that need to be set and they have examples and explanation.
 Open the `lib` with any editor:
 ```sh
 nano .onionrc
@@ -33,8 +27,8 @@ nano .onionrc
 Edit the required variables:
 ```sh
 ## [ EDIT REQUIRED ]
-DATA_DIR_OWNER="debian-tor" ## [debian-tor|tor]
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 ```
 
@@ -70,8 +64,8 @@ sh onionservice-cli setup torrc
 
 ### Technical
 
-Now that you have read the [manual](text/onionservice.man), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [dialog menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
-Read [TECHNICAL.md](text/TECHNICAL.md) for advanced usage.
+Now that you have read the [manual](doc/onionservice-cli.1), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [dialog menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
+Read [TECHNICAL.md](doc/TECHNICAL.md) for advanced usage.
 
 ### Requirements
 
@@ -127,7 +121,6 @@ zsh --emulate sh -c onionservice-tui
 * **KISS** - Keep It Simple Stupid (At least I try). [Source](https://en.wikipedia.org/wiki/KISS_principle).
 * **Portability** - POSIX compliant to work on different shells, customize path and ports with a sourced library. The [library](.onionrc) and the [cli](onionservice-cli) and the [menu](onionservice-tui) are [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), made possible studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) and the [GNU AutoConf guide for portable scripts](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.70/autoconf.html#Introduction).
 * **TUI** - The [menu](onionservice-tui) only works with POSIX compliant shells, see [Portability above](README.md#portability).
-* **Standalone** - The cli can run standalone, just need to source the [lib](.onionrc), or optionally input the variables inside one script if you want. menu is just an addon that calls the main script.
 * **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
 
 ## Features
@@ -144,6 +137,7 @@ zsh --emulate sh -c onionservice-tui
   * **Create** -  Backup of your `torrc` lines containing hidden service configuration, all of your directories of `HiddenServiceDir` and `ClientOnionAuthDir`. Guide to export the backup to a remote host with scp.
   * **Integrate** - Integrate hidden serivces lines configuration from `torrc` and the directories `HiddenServiceDir` and `ClientOnionAuthDir` to your current system. This option should be used after creating a backup and importing to the current host. Guide to import backup to the current host with scp.
 * **Vanguards** - This addon protects against guard discovery and related traffic analysis attacks. A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
+* **Nginx** - Serve files with your hidden service using Nginx web server. Can be
 * **Bulk** - Some commands can be bulked with `all-clients`, `all-services`, `[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected. They are specified inside `<>` (e.g. `<VIRTPORT2>`)
 * **Fool-proof** - The script tries to filter invalid commands and incorrect syntax. The commands are not difficult but the first look may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
@@ -161,4 +155,4 @@ zsh --emulate sh -c onionservice-tui
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
 * [Ronn-ng](https://github.com/apjanke/ronn-ng/) to build man pages from markdown instead of writing them manually :(
-  * Host website with nginx - Select activated servicee and point to directory.
+* Support VirtualPort 443 for web servers
