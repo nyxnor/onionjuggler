@@ -25,19 +25,20 @@
 ## along with this program. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## DESCRIPTION
-## This file is a library for the tor menus and scripts.
+## This file is the configuration (library) for the tor menus and scripts.
 ## It contains functions which are used in several scripts.
 ## Hopefully, this way the scripts stay short and clear.
 ##
 ## SYNTAX
-## . .onion.lib
+## . .onionrc
 ##
 ###########################
 ######## VARIABLES ########
 
 ## [ EDIT REQUIRED ]
-DATA_DIR_OWNER="debian-tor" ## [debian-tor|tor]
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+WEBSERVER="nginx" ## [nginx|apache2]
+TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 
 ## [ EDIT OPTIONAL ]
@@ -116,13 +117,13 @@ install_package(){
 }
 
 is_service_dir_empty(){
-  [ "$(sudo -u "${DATA_DIR_OWNER}" dir "${DATA_DIR_HS}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
+  [ "$(sudo -u "${TOR_USER}" dir "${DATA_DIR_HS}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
 }
 
 
 ## set correct permissions for tor directories and files
 set_owner_permission(){
-  sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
+  sudo chown -R "${TOR_USER}:${TOR_USER}" "${DATA_DIR}"
   sudo chown "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC}"
   sudo chmod 700 "${DATA_DIR}"
   sudo chmod 644 "${TORRC}"

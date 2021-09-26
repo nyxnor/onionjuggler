@@ -34,12 +34,31 @@ ONIONSERVICE_PWD=
 
 i=0
 
+folder_menu(){
+  i=0
+  DIALOG_TYPE="${1}"
+  for FOLDER in $(sudo ls /var/www/); do
+    i=$((i+1))
+    case "${DIALOG_TYPE}" in
+      checklist) FOLDER_LIST=$(printf "%s\n%s\n%s\n%s\n" "${FOLDER_LIST}" "${FOLDER}" "." 0);;
+      menu)      FOLDER_LIST=$(printf "%s\n%s\n%s\n" "${FOLDER_LIST}" "${FOLDER}" ".");;
+    esac
+  done
+
+  TITLE="Folder"
+  MENU="Use spacebar to select:"
+  CHOICE_FOLDER=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
+  "$((i+7))" 50 2 ${FOLDER_LIST} 2>&1 >/dev/tty)
+
+  [ ! -z "${CHOICE_FOLDER}" ] && FOLDER_NAME_LIST=$(printf %s"${CHOICE_FOLDER}" | sed "s/ /,/g")
+}
+
 service_menu(){
   i=0
   DIALOG_TYPE="${1}"
-  for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
+  for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
     i=$((i+1))
-    ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${DATA_DIR_OWNER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d '.' -f1)
+    ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d '.' -f1)
     case "${DIALOG_TYPE}" in
       checklist) SERVICE_LIST=$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0);;
       menu)      SERVICE_LIST=$(printf "%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}");;
@@ -57,12 +76,12 @@ service_menu(){
 ## NOT WORKING, CORRECT THE INTERSECTION
 auth_server_menu(){
   i=0
-  for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
+  for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
     ## only include services that have at least one client
-    CLIENT_EXIST=$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")
+    CLIENT_EXIST=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")
     if [ ! -z "${CLIENT_EXIST}" ]; then
       i=$((i+1))
-      ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${DATA_DIR_OWNER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d '.' -f1)
+      ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d '.' -f1)
       SERVICE_LIST=$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)
       CLIENT_LIST=$(printf "%s\n%s\n" "${CLIENT_LIST}" "${CLIENT_EXIST}")
     fi
@@ -112,7 +131,7 @@ auth_server_menu(){
 
 
 auth_client_menu(){
-  for ONION_AUTH in $(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d '.' -f1); do
+  for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d '.' -f1); do
     i=$((i+1))
     ONION_AUTH_LIST=$(printf "%s\n%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" "." 0)
   done
@@ -151,33 +170,34 @@ TITLE="Onion Services - Main Menu"
 MENU="Use spacepar to select:"
 BACKTITLE="Onion Services Manager"
 
-if [ -z "$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/)" ]; then
+if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/)" ]; then
 	CHOICE_MAIN=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-  --ok-label "Select" --no-cancel --menu "${MENU}" 14 80 2 \
+  --ok-label "Select" --no-cancel --menu "${MENU}" 15 80 2 \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
-  "ACTIVATE" "Activate a hidden service" \
+  "ACTIVATE" "Activate a onion service" \
   "AUTH_CLIENT" "Manage your client keys of remote service" \
   "VANGUARDS" "Add to protect against traffic analysis" \
-  "IMPORT" "Import your hidden service data directory" \
-  "QUIT" "Exit menu and go to the termina" \
+  "IMPORT" "Import backup from another machine" \
+  "QUIT" "Exit menu to the terminal" \
   2>&1 >/dev/tty)
 else
 	CHOICE_MAIN=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-  --ok-label "Select" --no-cancel --menu "${MENU}" 20 80 2 \
+  --ok-label "Select" --no-cancel --menu "${MENU}" 21 80 2 \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
-  "ACTIVATE" "Activate a hidden service" \
+  "ACTIVATE" "Activate a onion service" \
   "DEACTIVATE" "Deactivate chosen onion service" \
   "RENEW" "Renew onion service address" \
   "AUTH_SERVER" "Add or Remove client authorization from your service" \
   "AUTH_CLIENT" "Manage your client keys of remote service" \
   "CREDENTIALS" "See credentials (onion address, authorized clients)" \
+  "WEB_SERVER" "Serve your website using one of your onion services" \
   "VANGUARDS" "Add to protect against traffic analysis" \
   "LOCATION" "Guided steps to add onion-location to your plainnet website" \
   "IMPORT" "Import backup from another machine" \
   "EXPORT" "Export backup to another machine" \
-  "QUIT" "Exit menu and go to the termina" \
+  "QUIT" "Exit menu to the terminal" \
   2>&1 >/dev/tty)
 fi
 
@@ -188,100 +208,16 @@ case "${CHOICE_MAIN}" in
     man "${ONIONSERVICE_PWD}"/text/onionservice-cli.1
   ;;
 
+
   GUIDES)
     md_menu
   ;;
 
-  DEACTIVATE)
-    service_menu checklist
-    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
-      TITLE="Onion Service - Deactivation"
-      MENU="\nWould you also like to DELETE (purge) the HiddenServiceDir?\nIf YES: All the directory data, including hidden service keys and clients will be deleted permanently (you won't be able to use the same onion address).\nIf NO (default): Service will be deactivated, lines from the torrc deleted but the folder will be kept."
-      if CHOICE_PURGE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --defaultno --yesno "${MENU}" 11 80 2>&1 >/dev/tty)"; then CHOICE_PURGE="purge"; fi
-      clear
-      sh "${ONIONSERVICE_PWD}"/onionservice-cli off "${SERVICE_NAME_LIST}" "${CHOICE_PURGE}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
-    fi
-  ;;
-
-  RENEW)
-    service_menu checklist
-    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
-      clear
-      sh "${ONIONSERVICE_PWD}"/onionservice-cli renew "${SERVICE_NAME_LIST}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
-    fi
-  ;;
-
-  CREDENTIALS)
-    service_menu checklist
-    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
-      clear
-      sh "${ONIONSERVICE_PWD}"/onionservice-cli credentials "${SERVICE_NAME_LIST}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
-    fi
-  ;;
-
-  LOCATION)
-    service_menu menu
-    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
-      TITLE="Onion-Location"
-      CHOICE_ACTION=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 10 50 2 \
-      "NGINX" "Nginx web server header" \
-      "APACHE" "Apache web server header" \
-      "HTML" "hmtl <meta> http-equiv attribute" \
-      2>&1 >/dev/tty)
-      if [ ! -z "${CHOICE_ACTION}" ]; then
-        clear
-        sh "${ONIONSERVICE_PWD}"/onionservice-cli location "${SERVICE_NAME_LIST}" "${CHOICE_ACTION}"
-        printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
-      fi
-    fi
-  ;;
-
-  VANGUARDS)
-    TITLE="Vanguards"
-    if [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR}"/vanguards)" = "" ]; then
-      CHOICE_ACTION=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 8 50 2 \
-      "INSTALL" "Use Vanguards protections" 2>&1 >/dev/tty)
-    else
-      CHOICE_ACTION=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 10 50 2 \
-      "LOGS" "Follow vanguards logs" \
-      "UPGRADE" "Set new config and upgrade" \
-      "REMOVE" "Delete the Vanguards directory" \
-      2>&1 >/dev/tty)
-    fi
-
-    if [ "${CHOICE_ACTION}" = "LOGS" ]; then
-      clear
-      trap 'sh "${ONIONSERVICE_PWD}"/onionservice-tui; exit 0' INT
-      sudo tail -f -n 25 /var/log/tor/vanguards.log
-    elif [ ! -z "${CHOICE_ACTION}" ]; then
-      clear
-      sh "${ONIONSERVICE_PWD}"/onionservice-cli vanguards "${CHOICE_ACTION}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
-    fi
-  ;;
-
-  IMPORT)
-    sh "${ONIONSERVICE_PWD}"/onionservice-cli backup integrate
-    printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
-  ;;
-
-  EXPORT)
-    sh "${ONIONSERVICE_PWD}"/onionservice-cli backup create
-    printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
-  ;;
 
   ACTIVATE)
 
     TITLE="Onion Service - Activation"
     MENU="Choose socket type:"
-
     SOCKET_CHOICE=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
     --menu "${MENU}" 9 70 8 \
     "UNIX" "unix:path (more secure)" \
@@ -324,6 +260,31 @@ case "${CHOICE_MAIN}" in
 
     esac
   ;;
+
+
+  DEACTIVATE)
+    service_menu checklist
+    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+      TITLE="Onion Service - Deactivation"
+      MENU="\nWould you also like to DELETE (purge) the HiddenServiceDir?\nIf YES: All the directory data, including hidden service keys and clients will be deleted permanently (you won't be able to use the same onion address).\nIf NO (default): Service will be deactivated, lines from the torrc deleted but the folder will be kept."
+      if CHOICE_PURGE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      --defaultno --yesno "${MENU}" 11 80 2>&1 >/dev/tty)"; then CHOICE_PURGE="purge"; fi
+      clear
+      sh "${ONIONSERVICE_PWD}"/onionservice-cli off "${SERVICE_NAME_LIST}" "${CHOICE_PURGE}"
+      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+    fi
+  ;;
+
+
+  RENEW)
+    service_menu checklist
+    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+      clear
+      sh "${ONIONSERVICE_PWD}"/onionservice-cli renew "${SERVICE_NAME_LIST}"
+      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+    fi
+  ;;
+
 
   AUTH_SERVER)
     TITLE="Client Authorization - Server"
@@ -397,6 +358,7 @@ case "${CHOICE_MAIN}" in
     esac
   ;;
 
+
   AUTH_CLIENT)
     TITLE="Client Authorization - Client"
     MENU="As the onion service client: Would you like to 'add' or 'remove' authorization from a client?"
@@ -451,6 +413,96 @@ case "${CHOICE_MAIN}" in
 
     esac
   ;;
+
+
+  CREDENTIALS)
+    service_menu checklist
+    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+      clear
+      sh "${ONIONSERVICE_PWD}"/onionservice-cli credentials "${SERVICE_NAME_LIST}"
+      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+    fi
+  ;;
+
+
+  LOCATION)
+    service_menu menu
+    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+      TITLE="Onion-Location"
+      CHOICE_ACTION=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 10 50 2 \
+      "NGINX" "Nginx web server header" \
+      "APACHE" "Apache web server header" \
+      "HTML" "hmtl <meta> http-equiv attribute" \
+      2>&1 >/dev/tty)
+      if [ ! -z "${CHOICE_ACTION}" ]; then
+        clear
+        sh "${ONIONSERVICE_PWD}"/onionservice-cli location "${SERVICE_NAME_LIST}" "${CHOICE_ACTION}"
+        printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+      fi
+    fi
+  ;;
+
+
+  WEB_SERVER)
+    service_menu menu
+    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+      folder_menu menu
+      if [ ! -z "${FOLDER_NAME_LIST}" ]; then
+        TITLE="Web server - Status"
+        MENU="\nWould you like to activate or deactivate serving a web site?"
+        STATUS=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" 11 50 2 \
+        "ON" "Serve web site" \
+        "OFF" "Stop serving web site" \
+        2>&1 >/dev/tty)
+        if [ ! -z "${STATUS}" ]; then
+          clear
+          sh "${ONIONSERVICE_PWD}"/onionservice-cli "${WEBSERVER}" "${STATUS}" "${SERVICE_NAME_LIST}" "${FOLDER_NAME_LIST}"
+          printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+        fi
+      fi
+    fi
+  ;;
+
+
+  VANGUARDS)
+    TITLE="Vanguards"
+    if [ "$(sudo -u "${TOR_USER}" ls "${DATA_DIR}"/vanguards)" = "" ]; then
+      CHOICE_ACTION=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 8 50 2 \
+      "INSTALL" "Use Vanguards protections" 2>&1 >/dev/tty)
+    else
+      CHOICE_ACTION=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 10 50 2 \
+      "LOGS" "Follow vanguards logs" \
+      "UPGRADE" "Set new config and upgrade" \
+      "REMOVE" "Delete the Vanguards directory" \
+      2>&1 >/dev/tty)
+    fi
+
+    if [ "${CHOICE_ACTION}" = "LOGS" ]; then
+      clear
+      trap 'sh "${ONIONSERVICE_PWD}"/onionservice-tui; exit 0' INT
+      sudo tail -f -n 25 /var/log/tor/vanguards.log
+    elif [ ! -z "${CHOICE_ACTION}" ]; then
+      clear
+      sh "${ONIONSERVICE_PWD}"/onionservice-cli vanguards "${CHOICE_ACTION}"
+      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+    fi
+  ;;
+
+
+  IMPORT)
+    sh "${ONIONSERVICE_PWD}"/onionservice-cli backup integrate
+    printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+  ;;
+
+
+  EXPORT)
+    sh "${ONIONSERVICE_PWD}"/onionservice-cli backup create
+    printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+  ;;
+
 
   QUIT)
     clear

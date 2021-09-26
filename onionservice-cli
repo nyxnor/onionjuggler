@@ -61,9 +61,11 @@ Options:
 
   auth client list                                                                   list your keys as a client
 
-  credentials [all-services|SERV1,SERV2,...] no-qr                                   see credentials from indicated services
+  credentials [all-services|SERV1,SERV2,...] <no-qr>                                 see credentials from indicated services
 
-  nginx [SERV] [FOLDER]
+  [nginx|apache2] on [SERV] [FOLDER]                                                 start serving a website for certain service and its folder
+
+  [nginx|apache2] off [SERV]                                                         stop serving a website for certain service and its folder
 
   location [SERV] [nginx|apache|html]                                                onion-location guide, no execution
 
@@ -94,7 +96,7 @@ error_msg(){
 ## '# Done': You should always see it at the end, else something unexpected occured.
 ## It does not imply the code worked, you should always pay attention for errors in the logs."
 success_msg(){
-  [ "${1}" = "reload" ] && restarting_tor reload
+  [ "${1}" = "reload" ] && restarting_tor
   printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
   #exit 1
 }
@@ -137,7 +139,7 @@ is_addr_port(){
 test_service_exists(){
   service_existent=0
   SERVICE="${1}"
-  ONION_HOSTNAME=$(sudo -u "${DATA_DIR_OWNER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null)
+  ONION_HOSTNAME=$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null)
   [ "${ONION_HOSTNAME}" = "" ] \
   && { printf %s"${FOREGROUND_RED}ERROR: Service does not exist: ${SERVICE}\n${UNSET_FORMAT}"; exit 1; } \
   || service_existent=1
@@ -151,13 +153,13 @@ create_client_list(){
   CLIENT_COUNT=0
 
   ## obliterate loop
-  #CLIENT_NAME_LIST=$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
+  #CLIENT_NAME_LIST=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
   #CLIENT_NAME_LIST=$(printf "${CLIENT_NAME_LIST}" | cut -d '.' -f1)
   #CLIENT_NAME_LIST=$(echo ${CLIENT_NAME_LIST} | sed "s/ /,/g")    ## how to do this with printf?
 
-  CLIENT_CURRENT=$(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
+  CLIENT_CURRENT=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
   if [ "${CLIENT_CURRENT}" != "" ]; then
-    for AUTHORIZATION in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/); do
+    for AUTHORIZATION in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/); do
       AUTHORIZATION_NAME=${AUTHORIZATION##*/}
       AUTHORIZATION_NAME=${AUTHORIZATION_NAME%.auth}
       CLIENT_NAME_LIST="${CLIENT_NAME_LIST},${AUTHORIZATION_NAME}"
@@ -174,9 +176,9 @@ create_service_list(){
   SERVICE_NAME_LIST=""
 
   ## obliterate loop
-  #SERVICE_NAME_LIST=$(echo $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/) | sed "s/ /,/g") ## how to do this with printf?
+  #SERVICE_NAME_LIST=$(echo $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/) | sed "s/ /,/g") ## how to do this with printf?
 
-  for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
+  for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
     SERVICE_NAME=${SERVICE##*/}
     SERVICE_NAME_LIST="${SERVICE_NAME_LIST},${SERVICE_NAME}"
     SERVICE_NUMBER=$((SERVICE_NUMBER+1))
@@ -351,7 +353,7 @@ case "${COMMAND}" in
         sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${TORRC}\n"
-        UNIX_PATH="unix:/var/run/nginx-onion-${SERVICE}"
+        UNIX_PATH="unix:/var/run/${SERVICE}-onion"
         SOCK_FILE="${UNIX_PATH}-${VIRTPORT}.sock"
         SOCK2_FILE="${UNIX_PATH}-${VIRTPORT2}.sock"
         [ ! -z "${VIRTPORT2}" ] && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\nHiddenServicePort ${VIRTPORT2} ${SOCK2_FILE}\n\n" | sudo tee -a "${TORRC}"
@@ -399,7 +401,7 @@ case "${COMMAND}" in
                 CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
                 CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
                 # Server side configuration
-                printf %s"${PUB_KEY_CONFIG}\n" | sudo tee "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
+                printf %s"${CLIENT_PUB_KEY_CONFIG}\n" | sudo tee "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
                 ## Client side configuration
                 printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
                 printf "# Declare the variables\n"
@@ -407,7 +409,7 @@ case "${COMMAND}" in
                 printf %s"CLIENT=${CLIENT}\n"
                 printf %s"ONION_HOSTNAME=${ONION_HOSTNAME}\n"
                 printf %s"CLIENT_PUB_KEY=${CLIENT_PUB_KEY}\n"
-                printf %s"CLIENT_PUB_KEY_CONFIG=descriptor:x25519:${CLIENT_PUB_KEY}\n"
+                printf %s"CLIENT_PUB_KEY_CONFIG=${CLIENT_PUB_KEY_CONFIG}\n"
                 printf %s"CLIENT_PRIV_KEY=${CLIENT_PRIV_KEY}\n"
                 printf %s"CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
                 printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n"
@@ -420,7 +422,7 @@ case "${COMMAND}" in
               printf "# Send these instructions to the client:\n"
               printf "\n"
               printf "# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, insert it: ClientOnionAuthDir /var/lib/tor/onion_auth\n"
-              printf " [ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf 'ClientOnionAuthDir /var/lib/tor/onion_auth\n' | sudo tee -a /etc/tor/torrc ; }\n"
+              printf " [ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf 'ClientOnionAuthDir /var/lib/tor/onion_auth' | sudo tee -a /etc/tor/torrc ; }\n"
               printf "\n"
               printf "# Create a file with the suffix '.auth_private' inside <ClientOnionAuthDir>\n"
               printf " printf '\${CLIENT_PRIV_KEY_CONFIG}' | sudo tee /var/lib/tor/onion_auth/\${SERVICE}-\${ONION_HOSTNAME}.auth_private\n"
@@ -459,7 +461,7 @@ case "${COMMAND}" in
               printf %s"Service  = ${SERVICE}\n"
               if [ "${CLIENT}" = "all-clients" ]; then
                 printf "Client   = all-clients\n\n"
-                sudo rm -rf "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/
+                sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*.auth
               else
                 printf %s"Client   = ${CLIENT}\n\n"
                 sudo rm -f "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth
@@ -489,10 +491,12 @@ case "${COMMAND}" in
               create_client_list "${SERVICE}"
               if [ "${CLIENT_COUNT}" -gt 0 ]; then
                 printf %s"\nService    = ${SERVICE}\n"
-                printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
+                printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n\n"
+              else
+                printf "\n# No clients for Hidden Service: ${SERVICE}\n\n"
               fi
             }
-            printf "# Authorized clients for hidden service:\n\n"
+            printf "# Authorized clients for Hidden Services\n"
             [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
             loop_list auth_server_list "${SERVICE}"
             success_msg
@@ -522,7 +526,7 @@ case "${COMMAND}" in
             [ "${#ONION_HOSTNAME}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#ONION_HOSTNAME} is different than 62 characters (<56-char-base32>.onion)"
             [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
             [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a ${TORRC}; }
-            sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
+            sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
             if [ "${CLIENT_PRIV_KEY}" = "" ]; then
               ## Generate pem and derive pub and priv keys
               openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
@@ -574,7 +578,7 @@ case "${COMMAND}" in
               sudo rm -fv "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private
             }
             [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
-            if [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
+            if [ "$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
               loop_list auth_client_remove "${ONION_HOSTNAME}"
               printf "\n# Client side authorization removed\n"
               success_msg
@@ -584,11 +588,11 @@ case "${COMMAND}" in
           ;;
 
           list|LIST)
-            if [ "$(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
+            if [ "$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
               printf %s"# ClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n"
-              for AUTH in $(sudo -u "${DATA_DIR_OWNER}" ls "${CLIENT_ONION_AUTH_DIR}"); do
+              for AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"); do
                 printf %s"\n# File name: ${AUTH}\n"
-                printf %s"# Content:   $(sudo -u "${DATA_DIR_OWNER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}")"
+                printf %s"# Content:   $(sudo -u "${TOR_USER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}")"
               done
               printf "\n"
               success_msg
@@ -647,7 +651,7 @@ case "${COMMAND}" in
       fi
     }
     if [ "${SERVICE}" = "all-services" ]; then
-      for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
+      for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
         renew_service_address "${SERVICE}"
       done
     else
@@ -680,7 +684,7 @@ case "${COMMAND}" in
     }
     NO_QR="${3}"
     if [ "${SERVICE}" = "all-services" ]; then
-      for SERVICE in $(sudo -u "${DATA_DIR_OWNER}" ls "${DATA_DIR_HS}"/); do
+      for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
         get_credentials "${SERVICE}" "${NO_QR}"
       done
     else
@@ -690,24 +694,49 @@ case "${COMMAND}" in
   ;;
 
 
-  nginx)
-    FOLDER="${3}"
-    [ -z "${FOLDER}" ] && error_msg "FOLDER is missing"
-    printf %s"Activating Nginx web server for the onion service: ${SERVICE}"
-    TARGETS=$(sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | grep HiddenServicePort | cut -d " " -f3)
-    SED_NO_SPECIAL_CHAR="$(printf "%s\n" "${TARGETS}" | sed -e 's`[][\\/.*^$]`\\&`g')"
-    TARGET=$(printf "%s\n" "${SED_NO_SPECIAL_CHAR}" | head -n 1)
-    #TARGET2=$(printf "%s\n" "${SED_NO_SPECIAL_CHAR}" | tail -n 1)
-    sudo cp -v "${ONIONSERVICE_PWD}"/nginx/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
-    sudo sed -i 's/SERVICE/'${SERVICE}'/g' /tmp/"${SERVICE}"-onion.conf
-    sudo sed -i 's/FOLDER/'${FOLDER}'/g' /tmp/"${SERVICE}"-onion.conf
-    sudo sed -i 's/TARGET/'${TARGET}'/g' /tmp/"${SERVICE}"-onion.conf
-    #[ ! -z "${TARGET2}" ] && sudo sed -i 's/TARGET2/"${TARGET2}"/g' /tmp/"${SERVICE}"-onion.conf
-    sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/nginx/sites-available/
-    sudo ln -sf /etc/nginx/sites-available/"${SERVICE}"-onion.conf /etc/nginx/sites-enabled/
-    sudo nginx -tq && sudo nginx -s reload || exit 1
-    #sudo rm -f /tmp/"${SERVICE}"-onion.conf
-    success_msg
+  nginx|apache2)
+    [ "${WEBSERVER}" != "${1}" ] && error_msg "Your WEBSERVER of choice is: ${WEBSERVER}\nIt is not possible to run different web servers at the same time."
+    STATUS="${2}"
+    SERVICE="${3}"
+    service_existent=0; test_service_exists "${SERVICE}"
+    case "${STATUS}" in
+
+      on|ON)
+        FOLDER="${4}"; [ -z "${FOLDER}" ] && error_msg "FOLDER is missing"
+        printf %s"# Activating web server for the onion service: ${SERVICE}\n\n"
+        VIRTPORT=$(sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | grep "HiddenServicePort 80 ")
+        [ "${VIRTPORT}" = "" ] && error_msg "At least one VIRTPORT must be listening on port 80"
+        TARGET="$(printf "%s\n" "${VIRTPORT}" | cut -d " " -f3 | sed -e 's`[][\\/.*^$]`\\&`g')"
+        sudo cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i 's/SERVICE/'${SERVICE}'/g' /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i 's/FOLDER/'${FOLDER}'/g' /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i 's/TARGET/'${TARGET}'/g' /tmp/"${SERVICE}"-onion.conf
+        sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-available/
+        sudo ln -sfv /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-enabled/
+        printf "\n# Web server configuration:\n\n"
+        sudo cat /tmp/"${SERVICE}"-onion.conf
+        printf "\n# Reloading web server to apply new configuration:\n"
+        [ "${WEBSERVER}" = "nginx" ] && sudo nginx -tq && sudo nginx -s reload
+        [ "${WEBSERVER}" = "apache2" ] && sudo systemctl reload apache2
+        #sudo rm -f /tmp/"${SERVICE}"-onion.conf
+        printf %s"\n# Address: ${ONION_HOSTNAME}\n"
+        success_msg
+      ;;
+
+      off|OFF)
+        printf %s"\n# Stopping to serve the web site of the service: ${SERVICE}\n"
+        printf %s"# Url will not display any files: ${ONION_HOSTNAME}\n"
+        sudo rm -f /etc/"${WEBSERVER}"/sites-enabled/"${SERVICE}"-onion.conf
+        sudo rm -f /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf
+        printf "\n# Reloading web server to apply new configuration:\n"
+        [ "${WEBSERVER}" = "nginx" ] && sudo nginx -tq && sudo nginx -s reload
+        [ "${WEBSERVER}" = "apache2" ] && sudo systemctl reload apache2
+        success_msg
+      ;;
+
+      *)
+        error_msg "Invalid '${COMMAND}' argument: ${STATUS}"
+    esac
   ;;
 
 
@@ -855,7 +884,7 @@ finish_location(){
         SHA256SUM=$(sha256sum "${HS_BK_DIR}"/"${HS_BK_TAR}")
         sudo chown -R "${USER}:${USER}" "${HS_BK_DIR}"/"${HS_BK_TAR}"
         sudo find "${HS_BK_DIR}" \! -name "${HS_BK_TAR}" -delete 2>/dev/null
-        sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
+        sudo chown -R "${TOR_USER}:${TOR_USER}" "${DATA_DIR}"
         sudo chown -R "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC_ROOT}"
         printf %s"\nsha512sum=${SHA512SUM}"; printf %s" \nsha256sum=${SHA256SUM}\n\n"
         ## upload to remote
@@ -875,7 +904,7 @@ finish_location(){
   ## This addon protects against guard discovery and related traffic analysis attacks.
   ## A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
   ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
-  ## TODO: Add systemd hardening similar to tor@default: systemctl cat tor@default
+  ##  TODO: hardening (as in $ sytemctl cat tor@default), but got permission denied :unable to read '/run/tor/control.authcookie'
   vanguards|VANGUARDS)
     ACTION="${2}"
 
@@ -883,30 +912,19 @@ finish_location(){
       ## TODO: Better detection if using socket or control ip and port.
       #sudo sed -i "s/^control_socket =.*/control_socket = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
       #sudo sed -i "s/^control_port =.*/control_port = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
-      sudo -u "${DATA_DIR_OWNER}" cp "${DATA_DIR}"/vanguards/vanguards-example.conf "${DATA_DIR}"/vanguards/vanguards.conf
+      sudo -u "${TOR_USER}" cp "${DATA_DIR}"/vanguards/vanguards-example.conf "${DATA_DIR}"/vanguards/vanguards.conf
       sudo sed -i "s/^logfile =.*/logfile = \/var\/log\/tor\/vanguards.log/" "${DATA_DIR}"/vanguards/vanguards.conf
       [ "$(grep "ControlPort" "${TORRC}")" = "" ] && { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
       { [ "$(grep "CookieAuthentication" "${TORRC}")" = "" ] && [ "$(grep "HashedControlPassword" "${TORRC}")" = "" ]; } \
         && { printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null; }
       set_owner_permission
-      printf %s"
-[Unit]
-Description=Additional protections for Tor onion services
-Wants=${TOR_SERVICE}
-After=network.target nss-lookup.target
-
-[Service]
-WorkingDirectory=${DATA_DIR}/vanguards
-ExecStart=/usr/bin/python3 src/vanguards.py --control_port ${CONTROL_PORT}
-Environment=VANGUARDS_CONFIG=${DATA_DIR}/vanguards/vanguards.conf
-User=${DATA_DIR_OWNER}
-Group=${DATA_DIR_OWNER}
-Type=simple
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-\n" | sudo tee /etc/systemd/system/vanguards@default.service
+      sudo cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
+      DATA_DIR_SED="$(printf "%s\n" "${DATA_DIR}" | sed -e 's`[][\\/.*^$]`\\&`g')"
+      sudo sed -i 's/TOR_SERVICE/'${TOR_SERVICE}'/g' /tmp/vanguards@default.service
+      sudo sed -i 's/DATA_DIR/'${DATA_DIR_SED}'/g' /tmp/vanguards@default.service
+      sudo sed -i 's/CONTROL_PORT/'${CONTROL_PORT}'/g' /tmp/vanguards@default.service
+      sudo sed -i 's/TOR_USER/'${TOR_USER}'/g' /tmp/vanguards@default.service
+      sudo cp -v /tmp/vanguards@default.service /etc/systemd/system/
       sudo systemctl daemon-reload
       sudo systemctl enable vanguards@default.service
       sudo systemctl start vanguards@default.service
@@ -914,20 +932,20 @@ WantedBy=multi-user.target
       success_msg
     }
 
-    case ${ACTION} in
+    case "${ACTION}" in
       install|INSTALL)
         printf "# Installing Vanguards...\n\n"
-        sudo -u "${DATA_DIR_OWNER}" git clone https://github.com/mikeperry-tor/vanguards.git "${DATA_DIR}/vanguards"
-        sudo chown -R "${DATA_DIR_OWNER}:${DATA_DIR_OWNER}" "${DATA_DIR}"
-        sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards reset --hard "${VANGUARDS_COMMIT_HASH}"
+        sudo -u "${TOR_USER}" git clone https://github.com/mikeperry-tor/vanguards.git "${DATA_DIR}/vanguards"
+        sudo chown -R "${TOR_USER}:${TOR_USER}" "${DATA_DIR}"
+        sudo -u "${TOR_USER}" git -C "${DATA_DIR}"/vanguards reset --hard "${VANGUARDS_COMMIT_HASH}"
         vanguards_config
       ;;
 
       upgrade|UPGRADE)
         printf "# Upgrading Vanguards...\n\n"
-        sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards pull -p
-        sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards reset --hard "${VANGUARDS_COMMIT_HASH}"
-        sudo -u "${DATA_DIR_OWNER}" git -C "${DATA_DIR}"/vanguards show
+        sudo -u "${TOR_USER}" git -C "${DATA_DIR}"/vanguards pull -p
+        sudo -u "${TOR_USER}" git -C "${DATA_DIR}"/vanguards reset --hard "${VANGUARDS_COMMIT_HASH}"
+        sudo -u "${TOR_USER}" git -C "${DATA_DIR}"/vanguards show
         vanguards_config
       ;;
 

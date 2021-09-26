@@ -36,10 +36,10 @@ case "${ACTION}" in
   setup|SETUP)
       . .onionrc
       #python3-stem
-      install_package tor openssl basez git qrencode grep sed
-      sudo usermod -aG "${DATA_DIR_OWNER}" "${USER}"
-      sudo -u "${DATA_DIR_OWNER}" mkdir -p "${DATA_DIR_HS}"
-      sudo -u "${DATA_DIR_OWNER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
+      install_package tor openssl basez git qrencode grep sed "${WEBSERVER}"
+      sudo usermod -aG "${TOR_USER}" "${USER}"
+      sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
+      sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
       [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a ${TORRC}; }
       sed -i "/.*## DO NOT EDIT. Inserted automatically by onionservice setup.sh/d" ~/.${SHELL##*/}rc
       printf %s"PATH=\"\${PATH}:${PWD}/\" ## DO NOT EDIT. Inserted automatically by onionservice setup.sh\n" >> ~/.${SHELL##*/}rc
