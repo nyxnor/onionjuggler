@@ -49,7 +49,7 @@ onionservice-tui
 
 Read the manual:
 ```sh
-man text/onionservice.man
+man doc/onionservice-cli.1
 ```
 
 Read a small description of the main script:
