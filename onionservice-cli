@@ -151,40 +151,16 @@ create_client_list(){
   SERVICE="${1}"
   CLIENT_NAME_LIST=""
   CLIENT_COUNT=0
-
-  ## obliterate loop
-  #CLIENT_NAME_LIST=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
-  #CLIENT_NAME_LIST=$(printf "${CLIENT_NAME_LIST}" | cut -d '.' -f1)
-  #CLIENT_NAME_LIST=$(echo ${CLIENT_NAME_LIST} | sed "s/ /,/g")    ## how to do this with printf?
-
-  CLIENT_CURRENT=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
-  if [ "${CLIENT_CURRENT}" != "" ]; then
-    for AUTHORIZATION in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/); do
-      AUTHORIZATION_NAME=${AUTHORIZATION##*/}
-      AUTHORIZATION_NAME=${AUTHORIZATION_NAME%.auth}
-      CLIENT_NAME_LIST="${CLIENT_NAME_LIST},${AUTHORIZATION_NAME}"
-      CLIENT_COUNT=$((CLIENT_COUNT+1))
-    done
-    CLIENT_NAME_LIST=${CLIENT_NAME_LIST#,}
-    [ "${CLIENT_NAME_LIST}" = "1" ] && CLIENT_NAME_LIST=""
-  fi
+  CLIENT_NAME_LIST=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
+  CLIENT_NAME_LIST=$(printf %s"${CLIENT_NAME_LIST}" | sed "s/\.auth//g" | tr "\n" " " | sed "s/ /,/g")
+  CLIENT_COUNT=$(printf %s"${CLIENT_NAME_LIST}" | awk -F, '{print NF}')
 }
 
 
 ## save the service names that have a <HiddenServiceDir> in list format (SERV1,SERV2,...)
 create_service_list(){
   SERVICE_NAME_LIST=""
-
-  ## obliterate loop
-  #SERVICE_NAME_LIST=$(echo $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/) | sed "s/ /,/g") ## how to do this with printf?
-
-  for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
-    SERVICE_NAME=${SERVICE##*/}
-    SERVICE_NAME_LIST="${SERVICE_NAME_LIST},${SERVICE_NAME}"
-    SERVICE_NUMBER=$((SERVICE_NUMBER+1))
-  done
-  SERVICE_NAME_LIST=${SERVICE_NAME_LIST#,}
-  [ "${SERVICE_NAME_LIST}" = "1" ] && SERVICE_NAME_LIST=""
+  SERVICE_NAME_LIST=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/ | tr "\n" " " | sed "s/ /,/g")
 }
 
 
@@ -194,13 +170,8 @@ create_service_list(){
 ## $3 normally is client, but can be any other (accepts list -> client1,client2...)
 loop_list(){
   for ITEM in $(printf %s"${2}" | sed "s/\,/ /g"); do
-    if [ -z "${3}" ]; then
-      "${1}" "${ITEM}"
-    else
-      for SUBITEM in $(printf %s"${3}" | sed "s/\,/ /g"); do
-        "${1}" "${ITEM}" "${SUBITEM}"
-      done
-    fi
+    [ -z "${3}" ] && "${1}" "${ITEM}"
+    [ -z "${3}" ] || for SUBITEM in $(printf %s"${3}" | sed "s/\,/ /g"); do "${1}" "${ITEM}" "${SUBITEM}"; done
   done
 }
 
@@ -285,15 +256,13 @@ case "${COMMAND}" in
 
       ## show the Hidden Service address
       service_existent=0; test_service_exists "${SERVICE}"
-      if [ "${service_existent}" -eq 1 ]; then
-        printf "\n# Hidden Service information:\n"
-        qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
-        printf %s"Service name    = ${SERVICE}\n"
-        printf %s"Service address = ${ONION_HOSTNAME}\n"
-        printf %s"Virtual port    = ${VIRTPORT}\n"
-        [ ! -z "${VIRTPORT2}" ] && printf %s"Virtual port    = ${VIRTPORT2}\n"
-        success_msg
-      fi
+      printf "\n# Hidden Service information:\n"
+      qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
+      printf %s"Service name    = ${SERVICE}\n"
+      printf %s"Service address = ${ONION_HOSTNAME}\n"
+      printf %s"Virtual port    = ${VIRTPORT}\n"
+      [ ! -z "${VIRTPORT2}" ] && printf %s"Virtual port    = ${VIRTPORT2}\n"
+      success_msg
     }
 
     case "${SOCKET}" in
@@ -367,6 +336,7 @@ case "${COMMAND}" in
   ;;
 
 
+  ## manage client authorization server side (HiddenServiceDir/authorized_clients/) or client side (ClientOnionAuthDir)
   auth|AUTH)
     HOST="${2}"
     STATUS="${3}"; [ -z "${STATUS}" ] && error_msg "STATUS is missing"
@@ -389,33 +359,31 @@ case "${COMMAND}" in
               SERVICE="${1}"
               CLIENT="${2}"
               service_existent=0; test_service_exists "${SERVICE}"
-              if [ "${service_existent}" -eq 1 ]; then
-                ## Generate pem and derive pub and priv keys
-                openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
-                grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
-                openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
-                ## save variables
-                CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
-                CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
-                ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
-                CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
-                CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
-                # Server side configuration
-                printf %s"${CLIENT_PUB_KEY_CONFIG}\n" | sudo tee "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
-                ## Client side configuration
-                printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
-                printf "# Declare the variables\n"
-                printf %s"SERVICE=${SERVICE}\n"
-                printf %s"CLIENT=${CLIENT}\n"
-                printf %s"ONION_HOSTNAME=${ONION_HOSTNAME}\n"
-                printf %s"CLIENT_PUB_KEY=${CLIENT_PUB_KEY}\n"
-                printf %s"CLIENT_PUB_KEY_CONFIG=${CLIENT_PUB_KEY_CONFIG}\n"
-                printf %s"CLIENT_PRIV_KEY=${CLIENT_PRIV_KEY}\n"
-                printf %s"CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
-                printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n"
-                ## Delete pem and keys
-                sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
-              fi
+              ## Generate pem and derive pub and priv keys
+              openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
+              grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
+              openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
+              ## save variables
+              CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
+              CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
+              ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
+              CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+              CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
+              # Server side configuration
+              printf %s"${CLIENT_PUB_KEY_CONFIG}\n" | sudo tee "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
+              ## Client side configuration
+              printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+              printf "# Declare the variables\n"
+              printf %s"SERVICE=${SERVICE}\n"
+              printf %s"CLIENT=${CLIENT}\n"
+              printf %s"ONION_HOSTNAME=${ONION_HOSTNAME}\n"
+              printf %s"CLIENT_PUB_KEY=${CLIENT_PUB_KEY}\n"
+              printf %s"CLIENT_PUB_KEY_CONFIG=${CLIENT_PUB_KEY_CONFIG}\n"
+              printf %s"CLIENT_PRIV_KEY=${CLIENT_PRIV_KEY}\n"
+              printf %s"CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
+              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n"
+              ## Delete pem and keys
+              sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
             }
             instructions_auth(){
               printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
@@ -429,7 +397,7 @@ case "${COMMAND}" in
               printf "\n"
               printf "# Reload tor\n"
               printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
-              printf " sudo systemctl reload-or-restart-tor tor\n"
+              printf " sudo systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             }
             [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
@@ -493,7 +461,7 @@ case "${COMMAND}" in
                 printf %s"\nService    = ${SERVICE}\n"
                 printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n\n"
               else
-                printf "\n# No clients for Hidden Service: ${SERVICE}\n\n"
+                printf %s"\n# No clients for Hidden Service: ${SERVICE}\n\n"
               fi
             }
             printf "# Authorized clients for Hidden Services\n"
@@ -620,43 +588,36 @@ case "${COMMAND}" in
     renew_service_address(){
       SERVICE="${1}"
       service_existent=0; test_service_exists "${SERVICE}"
-      if [ ${service_existent} -eq 1 ]; then
-        printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
-        printf %s"\n# Renewing hostname (address) of the service: ${SERVICE}\n"
-        OLD_HOSTNAME="${ONION_HOSTNAME}"
-        ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
-        create_client_list "${SERVICE}"
-        ## delete the service folder
-        #sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/
-        ## delete service public and secret keys
-        sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_secret_key
-        sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_public_key
-        ## delete authorized clients
-        sudo rm -rfv "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*
-        ## reload tor now so auth option can get the new hostname
-        restarting_tor
-        ## generate auth for clients
-        [ ! -z "${CLIENT_NAME_LIST}" ] \
-        && { printf %s"\n${FOREGROUND_YELLOW}# Command to renew services requires new authorization for your clients.\n${UNSET_FORMAT}" \
-        && sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
-        test_service_exists "${SERVICE}"
-        NEW_HOSTNAME="${ONION_HOSTNAME}"
-        printf %s"Current = ${OLD_HOSTNAME}\n"
-        printf %s"New     = ${ONION_HOSTNAME}\n"
-        [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ] \
-        && { printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"; printf "\nService address QR encoded format:\n" \
-        && qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"; } \
-        || printf %s"${FOREGROUND_RED}# Failed to renew service: ${SERVICE}\n${UNSET_FORMAT}"
-        printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
-      fi
+      printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+      printf %s"\n# Renewing hostname (address) of the service: ${SERVICE}\n"
+      OLD_HOSTNAME="${ONION_HOSTNAME}"
+      ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
+      create_client_list "${SERVICE}"
+      ## delete the service folder
+      #sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/
+      ## delete service public and secret keys
+      sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_secret_key
+      sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_public_key
+      ## delete authorized clients
+      sudo rm -rfv "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*
+      ## reload tor now so auth option can get the new hostname
+      restarting_tor
+      ## generate auth for clients
+      [ ! -z "${CLIENT_NAME_LIST}" ] \
+      && { printf %s"\n${FOREGROUND_YELLOW}# Command to renew services requires new authorization for your clients.\n${UNSET_FORMAT}" \
+      && sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
+      test_service_exists "${SERVICE}"
+      NEW_HOSTNAME="${ONION_HOSTNAME}"
+      printf %s"Current = ${OLD_HOSTNAME}\n"
+      printf %s"New     = ${ONION_HOSTNAME}\n"
+      [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ] \
+      && { printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"; printf "\nService address QR encoded format:\n" \
+      && qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"; } \
+      || printf %s"${FOREGROUND_RED}# Failed to renew service: ${SERVICE}\n${UNSET_FORMAT}"
+      printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
-    if [ "${SERVICE}" = "all-services" ]; then
-      for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
-        renew_service_address "${SERVICE}"
-      done
-    else
-      loop_list renew_service_address "${SERVICE}"
-    fi
+    [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
+    loop_list renew_service_address "${SERVICE}"
     success_msg reload
   ;;
 
@@ -669,31 +630,27 @@ case "${COMMAND}" in
       SERVICE="${1}"
       NO_QR="${2}"
       service_existent=0; test_service_exists "${SERVICE}"
-      if [ "${service_existent}" -eq 1 ]; then
-        ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
-        create_client_list "${SERVICE}"
-        [ "${NO_QR}" = "no-qr" ] || qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
-        printf %s"\nAddress  = ${ONION_HOSTNAME}\n"
-        printf %s"Service  = ${SERVICE}\n"
-        [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
-        if [ "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then printf "Status   = inactive\n"
-        else printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"; fi
-        #[ ! -z "${TLS_CERT}" ] && printf %s"Certificate Fingerprint SHA-256 = ${TLS_CERT_FINGERPRINT}\n"
-        printf "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+      ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
+      create_client_list "${SERVICE}"
+      [ "${NO_QR}" = "no-qr" ] || qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
+      printf %s"\nAddress  = ${ONION_HOSTNAME}\n"
+      printf %s"Service  = ${SERVICE}\n"
+      [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
+      if [ "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then
+        printf "Status   = inactive\n"
+      else
+        printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
       fi
+      #[ ! -z "${TLS_CERT}" ] && printf %s"Certificate Fingerprint SHA-256 = ${TLS_CERT_FINGERPRINT}\n"
+      printf "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
     }
     NO_QR="${3}"
-    if [ "${SERVICE}" = "all-services" ]; then
-      for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
-        get_credentials "${SERVICE}" "${NO_QR}"
-      done
-    else
-      loop_list get_credentials "${SERVICE}" "${NO_QR}"
-    fi
+    [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
+    loop_list get_credentials "${SERVICE}" "${NO_QR}"
     success_msg
   ;;
 
-
+  ## start serving files with a webserver for a specific onion service and specific website folder
   nginx|apache2)
     [ "${WEBSERVER}" != "${1}" ] && error_msg "Your WEBSERVER of choice is: ${WEBSERVER}\nIt is not possible to run different web servers at the same time."
     STATUS="${2}"
@@ -747,10 +704,9 @@ case "${COMMAND}" in
     SERVICE="${2}"
     ACTION="${3}"
     service_existent=0; test_service_exists "${SERVICE}"
-    if [ ${service_existent} -eq 1 ]; then
 
-start_location(){
-  printf %s"# Onion-Location guided steps
+    start_location(){
+    printf %s"# Onion-Location guided steps
 
 * The below output is printing text, no file was modified by this script, therefore, user needs to manually configure.
 * For web servers, include header line inside the plainnet ssl block (port 443).
@@ -760,13 +716,13 @@ start_location(){
 "
 }
 
-finish_location(){
+  finish_location(){
   printf "## Test redirection
 
 * Open the web site in Tor Browser and a purple pill will appear in the address bar; or
 * Fetch the web site HTTP headers and look for onion-location entry and the onion service address:
 
-  wget --server-response --spider your-website.tld
+wget --server-response --spider your-website.tld
 "
 }
 
@@ -775,15 +731,15 @@ finish_location(){
       nginx|NGINX)
         start_location
         printf '%s\n' "
-  server {
-      listen 443 ssl http2;
-      add_header Onion-Location http://""${ONION_HOSTNAME}""\$request_uri;
-  }
+server {
+    listen 443 ssl http2;
+    add_header Onion-Location http://""${ONION_HOSTNAME}""\$request_uri;
+}
 
 ## Reload web server:
 
-  sudo nginx -t
-  sudo nginx -s reload
+sudo nginx -t
+sudo nginx -s reload
 "
         finish_location
       ;;
@@ -791,17 +747,17 @@ finish_location(){
       apache|APACHE)
         start_location
         printf '%s\n' "
-  <VirtualHost *:443>
-          Header set Onion-Location \"http://${ONION_HOSTNAME}%{REQUEST_URI}s\"
-  </Virtualhost>
+<VirtualHost *:443>
+        Header set Onion-Location \"http://${ONION_HOSTNAME}%{REQUEST_URI}s\"
+</Virtualhost>
 
 ## Enable headers and rewrite modules:
 
-  sudo a2enmod headers rewrite
+sudo a2enmod headers rewrite
 
 ## Reload web server:
 
-  sudo systemctl reload apache
+sudo systemctl reload apache
 "
         finish_location
       ;;
@@ -809,12 +765,12 @@ finish_location(){
       html|HTML)
         start_location
         printf '%s\n' "
-  <meta http-equiv=\"onion-location\" content=\"http://${ONION_HOSTNAME}\"/>
+<meta http-equiv=\"onion-location\" content=\"http://${ONION_HOSTNAME}\"/>
 
 ## Reload web server that you use:
 
-  sudo nginx -t && sudo nginx -s reload
-  sudo systemctl reload apache
+sudo nginx -t && sudo nginx -s reload
+sudo systemctl reload apache
 "
         finish_location
       ;;
@@ -822,7 +778,6 @@ finish_location(){
       *)
         error_msg "Invalid '${COMMAND}' argument: ${ACTION}"
     esac
-    fi
   ;;
 
 
@@ -840,7 +795,7 @@ finish_location(){
         sudo cp -rf "${HS_BK_DIR}"/backup-restoration.tbx"${DATA_DIR_HS}"/* "${DATA_DIR_HS}"/ >/dev/null
         sudo cp -rf "${HS_BK_DIR}"/backup-restoration.tbx"${CLIENT_ONION_AUTH_DIR}"/* "${CLIENT_ONION_AUTH_DIR}"/ >/dev/null
         ## avoid duplication of services, it will keep the current machine config lines for safety
-        for SERVICE in $(sudo -u "${CONF_DIR_OWNER}" grep "HiddenServiceDir" "${TORRC}" | cut -d ' ' -f2); do
+        for SERVICE in $(sudo -u "${CONF_DIR_OWNER}" grep "HiddenServiceDir " "${TORRC}" | cut -d ' ' -f2); do
           SERVICE_NAME=$(printf %s"${SERVICE##*/}")
           sed -n "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{p}" "${TORRC}" > "${TORRC}".tmp
           sed -i "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{d}" "${TORRC}"
