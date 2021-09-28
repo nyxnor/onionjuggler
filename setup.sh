@@ -33,13 +33,18 @@ ACTION=${1:-SETUP}
 
 case "${ACTION}" in
 
+  *help|-h)
+    printf "Commands: [help|setup|release]\n"
+  ;;
+
   setup|SETUP)
       . .onionrc
       #python3-stem
-      install_package tor openssl basez git qrencode grep sed "${WEBSERVER}"
+      install_package tor openssl basez git qrencode grep sed gawk "${WEBSERVER}"
       sudo usermod -aG "${TOR_USER}" "${USER}"
       sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
       sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
+      restarting_tor
       [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a ${TORRC}; }
       sed -i "/.*## DO NOT EDIT. Inserted automatically by onionservice setup.sh/d" ~/.${SHELL##*/}rc
       printf %s"PATH=\"\${PATH}:${PWD}/\" ## DO NOT EDIT. Inserted automatically by onionservice setup.sh\n" >> ~/.${SHELL##*/}rc
@@ -48,7 +53,6 @@ case "${ACTION}" in
       sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-cli
       sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-tui
       printf %s"${FOREGROUND_BLUE}# OnionService enviroment is ready\n${UNSET_FORMAT}"
-      restarting_tor
   ;;
 
   release|RELEASE)

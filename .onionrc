@@ -28,6 +28,7 @@
 ## This file is the configuration (library) for the tor menus and scripts.
 ## It contains functions which are used in several scripts.
 ## Hopefully, this way the scripts stay short and clear.
+## Path for folders variables must not contain "/" at the end.
 ##
 ## SYNTAX
 ## . .onionrc
@@ -42,6 +43,7 @@ TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 
 ## [ EDIT OPTIONAL ]
+WEBSITE_FOLDER="/var/www"
 ## path to certificate. only used to show 'credentials' option in the CLI, leave it blank if not using
 TLS_CERT=""
 ## Vanguards

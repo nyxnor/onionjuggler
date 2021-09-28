@@ -34,25 +34,40 @@ ONIONSERVICE_PWD=
 
 i=0
 
-folder_menu(){
+sites_menu(){
   i=0
   DIALOG_TYPE="${1}"
-  for FOLDER in $(sudo ls /var/www/); do
+  for FOLDER in $(sudo ls "${WEBSITE_FOLDER}"); do
     i=$((i+1))
     case "${DIALOG_TYPE}" in
-      checklist) FOLDER_LIST=$(printf "%s\n%s\n%s\n%s\n" "${FOLDER_LIST}" "${FOLDER}" "." 0);;
-      menu)      FOLDER_LIST=$(printf "%s\n%s\n%s\n" "${FOLDER_LIST}" "${FOLDER}" ".");;
+      checklist) FOLDER_LIST=$(printf "%s\n%s\n" "${FOLDER_LIST}" "${FOLDER}" "." 0);;
+      menu)      FOLDER_LIST=$(printf "%s\n%s\n" "${FOLDER_LIST}" "${FOLDER}" ".");;
     esac
   done
 
   TITLE="Folder"
-  MENU="Use spacebar to select:"
+  MENU="\nUse spacebar to select:"
   CHOICE_FOLDER=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-  "$((i+7))" 50 2 ${FOLDER_LIST} 2>&1 >/dev/tty)
+  "$((i+8))" 50 2 ${FOLDER_LIST} 2>&1 >/dev/tty)
 
   [ ! -z "${CHOICE_FOLDER}" ] && FOLDER_NAME_LIST=$(printf %s"${CHOICE_FOLDER}" | sed "s/ /,/g")
 }
 
+
+sites_enabled_menu(){
+  i=0
+  for SERVICE in $(sudo ls /etc/"${WEBSERVER}"/sites-enabled/ | sed "s/-onion.conf//g"); do
+    i=$((i+1))
+    SERVICE_LIST=$(printf "%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "." 0)
+  done
+
+  TITLE="Web Server - Deactivate Site"
+  MENU="\nUse spacebar to select:"
+  CHOICE_SERVICE=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+  "$((i+8))" 50 2 ${SERVICE_LIST} 2>&1 >/dev/tty)
+
+  [ ! -z "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST=$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")
+}
 
 ## $1 boolean -> service_menu primary option (deactivate,renew), then 0, if secondary option (auth_server), then 1. It is a bug in the height
 ## $2 [checklist|menu]
@@ -70,8 +85,9 @@ service_menu(){
   done
 
   TITLE="Onion Services - ${3}"
+  MENU="\nUse spacebar to select"
   CHOICE_SERVICE=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-  "$((i+7))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)
+  "$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)
 
   [ ! -z "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST=$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")
 }
@@ -96,9 +112,9 @@ auth_server_menu(){
     dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${MENU}" 10 50
   else
     TITLE="Client Authorization - Server - Deletion"
-    MENU="Use spacebar to select:"
+    MENU="\nUse spacebar to select:"
     CHOICE_SERVICE=$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-    "$((i+7))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)
+    "$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)
   fi
 
   if [ ! -z "${CHOICE_SERVICE}" ]; then
@@ -139,9 +155,9 @@ auth_client_menu(){
     TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${CLIENT_ONION_AUTH_DIR}"
     dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
   else
-    MENU="Use spacebar to select:"
+    MENU="\nUse spacebar to select:"
     CHOICE_ONION_AUTH=$(dialog --title "${TITLE}" --checklist "${MENU}" \
-    "$((i+7))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)
+    "$((i+8))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)
     [ ! -z "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST=$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")
   fi
 }
@@ -165,11 +181,11 @@ md_menu(){
 ###########################
 
 TITLE="Onion Services - Main Menu"
-MENU="Use spacepar to select:"
+MENU="\nUse spacepar to select:"
 BACKTITLE="Onion Services Manager"
 if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/)" ]; then
 	CHOICE_MAIN=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-  --ok-label "Select" --no-cancel --menu "${MENU}" 15 80 2 \
+  --ok-label "Select" --no-cancel --menu "${MENU}" 16 80 2 \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
   "ACTIVATE" "Activate a onion service" \
@@ -180,7 +196,7 @@ if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/)" ]; then
   2>&1 >/dev/tty)
 else
 	CHOICE_MAIN=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-  --ok-label "Select" --no-cancel --menu "${MENU}" 21 80 2 \
+  --ok-label "Select" --no-cancel --menu "${MENU}" 22 80 2 \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
   "ACTIVATE" "Activate a onion service" \
@@ -439,21 +455,34 @@ case "${CHOICE_MAIN}" in
 
 
   WEB_SERVER)
-    service_menu 0 menu "Web server "
-    if [ ! -z "${SERVICE_NAME_LIST}" ]; then
-      folder_menu menu
-      if [ ! -z "${FOLDER_NAME_LIST}" ]; then
-        TITLE="Web server - Status"
-        MENU="\nWould you like to activate or deactivate serving a web site?"
-        STATUS=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" 11 50 2 \
-        "ON" "Serve web site" \
-        "OFF" "Stop serving web site" \
-        2>&1 >/dev/tty)
-        if [ ! -z "${STATUS}" ]; then
+    TITLE="Web server - Status"
+    MENU="\nWould you like to activate or deactivate serving a web site?"
+    STATUS=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" 12 50 2 \
+    "LIST" "List enabled websites" \
+    "ON" "Serve web site" \
+    "OFF" "Stop serving web site" \
+    2>&1 >/dev/tty)
+    if [ "${STATUS}" = "LIST" ]; then
+      clear
+      sh "${ONIONSERVICE_PWD}"/onionservice-cli "${WEBSERVER}" "${STATUS}"
+      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+    elif [ "${STATUS}" = "ON" ]; then
+      service_menu 1 menu "Web server "
+      if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+        sites_menu menu
+        if [ ! -z "${FOLDER_NAME_LIST}" ]; then
           clear
           sh "${ONIONSERVICE_PWD}"/onionservice-cli "${WEBSERVER}" "${STATUS}" "${SERVICE_NAME_LIST}" "${FOLDER_NAME_LIST}"
           printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
         fi
+      fi
+    elif [ "${STATUS}" = "OFF" ]; then
+      ## LIST SITES-ENABLED TO DEACTIVATE WITH CHECKLIST
+      sites_enabled_menu
+      if [ ! -z "${SERVICE_NAME_LIST}" ]; then
+        clear
+        sh "${ONIONSERVICE_PWD}"/onionservice-cli "${WEBSERVER}" "${STATUS}" ${SERVICE_NAME_LIST}
+        printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
       fi
     fi
   ;;

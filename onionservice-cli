@@ -82,7 +82,7 @@ It does not imply the code worked, you should always pay attention for errors in
 
 [ "${USER}" = "root" ] && { printf %s"${FOREGROUND_RED}Do not run with the root user!!!\n${UNSET_FORMAT}" && exit 1; }
 
-{ [ -z "${#}" ] || [ -z "${2}" ] || [ "${1}" = "help" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
+{ [ -z "${2}" ] || [ "${1}" = *help ] || [ "${1}" = "-h" ]; } && onion_usage
 
 
 ## display error message with instructions to use the script correctly.
@@ -151,8 +151,7 @@ create_client_list(){
   SERVICE="${1}"
   CLIENT_NAME_LIST=""
   CLIENT_COUNT=0
-  CLIENT_NAME_LIST=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)
-  CLIENT_NAME_LIST=$(printf %s"${CLIENT_NAME_LIST}" | sed "s/\.auth//g" | tr "\n" " " | sed "s/ /,/g")
+  CLIENT_NAME_LIST=$(printf %s"$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" " " | sed "s/ /,/g")
   CLIENT_COUNT=$(printf %s"${CLIENT_NAME_LIST}" | awk -F, '{print NF}')
 }
 
@@ -493,7 +492,7 @@ case "${COMMAND}" in
             [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#ONION_HOSTNAME}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#ONION_HOSTNAME} is different than 62 characters (<56-char-base32>.onion)"
             [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
-            [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a ${TORRC}; }
+            [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
             sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
             if [ "${CLIENT_PRIV_KEY}" = "" ]; then
               ## Generate pem and derive pub and priv keys
@@ -605,14 +604,14 @@ case "${COMMAND}" in
       ## generate auth for clients
       [ ! -z "${CLIENT_NAME_LIST}" ] \
       && { printf %s"\n${FOREGROUND_YELLOW}# Command to renew services requires new authorization for your clients.\n${UNSET_FORMAT}" \
-      && sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
+        && sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
       test_service_exists "${SERVICE}"
       NEW_HOSTNAME="${ONION_HOSTNAME}"
       printf %s"Current = ${OLD_HOSTNAME}\n"
       printf %s"New     = ${ONION_HOSTNAME}\n"
       [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ] \
       && { printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"; printf "\nService address QR encoded format:\n" \
-      && qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"; } \
+        && qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"; } \
       || printf %s"${FOREGROUND_RED}# Failed to renew service: ${SERVICE}\n${UNSET_FORMAT}"
       printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
@@ -635,8 +634,8 @@ case "${COMMAND}" in
       [ "${NO_QR}" = "no-qr" ] || qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
       printf %s"\nAddress  = ${ONION_HOSTNAME}\n"
       printf %s"Service  = ${SERVICE}\n"
-      [ ${#CLIENT_NAME_LIST} -gt 0 ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
-      if [ "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" -eq 0 ]; then
+      [ -n "${CLIENT_NAME_LIST}" ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
+      if [ ! "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" ]; then
         printf "Status   = inactive\n"
       else
         printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
@@ -653,26 +652,26 @@ case "${COMMAND}" in
   ## start serving files with a webserver for a specific onion service and specific website folder
   nginx|apache2)
     [ "${WEBSERVER}" != "${1}" ] && error_msg "Your WEBSERVER of choice is: ${WEBSERVER}\nIt is not possible to run different web servers at the same time."
-    STATUS="${2}"
-    SERVICE="${3}"
-    service_existent=0; test_service_exists "${SERVICE}"
+    STATUS="${2}"; [ -z "${STATUS}" ] && error_msg "STATUS is missing"
+    SERVICE="${3}"; [ -z "${STATUS}" ] && error_msg "SERVICE is missing"
     case "${STATUS}" in
 
       on|ON)
+        service_existent=0; test_service_exists "${SERVICE}"
         FOLDER="${4}"; [ -z "${FOLDER}" ] && error_msg "FOLDER is missing"
         printf %s"# Activating web server for the onion service: ${SERVICE}\n\n"
         VIRTPORT=$(sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | grep "HiddenServicePort 80 ")
         [ "${VIRTPORT}" = "" ] && error_msg "At least one VIRTPORT must be listening on port 80"
-        TARGET="$(printf "%s\n" "${VIRTPORT}" | cut -d " " -f3 | sed -e 's`[][\\/.*^$]`\\&`g')"
+        TARGET="$(printf "%s\n" "${VIRTPORT}" | cut -d " " -f3)" # | sed -e 's`[][\\/.*^$]`\\&`g')"
         sudo cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i 's/SERVICE/'${SERVICE}'/g' /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i 's/FOLDER/'${FOLDER}'/g' /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i 's/TARGET/'${TARGET}'/g' /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i "s|TARGET|${TARGET}|g" /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i "s|FOLDER|${WEBSITE_FOLDER}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
         sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-available/
         sudo ln -sfv /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-enabled/
         printf "\n# Web server configuration:\n\n"
         sudo cat /tmp/"${SERVICE}"-onion.conf
-        printf "\n# Reloading web server to apply new configuration:\n"
+        printf "\n# Reloading web server to apply new configuration\n"
         [ "${WEBSERVER}" = "nginx" ] && sudo nginx -tq && sudo nginx -s reload
         [ "${WEBSERVER}" = "apache2" ] && sudo systemctl reload apache2
         #sudo rm -f /tmp/"${SERVICE}"-onion.conf
@@ -681,14 +680,23 @@ case "${COMMAND}" in
       ;;
 
       off|OFF)
-        printf %s"\n# Stopping to serve the web site of the service: ${SERVICE}\n"
-        printf %s"# Url will not display any files: ${ONION_HOSTNAME}\n"
-        sudo rm -f /etc/"${WEBSERVER}"/sites-enabled/"${SERVICE}"-onion.conf
-        sudo rm -f /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf
-        printf "\n# Reloading web server to apply new configuration:\n"
+        disable_site(){
+          SERVICE="${1}"
+          printf %s"\n# Stopping website of the service: ${SERVICE}\n"
+          sudo rm -fv /etc/"${WEBSERVER}"/sites-enabled/"${SERVICE}"-onion.conf
+        }
+        loop_list disable_site "${SERVICE}" 0
+        printf "\n# Reloading web server to apply new configuration\n"
         [ "${WEBSERVER}" = "nginx" ] && sudo nginx -tq && sudo nginx -s reload
         [ "${WEBSERVER}" = "apache2" ] && sudo systemctl reload apache2
         success_msg
+      ;;
+
+      list|LIST)
+        printf %s"# Web server = ${WEBSERVER}\n\n"
+        printf "# Enabled websites:"
+        SITES_ENABLED=$(sudo ls /etc/"${WEBSERVER}"/sites-enabled/) # | sed "s/ /,/g")
+        [ ! -z "${SITES_ENABLED}" ] && printf %s"\n${SITES_ENABLED}\n" || printf " No website enabled\n"
       ;;
 
       *)
@@ -874,15 +882,17 @@ sudo systemctl reload apache
         && { printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null; }
       set_owner_permission
       sudo cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
-      DATA_DIR_SED="$(printf "%s\n" "${DATA_DIR}" | sed -e 's`[][\\/.*^$]`\\&`g')"
-      sudo sed -i 's/TOR_SERVICE/'${TOR_SERVICE}'/g' /tmp/vanguards@default.service
-      sudo sed -i 's/DATA_DIR/'${DATA_DIR_SED}'/g' /tmp/vanguards@default.service
-      sudo sed -i 's/CONTROL_PORT/'${CONTROL_PORT}'/g' /tmp/vanguards@default.service
-      sudo sed -i 's/TOR_USER/'${TOR_USER}'/g' /tmp/vanguards@default.service
+      sudo sed -i "s/TOR_SERVICE/${TOR_SERVICE}/g" /tmp/vanguards@default.service
+      sudo sed -i "s|DATA_DIR|${DATA_DIR}|g" /tmp/vanguards@default.service
+      sudo sed -i "s/CONTROL_PORT/${CONTROL_PORT}/g" /tmp/vanguards@default.service
+      sudo sed -i "s/TOR_USER/${TOR_USER}/g" /tmp/vanguards@default.service
       sudo cp -v /tmp/vanguards@default.service /etc/systemd/system/
+      printf "\n>>>>>>>>>>>>>>>>>>>\n"
+      sudo cat /tmp/vanguards@default.service
+      printf ">>>>>>>>>>>>>>>>>>>\n\n"
       sudo systemctl daemon-reload
       sudo systemctl enable vanguards@default.service
-      sudo systemctl start vanguards@default.service
+      sudo systemctl restart vanguards@default.service
       sudo systemctl status vanguards@default.service --no-pager
       success_msg
     }
