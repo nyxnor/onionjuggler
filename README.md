@@ -82,6 +82,7 @@ Read [TECHNICAL.md](doc/TECHNICAL.md) for advanced usage.
 * user with root privileges
 * leave blank lines between Hidden Services torrc lines - the cli script create it correctly, no change needed when using this project, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block
 * HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
+* Path for folders variables must not contain "/" at the end.
 
 ### Portability
 
