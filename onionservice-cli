@@ -137,12 +137,10 @@ is_addr_port(){
 ## test if service exists to continue the script or output error logs.
 ## if the service exists, will save the hostname for when requested.
 test_service_exists(){
-  service_existent=0
   SERVICE="${1}"
   ONION_HOSTNAME=$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null)
   [ "${ONION_HOSTNAME}" = "" ] \
-  && { printf %s"${FOREGROUND_RED}ERROR: Service does not exist: ${SERVICE}\n${UNSET_FORMAT}"; exit 1; } \
-  || service_existent=1
+  && { printf %s"${FOREGROUND_RED}ERROR: Service does not exist: ${SERVICE}\n${UNSET_FORMAT}"; exit 1; }
 }
 
 
@@ -254,7 +252,7 @@ case "${COMMAND}" in
       restarting_tor
 
       ## show the Hidden Service address
-      service_existent=0; test_service_exists "${SERVICE}"
+      test_service_exists "${SERVICE}"
       printf "\n# Hidden Service information:\n"
       qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
       printf %s"Service name    = ${SERVICE}\n"
@@ -357,7 +355,7 @@ case "${COMMAND}" in
             auth_server_add(){
               SERVICE="${1}"
               CLIENT="${2}"
-              service_existent=0; test_service_exists "${SERVICE}"
+              test_service_exists "${SERVICE}"
               ## Generate pem and derive pub and priv keys
               openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
               grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
@@ -454,7 +452,7 @@ case "${COMMAND}" in
           list|LIST)
             auth_server_list(){
               SERVICE="${1}"
-              service_existent=0; test_service_exists "${SERVICE}"
+              test_service_exists "${SERVICE}"
               create_client_list "${SERVICE}"
               if [ "${CLIENT_COUNT}" -gt 0 ]; then
                 printf %s"\nService    = ${SERVICE}\n"
@@ -586,7 +584,7 @@ case "${COMMAND}" in
     is_service_dir_empty
     renew_service_address(){
       SERVICE="${1}"
-      service_existent=0; test_service_exists "${SERVICE}"
+      test_service_exists "${SERVICE}"
       printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
       printf %s"\n# Renewing hostname (address) of the service: ${SERVICE}\n"
       OLD_HOSTNAME="${ONION_HOSTNAME}"
@@ -628,7 +626,7 @@ case "${COMMAND}" in
     get_credentials(){
       SERVICE="${1}"
       NO_QR="${2}"
-      service_existent=0; test_service_exists "${SERVICE}"
+      test_service_exists "${SERVICE}"
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
       create_client_list "${SERVICE}"
       [ "${NO_QR}" = "no-qr" ] || qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
@@ -657,7 +655,8 @@ case "${COMMAND}" in
     case "${STATUS}" in
 
       on|ON)
-        service_existent=0; test_service_exists "${SERVICE}"
+        is_service_dir_empty
+        test_service_exists "${SERVICE}"
         FOLDER="${4}"; [ -z "${FOLDER}" ] && error_msg "FOLDER is missing"
         printf %s"# Activating web server for the onion service: ${SERVICE}\n\n"
         VIRTPORT=$(sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | grep "HiddenServicePort 80 ")
@@ -711,7 +710,7 @@ case "${COMMAND}" in
     ## https://matt.traudt.xyz/posts/website-setup/
     SERVICE="${2}"
     ACTION="${3}"
-    service_existent=0; test_service_exists "${SERVICE}"
+    test_service_exists "${SERVICE}"
 
     start_location(){
     printf %s"# Onion-Location guided steps
