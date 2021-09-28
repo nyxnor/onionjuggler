@@ -429,7 +429,7 @@ case "${CHOICE_MAIN}" in
     service_menu 0 checklist "Credentials"
     if [ ! -z "${SERVICE_NAME_LIST}" ]; then
       clear
-      sh "${ONIONSERVICE_PWD}"/onionservice-cli credentials "${SERVICE_NAME_LIST}"
+      sh "${ONIONSERVICE_PWD}"/onionservice-cli list "${SERVICE_NAME_LIST}"
       printf %s"${FOREGROUND_YELLOW}\nPress ENTER to go back to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
     fi
   ;;

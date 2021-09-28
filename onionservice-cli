@@ -45,6 +45,8 @@ Options:
 
   off [SERV1,SERV2,...] <purge>                                                      deactivate a service and optionally purge its directory
 
+  list [all-services|SERV1,SERV2,...] <no-qr>                                        see credentials from indicated services
+
   renew [all-services|SERV1,SERV2,...]                                               renew indicated|all services addresses
 
   auth server on [SERV] [CLIENT] <CLIENT_PUB_KEY>                                    when auth content is especified, use the public key given by the client
@@ -60,8 +62,6 @@ Options:
   auth client off [ONION1,ONION2,...]                                                remote your client key
 
   auth client list                                                                   list your keys as a client
-
-  credentials [all-services|SERV1,SERV2,...] <no-qr>                                 see credentials from indicated services
 
   [nginx|apache2] on [SERV] [FOLDER]                                                 start serving a website for certain service and its folder
 
@@ -82,7 +82,7 @@ It does not imply the code worked, you should always pay attention for errors in
 
 [ "${USER}" = "root" ] && { printf %s"${FOREGROUND_RED}Do not run with the root user!!!\n${UNSET_FORMAT}" && exit 1; }
 
-{ [ -z "${2}" ] || [ "${1}" = *help ] || [ "${1}" = "-h" ]; } && onion_usage
+{ [ -z "${1}" ] || [ "${1}" = "help" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
 
 
 ## display error message with instructions to use the script correctly.
@@ -180,7 +180,6 @@ loop_list(){
 ## tor does not need to be running to delete service, authorize or remove authorization from clients or see credentials (off, auth, credentials)
 #check_tor
 COMMAND="${1}"
-SERVICE="${2}"
 sudo sed -i 's/\/$//' "${TORRC}" ## no config should end with '/' to find exact match.
 sudo cp "${TORRC}" "${TORRC}".bak
 
@@ -189,7 +188,7 @@ case "${COMMAND}" in
   ## deactivated the service wrongly and don't remember the ports? no worries, will restore the latest torrc.bak
   ## beaware this only works for the torrc, if you deleted your data directory with command "off" and "purge" option, the keys will not be restored, insteadm new ones will be created
   setup|SETUP)
-    ACTION="${2}"
+    ACTION="${2}"; [ -z "${ACTION}" ] && error_msg "ACTION is missing"
     case "${ACTION}" in
 
       torrc|TORRC)
@@ -211,15 +210,18 @@ case "${COMMAND}" in
   ## will not check if folder or configuration exist, this is cleanup mode
   ## will not use 'all-services'. Purge is dangerous, purging all service is even more dangerous. Always backup.
   off|OFF)
+    SERVICE="${2}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
     PURGE="${3}" ## optional
     delete_service(){
       SERVICE="${1}"
       PURGE="${2}"
       ## remove service service data
-      { [ "${PURGE}" = "purge" ] || [ "${PURGE}" = "PURGE" ]; } \
-      && { printf %s"${FOREGROUND_RED}\n# Deleted Hidden Service data in ${DATA_DIR_HS}/${SERVICE}\n${UNSET_FORMAT}"; \
-        sudo rm -rfv "${DATA_DIR_HS}"/"${SERVICE}"; } \
-      || printf "\n# HiddenServiceDiretory was kept\n"
+      if [ "${PURGE}" = "purge" ] || [ "${PURGE}" = "PURGE" ]; then
+        printf %s"${FOREGROUND_RED}\n# Deleted Hidden Service data in ${DATA_DIR_HS}/${SERVICE}\n${UNSET_FORMAT}"
+        sudo rm -rfv "${DATA_DIR_HS}"/"${SERVICE}"
+      else
+        printf "\n# HiddenServiceDiretory was kept\n"
+      fi
       ## remove service paragraph in torrc
       printf %s"# Deleted Hidden Service configuration in ${TORRC}\n"
       sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
@@ -335,7 +337,7 @@ case "${COMMAND}" in
 
   ## manage client authorization server side (HiddenServiceDir/authorized_clients/) or client side (ClientOnionAuthDir)
   auth|AUTH)
-    HOST="${2}"
+    HOST="${2}"; [ -z "${HOST}" ] && error_msg "HOST is missing"
     STATUS="${3}"; [ -z "${STATUS}" ] && error_msg "STATUS is missing"
     case "${HOST}" in
 
@@ -582,6 +584,7 @@ case "${COMMAND}" in
   ## all-services will read through all services folders and execute the commands.
   renew|RENEW)
     is_service_dir_empty
+    SERVICE="${2}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
     renew_service_address(){
       SERVICE="${1}"
       test_service_exists "${SERVICE}"
@@ -600,17 +603,20 @@ case "${COMMAND}" in
       ## reload tor now so auth option can get the new hostname
       restarting_tor
       ## generate auth for clients
-      [ ! -z "${CLIENT_NAME_LIST}" ] \
-      && { printf %s"\n${FOREGROUND_YELLOW}# Command to renew services requires new authorization for your clients.\n${UNSET_FORMAT}" \
-        && sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"; }
+      if [ ! -z "${CLIENT_NAME_LIST}" ]; then
+        printf %s"\n${FOREGROUND_YELLOW}# Command to renew services requires new authorization for your clients.\n${UNSET_FORMAT}"
+        sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"
+      fi
       test_service_exists "${SERVICE}"
       NEW_HOSTNAME="${ONION_HOSTNAME}"
       printf %s"Current = ${OLD_HOSTNAME}\n"
       printf %s"New     = ${ONION_HOSTNAME}\n"
-      [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ] \
-      && { printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"; printf "\nService address QR encoded format:\n" \
-        && qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"; } \
-      || printf %s"${FOREGROUND_RED}# Failed to renew service: ${SERVICE}\n${UNSET_FORMAT}"
+      if [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ]; then
+        printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"; printf "\nService address QR encoded format:\n"
+        qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"
+      else
+        printf %s"${FOREGROUND_RED}# Failed to renew service: ${SERVICE}\n${UNSET_FORMAT}"
+      fi
       printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
     [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
@@ -621,8 +627,9 @@ case "${COMMAND}" in
   ## show all the necessary information to access the service such as the hostname and the QR encoded hostname to scan for Tor Browser Mobile
   ## show the clients names and quantity, as well as the service torrc's block
   ## all-services will read through all services folders and execute the commands
-  credentials|CREDENTIALS)
+  list|LIST)
     is_service_dir_empty
+    SERVICE="${2}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
     get_credentials(){
       SERVICE="${1}"
       NO_QR="${2}"
@@ -694,7 +701,7 @@ case "${COMMAND}" in
       list|LIST)
         printf %s"# Web server = ${WEBSERVER}\n\n"
         printf "# Enabled websites:"
-        SITES_ENABLED=$(sudo ls /etc/"${WEBSERVER}"/sites-enabled/) # | sed "s/ /,/g")
+        SITES_ENABLED=$(sudo ls /etc/"${WEBSERVER}"/sites-enabled/ | sed "s/-onion.conf//g")
         [ ! -z "${SITES_ENABLED}" ] && printf %s"\n${SITES_ENABLED}\n" || printf " No website enabled\n"
       ;;
 
@@ -705,11 +712,11 @@ case "${COMMAND}" in
 
 
   ## guide to add onion-location to redirect tor users when using your plainnet site to the onion service address
+  ## https://matt.traudt.xyz/posts/website-setup/
   location|LOCATION)
     is_service_dir_empty
-    ## https://matt.traudt.xyz/posts/website-setup/
-    SERVICE="${2}"
-    ACTION="${3}"
+    SERVICE="${2}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
+    ACTION="${3}"; [ -z "${ACTION}" ] && error_msg "ACTION is missing"
     test_service_exists "${SERVICE}"
 
     start_location(){
@@ -789,7 +796,7 @@ sudo systemctl reload apache
 
 
   backup|BACKUP)
-    ACTION="${2}"
+    ACTION="${2}"; [ -z "${ACTION}" ] && error_msg "ACTION is missing"
     case "${ACTION}" in
 
       ## backup tar file will be extracted and integrated into their respective tor folders
@@ -868,7 +875,7 @@ sudo systemctl reload apache
   ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
   ##  TODO: hardening (as in $ sytemctl cat tor@default), but got permission denied :unable to read '/run/tor/control.authcookie'
   vanguards|VANGUARDS)
-    ACTION="${2}"
+    ACTION="${2}"; [ -z "${ACTION}" ] && error_msg "ACTION is missing"
 
     vanguards_config(){
       ## TODO: Better detection if using socket or control ip and port.
@@ -877,8 +884,9 @@ sudo systemctl reload apache
       sudo -u "${TOR_USER}" cp "${DATA_DIR}"/vanguards/vanguards-example.conf "${DATA_DIR}"/vanguards/vanguards.conf
       sudo sed -i "s/^logfile =.*/logfile = \/var\/log\/tor\/vanguards.log/" "${DATA_DIR}"/vanguards/vanguards.conf
       [ "$(grep "ControlPort" "${TORRC}")" = "" ] && { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
-      { [ "$(grep "CookieAuthentication" "${TORRC}")" = "" ] && [ "$(grep "HashedControlPassword" "${TORRC}")" = "" ]; } \
-        && { printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null; }
+      if [ "$(grep "CookieAuthentication" "${TORRC}")" = "" ] && [ "$(grep "HashedControlPassword" "${TORRC}")" = "" ]; then
+        printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null
+      fi
       set_owner_permission
       sudo cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
       sudo sed -i "s/TOR_SERVICE/${TOR_SERVICE}/g" /tmp/vanguards@default.service

@@ -153,6 +153,7 @@ zsh --emulate sh -c onionservice-tui
 
 ## To-do
 
+* Update TECHNICAL.md, it is a little behind with the new features.
 * Better detection if using `HashedControlPassword` or `CookieAuthentication` for Vanguards.
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
