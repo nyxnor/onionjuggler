@@ -1,9 +1,5 @@
 # TECHNICAL OVERVIEW
 
-## Notes
-
-Sacrificing some code legibility for speed is acceptable.
-
 ## Important files:
 
 * the onion config -> `.onionrc`
@@ -14,15 +10,9 @@ Sacrificing some code legibility for speed is acceptable.
 * **[VAR]** = Variable is required
 * **< VAR >** = Variable is optional
 * **SERV** = service name
-* **SERV1,SERV2,..** = listed service names (ssh,xmpp,nextcloud)
-* **CLIENT** = client name
-* **CLIENT1,CLIENT2,...** = listed service names (alice,bob)
-* **VIRTPORT** = virtual port
-* **TARGET** = target can be tcp or unix socket that will receive requests from the VIRTPORT
+* **VAR1,VAR2,..** = listed variables names (alice,bob)
 * **all-services** = run the command for all services existent
 * **all-clients** = run the command for all clients of the indicated services (can be combine with all-services or a list)
-* **unix** = unix sockets
-* **tcp** = tcp sockets
 
 ## Variables example:
 
@@ -211,7 +201,7 @@ An authenticated onion service is an onion service that requires the client to p
 
 Once you have configured client authorization, anyone with the address will not be able to access it from this point on. If no authorization is configured, the service will be accessible to anyone with the onion address.
 
-### Authorize a client
+### Server authorizing a client
 
 It is posible to add to:
 * a list of services (ssh,xmpp,nextcloud)
@@ -251,63 +241,17 @@ Add authorization of all services and one or a list of clients:
 sh onionservice-cli auth server on all-services alice,bob
 ```
 
-Example:
+#### Server listing clients
+
+List clients of any service you have, this is mostly used to know if there is any active clients or their names to delete them if necessary.
+
+**Usage:**
+
+Syntax: *auth server list [all-services|SERV1,SERV2,...]*
+
+List all clients for all hidden services:
 ```sh
-sh onionservice-cli auth server on test,xmpp alice,bob
-```
-Effect:
-```
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# Declare the variables
-SERVICE=xmpp
-CLIENT=bob
-TOR_HOSTNAME=vrekvygmdtz7i3uxrxrj3mu4shtsu4fwoz3li2r2hxsnijjq6p2rfcyd.onion
-PRIV_KEY=BBGUMZUTT6GXP2WURAG3UYZQABRGRBDO2LHSZGZ5HB5GVKJ2VVXA
-PRIV_KEY_CONFIG=vrekvygmdtz7i3uxrxrj3mu4shtsu4fwoz3li2r2hxsnijjq6p2rfcyd:descriptor:x25519:BBGUMZUTT6GXP2WURAG3UYZQABRGRBDO2LHSZGZ5HB5GVKJ2VVXA
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# Declare the variables
-SERVICE=xmpp
-CLIENT=alice
-TOR_HOSTNAME=vrekvygmdtz7i3uxrxrj3mu4shtsu4fwoz3li2r2hxsnijjq6p2rfcyd.onion
-PRIV_KEY=QAXRTA7H72HLFIAWU3J7J3WPVHIDL43X2FP3EP4W2UNXM4H4RFRQ
-PRIV_KEY_CONFIG=vrekvygmdtz7i3uxrxrj3mu4shtsu4fwoz3li2r2hxsnijjq6p2rfcyd:descriptor:x25519:QAXRTA7H72HLFIAWU3J7J3WPVHIDL43X2FP3EP4W2UNXM4H4RFRQ
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# Declare the variables
-SERVICE=test
-CLIENT=bob
-TOR_HOSTNAME=xap5clrt4eaqglov72qxwih4lq4yagguzmln2kaw42xye4txfgyrfiid.onion
-PRIV_KEY=OAXP3EYJYUIWHNNVCVR5R3DSH7WPCPI6XRZYDT5Y7KCJQ7GERJDA
-PRIV_KEY_CONFIG=xap5clrt4eaqglov72qxwih4lq4yagguzmln2kaw42xye4txfgyrfiid:descriptor:x25519:OAXP3EYJYUIWHNNVCVR5R3DSH7WPCPI6XRZYDT5Y7KCJQ7GERJDA
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# Declare the variables
-SERVICE=test
-CLIENT=alice
-TOR_HOSTNAME=xap5clrt4eaqglov72qxwih4lq4yagguzmln2kaw42xye4txfgyrfiid.onion
-PRIV_KEY=JBIAPK63HAVUYLDUGXJOCO4THIIPH42GROFWBIRGTFZIZQRDMF2Q
-PRIV_KEY_CONFIG=xap5clrt4eaqglov72qxwih4lq4yagguzmln2kaw42xye4txfgyrfiid:descriptor:x25519:JBIAPK63HAVUYLDUGXJOCO4THIIPH42GROFWBIRGTFZIZQRDMF2Q
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# Instructions client side:
-
-# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, insert it: ClientOnionAuthDir /var/lib/tor/onion_auth
-[ $(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf 'ClientOnionAuthDir /var/lib/tor/onion_auth' | sudo tee -a /etc/tor/torrc ; }
-
-# Create the auth file inside <ClientOnionAuthDir>
-printf ${PRIV_KEY_CONFIG} | sudo tee -a /var/lib/tor/onion_auth/${SERVICE}-${TOR_HOSTNAME}.auth_private
-
-# Reload tor
-sudo chown -R debian-tor:debian-tor /var/lib/tor
-sudo pkill -sighup tor
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-# Done
+sh onionservice-cli auth server list all-services
 ```
 
 ### Remove authorization of a client
@@ -391,6 +335,18 @@ This will create a '.auth_private' file inside ClietOnionAuthDir named with the 
 fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd:descriptor:x25519:UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
 ```
 
+### List client
+
+Use case if to see if the credentials being used are correct and to which services you have credentials to access.
+
+**Usage:**
+
+Syntax: *auth client list*
+
+```sh
+sh onionservice-cli auth client list
+```
+
 ### Remove your authorization as a client
 
 To remove your key that authenticated you tor (daemon) normally to a site no more operational or keys expired (note you only need to speficy the file name when deleting).
@@ -432,7 +388,7 @@ fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd:descriptor:x25519:IB6SV
 ```
 
 
-# View services credentials
+# View services information listed
 
 Print to stdout relevant information about the service configuration:
 * QR encoded hostname
@@ -443,73 +399,42 @@ Print to stdout relevant information about the service configuration:
 
 **Usage:**
 
-Syntax: *credentials [all-services|SERV1,SERV2,...]*
+Syntax: *list [all-services|SERV1,SERV2,...] < no-qr >*
 
-View credentials of one or a list of services:
+View informations of one or a list of services:
 ```sh
-sh onionservice-cli credentials ssh,xmpp,nextcloud
+sh onionservice-cli list ssh,xmpp,nextcloud
 ```
 
-View credentials of all services:
+View informations of all services but without showing the QR codes:
 ```sh
-sh onionservice-cli credentials all-services
+sh onionservice-cli list all-services no-qr
 ```
 
-```
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-█████████████████████████████████████
-██ ▄▄▄▄▄ █▀▀ ██▄▄ ▀▄ ▄▀█▀ ██ ▄▄▄▄▄ ██
-██ █   █ █▄▀██▀█ ▄█▄  ▀█▀ ▀█ █   █ ██
-██ █▄▄▄█ █ ▄ █ █▄  ▄▄▀▀▀ ▄██ █▄▄▄█ ██
-██▄▄▄▄▄▄▄█ █ ▀▄█ █▄▀ █▄▀▄▀▄█▄▄▄▄▄▄▄██
-██▄▄▀ ██▄ █▀█  ▄▄▄ ██▄   █ █ ▄▄█▄▄▀██
-██ ▀▀▄  ▄█ ▀▀  ▀▀█▀▄▄  ▀▄▀█ ▀▄█▀██▄██
-██▀▀██▄▀▄▀▀█▄ █▀▄▄ ▄█   ▀█▀  ▄▀ ▀█▀██
-███▄ ▀██▄▀ ▀█ █▄▄▀ ▀▄██ █  ▀▀ ██▄▄███
-██▀██   ▄▀ ▄▀█  ▀█▀▄▀▄▀  ▀██▄ ▄▀█▀▄██
-██▀█▀▄▄▀▄█▄▀█▄ █ ▀▀▀ ▀▄ █▀▀██ ▄▄█▄ ██
-███ ██▄▄▄▀█▄ ▀██▀▄▀▀ █ ▄█▄▀▄▀██▄▀█▀██
-██▄  ▄▀▄▄▀▀▄ ███▀█▄▄█▄   █▀ ▄▄▄ ▄▀▄██
-██▄█▄▄█▄▄█ ▄█▀ ███▄ ▀▀█▄█  ▄▄▄ ██  ██
-██ ▄▄▄▄▄ █▄███ ▀▀█  ▄▀▄ ▄█ █▄█ ▄▄ ▀██
-██ █   █ █▀▄█▄█▄▄█▀▄ █▄ ▀▀ ▄ ▄  █████
-██ █▄▄▄█ █▀ █▀█ ██  ▄█  ▄█ █▀▀▄█▄█▄██
-██▄▄▄▄▄▄▄█▄▄█▄▄█▄████▄█▄█▄▄█▄████▄███
-█████████████████████████████████████
-Address    = vrekvygmdtz7i3uxrxrj3mu4shtsu4fwoz3li2r2hxsnijjq6p2rfcyd.onion
-Name       = xmpp
-Clients    = alice,bob (2)
-Status     = active
-HiddenServiceDir /var/lib/tor/services/xmpp
-HiddenServicePort 5222 127.0.0.1:5222
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-█████████████████████████████████████
-██ ▄▄▄▄▄ █▀ █▀▀▄█▀▄▄▀▄▄▀▄▄▀█ ▄▄▄▄▄ ██
-██ █   █ █▀ ▄ █▀ █▄▀█▀▀▄ ███ █   █ ██
-██ █▄▄▄█ █▀█ █▄ ▀▀ █▄▄▄ █▄▄█ █▄▄▄█ ██
-██▄▄▄▄▄▄▄█▄█▄█ █ █ █▄▀▄▀ █ █▄▄▄▄▄▄▄██
-██▄    ▀▄▄  ▄█▄ ▄█▀▄▄▀▄▀▄▀█ ▀▄█▄▀▄▀██
-██▄ ▄▄ ▄▄ ▀ ▀ ▄▄▄▄▀█▀█▀▀ █▄▄▀█  ▀ ███
-██▀▄█ ▀ ▄▀█ ▀▄▀▀███▄█▀▄▀▄ ▄▀▀▄▄▀█ ▀██
-██▀ █ █▄▄▄▀ ██▀ ▄ ▀█▀▀ ▀ █▄ ▀▄▀▀ ████
-██▄▄▀███▄▀ ▄██▄█▄▄▀ █▀ ▀ ▀▀▀▀▄▄▄▀▀▀██
-██▀▀▄ ▀▄▄█▀▀█ ▄█▀ ▄█ █▄  █ █▀█▄▀▀ ███
-██ ██ ██▄▄ ▄ ▄▀▀▀█▀▄▀▀▀█  ▄ ▀▄▄ ▀█▀██
-██ █████▄▄▀█ █▀ ▄ ▄▄▀▀▄▀██▀▀█▀██ ▄███
-██▄███▄█▄█ ▄ █▄█▄█▀▄▀ ▀█▄▄ ▄▄▄  ▀▀ ██
-██ ▄▄▄▄▄ █▄▄▀ ▄█▀▄▀▄█▀█    █▄█ ▀ ▄▀██
-██ █   █ █ ▄▀▄▀▀▀▄▀ █▀▄█▄▀▄ ▄▄ ▀▀  ██
-██ █▄▄▄█ █  ▀█▀ ▄▄██▄▀▀ ▄ ▄▄ ██  ████
-██▄▄▄▄▄▄▄█▄███▄█▄▄▄▄█▄██▄▄▄██▄███▄███
-█████████████████████████████████████
-Address    = xap5clrt4eaqglov72qxwih4lq4yagguzmln2kaw42xye4txfgyrfiid.onion
-Name       = test
-Clients    = alice,bob (2)
-Status     = inactive
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# Web server
+
+Helps setting up a simple webserver for you services. It has the minimal configuration files for Nginx and Apache2 to work out of the box.
+
+## Activate website
+
+**Usage:**
+
+Syntax: *[nginx|apache2] on [SERV] [FOLDER]*
+
+The first nextcloud is the service name of the folder `HiddenServiceDir` and the second nextcloud is the folder name inside the `WEBSITE_FOLDER`, the default is `/var/www/`.
+```sh
+sh onionservice-cli nginx on nextcloud nextcloud
 ```
 
+## Deactive website
+
+**Usage:**
+
+Syntax: *[nginx|apache2] off [SERV]*
+
+```sh
+sh onionservice-cli nginx off nextloud
+```
 
 # Onion-Location
 
@@ -521,7 +446,7 @@ Syntax: *location [SERV] [nginx|apache|html]*
 
 View onion location guide for your test hidden service:
 ```sh
-sh onionservice-cli location torbox.ch nginx
+sh onionservice-cli location nextcloud nginx
 ```
 
 # Backup

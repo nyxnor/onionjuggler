@@ -20,7 +20,7 @@ cd onionservice
 ```
 
 2. Edit the required variables to fit your system inside `.onionrc`. Don't worry, there is only a few variables that need to be set and they have examples and explanation.
-Open the `lib` with any editor:
+Open the `.onionrc` with any editor:
 ```sh
 nano .onionrc
 ```
@@ -48,9 +48,16 @@ onionservice-tui
 
 #### Helper
 
-Read the manual:
+Take a loot at the documentation inside `docs` folder.
+
+Read any markdown file formatted on the shell (with `pandoc` and `lynx`):
 ```sh
-man doc/onionservice-cli.1
+pandoc docs/TECHNICAL.md | lynx -stdin
+```
+
+Read the CLI manual:
+```sh
+man docs/onionservice-cli.1
 ```
 
 Read a small description of the main script:
@@ -65,8 +72,8 @@ sh onionservice-cli setup torrc
 
 ### Technical
 
-Now that you have read the [manual](doc/onionservice-cli.1), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [dialog menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
-Read [TECHNICAL.md](doc/TECHNICAL.md) for advanced usage.
+Now that you have read the [manual](docs/onionservice-cli.1), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [dialog menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
+Read [TECHNICAL.md](docs/TECHNICAL.md) for advanced usage.
 
 ### Requirements
 
@@ -121,9 +128,8 @@ zsh --emulate sh -c onionservice-tui
 
 * **Autonomy** - The onion service operator should have full control of tor functionalities and if he does not know how, he can learn reading the scripts. It also helps typing less commands and when not remembering full directories paths or file syntax. Client option to add '.auth_private' option also possible.
 * **KISS** - Keep It Simple Stupid (At least I try). [Source](https://en.wikipedia.org/wiki/KISS_principle).
-* **Portability** - POSIX compliant to work on different shells, customize path and ports with a sourced library. The [library](.onionrc) and the [cli](onionservice-cli) and the [menu](onionservice-tui) are [POSIX compliant](https://www.gnu.org/software/guile/manual/html_node/POSIX.html), made possible studying the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) and the [GNU AutoConf guide for portable scripts](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.70/autoconf.html#Introduction).
-* **TUI** - The [menu](onionservice-tui) only works with POSIX compliant shells, see [Portability above](README.md#portability).
-* **Correct syntax** - [shellcheck](https://github.com/koalaman/shellcheck) for synxtax verification.
+* **Portability** - POSIX compliant to work on different shells.
+* **TUI** - The [menu](onionservice-tui) only works with POSIX compliant shells, see [Portability above](README.md#portability) if using a different shell such as zsh.
 
 ## Features
 
@@ -142,7 +148,7 @@ zsh --emulate sh -c onionservice-tui
 * **Web server** - Serve files with your hidden service using Nginx or Apache2 web server.
 * **Bulk** - Some commands can be bulked with `all-clients`, `all-services`, `[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected. They are specified inside `<>` (e.g. `<VIRTPORT2>`)
-* **Fool-proof** - The script tries to filter invalid commands and incorrect syntax. The commands are not difficult but the first look may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
+* **Fool-proof** - The script tries to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
 
 ## Bugs
 
@@ -154,7 +160,6 @@ zsh --emulate sh -c onionservice-tui
 ## To-do
 
 * Update TECHNICAL.md, it is a little behind with the new features.
-* Better detection if using `HashedControlPassword` or `CookieAuthentication` for Vanguards.
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
 * [Ronn-ng](https://github.com/apjanke/ronn-ng/) to build man pages from markdown instead of writing them manually :(
