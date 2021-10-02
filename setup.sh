@@ -29,6 +29,14 @@
 { [ -f .onionrc ] && [ -f onionservice-cli ]; } \
 || { printf "\033[1;31mERROR: This script must be run from inside the onionservice cloned repository.\n"; exit 1; }
 
+## Customiz severity with -s [error|warning|info|style]
+check_syntax(){
+  shellcheck -x -s sh -e 1090,2086,2236 onionservice-tui || exit 1
+  shellcheck -x -s sh -e 1090,2236 onionservice-cli || exit 1
+  shellcheck -x -s sh -e 1090,2034,2119,2236 setup.sh || exit 1
+  shellcheck -s sh -e 2034,2236 .onionrc || exit 1
+}
+
 ACTION=${1:-SETUP}
 
 case "${ACTION}" in
@@ -45,17 +53,22 @@ case "${ACTION}" in
       sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
       sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
       restarting_tor
-      [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a ${TORRC}; }
-      sed -i "/.*## DO NOT EDIT. Inserted automatically by onionservice setup.sh/d" ~/.${SHELL##*/}rc
-      printf %s"PATH=\"\${PATH}:${PWD}/\" ## DO NOT EDIT. Inserted automatically by onionservice setup.sh\n" >> ~/.${SHELL##*/}rc
-      . ~/.${SHELL##*/}rc
+      [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
+      sed -i "/.*## DO NOT EDIT. Inserted automatically by onionservice setup.sh/d" ~/."${SHELL##*/}"rc
+      printf %s"PATH=\"\${PATH}:${PWD}/\" ## DO NOT EDIT. Inserted automatically by onionservice setup.sh\n" >> ~/."${SHELL##*/}"rc
+      . ~/."${SHELL##*/}"rc
       sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" .onionrc
       sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-cli
       sed -i "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-tui
       printf %s"${FOREGROUND_BLUE}# OnionService enviroment is ready\n${UNSET_FORMAT}"
   ;;
 
+  check)
+    check_syntax
+  ;;
+
   release|RELEASE)
+    check_syntax
     . .onionrc
     printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
     sed -i "s/set \-\x//g" .onionrc

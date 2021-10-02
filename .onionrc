@@ -25,7 +25,7 @@
 ## along with this program. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## DESCRIPTION
-## This file is the configuration (library) for the tor menus and scripts.
+## This file is the configuration for the tor menus and scripts.
 ## It contains functions which are used in several scripts.
 ## Hopefully, this way the scripts stay short and clear.
 ## Path for folders variables must not contain "/" at the end.
@@ -87,7 +87,7 @@ ONIONSERVICE_PWD=
 ## Dialog
 export DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
 ## cert fingerprint
-[ ! -z "${TLS_CERT}" ] && TLS_CERT_FINGERPRINT="$(openssl x509 -in ${TLS_CERT} -fingerprint -sha256 -noout | cut -d"=" -f2)"
+[ ! -z "${TLS_CERT}" ] && TLS_CERT_FINGERPRINT="$(openssl x509 -in "${TLS_CERT}" -fingerprint -sha256 -noout | cut -d"=" -f2)"
 ## Color
 UNSET_FORMAT="\033[0m"
 FOREGROUND_DEFAULT="\033[1;39m"
@@ -162,13 +162,12 @@ online_check()
 ## TODO: Improve timeout if reload get stuck, then restart. Restart if fail throws errors, reload timeout is 1min which is too long.
 restarting_tor()
 {
-  ACTION="${1}"
   set_owner_permission
-  if [ "${ACTION}" = "force" ]; then
+  if [ "${1}" = "force" ]; then
     printf "# Restarting tor...\n"
     sudo systemctl restart "${TOR_SERVICE}"
     printf %s"${FOREGROUND_GREEN}# Restarted tor succesfully!\n${UNSET_FORMAT}"
-  elif [ "${ACTION}" = "" ]; then
+  elif [ "${1}" = "" ]; then
     printf "# Reloading tor...\n"
     sudo systemctl reload-or-restart "${TOR_SERVICE}"
     printf %s"${FOREGROUND_GREEN}# Reloaded tor succesfully!\n${UNSET_FORMAT}"
