@@ -24,7 +24,7 @@
 ## SYNTAX
 ## sh onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
 ##
-## INCLUDE LIB
+## INCLUDE .onionrc
 ONIONSERVICE_PWD=
 [ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mThe variable ONIONSERVICE_PWD is empty!\n\033[0m"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onionrc
@@ -37,7 +37,7 @@ Usage: onionservice-cli COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
 
-  setup [env|torrc]                                                                  setup tor (one time run) or restore latest torrc
+  setup torrc                                                                       setup tor (one time run) or restore latest torrc
 
   on tcp [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                            activate a service targeting tcp socket
 
@@ -148,7 +148,6 @@ test_service_exists(){
 create_client_list(){
   SERVICE="${1}"
   CLIENT_NAME_LIST=""
-  CLIENT_COUNT=0
   CLIENT_NAME_LIST=$(printf %s"$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" " " | sed "s/ /,/g")
   CLIENT_COUNT=$(printf %s"${CLIENT_NAME_LIST}" | awk -F, '{print NF}')
 }
@@ -456,7 +455,7 @@ case "${COMMAND}" in
               SERVICE="${1}"
               test_service_exists "${SERVICE}"
               create_client_list "${SERVICE}"
-              if [ "${CLIENT_COUNT}" -gt 0 ]; then
+              if [ ! -z "${CLIENT_COUNT}" ]; then
                 printf %s"\nService    = ${SERVICE}\n"
                 printf %s"Clients    = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n\n"
               else
@@ -630,7 +629,7 @@ case "${COMMAND}" in
   list|LIST)
     is_service_dir_empty
     SERVICE="${2}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
-    get_credentials(){
+    get_service_info(){
       SERVICE="${1}"
       NO_QR="${2}"
       test_service_exists "${SERVICE}"
@@ -650,7 +649,7 @@ case "${COMMAND}" in
     }
     NO_QR="${3}"
     [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
-    loop_list get_credentials "${SERVICE}" "${NO_QR}"
+    loop_list get_service_info "${SERVICE}" "${NO_QR}"
     success_msg
   ;;
 
