@@ -31,6 +31,11 @@ ONIONSERVICE_PWD=
 
 ## COMMAND INFO
 onion_usage(){
+  if [ -f images/onion-ascii.txt ]; then
+    ASCII="$(cat images/onion-ascii-closed.txt)"
+    printf %s"${FOREGROUND_MAGENTA} ${ASCII} ${UNSET_FORMAT}\n\n"
+  fi
+
   printf "Configure an Onion Service
 
 Usage: onionservice-cli COMMAND [REQUIRED] <OPTIONAL>
@@ -98,12 +103,11 @@ error_msg(){
 success_msg(){
   [ "${1}" = "reload" ] && restarting_tor
   printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
-  #exit 1
 }
 
 
 ## check if variable is integer
-is_integer(){ printf %d "${1}" >/dev/null 2>&1 || { error_msg "Not an integer: ${1}"; onion_usage; } }
+is_integer(){ printf %d "${1}" >/dev/null 2>&1 || error_msg "Not an integer: ${1}" ; }
 
 
 ## checks if the TARGET is valid.
@@ -147,9 +151,9 @@ test_service_exists(){
 ## save the clients names that are inside the <HiddenServiceDir>/authorized_clients/ in list format (CLIENT1,CLIENT2,...)
 create_client_list(){
   SERVICE="${1}"
-  CLIENT_NAME_LIST=""
   CLIENT_NAME_LIST=$(printf %s"$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" " " | sed "s/ /,/g")
-  CLIENT_COUNT=$(printf %s"${CLIENT_NAME_LIST}" | awk -F, '{print NF}')
+  CLIENT_COUNT=$(printf %s"${CLIENT_NAME_LIST}" | grep -c ",")
+  CLIENT_COUNT=$((CLIENT_COUNT+1))
 }
 
 
@@ -179,7 +183,7 @@ loop_list(){
 ## tor does not need to be running to delete service, authorize or remove authorization from clients or see credentials (off, auth, credentials)
 #check_tor
 COMMAND="${1}"
-sudo sed -i 's/\/$//' "${TORRC}" ## no config should end with '/' to find exact match.
+sudo sed -i'' 's/\/$//' "${TORRC}" ## no config should end with '/' to find exact match.
 sudo cp "${TORRC}" "${TORRC}".bak
 
 case "${COMMAND}" in
@@ -223,7 +227,7 @@ case "${COMMAND}" in
       fi
       ## remove service paragraph in torrc
       printf %s"# Deleted Hidden Service configuration in ${TORRC}\n"
-      sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
+      sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
       ## substitute multiple sequential empty lines to a single one per sequence
       #awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
@@ -303,7 +307,7 @@ case "${COMMAND}" in
         fi
 
         ## delete any old entry for that servive
-        sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
+        sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${TORRC}\n"
         [ ! -z "${VIRTPORT2}" ] && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}\n\n" | sudo tee -a "${TORRC}"
@@ -317,7 +321,7 @@ case "${COMMAND}" in
         is_integer "${VIRTPORT}"
 
         ## delete any old entry for that servive
-        sudo sed -i "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
+        sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${TORRC}\n"
         UNIX_PATH="unix:/var/run/${SERVICE}-onion"
@@ -370,7 +374,7 @@ case "${COMMAND}" in
               # Server side configuration
               printf %s"${CLIENT_PUB_KEY_CONFIG}\n" | sudo tee "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
               ## Client side configuration
-              printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
               printf "# Declare the variables\n"
               printf %s"SERVICE=${SERVICE}\n"
               printf %s"CLIENT=${CLIENT}\n"
@@ -384,7 +388,7 @@ case "${COMMAND}" in
               sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
             }
             instructions_auth(){
-              printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
               printf "# Send these instructions to the client:\n"
               printf "\n"
               printf "# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, insert it: ClientOnionAuthDir /var/lib/tor/onion_auth\n"
@@ -514,7 +518,7 @@ case "${COMMAND}" in
               printf %s" CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
               printf "\n# Now it depends on the service operator to authorize you client public key\n\n"
               ## Server side configuration
-              printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
               printf "# Send the public key and instructions to the onion service operator\n\n"
               printf %s" ONION_HOSTNAME=${ONION_HOSTNAME}\n"
               printf %s" CLIENT_PUB_KEY=${CLIENT_PUB_KEY}\n"
@@ -587,7 +591,7 @@ case "${COMMAND}" in
     renew_service_address(){
       SERVICE="${1}"
       test_service_exists "${SERVICE}"
-      printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+      printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
       printf %s"\n# Renewing hostname (address) of the service: ${SERVICE}\n"
       OLD_HOSTNAME="${ONION_HOSTNAME}"
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
@@ -598,7 +602,7 @@ case "${COMMAND}" in
       sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_secret_key
       sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_public_key
       ## delete authorized clients
-      sudo rm -rfv "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*
+      sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*
       ## reload tor now so auth option can get the new hostname
       restarting_tor
       ## generate auth for clients
@@ -635,7 +639,7 @@ case "${COMMAND}" in
       test_service_exists "${SERVICE}"
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
       create_client_list "${SERVICE}"
-      [ "${NO_QR}" = "no-qr" ] || qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"
+      [ "${NO_QR}" = "no-qr" ] || { printf "\n"; qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"; }
       printf %s"\nAddress  = ${ONION_HOSTNAME}\n"
       printf %s"Service  = ${SERVICE}\n"
       [ -n "${CLIENT_NAME_LIST}" ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
@@ -645,7 +649,7 @@ case "${COMMAND}" in
         printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
       fi
       #[ ! -z "${TLS_CERT}" ] && printf %s"Certificate Fingerprint SHA-256 = ${TLS_CERT_FINGERPRINT}\n"
-      printf "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+      printf "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
     NO_QR="${3}"
     [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
@@ -669,9 +673,9 @@ case "${COMMAND}" in
         [ "${VIRTPORT}" = "" ] && error_msg "At least one VIRTPORT must be listening on port 80"
         TARGET="$(printf "%s\n" "${VIRTPORT}" | cut -d " " -f3)" # | sed -e 's`[][\\/.*^$]`\\&`g')"
         sudo cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i "s|TARGET|${TARGET}|g" /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i "s|FOLDER|${WEBSITE_FOLDER}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i'' "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i'' "s|TARGET|${TARGET}|g" /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i'' "s|FOLDER|${WEBSITE_FOLDER}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
         sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-available/
         sudo ln -sfv /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-enabled/
         printf "\n# Web server configuration:\n\n"
@@ -811,9 +815,9 @@ sudo systemctl reload apache
         for SERVICE in $(sudo -u "${CONF_DIR_OWNER}" grep "HiddenServiceDir " "${TORRC}" | cut -d ' ' -f2); do
           SERVICE_NAME=$(printf %s"${SERVICE##*/}")
           sed -n "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{p}" "${TORRC}" > "${TORRC}".tmp
-          sed -i "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{d}" "${TORRC}"
+          sed -i'' "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{d}" "${TORRC}"
           sed '/^\s*$/Q' "${TORRC}".tmp > "${TORRC}".mod
-          sudo sed -i '1 i \ ' "${TORRC}".mod; sudo sed -i "\$a\ " "${TORRC}".mod
+          sudo sed -i'' '1 i \ ' "${TORRC}".mod; sudo sed -i'' "\$a\ " "${TORRC}".mod
           sudo cat "${TORRC}".mod | sudo tee -a "${TORRC}" >/dev/null
         done
         sudo rm -f "${TORRC}".tmp "${TORRC}".mod
@@ -878,20 +882,20 @@ sudo systemctl reload apache
 
     vanguards_config(){
       ## TODO: Better detection if using socket or control ip and port.
-      #sudo sed -i "s/^control_socket =.*/control_socket = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
-      #sudo sed -i "s/^control_port =.*/control_port = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
+      #sudo sed -i'' "s/^control_socket =.*/control_socket = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
+      #sudo sed -i'' "s/^control_port =.*/control_port = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
       sudo -u "${TOR_USER}" cp "${DATA_DIR}"/vanguards/vanguards-example.conf "${DATA_DIR}"/vanguards/vanguards.conf
-      sudo sed -i "s/^logfile =.*/logfile = \/var\/log\/tor\/vanguards.log/" "${DATA_DIR}"/vanguards/vanguards.conf
+      sudo sed -i'' "s/^logfile =.*/logfile = \/var\/log\/tor\/vanguards.log/" "${DATA_DIR}"/vanguards/vanguards.conf
       [ "$(grep "ControlPort" "${TORRC}")" = "" ] && { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
       if [ "$(grep "CookieAuthentication" "${TORRC}")" = "" ] && [ "$(grep "HashedControlPassword" "${TORRC}")" = "" ]; then
         printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null
       fi
       set_owner_permission
       sudo cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
-      sudo sed -i "s/TOR_SERVICE/${TOR_SERVICE}/g" /tmp/vanguards@default.service
-      sudo sed -i "s|DATA_DIR|${DATA_DIR}|g" /tmp/vanguards@default.service
-      sudo sed -i "s/CONTROL_PORT/${CONTROL_PORT}/g" /tmp/vanguards@default.service
-      sudo sed -i "s/TOR_USER/${TOR_USER}/g" /tmp/vanguards@default.service
+      sudo sed -i'' "s/TOR_SERVICE/${TOR_SERVICE}/g" /tmp/vanguards@default.service
+      sudo sed -i'' "s|DATA_DIR|${DATA_DIR}|g" /tmp/vanguards@default.service
+      sudo sed -i'' "s/CONTROL_PORT/${CONTROL_PORT}/g" /tmp/vanguards@default.service
+      sudo sed -i'' "s/TOR_USER/${TOR_USER}/g" /tmp/vanguards@default.service
       sudo cp -v /tmp/vanguards@default.service /etc/systemd/system/
       printf "\n>>>>>>>>>>>>>>>>>>>\n"
       sudo cat /tmp/vanguards@default.service
