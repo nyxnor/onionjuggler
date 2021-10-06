@@ -1,3 +1,4 @@
+## check setup.sh for the dedicated of each file
 shell=sh
 #disable=SC1090  # (can't follow source): source path is a variable
 #disable=SC2086  # (double quote vars): some variables need to expand, remove this for verification

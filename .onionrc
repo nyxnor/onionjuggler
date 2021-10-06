@@ -36,7 +36,7 @@
 ###########################
 ######## VARIABLES ########
 
-## [ EDIT REQUIRED ]
+## [ EDIT REQUIRED IF NOT DEBIAN]
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
 WEBSERVER="nginx" ## [nginx|apache2]
 TOR_USER="debian-tor" ## [debian-tor|tor]
@@ -57,7 +57,7 @@ DATE_TIME=$(date +%Y-%m-%d-%H'h'-%M'm')
 HS_BK_TAR=tor-hs-${DATE_TIME}.tar.gz
 HS_BK_DIR="${HOME}/tor-hs-backup"
 LOCAL_DOWNLOAD_PATH="${HOME}/Downloads/tor-hs-backup"
-LOCAL_IP=$(hostname -I | awk '{print $1}')
+LOCAL_IP=$(hostname -I | cut -d " " -f1)
 ## tor defaults
 TORRC_ROOT="/etc/tor"
 TORRC="${TORRC_ROOT}/torrc"
@@ -88,8 +88,13 @@ ONIONSERVICE_PWD=
 export DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
 ## cert fingerprint
 [ ! -z "${TLS_CERT}" ] && TLS_CERT_FINGERPRINT="$(openssl x509 -in "${TLS_CERT}" -fingerprint -sha256 -noout | cut -d"=" -f2)"
-## Color
+
+## Colo
+
+## Unset all formats
 UNSET_FORMAT="\033[0m"
+
+## Foreground
 FOREGROUND_DEFAULT="\033[1;39m"
 FOREGROUND_BLACK="\033[1;30m"
 FOREGROUND_RED="\033[1;31m"
@@ -107,6 +112,25 @@ FOREGROUND_LIGHT_BLUE="\033[1;94m"
 FOREGROUND_LIGHT_MAGENTA="\033[1;95m"
 FOREGROUND_LIGHT_CYAN="\033[1;96m"
 FOREGROUND_WHITE="\033[1;97m"
+
+# Background
+BACKGROUND_DEFAULT="\033[49m"
+BACKGROUND_BLACK="\033[40m"
+BACKGROUND_RED="\033[41m"
+BACKGROUND_GREEN="\033[42m"
+BACKGROUND_YELLOW="\033[43m"
+BACKGROUND_BLUE="\033[44m"
+BACKGROUND_MAGENTA="\033[45m"
+BACKGROUND_CYAN="\033[46m"
+BACKGROUND_LIGHT_GRAY="\033[47m"
+BACKGROUND_DARK_GRAY="\033[100m"
+BACKGROUND_LIGHT_RED="\033[101m"
+BACKGROUND_LIGHT_GREEN="\033[102m"
+BACKGROUND_LIGHT_YELLOW="\033[103m"
+BACKGROUND_LIGHT_BLUE="\033[104m"
+BACKGROUND_LIGHT_MAGENTA="\033[105m"
+BACKGROUND_LIGHT_CYAN="\033[106m"
+BACKGROUND_WHIT="\033[107"
 
 ###########################
 ######## FUNCTIONS ########
