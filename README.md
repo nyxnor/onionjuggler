@@ -57,8 +57,8 @@ Descentralization from a single point of failure:
 
 ## Images
 
-![tui](image/tui.png)
-![cli](image/cli.png)
+![tui](images/tui.png)
+![cli](images/cli.png)
 
 ## Usage
 
