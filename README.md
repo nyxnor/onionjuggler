@@ -7,10 +7,10 @@
 ## Analysis
 
 The current state of the internet (plain net) is:
-* not private, every server you connect to knows your public ip address and your Internet Service Provider knows to which site you are connecting to.
-* not trustless, to add encryption to an website, there is the [Certificate Authority](https://en.wikipedia.org/wiki/Certificate_authority) problem, the conglomerate dictates. Your Let's Encrypt self signed certificates is not the solution if noone verifies the fingerprint.
-* not censorship resistant, dns attacks take place to redirect from the requested site to another.
-* not descentralized, you can not purely peer to peer (running your own internet, connecting directly to the wanted host)
+* **not private** - every server you connect to knows your public ip address and your Internet Service Provider knows to which site you are connecting to.
+* **not trustless** - to add encryption to an website, there is the [Certificate Authority](https://en.wikipedia.org/wiki/Certificate_authority) problem, the conglomerate dictates. Your Let's Encrypt self signed certificates is not the solution if noone verifies the fingerprint.
+* **not censorship resistant** - dns attacks as well as many other still occurs
+* **not descentralized** - you can not purely peer to peer (running your own internet, connecting directly to the wanted host)
 
 Onion Routing tries to solve most of these problems but it is still centralized by the [Directory Authorities](https://metrics.torproject.org/rs.html#search/flag:authority), and referencing [Matt Traudt's blog post](https://matt.traudt.xyz/posts/Debunking:_OSINT_Analysis_of_the_TOR_Foundation/#index4h2): replacing it for something more distributed is [not a trivial task](https://www.freehaven.net/anonbib/#wpes09-dht-attack) (Free Haven selected papers).
 

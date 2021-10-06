@@ -8,19 +8,13 @@ There is a TODO list at the end of the README. Those are tasks that will improve
 
 All executables are shell scripts and will stay that way till the limit.
 
-### Study
-
-Resources:
-* [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) - POSIX compliant and efficiency guide.
-* [KISS](https://www.youtube.com/watch?v=EFMD7Usflbg) - Keep It Simple Stupid, but in audio and video format.
-
 ### Syntax
 
 These are requirements and must be done. If not conformed, the merge request must not be accepted.
 
 1. Sacrificing some code legibility for speed is acceptable, but if the maintainer considers it messy because it does not help performance, it won't be approved. This is the only subjective requirements
 
-1. POSIX compliant. The [SCC2039](https://github.com/koalaman/shellcheck/wiki/SC2039) must not be ignored
+1. POSIX compliant. The [SCC2039](https://github.com/koalaman/shellcheck/wiki/SC2039) must not be ignored. The project will never be pure POSIX alternative to external process such as git, grep, openssl, but it aims to use more of the shell capabilities than depending on more packages. Read the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) - POSIX compliant and efficiency guide while listening to [KISS](https://www.youtube.com/watch?v=EFMD7Usflbg) - Keep It Simple Stupid, but in audio and video format.
 
 1. The most efficient (fastest, least consumed resources). Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
 
