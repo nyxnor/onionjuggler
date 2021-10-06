@@ -6,7 +6,7 @@ There is a TODO list at the end of the README. Those are tasks that will improve
 
 ## Shell
 
-All executables are shellscripts and will stay that way till the limit.
+All executables are shell scripts and will stay that way till the limit.
 
 ### Study
 
@@ -55,11 +55,11 @@ Shellcheck Codes that can be safely ingored:
 
 Choose one of these options:
 
-1. Github.com:
+Github.com:
 1. 1. Go to https://github.com/nyxnor/onionservice.
 1. 2. In the top-right corner of the page, click Fork.
 
-2. GitHub CLI:
+or on GitHub CLI:
 ```sh
 gh repo fork https://github.com/nyxnor/onionservice
 ```
@@ -75,7 +75,7 @@ cd onionservice
 ```
 
 Create feature or fix branch based on the upstream project development branch as base:
-```
+```sh
 git remote add upstream https://github.com/nyxnor/onionservice.git
 git checkout -b <NEW_BRANCH> upstream/<BASE_BRANCH>
 ```
@@ -88,7 +88,7 @@ sh setup.sh check
 #### Commit
 
 After changes are finished, test thoroughly to see if it works.
-If it does and is valuable to the upstream project, first open an issue to be this discussed, after it is evaluated, create a pull request and for review.
+If it does and is valuable to the upstream project, first open an issue to be this discussed, after it is evaluated, create a merge request.
 
 Before commiting, shellcheck and empty `ONIONSERVICE_PWD`
 ```sh
@@ -96,7 +96,7 @@ sh setup.sh release
 ```
 
 Commit
-```
+```sh
 git add <FILE_EDITED>
 git rm <FILE_DETELED>
 git commit -m "These changes does this thing"
