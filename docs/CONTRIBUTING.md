@@ -14,11 +14,20 @@ These are requirements and must be done. If not conformed, the merge request mus
 
 1. Sacrificing some code legibility for speed is acceptable, but if the maintainer considers it messy because it does not help performance, it won't be approved. This is the only subjective requirements
 
-1. POSIX compliant. The [SCC2039](https://github.com/koalaman/shellcheck/wiki/SC2039) must not be ignored. The project will never be pure POSIX alternative to external process such as git, grep, openssl, but it aims to use more of the shell capabilities than depending on more packages. Read the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) - POSIX compliant and efficiency guide while listening to [KISS](https://www.youtube.com/watch?v=EFMD7Usflbg) - Keep It Simple Stupid, but in audio and video format.
+1. POSIX compliant. The [Shellcheck Code 2039](https://github.com/koalaman/shellcheck/wiki/SC2039) must not be ignored. The project will never be pure POSIX alternative to external process such as git, grep, openssl, but it aims to use more of the shell capabilities than depending on more packages. Read the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) - POSIX compliant and efficiency guide while listening to [KISS](https://www.youtube.com/watch?v=EFMD7Usflbg) - Keep It Simple Stupid, but in audio and video format.
 
 1. The most efficient (fastest, least consumed resources). Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
 
 1. `printf` instead of `echo` for portability reasons.
+1. for the rest, follow the same pattern predominant in the scripts
+1. for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`
+1. exit codes -> `&&` for true or 0 and `||` for false or 0.
+1. case instead of if-then-else
+1. `-z` for null and `! -z` for not null. Avoid `-n` as it just considers integer variables, giving errors when it is text.
+1. variables on upper case letters -> `VAR=1`
+1. use brackes on variables to avoid some tiny errors -> `${VAR}`
+1. comment every variable if they are not supposed to expand -> `"${VAR}"`
+
 
 ### Check
 
@@ -89,13 +98,15 @@ Before commiting, shellcheck and empty `ONIONSERVICE_PWD`
 sh setup.sh release
 ```
 
-Commit
+Commit to your branch
 ```sh
 git add <FILE_EDITED>
 git rm <FILE_DETELED>
 git commit -m "These changes does this thing"
 git push -u origin <NEW_BRANCH>
 ```
+
+Open a pull request on GitHub.
 
 ## Confessions
 

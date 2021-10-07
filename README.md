@@ -4,6 +4,7 @@
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location**
 
+
 ## Analysis
 
 The current state of the internet (plain net) is:
@@ -18,9 +19,13 @@ On the Tor echosystem, from [TPO metrics](https://metrics.torproject.org/), comp
 
 That was on the network level, but know on the user system, even if one chooses a Free and Open Source Operating System, GNU/Linux dominates a big share over *BSD, having a huge impact on the main software used for the kernel (Linux), shell (bash), service manager (systemd).
 
+
 ## Goal
 
-The goal of this project is distribution, from the source code level (FOSS) to the effect it takes when it allows anyone to run the code on any operating system, shell or service manager.
+The goal of this project:
+* facilitate onion service managements, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
+* show the that managing the onion service is much more than just using a webserver with your pages.
+* distribution, from the source code level (FOSS) to the effect it takes when it allows anyone to run the code on any operating system, shell or service manager.
 
 Descentralization from a single point of failure:
 * **Kernel** - The Linux Kernel is a problem, there are few *BSD users compared to linux users.
@@ -35,6 +40,7 @@ Descentralization from a single point of failure:
   * **[Systemd](https://en.wikipedia.org/wiki/Systemd#Adoption)** - Arch, CentOS, Debian, Fedora, Mint, Mageia, Manjaro, openSUSE, Red Hat, Solus, SLES, Ubuntu
   * **[Runit](https://en.wikipedia.org/wiki/Runit)** - Void, Dragora, Trident, Artix, antiX, Devuan, Venom
   * **[OpenRC](https://en.wikipedia.org/wiki/OpenRC)** - Gentoo, Alpine, Hyperbola, Parabola, Artix, Maemo Lest, TrueOS
+
 
 ## Features
 
@@ -55,14 +61,16 @@ Descentralization from a single point of failure:
 * **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected. They are specified inside `<>` (e.g. `<VIRTPORT2>`)
 * **Fool-proof** - The script tries to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
 
+
 ## Images
 
 ![tui](images/tui.png)
 ![cli](images/cli.png)
 
-## Usage
 
-### Instructions
+## Instructions
+
+### Setup
 
 Three easy steps to fully this project:
 
@@ -89,7 +97,8 @@ TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 sh setup.sh
 ```
 
-#### Helper
+
+#### Usage
 
 Take a loot at the documentation inside `docs` folder.
 
@@ -120,18 +129,16 @@ Read:
 * any markdown file formatted on the shell (with `pandoc` and `lynx`):
 ```sh
 ls docs/*.md
-pandoc docs/TECHNICAL.md | lynx -stdin
+pandoc docs/CONTRIBUTING.md | lynx -stdin
 ```
 
-* the CLI manual:
+* the [CLI manual](docs/ONIONSERVICE-CLI.md):
 ```sh
-man docs/onionservice-cli.1
+man onionservice-cli
 ```
 
-### Technical
 
-Now that you have read the [manual](docs/onionservice-cli.1), the [insructions](README.md#INSTRUCTIONS) and optionally tested the [dialog menu](onionservice-tui), you are prepared to understand what it does behind the curtains.
-Read [TECHNICAL.md](docs/TECHNICAL.md) for advanced usage.
+## Portability
 
 ### Requirements
 
@@ -149,14 +156,13 @@ Read [TECHNICAL.md](docs/TECHNICAL.md) for advanced usage.
 * HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
 * Path for folders variables must not contain "/" at the end.
 
-### Portability
 
-#### Operating systems
+### Operating systems
 
 Works *nix operating systems, tested by the maintainer specifically on GNU/Linux Debian 11.
 Work is being done for *bsd systems, sed is using [this trick](https://unix.stackexchange.com/a/401928). Missing different service managers, currently just supports Systemd, planning on implementing SysV, Runit, OpenRC.
 
-#### Shells
+### Shells
 
 Full compatibility with the following shells:
 * Korn Shell (ksh)
@@ -184,7 +190,7 @@ ii  yash           2.50-1                        amd64        yet another shell
 ii  zsh            5.8-6+b2                      amd64        shell with lots of features
 ```
 
-##### Which shell to use?
+#### Which shell to use?
 
 The best performance (most reliant, fastest and lightweight) you can get using these script is calling them with `sh` (not an actual shell. On Debian, `/bin/sh` has a symbolic-link pointing to `/bin/dash` (Debian Alquimist SHell):
 ```sh
@@ -196,7 +202,7 @@ You may call the scripts with:
 sh onionservice-cli
 ```
 
-##### Zsh in `sh` compatibility
+#### Zsh in `sh` compatibility
 
 The Z SHell is not POSIX compliant (works with the CLI but need workarounds when using the TUI). You can run the TUI:
 
@@ -219,7 +225,6 @@ zsh --emulate sh -c onionservice-tui
 
 ## To-do
 
-* Update TECHNICAL.md, it is a little behind with the new features.
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
 * [Ronn-ng](https://github.com/apjanke/ronn-ng/) to build man pages from markdown instead of writing them manually :(
