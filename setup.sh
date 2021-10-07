@@ -39,6 +39,16 @@ check_syntax(){
   [ ! -z "${SHELLCHECK_FAIL}" ] && exit 1
 }
 
+## creat man page
+make_man(){
+  sudo mkdir -p /usr/local/man/man1
+  pandoc "${ONIONSERVICE_PWD}"/docs/ONIONSERVICE-CLI.md -s -t man -o "${ONIONSERVICE_PWD}"/docs/onionservice-cli.1
+  sudo cp "${ONIONSERVICE_PWD}"/docs/onionservice-cli.1 /tmp/
+  sudo gzip -f /tmp/onionservice-cli.1
+  sudo cp /tmp/onionservice-cli.1.gz /usr/local/man/man1/
+  sudo mandb -q -f /usr/local/man/man1/onionservice-cli.1.gz
+}
+
 ACTION=${1:-SETUP}
 
 case "${ACTION}" in
@@ -48,21 +58,26 @@ case "${ACTION}" in
   ;;
 
   setup|SETUP)
-      . .onionrc
-      #python3-stem
-      install_package tor openssl basez git qrencode grep sed "${WEBSERVER}"
-      sudo usermod -aG "${TOR_USER}" "${USER}"
-      sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
-      sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
-      restarting_tor
-      [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
-      sed -i'' "/.*## DO NOT EDIT. Inserted automatically by onionservice setup.sh/d" ~/."${SHELL##*/}"rc
-      printf %s"PATH=\"\${PATH}:${PWD}/\" ## DO NOT EDIT. Inserted automatically by onionservice setup.sh\n" >> ~/."${SHELL##*/}"rc
-      . ~/."${SHELL##*/}"rc
-      sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" .onionrc
-      sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-cli
-      sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-tui
-      printf %s"${FOREGROUND_BLUE}# OnionService enviroment is ready\n${UNSET_FORMAT}"
+    . .onionrc
+    ## configure tor
+    #python3-stem
+    install_package tor openssl basez git qrencode grep sed pandoc gzip lynx "${WEBSERVER}"
+    sudo usermod -aG "${TOR_USER}" "${USER}"
+    sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
+    sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
+    restarting_tor
+    [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
+    ## add repo to path
+    sed -i'' "/.*## DO NOT EDIT. Inserted automatically by onionservice setup.sh/d" ~/."${SHELL##*/}"rc
+    printf %s"PATH=\"\${PATH}:${PWD}/\" ## DO NOT EDIT. Inserted automatically by onionservice setup.sh\n" >> ~/."${SHELL##*/}"rc
+    . ~/."${SHELL##*/}"rc
+    sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" .onionrc
+    sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-cli
+    sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-tui
+    . .onionrc
+    make_man
+    ## finish
+    printf %s"${FOREGROUND_BLUE}# OnionService enviroment is ready\n${UNSET_FORMAT}"
   ;;
 
   check)
@@ -73,6 +88,8 @@ case "${ACTION}" in
     check_syntax
     . .onionrc
     printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
+    make_man
+    ## empty var and cleanup
     sed -i'' "s/set \-\x//g" .onionrc
     sed -i'' "s/set \-\x//g" onionservice-cli
     sed -i'' "s/set \-\x//g" onionservice-tui

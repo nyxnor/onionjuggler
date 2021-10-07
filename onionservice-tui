@@ -477,16 +477,15 @@ case "${CHOICE_MAIN}" in
         sites_menu menu
         if [ ! -z "${FOLDER_NAME_LIST}" ]; then
           clear
-          sh "${ONIONSERVICE_PWD}"/onionservice-cli "${WEBSERVER}" "${STATUS}" "${SERVICE_NAME_LIST}" "${FOLDER_NAME_LIST}"
+          sh "${ONIONSERVICE_PWD}"/onionservice-cli web "${STATUS}" "${SERVICE_NAME_LIST}" "${FOLDER_NAME_LIST}"
           printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
         fi
       fi
     elif [ "${STATUS}" = "OFF" ]; then
-      ## LIST SITES-ENABLED TO DEACTIVATE WITH CHECKLIST
       sites_enabled_menu
       if [ ! -z "${SERVICE_NAME_LIST}" ]; then
         clear
-        sh "${ONIONSERVICE_PWD}"/onionservice-cli "${WEBSERVER}" "${STATUS}" ${SERVICE_NAME_LIST}
+        sh "${ONIONSERVICE_PWD}"/onionservice-cli web "${STATUS}" ${SERVICE_NAME_LIST}
         printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
       fi
     fi

@@ -32,7 +32,7 @@ ONIONSERVICE_PWD=
 ## COMMAND INFO
 onion_usage(){
   if [ -f images/onion-ascii.txt ]; then
-    ASCII="$(cat images/onion-ascii-closed.txt)"
+    ASCII="$(cat "${ONIONSERVICE_PWD}"/images/onion-ascii-closed.txt)"
     printf %s"${FOREGROUND_MAGENTA} ${ASCII} ${UNSET_FORMAT}\n\n"
   fi
 
@@ -41,8 +41,7 @@ onion_usage(){
 Usage: onionservice-cli COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
-
-  setup torrc                                                                       setup tor (one time run) or restore latest torrc
+  setup torrc                                                                        restore latest torrc
 
   on tcp [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                            activate a service targeting tcp socket
 
@@ -68,9 +67,11 @@ Options:
 
   auth client list                                                                   list your keys as a client
 
-  [nginx|apache2] on [SERV] [FOLDER]                                                 start serving a website for certain service and its folder
+  web on [SERV] [FOLDER]                                                             start serving a website for certain service and its folder
 
-  [nginx|apache2] off [SERV]                                                         stop serving a website for certain service and its folder
+  web off [SERV]                                                                     stop serving a website for certain service and its folder
+
+  web list                                                                           list enabled websites
 
   location [SERV] [nginx|apache|html]                                                onion-location guide, no execution
 
@@ -80,14 +81,13 @@ Options:
 
   [-h|-help|--help|help]                                                             display this help message
 
+
 '# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs.\n"
   exit 1
 }
 
 [ "${USER}" = "root" ] && { printf %s"${FOREGROUND_RED}Do not run with the root user!!!\n${UNSET_FORMAT}" && exit 1; }
-
-{ [ -z "${1}" ] || [ "${1}" = "help" ] || [ "${1}" = "-h" ] || [ "${1}" = "-help" ] || [ "${1}" = "--help" ]; } && onion_usage
 
 
 ## display error message with instructions to use the script correctly.
@@ -281,7 +281,7 @@ case "${COMMAND}" in
         TARGET=${TARGET:-127.0.0.1:${VIRTPORT}}
         TARGET_ADDR=${TARGET%%:*}
         TARGET_PORT=${TARGET##*:}
-        { [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
+        [ "${TARGET_ADDR}" = "localhost" ] && TARGET="127.0.0.1:${TARGET_PORT}"
         TARGET_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" grep -c "HiddenServicePort .*${TARGET}$" "${TORRC}")
         TARGET_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
         TARGET_ALREADY_INSERTED_SERVICE=${TARGET_ALREADY_INSERTED_BLOCK##*/}
@@ -658,8 +658,8 @@ case "${COMMAND}" in
   ;;
 
   ## start serving files with a webserver for a specific onion service and specific website folder
-  nginx|apache2)
-    [ "${WEBSERVER}" != "${1}" ] && error_msg "Your WEBSERVER of choice is: ${WEBSERVER}\nIt is not possible to run different web servers at the same time."
+  web|WEB)
+    [ -z "${WEBSERVER}" ] && error_msg "WEBSERVER variable is empty on .onionrc"
     STATUS="${2}"; [ -z "${STATUS}" ] && error_msg "STATUS is missing"
     SERVICE="${3}"; [ -z "${STATUS}" ] && error_msg "SERVICE is missing"
     case "${STATUS}" in
@@ -940,6 +940,6 @@ sudo systemctl reload apache
   ;;
 
   *)
-    error_msg "Invalid command: ${COMMAND}"
+    onion_usage
 
 esac
