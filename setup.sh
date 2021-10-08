@@ -29,23 +29,27 @@
 { [ -f .onionrc ] && [ -f onionservice-cli ]; } \
 || { printf "\033[1;31mERROR: This script must be run from inside the onionservice cloned repository.\n"; exit 1; }
 
+. .onionrc
+
 ## Customize severity with -s [error|warning|info|style]
 ## quits to warn workflow test failed
 check_syntax(){
+	printf "# Checking syntax\n"
   shellcheck -x -s sh -e 1090,2034,2086,2236 onionservice-tui || SHELLCHECK_FAIL=1
-  shellcheck -x -s sh -e 1090,2236 onionservice-cli || SHELLCHECK_FAIL=1
+  shellcheck -x -s sh -e 1090,2086,2236 onionservice-cli || SHELLCHECK_FAIL=1
   shellcheck -x -s sh -e 1090,2034,2119,2236 setup.sh || SHELLCHECK_FAIL=1
   shellcheck -s sh -e 2034,2236 .onionrc || SHELLCHECK_FAIL=1
-  [ ! -z "${SHELLCHECK_FAIL}" ] && exit 1
+  [ -n "${SHELLCHECK_FAIL}" ] && exit 1
 }
 
 ## creat man page
 make_man(){
+	printf "# Creating man pages\n"
   sudo mkdir -p /usr/local/man/man1
-  pandoc "${ONIONSERVICE_PWD}"/docs/ONIONSERVICE-CLI.md -s -t man -o "${ONIONSERVICE_PWD}"/docs/onionservice-cli.1
-  sudo cp "${ONIONSERVICE_PWD}"/docs/onionservice-cli.1 /tmp/
+  pandoc docs/ONIONSERVICE-CLI.md -s -t man -o docs/onionservice-cli.1
+  sudo cp docs/onionservice-cli.1 /tmp/
   sudo gzip -f /tmp/onionservice-cli.1
-  sudo cp /tmp/onionservice-cli.1.gz /usr/local/man/man1/
+  sudo mv /tmp/onionservice-cli.1.gz /usr/local/man/man1/
   sudo mandb -q -f /usr/local/man/man1/onionservice-cli.1.gz
 }
 
@@ -58,7 +62,6 @@ case "${ACTION}" in
   ;;
 
   setup|SETUP)
-    . .onionrc
     ## configure tor
     #python3-stem
     install_package tor openssl basez git qrencode grep sed pandoc gzip lynx "${WEBSERVER}"
@@ -85,9 +88,8 @@ case "${ACTION}" in
   ;;
 
   release|RELEASE)
+		printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
     check_syntax
-    . .onionrc
-    printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
     make_man
     ## empty var and cleanup
     sed -i'' "s/set \-\x//g" .onionrc
@@ -100,7 +102,6 @@ case "${ACTION}" in
   ;;
 
   *)
-    . .onionrc
     printf %s"${FOREGROUND_RED}ERROR: Invalid command: ${ACTION}.\n"
 
 esac
