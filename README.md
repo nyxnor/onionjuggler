@@ -44,8 +44,8 @@ Descentralization from a single point of failure:
 
 ## Features
 
-* **Activate service** - Create directory if not existent, activate with custom socket type (unix or tcp) virtual port, target (localhost or remote).
-* **Deactivate service** - Remove service configuration from the torrc, the service will not be acessible anymore, but you can activate it again any time you want. Optionally purge the service, deleting its configuration and directory, which will delete its keys permanently.
+* **Enable service** - Create directory if not existent, enable with custom socket type (unix or tcp) virtual port, target (localhost or remote).
+* **Disable service** - Remove service configuration from the torrc, the service will not be acessible anymore, but you can enable it again any time you want. Optionally purge the service, deleting its configuration and directory, which will delete its keys permanently.
 * **Renew service address** - Focused on private onion services, if you ever leak its address, you can change its hostname, beware all of your authorized clients will be disconnected and the service keys will be permanently deleted.
 * **Credentials** - Show hostname, clients, torrc block, qrencoded hostname.
 * **Onion authentication** - For v3 onion services only. This depends on client and server side configuration and works with a key pair, the client holds the private key part either generate by him (more safe) or given by the service operator and the onion service operator holds the public part. If any if
@@ -192,7 +192,8 @@ ii  zsh            5.8-6+b2                      amd64        shell with lots of
 
 #### Which shell to use?
 
-The best performance (most reliant, fastest and lightweight) you can get using these script is calling them with `sh` (not an actual shell. On Debian, `/bin/sh` has a symbolic-link pointing to `/bin/dash` (Debian Alquimist SHell):
+The best performance (most reliant, fastest and lightweight) you can get using these script is calling them with `sh` (not an actual shell, `/bin/sh` is symlinked to the distribution choice of POSIX compliant shell. FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`,Debian uses `dash`:
+`ls -l /bin/sh`:
 ```sh
 /bin/sh -> dash
 ```
@@ -227,5 +228,4 @@ zsh --emulate sh -c onionservice-tui
 
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
-* [Ronn-ng](https://github.com/apjanke/ronn-ng/) to build man pages from markdown instead of writing them manually :(
 * Support VirtualPort 443 for web servers

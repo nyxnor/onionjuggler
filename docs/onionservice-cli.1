@@ -174,6 +174,8 @@ File(s) modified: torrc.
 \f[C]
 onionservice-cli on tcp ssh 22
 onionservice-cli on tcp ssh 22 22
+onionservice-cli on tcp ssh 22 22 80
+onionservice-cli on tcp ssh 22 22 80 80
 onionservice-cli on tcp ssh 22 127.0.0.1:22
 onionservice-cli on tcp ssh 22 127.0.0.1:22 80
 onionservice-cli on tcp ssh 22 127.0.0.1:22 80 127.0.0.1:80
@@ -497,12 +499,8 @@ Fail
 .PP
 Bugs you may find
 .SH SEE ALSO
-.IP
-.nf
-\f[C]
+.PP
 tor(1), sh(1), regex(7)
-\f[R]
-.fi
 .SH COPYRIGHT
 .PP
 Copyright \[co] 2021 nyxnor.

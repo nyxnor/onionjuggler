@@ -80,6 +80,8 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 ```
 onionservice-cli on tcp ssh 22
 onionservice-cli on tcp ssh 22 22
+onionservice-cli on tcp ssh 22 22 80
+onionservice-cli on tcp ssh 22 22 80 80
 onionservice-cli on tcp ssh 22 127.0.0.1:22
 onionservice-cli on tcp ssh 22 127.0.0.1:22 80
 onionservice-cli on tcp ssh 22 127.0.0.1:22 80 127.0.0.1:80
@@ -244,7 +246,8 @@ Bugs you may find
 
 
 # SEE ALSO
-    tor(1), sh(1), regex(7)
+
+tor(1), sh(1), regex(7)
 
 
 # COPYRIGHT
