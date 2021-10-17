@@ -82,7 +82,7 @@ service_menu(){
   COMPL_TITLE="${2}"
   for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
     i=$((i+1))
-    ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d '.' -f1)
+    ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d "." -f1)
     case "${DIALOG_TYPE}" in
       checklist) SERVICE_LIST=$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0);;
       menu)      SERVICE_LIST=$(printf "%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}");;
@@ -105,7 +105,7 @@ auth_server_menu(){
     CLIENT_EXIST=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")
     if [ ! -z "${CLIENT_EXIST}" ]; then
       i=$((i+1))
-      ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d '.' -f1)
+      ONION_HOSTNAME_WITHOUT_ONION=$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d "." -f1)
       SERVICE_LIST=$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)
     fi
   done
@@ -155,7 +155,7 @@ auth_server_menu(){
 
 auth_client_menu(){
   i=0
-  for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d '.' -f1); do
+  for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1); do
     i=$((i+1))
     ONION_AUTH_LIST=$(printf "%s\n%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" "." 0)
   done
@@ -262,7 +262,7 @@ case "${CHOICE_MAIN}" in
           --inputbox "${UNIX_PORT_MSG}" 10 60 3>&1 1>&2 2>&3)
           if [ ! -z "${SERVICE_PORTS}" ]; then
             clear
-            sh "${ONIONSERVICE_PWD}"/onionservice-cli on unix "${SERVICE_NAME}" ${SERVICE_PORTS}
+            sh "${ONIONSERVICE_PWD}"/onionservice-cli on unix 3 "${SERVICE_NAME}" ${SERVICE_PORTS}
             printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
           fi
         fi
@@ -275,7 +275,7 @@ case "${CHOICE_MAIN}" in
           SERVICE_PORTS=$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${TCP_PORT_MSG}" 13 80 3>&1 1>&2 2>&3)
           if [ ! -z "${SERVICE_PORTS}" ]; then
-            sh "${ONIONSERVICE_PWD}"/onionservice-cli on tcp "${SERVICE_NAME}" ${SERVICE_PORTS}
+            sh "${ONIONSERVICE_PWD}"/onionservice-cli on tcp 3 "${SERVICE_NAME}" ${SERVICE_PORTS}
             printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
           fi
         fi

@@ -46,25 +46,21 @@ check_syntax(){
 make_man(){
 	printf "# Creating man pages\n"
   sudo mkdir -p /usr/local/man/man1
-  pandoc docs/ONIONSERVICE-CLI.md -s -t man -o docs/onionservice-cli.1
-  sudo cp docs/onionservice-cli.1 /tmp/
-  sudo gzip -f /tmp/onionservice-cli.1
+  pandoc docs/ONIONSERVICE-CLI.md -s -t man -o /tmp/onionservice-cli.1
+  gzip -f /tmp/onionservice-cli.1
   sudo mv /tmp/onionservice-cli.1.gz /usr/local/man/man1/
   sudo mandb -q -f /usr/local/man/man1/onionservice-cli.1.gz
 }
+
 
 ACTION=${1:-SETUP}
 
 case "${ACTION}" in
 
-  *help|-h)
-    printf "Commands: [help|setup|release]\n"
-  ;;
-
   setup|SETUP)
     ## configure tor
     #python3-stem
-    install_package tor openssl basez git qrencode grep sed pandoc gzip lynx "${WEBSERVER}"
+    install_package tor grep sed openssl basez git qrencode pandoc lynx gzip "${WEBSERVER}"
     sudo usermod -aG "${TOR_USER}" "${USER}"
     sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
     sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
@@ -98,10 +94,10 @@ case "${ACTION}" in
     sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" .onionrc
     sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-cli
     sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-tui
-    printf %s"${FOREGROUND_GREEN}# Done!\n"
+    printf %s"${FOREGROUND_GREEN}# Done!\n${UNSET_FORMAT}"
   ;;
 
   *)
-    printf %s"${FOREGROUND_RED}ERROR: Invalid command: ${ACTION}.\n"
+    printf "Commands: [help|setup|release]\n"
 
 esac
