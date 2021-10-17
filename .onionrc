@@ -43,9 +43,7 @@ TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 
 ## [ EDIT OPTIONAL ]
-WEBSITE_FOLDER="/var/www"
-## path to certificate. only used to show 'credentials' option in the CLI, leave it blank if not using
-TLS_CERT=""
+WEBSITE_FOLDER="/var/www" # /var/www
 ## Vanguards
 VANGUARDS_COMMIT_HASH=10942de
 ## Backup
@@ -86,10 +84,7 @@ SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
 ONIONSERVICE_PWD=
 ## Dialog
 export DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
-## cert fingerprint
-[ ! -z "${TLS_CERT}" ] && TLS_CERT_FINGERPRINT="$(openssl x509 -in "${TLS_CERT}" -fingerprint -sha256 -noout | cut -d"=" -f2)"
 
-## Colo
 
 ## Unset all formats
 UNSET_FORMAT="\033[0m"
@@ -182,7 +177,7 @@ online_check()
 
 
 # This function reload tor by default or forces to restart
-# Nyxnor: Why this name restart when it reload by default? I dont know a better name.
+## TODO: Why this name restart when it reload by default? I dont know a better name.
 ## TODO: Improve timeout if reload get stuck, then restart. Restart if fail throws errors, reload timeout is 1min which is too long.
 restarting_tor()
 {
