@@ -36,7 +36,7 @@
 check_syntax(){
 	printf "# Checking syntax\n"
   shellcheck -x -s sh -e 1090,2034,2086,2236 onionservice-tui || SHELLCHECK_FAIL=1
-  shellcheck -x -s sh -e 1090,2086,2236 onionservice-cli || SHELLCHECK_FAIL=1
+  shellcheck -x -s sh -e 1090,2086,2153,2236 onionservice-cli || SHELLCHECK_FAIL=1
   shellcheck -x -s sh -e 1090,2034,2119,2236 setup.sh || SHELLCHECK_FAIL=1
   shellcheck -s sh -e 2034,2236 .onionrc || SHELLCHECK_FAIL=1
   [ -n "${SHELLCHECK_FAIL}" ] && exit 1
@@ -86,7 +86,6 @@ case "${ACTION}" in
   release|RELEASE)
 		printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
     check_syntax
-    make_man
     ## empty var and cleanup
     sed -i'' "s/set \-\x//g" .onionrc
     sed -i'' "s/set \-\x//g" onionservice-cli

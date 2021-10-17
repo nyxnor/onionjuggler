@@ -186,7 +186,10 @@ case "${COMMAND}" in
     case "${ACTION}" in
 
       torrc|TORRC)
-        sudo cp "${TORRC}".bak "${TORRC}"
+				## separate HiddenService liens to the end of the torrc
+				printf '\n%s\n\n' "$(sudo sed -n "/HiddenServiceDir/,/^\s*$/{p}" "${TORRC}".bak)" | sudo tee "${TORRC}".tmp >/dev/null
+				sudo sed "/HiddenServiceDir/,/^\s*$/{d}" "${TORRC}" | sudo tee "${TORRC}".mod >/dev/null
+				sudo cat -s "${TORRC}".mod "${TORRC}".tmp | sudo tee "${TORRC}" >/dev/null
         printf "# Restored torrc with its latest backup\n"
 				restarting_tor
         printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
@@ -802,68 +805,73 @@ sudo systemctl reload apache
     ACTION="${2}"; [ -z "${ACTION}" ] && error_msg "ACTION is missing"
     case "${ACTION}" in
 
+			## restore backup
       ## backup tar file will be extracted and integrated into their respective tor folders
       ## scp instructions to import backup from remote host
       integrate|INTEGRATE)
-        ## RESTORE
-        sudo mkdir -p "${HS_BK_DIR}"/backup-restoration.tbx
-        sudo tar -xpzvf "${HS_BK_DIR}"/*.tar.gz -C "${HS_BK_DIR}"/backup-restoration.tbx
-        sudo chown -R "${USER}:${USER}" "${HS_BK_DIR}"/backup-restoration.tbx
-        sudo cp -rf "${HS_BK_DIR}"/backup-restoration.tbx"${DATA_DIR_HS}"/* "${DATA_DIR_HS}"/ >/dev/null
-        sudo cp -rf "${HS_BK_DIR}"/backup-restoration.tbx"${CLIENT_ONION_AUTH_DIR}"/* "${CLIENT_ONION_AUTH_DIR}"/ >/dev/null
+				sudo -u "${USER}" mkdir -p "${HS_BK_DIR}"/integrate
+				HS_BK_TAR=$(sudo -u "${USER}" ls "${HS_BK_DIR}" | grep ".tar.gz" | tail -1)
+        printf %s"# Integrating backup from file: ${HS_BK_TAR}\n\n"
+				printf "# Extracting the archive\n\n"
+				sudo tar -xpzvf "${HS_BK_DIR}"/"${HS_BK_TAR}" -C "${HS_BK_DIR}"/integrate
+        sudo chown -R "${USER}:${USER}" "${HS_BK_DIR}"
+				sudo cp -rf "${HS_BK_DIR}"/integrate"${DATA_DIR_HS}"/* "${DATA_DIR_HS}"/
+        sudo cp -rf "${HS_BK_DIR}"/integrate"${CLIENT_ONION_AUTH_DIR}"/* "${CLIENT_ONION_AUTH_DIR}"/
+				CLIENT_ONION_AUTH_DIR_BK="$(sudo grep "ClientOnionAuthDir" "${HS_BK_DIR}"/integrate"${TORRC}")"
+				if [ ! -z "${CLIENT_ONION_AUTH_DIR_BK}" ]; then
+					sudo sed -i'' "/ClientOnionAuthDir .*/d" "${TORRC}"
+					printf '\n%s\n\n' "${CLIENT_ONION_AUTH_DIR_BK}" | sudo tee -a "${TORRC}" >/dev/null
+					sudo sed -i'' "/ClientOnionAuthDir .*/d" "${HS_BK_DIR}"/integrate"${TORRC}"
+				fi
+				sudo cat -s "${TORRC}" "${HS_BK_DIR}"/integrate"${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null
+				sudo mv "${TORRC}".tmp "${TORRC}"
         ## avoid duplication of services, it will keep the current machine config lines for safety
-        for SERVICE in $(sudo -u "${CONF_DIR_OWNER}" grep "HiddenServiceDir" "${TORRC}" | cut -d " " -f2); do
-          SERVICE_NAME=$(printf %s"${SERVICE##*/}")
-          sed -n "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{p}" "${TORRC}" > "${TORRC}".tmp
-          sed -i'' "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{d}" "${TORRC}"
-          sed '/^\s*$/Q' "${TORRC}".tmp > "${TORRC}".mod
-          sudo sed -i'' '1 i \ ' "${TORRC}".mod; sudo sed -i'' "\$a\ " "${TORRC}".mod
-          sudo cat "${TORRC}".mod | sudo tee -a "${TORRC}" >/dev/null
-        done
-        sudo rm -f "${TORRC}".tmp "${TORRC}".mod
+        # for SERVICE in $(sudo -u "${CONF_DIR_OWNER}" grep "HiddenServiceDir" "${TORRC}" | cut -d " " -f2); do
+        #   SERVICE_NAME=$(printf %s"${SERVICE##*/}")
+        #   sudo sed -n "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{p}" "${TORRC}" > "${TORRC}".tmp
+        #   sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{d}" "${TORRC}"
+				# 	sudo sed '/^\s*$/Q' "${TORRC}".tmp > "${TORRC}".mod
+				# 	sudo sed -i'' '1 i \ ' "${TORRC}".mod; sudo sed -i'' "\$a\ " "${TORRC}".mod
+        #   sudo cat "${TORRC}".mod | sudo tee -a "${TORRC}" >/dev/null
+        # done
+        # sudo rm -f "${TORRC}".tmp "${TORRC}".mod
         #awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
-        cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
-        sudo chown -R "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC}"
-        sudo rm -rf "${HS_BK_DIR}"/backup-restoration.tbx
-        set_owner_permission
+        #sudo cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
+        sudo rm -rf "${HS_BK_DIR}"/integrate
         ## RESTORE BACKUP FROM REMOTE
-        printf "# Restore your configuration importing from a remote machine.\n"
-        printf "## Backup the services dir, onion_auth dir and the torrc\n\n"
+        printf "\n# Restore your configuration importing from a remote machine.\n\n"
         ## upload from remote to this instane
-        printf "## Import backup file uploading from remote. On the remote terminal, run:\n"
-        printf %s"  sudo scp -r ${HS_BK_TAR} ${USER}@${LOCAL_IP}:${HS_BK_DIR}/\n\n"
+        printf "# Import backup file uploading to remote. On the remote terminal, run:\n"
+        printf %s"\tsudo scp -r ${HS_BK_TAR} ${USER}@${LOCAL_IP}:${HS_BK_DIR}/\n\n" #### remove HS_BK_TAR
         ## download from this instance
-        printf "## Import backup file downloading from remote. On this terminal instance, run:\n"
-        printf %s"  sudo scp -r ${SCP_TARGET_FULL} ${HS_BK_DIR}/${HS_BK_TAR}\n"
+        printf "# Import backup file downloading from remote. On this terminal instance, run:\n"
+        printf %s"\tsudo scp -r ${SCP_TARGET_FULL} ${HS_BK_DIR}/${HS_BK_TAR}\n" #### remove HS_BK_TAR
+				#restarting_tor
       ;;
 
       ## full backup needede to restore all of your hidden services and client keys
       ## folders/files included: <torrc>, <DataDir>/services/, <DataDir>/onion_auth/
       ## scp instructions to export backup to remote host
       create|CREATE)
-        ## CREATE BACKUP
-        printf "# Backup your configuration and export it to a remote machine.\n"
-        printf "## Backing up the services dir, onion_auth dir and the torrc\n\n"
-        sudo -u "${USER}" mkdir -p "${HS_BK_DIR}${TORRC_ROOT}"
-        sudo -u "${USER}" touch "${HS_BK_DIR}${TORRC}"
-        sudo cp "${TORRC}" "${TORRC}".rest
-        printf %s"$(sudo sed -n "/HiddenServiceDir/,/^\s*$/{p}" "${TORRC}")" | sudo tee "${TORRC}".tmp >/dev/null
-        sudo mv "${TORRC}".tmp "${TORRC}"
+				HS_BK_TAR="tor-hs-$(date +%Y-%m-%d-%H'h'-%M'm').tar.gz"
+        printf "# Backing up the services dir, onion_auth dir and the torrc\n\n"
+				mkdir -p "${HS_BK_DIR}"
+				## these lines are necessary to copy the full path when creating the compressed archive
+				sudo cp "${TORRC}" "${TORRC}".rest
+				printf '\n%s\n\n' "$(sudo grep "ClientOnionAuthDir" "${TORRC}")" | sudo tee "${TORRC}".tmp >/dev/null
+				printf '\n%s\n\n' "$(sudo sed -n "/HiddenServiceDir/,/^\s*$/{p}" "${TORRC}")" | sudo tee -a "${TORRC}".tmp >/dev/null
+				sudo mv "${TORRC}".tmp "${TORRC}"
         sudo tar -cpzvf "${HS_BK_DIR}"/"${HS_BK_TAR}" "${DATA_DIR_HS}" "${CLIENT_ONION_AUTH_DIR}" "${TORRC}" 2>/dev/null
         sudo mv "${TORRC}".rest "${TORRC}"
-        SHA512SUM=$(sha512sum "${HS_BK_DIR}"/"${HS_BK_TAR}")
-        SHA256SUM=$(sha256sum "${HS_BK_DIR}"/"${HS_BK_TAR}")
-        sudo chown -R "${USER}:${USER}" "${HS_BK_DIR}"/"${HS_BK_TAR}"
-        sudo find "${HS_BK_DIR}" \! -name "${HS_BK_TAR}" -delete 2>/dev/null
-        sudo chown -R "${TOR_USER}:${TOR_USER}" "${DATA_DIR}"
-        sudo chown -R "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC_ROOT}"
-        printf %s"\nsha512sum=${SHA512SUM}"; printf %s" \nsha256sum=${SHA256SUM}\n\n"
+        sudo chown -R "${USER}:${USER}" "${HS_BK_DIR}"
+        set_owner_permission
+        printf %s"\nsha256sum=$(sha256sum "${HS_BK_DIR}"/"${HS_BK_TAR}")\n\n"
         ## upload to remote
-        printf "## Export backup file uploading to remote. On this terminal instance, run:\n"
-        printf %s"  sudo scp -r ${HS_BK_DIR}/${HS_BK_TAR} ${SCP_TARGET_FULL}\n\n"
+        printf "# Export backup file uploading to remote. On this terminal instance, run:\n"
+        printf %s"\tsudo scp -r ${HS_BK_DIR}/${HS_BK_TAR} ${SCP_TARGET_FULL}\n\n"
         ## download from this instance on remote
-        printf "## Export backup file downloading from remote. On the remote terminal, run:\n"
-        printf %s"  sudo scp -r ${USER}@${LOCAL_IP}:${HS_BK_DIR}/${HS_BK_TAR} .\n"
+        printf "# Export backup file downloading from remote. On the remote terminal, run:\n"
+        printf %s"\tsudo scp -r ${USER}@${LOCAL_IP}:${HS_BK_DIR}/${HS_BK_TAR} .\n"
       ;;
 
       *)

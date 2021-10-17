@@ -31,10 +31,15 @@
 ## Path for folders variables must not contain "/" at the end.
 ##
 ## SYNTAX
-## . .onionrc
+##   . .onionrc
+##
+## ADAPT
+## For this, use 'sed', with '|' as delimiter and escape quoted variables with '\"', -i'' for compatibility.
+##   sed -i'' "s|VAR=.*|VAR=\"something\"|" .onionrc
 ##
 ###########################
 ######## VARIABLES ########
+
 
 ## [ EDIT REQUIRED IF NOT DEBIAN]
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
@@ -49,10 +54,8 @@ VANGUARDS_COMMIT_HASH=10942de
 ## Backup
 SCP_TARGET_USER="remoteUser"
 SCP_TARGET_IP="remoteIp"
-SCP_TARGET_PATH="${HOME}/remote/path"
+SCP_TARGET_PATH="/home/${SCP_TARGET_USER}/remote/path"
 SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" ## '[USER]@[SERVER]:[SERVER_DIR]'
-DATE_TIME=$(date +%Y-%m-%d-%H'h'-%M'm')
-HS_BK_TAR=tor-hs-${DATE_TIME}.tar.gz
 HS_BK_DIR="${HOME}/tor-hs-backup"
 LOCAL_DOWNLOAD_PATH="${HOME}/Downloads/tor-hs-backup"
 LOCAL_IP=$(hostname -I | cut -d " " -f1)
@@ -155,12 +158,9 @@ set_owner_permission(){
 check_tor()
 {
   printf %s"${FOREGROUND_RED}[+] Checking connectivity to the Tor network - please wait...${UNSET_FORMAT}\n"
-  TOR_SERVICE=$(curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 -c Congratulations)
-  if [ "${TOR_SERVICE}" -eq 1 ]; then
-    TOR_STATUS="Tor is working"
-  else
-    TOR_STATUS=""
-  fi
+  TOR_SERVICE=$(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 -m 5 -s https://check.torproject.org/api/ip | grep -oP '"IsTor"\s*:\s*\K\w+')
+  TOR_STATUS=""
+	[ "${TOR_SERVICE}" -eq 1 ] && TOR_STATUS="Tor is working"
 }
 
 
