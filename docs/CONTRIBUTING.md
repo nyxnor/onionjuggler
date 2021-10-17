@@ -16,6 +16,8 @@ These are requirements and must be done. If not conformed, the merge request mus
 
 1. POSIX compliant. The [Shellcheck Code 2039](https://github.com/koalaman/shellcheck/wiki/SC2039) must not be ignored. The project will never be pure POSIX alternative to external process such as git, grep, openssl, but it aims to use more of the shell capabilities than depending on more packages. Read the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) - POSIX compliant and efficiency guide while listening to [KISS](https://www.youtube.com/watch?v=EFMD7Usflbg) - Keep It Simple Stupid, but in audio and video format.
 
+1. Operating system extensions (GNU extesions on commands such as grep) and commands unique to some unix operating systems but not present on others need to be avoided.
+
 1. The most efficient (fastest, least consumed resources). Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
 
 1. `printf` instead of `echo` for portability reasons.

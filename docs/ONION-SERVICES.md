@@ -64,6 +64,6 @@ If the onion service you are trying to access consists of a string of 16 charact
 
 You can also test if you are able to access other onion services by connecting to [DuckDuckGo's Onion Service](https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/).
 
-### Source
+## Source
 
 https://tb-manual.torproject.org/onion-services/

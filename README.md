@@ -13,9 +13,9 @@ The current state of the internet (plain net) is:
 * **not censorship resistant** - dns attacks as well as many other still occurs
 * **not descentralized** - you can not purely peer to peer (running your own internet, connecting directly to the wanted host)
 
-Onion Routing tries to solve most of these problems but it is still centralized by the [Directory Authorities](https://metrics.torproject.org/rs.html#search/flag:authority), and referencing [Matt Traudt's blog post](https://matt.traudt.xyz/posts/Debunking:_OSINT_Analysis_of_the_TOR_Foundation/#index4h2): replacing it for something more distributed is [not a trivial task](https://www.freehaven.net/anonbib/#wpes09-dht-attack) (Free Haven selected papers).
+Onion Routing tries to solve most of these problems but it is still centralized by the [Directory Authorities](https://metrics.torproject.org/rs.html#search/flag:authority), and referencing [Matt Traudt's blog post](https://matt.traudt.xyz/posts/Debunking:_OSINT_Analysis_of_the_TOR_Foundation/#index4h2): replacing it for something more distributed is [not a trivial task](https://www.freehaven.net/anonbib/#wpes09-dht-attack).
 
-On the Tor echosystem, from [TPO metrics](https://metrics.torproject.org/), comparing only Free and Open Source Operating Systems, `Linux` dominates[on relays by platform](https://metrics.torproject.org/platforms.html)and [Tor Browser downloads by platform](https://metrics.torproject.org/webstats-tb-platform.html) over BSD. Data regarding which operating system the onion service operator can not be easily acquired for obvious reasons.
+On the Tor echosystem, from [TPO metrics](https://metrics.torproject.org/), comparing only Free and Open Source Operating Systems, `Linux` dominates [on relays by platform](https://metrics.torproject.org/platforms.html) and [Tor Browser downloads by platform](https://metrics.torproject.org/webstats-tb-platform.html) over BSD. Data regarding which operating system the onion service operator can not be easily acquired for obvious reasons.
 
 That was on the network level, but know on the user system, even if one chooses a Free and Open Source Operating System, GNU/Linux dominates a big share over *BSD, having a huge impact on the main software used for the kernel (Linux), shell (bash), service manager (systemd).
 
@@ -23,24 +23,19 @@ That was on the network level, but know on the user system, even if one chooses 
 ## Goal
 
 The goal of this project:
-* facilitate onion service managements, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
+* facilitate onion service management, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
 * show the that managing the onion service is much more than just using a webserver with your pages.
 * distribution, from the source code level (FOSS) to the effect it takes when it allows anyone to run the code on any operating system, shell or service manager.
 
 Descentralization from a single point of failure:
-* **Kernel** - The Linux Kernel is a problem, there are few *BSD users compared to linux users.
-  * **BSD** variants (FreeBSD, NetBSD, OpenBSD, DragonflyBSD)
-* **Shell** - bash (GNU Bourne-Again SHell) is the [most popular shell](https://insights.stackoverflow.com/trends?tags=bash%2Cksh%2Czsh), So a POSIX compliant script is done to work on different [shells](README#shells) such as
-  * **ksh** (Korn SHell) - IEEE POSIX 1003.1 and 1003.2 standards.
-  * **(d)ash** (Alquimist Shell) - Only features designated by POSIX, plus a few Berkeley extensions, dash adds Debian compatibility. POSIX 1003.2 and 1003.2a standards.
-  * **yash** (Yet Another SHell) - conforms to the POSIX.1-2008
-  * **zsh** (Z SHell) - not POSIX compliant by default
-  * **bash** (Bourne-Again SHell) - but it is slower because it has the biggest code and the objective is to not depend on it.
-* **Service manager** - on the Linux echosystem, `systemd` dominates over any other init system and/or service manager. Default init systems for each distribution:
-  * **[Systemd](https://en.wikipedia.org/wiki/Systemd#Adoption)** - Arch, CentOS, Debian, Fedora, Mint, Mageia, Manjaro, openSUSE, Red Hat, Solus, SLES, Ubuntu
-  * **[Runit](https://en.wikipedia.org/wiki/Runit)** - Void, Dragora, Trident, Artix, antiX, Devuan, Venom
-  * **[OpenRC](https://en.wikipedia.org/wiki/OpenRC)** - Gentoo, Alpine, Hyperbola, Parabola, Artix, Maemo Lest, TrueOS
+* **Kernel** from predominant `Linux` to also `BSD`.
+* **Shell** from predominant `bash` to also any POSIX shell such as `ksh`, `(y,d)ash)` and `zsh` (emulating sh).
+* **Service manager** from predominant `systemd` to also `Runit`, `OpenRC`.
 
+Editing the tor configuration file (torrc) is not difficult, but automation solves problem of misconfiguration and having:
+* less time spent
+* complete uniformity
+*
 
 ## Features
 
@@ -59,7 +54,7 @@ Descentralization from a single point of failure:
 * **Web server** - Serve files with your hidden service using Nginx or Apache2 web server.
 * **Bulk** - Some commands can be bulked with `all-clients`, `all-services`, `[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected. They are specified inside `<>` (e.g. `<VIRTPORT2>`)
-* **Fool-proof** - The script tries to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
+* **Fool-proof** - The script tries its best to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
 
 
 ## Images
@@ -142,24 +137,26 @@ man onionservice-cli
 
 ### Requirements
 
-* Unix system (paths break on windows cause they use \ for path)
+* Unix-like system
 * tor >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
+* grep
+* sed
 * python3-stem >=1.8.0 (for Vanguards)
 * openssl >= 1.1+ (for onion authentication)
 * basez >= 1.6.2 (for onion authentication)
 * git >= 2.0+ (for cloning the repo and vanguards)
 * qrencode >= 4.1.1 (for printing the hostname)
-* sh under /bin/sh (or the closest to POSIX compliant shell you want, ash, dash)
-* systemd (for vanguards control)
+* pandoc (creating the manual and reading markdown)
+* lynx (reading markdown)
+* systemd (for vanguards control) - for now, different services managers is a goal
 * user with root privileges
 * leave blank lines between Hidden Services torrc lines - the cli script create it correctly, no change needed when using this project, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block
 * HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
 * Path for folders variables must not contain "/" at the end.
 
-
 ### Operating systems
 
-Works *nix operating systems, tested by the maintainer specifically on GNU/Linux Debian 11.
+Works unix-like operating systems, tested by the maintainer specifically on GNU/Linux Debian 11.
 Work is being done for *bsd systems, sed is using [this trick](https://unix.stackexchange.com/a/401928). Missing different service managers, currently just supports Systemd, planning on implementing SysV, Runit, OpenRC.
 
 ### Shells
@@ -171,34 +168,12 @@ Full compatibility with the following shells:
 * Bourne-Again SHell (bash)
 * Z SHell (zsh)
 
-Versions tested (debian package manager):
-```sh
-dpkg -l ash bash dash ksh yash zsh
-```
-Note that `ash` is symlinked to `dash`:
-```sh
-Desired=Unknown/Install/Remove/Purge/Hold
-| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
-|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
-||/ Name           Version                       Architecture Description
-+++-==============-=============================-============-====================================
-ii  ash            0.5.11+git20200708+dd9ef66-5  all          compatibility package for dash
-ii  bash           5.1-2+b3                      amd64        GNU Bourne Again SHell
-ii  dash           0.5.11+git20200708+dd9ef66-5  amd64        POSIX-compliant shell
-ii  ksh            2020.0.0+really93u+20120801-9 amd64        Real, AT&T version of the Korn shell
-ii  yash           2.50-1                        amd64        yet another shell
-ii  zsh            5.8-6+b2                      amd64        shell with lots of features
-```
-
 #### Which shell to use?
 
 The best performance (most reliant, fastest and lightweight) you can get using these script is calling them with `sh` (not an actual shell, `/bin/sh` is symlinked to the distribution choice of POSIX compliant shell. FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`,Debian uses `dash`:
-`ls -l /bin/sh`:
-```sh
-/bin/sh -> dash
-```
+`ls -l /bin/sh`: `/bin/sh -> dash`.
 
-You may call the scripts with:
+You may call the scripts with the the POSIX compliant shell of your system by using only `sh`:
 ```sh
 sh onionservice-cli
 ```
@@ -212,7 +187,7 @@ The Z SHell is not POSIX compliant (works with the CLI but need workarounds when
 zsh --emulate sh -c onionservice-tui
 ```
 
-* calling the `sh` binary with its path:
+* calling the shell specifying its path:
 ```sh
 /bin/sh -c onionservice-tui
 ```
@@ -226,6 +201,8 @@ zsh --emulate sh -c onionservice-tui
 
 ## To-do
 
+* [getopts](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/getopts.html)
+* support for different services managers
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
 * Support VirtualPort 443 for web servers

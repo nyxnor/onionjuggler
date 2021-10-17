@@ -158,6 +158,6 @@ If you run a high-security onion service which is under attack by sophisticated 
 
 In addition, you can also enable Sandbox 1 in your torrc to enable the built in sandboxing.
 
-### Source
+## Source
 
 https://riseup.net/en/security/network-security/tor/onionservices-best-practices

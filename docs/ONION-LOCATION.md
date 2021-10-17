@@ -204,6 +204,6 @@ The Onion-Location header would be equivalent to a `<meta http-equiv="onion-loca
 
 Read the [Onion-Location spec](https://gitweb.torproject.org/tor-browser-spec.git/tree/proposals/100-onion-location-header.txt).
 
-### Source
+## Source
 
 https://community.torproject.org/onion-services/advanced/onion-location/

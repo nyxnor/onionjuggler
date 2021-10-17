@@ -11,7 +11,7 @@ Once you have configured client authorization, anyone with the address will not 
 You can get the access credentials from the onion service operator. Reach out to the operator and request access. You may authenticate yourself directly in the Tor Browser. When accessing an authenticated onion service, Tor Browser will show in the URL bar an icon of a little gray key, accompanied by a tooltip. Enter your valid client private key into the input field.
 
 
-### SOURCE:
+## SOURCE:
 
 Synopsis - https://support.torproject.org/onionservices/client-auth/
 

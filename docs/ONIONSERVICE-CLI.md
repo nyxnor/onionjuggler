@@ -11,8 +11,8 @@ onionservice-cli - dinamically manage your onion services with a POSIX compliant
 
 **onionservice-cli** [COMMAND] <*OPTION*>\
 **onionservice-cli setup torrc**\
-**onionservice-cli on tcp** [SERV] [VIRTPORT] <*TARGET*> <*VIRTPORT2*> <*TARGET2*>\
-**onionservice-cli on unix** [SERV] [VIRTPORT] <*VIRTPORT2*>\
+**onionservice-cli on tcp** [VERSION] [SERV] [VIRTPORT] <*TARGET*> <*VIRTPORT2*> <*TARGET2*>\
+**onionservice-cli on unix** [VERSION] [SERV] [VIRTPORT] <*VIRTPORT2*>\
 **onionservice-cli off** [SERV1,SERV2,...] <*purge*>\
 **onionservice-cli list** [all-services|SERV1,SERV2,...] <*no-qr*>\
 **onionservice-cli renew** [all-services|SERV1,SERV2,...]\
@@ -64,8 +64,23 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 **all-services**, **all-clients**
 : Include all available services or clients.
 
-**SERV1,SERV2...**, **CLIENT1,CLIENT2,...**
+**SERV1,SERV2...**, **CLIENT1,CLIENT2,...**, **ONION1,ONION2**
 : List enabled option. e.g: ssh,xmpp,irc or alice,bob.
+
+**VERSION**
+: Onion service version. Currently only valid value is 3.
+
+**SERV**
+: Service name. String format.
+
+**VIRTPORT**
+: Virtual port. Integer format.
+
+**TARGET**
+: Target socket. TCP needs to be specified, the format is *addr:port*. Abscense of the address will bind to localhost using the address *127.0.0.1* for uniformity. Abscense of target and will use the same port as the virtual port, specifying just the port will bind to localhost using the address *127.0.0.1* for uniformity. Unix target is handled by the code using the format *unix:path* and does not require manual selection. Integer format.
+
+**ONION**
+: Onion address of the authenticated service for the client to connect to. Only accepted format is for onion v3 addresses, which contains 56 characters using the base32 format with the range *a-z2-7* and ending with (dot)onion. String format.
 
 **ssh**, **xmpp**, **nextcloud**
 : Example of onion services directory names.
@@ -78,20 +93,20 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 **on tcp** [SERV] [VIRTPORT] <*TARGET*> <*VIRTPORT2*> <*TARGET2*>
 : Enable an onion service using TCP socket (addr:port) as target. If the TARGET is only the port of it TARGET was not provided, will use the same port as VIRTPORT and bind to 127.0.0.1. TARGET examples: 127.0.0.1:80, 192.168.1.100:80, 140.82.121.3. File(s) modified: torrc.
 ```
-onionservice-cli on tcp ssh 22
-onionservice-cli on tcp ssh 22 22
-onionservice-cli on tcp ssh 22 22 80
-onionservice-cli on tcp ssh 22 22 80 80
-onionservice-cli on tcp ssh 22 127.0.0.1:22
-onionservice-cli on tcp ssh 22 127.0.0.1:22 80
-onionservice-cli on tcp ssh 22 127.0.0.1:22 80 127.0.0.1:80
+onionservice-cli on tcp 3 ssh 22
+onionservice-cli on tcp 3 ssh 22 22
+onionservice-cli on tcp 3 ssh 22 22 80
+onionservice-cli on tcp 3 ssh 22 22 80 80
+onionservice-cli on tcp 3 ssh 22 127.0.0.1:22
+onionservice-cli on tcp 3 ssh 22 127.0.0.1:22 80
+onionservice-cli on tcp 3 ssh 22 127.0.0.1:22 80 127.0.0.1:80
 ```
 
 **on unix** [SERV] [VIRTPORT] <*VIRTPORT2*>
 : Enable an onion service using UNIX socket (unix:path) as target. The TARGET is handled automatically by the script. This method avoids leaking the onion service address to the local network. File(s) modified: torrc.
 ```
-onionservice-cli on unix ssh 22
-onionservice-cli on tcp ssh 22 80
+onionservice-cli on unix 3 ssh 22
+onionservice-cli on tcp 3 ssh 22 80
 ```
 
 **off** [SERV1,SERV2,...] <*purge*>
@@ -242,7 +257,7 @@ onionservice-cli help
 
 # BUGS
 
-Bugs you may find
+Bugs you may find. First search for related issues on https://github.com/nyxnor/onionservice/issues, if not solved, open a new one.
 
 
 # SEE ALSO
