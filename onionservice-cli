@@ -25,7 +25,7 @@
 ## sh onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
 ##
 ## INCLUDE .onionrc
-ONIONSERVICE_PWD=
+ONIONSERVICE_PWD="/home/nyxnor/Documents/git/onionservice"
 [ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mThe variable ONIONSERVICE_PWD is empty!\nRun: sh setup.sh\n\033[0m"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onionrc
 
@@ -271,8 +271,8 @@ case "${COMMAND}" in
         ## This measures avoid using the same local port for different services
         ## grep torrc TARGET to see if port is already in use and by which service, reading the file in reverse
         ## Required
-        VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
-        TARGET="${5}" ## optional, if null then map to 127.0.0.1:VIRTPORT
+        VIRTPORT="${5}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
+        TARGET="${6}" ## optional, if null then map to 127.0.0.1:VIRTPORT
         TARGET=${TARGET:-127.0.0.1:${VIRTPORT}}
         TARGET_ADDR=${TARGET%%:*}
         TARGET_PORT=${TARGET##*:}
@@ -283,8 +283,8 @@ case "${COMMAND}" in
         [ "${TARGET_ALREADY_INSERTED}" -gt 0 ] && error_msg "TARGET=${TARGET} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}\nINFO: Choose another port or disable the service that is using the wanted port"
         is_integer "${VIRTPORT}"; is_addr_port "${TARGET}" "TARGET"
         ## Optional
-        VIRTPORT2="${6}"
-        TARGET2="${7}"
+        VIRTPORT2="${7}"
+        TARGET2="${8}"
         if [ ! -z "${VIRTPORT2}" ]; then
           TARGET2=${TARGET2:-127.0.0.1:${VIRTPORT2}}
 					TARGET2_ADDR=${TARGET2%%:*}
@@ -308,8 +308,8 @@ case "${COMMAND}" in
       ;;
 
       unix|UNIX)
-        VIRTPORT="${4}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
-        VIRTPORT2="${5}"; [ ! -z "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
+        VIRTPORT="${5}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
+        VIRTPORT2="${6}"; [ ! -z "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
         is_integer "${VIRTPORT}"
 
         ## delete any old entry for that servive
@@ -836,7 +836,6 @@ sudo systemctl reload apache
         printf "## Import backup file downloading from remote. On this terminal instance, run:\n"
         printf %s"  sudo scp -r ${SCP_TARGET_FULL} ${HS_BK_DIR}/${HS_BK_TAR}\n"
       ;;
-
 
       ## full backup needede to restore all of your hidden services and client keys
       ## folders/files included: <torrc>, <DataDir>/services/, <DataDir>/onion_auth/

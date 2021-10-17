@@ -29,13 +29,12 @@ The goal of this project:
 
 Descentralization from a single point of failure:
 * **Kernel** from predominant `Linux` to also `BSD`.
-* **Shell** from predominant `bash` to also any POSIX shell such as `ksh`, `(y,d)ash)` and `zsh` (emulating sh).
+* **Shell** from predominant `bash` to also any POSIX shell such as `ksh`, `(y,d)ash` and `zsh` (emulating sh).
 * **Service manager** from predominant `systemd` to also `Runit`, `OpenRC`.
 
 Editing the tor configuration file (torrc) is not difficult, but automation solves problem of misconfiguration and having:
 * less time spent
 * complete uniformity
-*
 
 ## Features
 
@@ -201,8 +200,8 @@ zsh --emulate sh -c onionservice-tui
 
 ## To-do
 
+* improve backup method
 * [getopts](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/getopts.html)
 * support for different services managers
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
-* Support VirtualPort 443 for web servers
