@@ -25,7 +25,7 @@
 ## sh onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
 ##
 ## INCLUDE .onionrc
-[ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mThe variable ONIONSERVICE_PWD is empty!\nRun: sh setup.sh\n\033[0m"; exit 1; }
+[ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: sh setup.sh\n"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onionrc
 
 ## COMMAND INFO

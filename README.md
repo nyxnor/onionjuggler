@@ -68,13 +68,16 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 
 Three easy steps to fully this project:
 
-1. Clone the repository:
+#### Clone the repository:
 ```sh
 git clone https://github.com/nyxnor/onionservice.git
 cd onionservice
 ```
 
-2. Edit the required variables to fit your system inside `.onionrc`. Open the mentioned file with any editor:
+#### Set custom vars
+
+Edit the required variables to fit your system inside `.onionrc`. Open the mentioned file with any editor:
+
 ```sh
 "${EDITOR:-nano}" .onionrc
 ```
@@ -85,12 +88,29 @@ WEBSERVER="nginx" ## [nginx|apache2]
 TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 ```
+Edit with sed:
+```sh
+sed "s|TOR_USER=.*|TOR_USER=\"tor\"|"
+```
 
-3. Setup the enviroment:
+#### Setup the enviroment
+
+The enviroment variable ${ONIONSERVICE_PWD} and add the directory to path.
+* add the enviroment variable ${ONIONSERVICE_PWD} -> exporting this variable possibilitate calling it from isnide shell scripts.
+* add directory to path -> call the scripts from any directory as if they were commands (without indicating the path to them or prepending with the shell name).
+
+For this, you have two options:
+* **Easy**: run from inside the cloned repository and it will use the same path as ${PWD}:
 ```sh
 sh setup.sh
 ```
-
+* **Development**: Set the variable manually using the absolute path without trailing "/" at the end (e.g.: `\${HOME}/onionservice`, `/home/admin/onionservice`). Advantages are: no need to run from inside the cloned repository and facilitate scripting and porting to other projects):
+```sh
+printf "\nexport ONIONSERVICE_PWD=\"/absolute/path/to/onionservice/repo\"\n" >> ~/."${SHELL##*/}"rc
+printf "PATH=\"\${PATH}:\${ONIONSERVICE_PWD}\"\n\n" >> ~/."${SHELL##*/}"rc
+. ~/."${SHELL##*/}"rc
+sh setup.sh
+```
 
 #### Usage
 
@@ -123,7 +143,7 @@ Read:
 * any markdown file formatted on the shell (with `pandoc` and `lynx`):
 ```sh
 ls docs/*.md
-pandoc docs/CONTRIBUTING.md | lynx -stdin
+pandoc ${ONIONSERVICE_PWD}/docs/CONTRIBUTING.md | lynx -stdin
 ```
 
 * the [CLI manual](docs/ONIONSERVICE-CLI.md):

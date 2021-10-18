@@ -58,7 +58,7 @@ SCP_TARGET_PATH="/home/${SCP_TARGET_USER}/remote/path"
 SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" ## '[USER]@[SERVER]:[SERVER_DIR]'
 HS_BK_DIR="${HOME}/tor-hs-backup"
 LOCAL_DOWNLOAD_PATH="${HOME}/Downloads/tor-hs-backup"
-LOCAL_IP=$(hostname -I | cut -d " " -f1)
+LOCAL_IP=$(hostname -I | cut -d " " -f1) ## awk '{print $1}'
 ## tor defaults
 TORRC_ROOT="/etc/tor"
 TORRC="${TORRC_ROOT}/torrc"
@@ -70,6 +70,11 @@ CONF_DIR_OWNER="${USER}"
 CONTROL_PORT=9051
 SOCKS_PORT=9050
 CHECK_URL1="http://debian.org"
+
+## Dialog
+export DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
+
+## [ TODO ]
 BROWSER_DATA_DIR="/home/${USER}/.local/share/torbrowser/tbb/$(uname -m)/tor-browser_en-US/Browser/TorBrowser/Data/Tor"
 BROWSER_TORRC="${BROWSER_DATA_DIR}/torrc"
 BROWSER_ONION_AUTH_DIR="${BROWSER_DATA_DIR}/onion-auth"
@@ -81,13 +86,10 @@ SOURCES_DEB_UPDATE_PLAIN="https://deb.debian.org/"
 ## tpo onion sources
 SOURCES_TOR_UPDATE_ONION="http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
 SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
-## Dialog
-export DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
 
-
+## [ COLORS ]
 ## Unset all formats
 UNSET_FORMAT="\033[0m"
-
 ## Foreground
 FOREGROUND_DEFAULT="\033[1;39m"
 FOREGROUND_BLACK="\033[1;30m"
@@ -106,7 +108,6 @@ FOREGROUND_LIGHT_BLUE="\033[1;94m"
 FOREGROUND_LIGHT_MAGENTA="\033[1;95m"
 FOREGROUND_LIGHT_CYAN="\033[1;96m"
 FOREGROUND_WHITE="\033[1;97m"
-
 # Background
 BACKGROUND_DEFAULT="\033[49m"
 BACKGROUND_BLACK="\033[40m"
