@@ -26,8 +26,17 @@
 ## SYNTAX
 ## sh setup.sh [<setup>|release]
 
-{ [ -f .onionrc ] && [ -f onionservice-cli ]; } \
-|| { printf "\033[1;31mERROR: This script must be run from inside the onionservice cloned repository.\n"; exit 1; }
+if [ -z "${ONIONSERVICE_PWD}" ]; then
+	if [ -f .onionrc ] && [ -f onionservice-cli ]; then
+		printf %s"ONIONSERVICE_PWD=\"${PWD}\"" >> ~/."${SHELL##*/}"rc
+    . ~/."${SHELL##*/}"rc
+	else
+		printf "\033[1;31mERROR: This script must be run from inside the onionservice git repository.\n"
+		printf "\033[1;31mINFO: It is possible to run from any directory if setting the variable ONIONSERVICE_PWD:\n\033[0m"
+		printf "\tprintf ONIONSERVICE_PWD=\"/path/to/onionservice/repo\" >> ~/."${SHELL##*/}"rc\n"
+		exit 1
+	fi
+fi
 
 . .onionrc
 
@@ -35,10 +44,10 @@
 ## quits to warn workflow test failed
 check_syntax(){
 	printf "# Checking syntax\n"
-  shellcheck -x -s sh -e 1090,2034,2086,2236 onionservice-tui || SHELLCHECK_FAIL=1
-  shellcheck -x -s sh -e 1090,2086,2153,2236 onionservice-cli || SHELLCHECK_FAIL=1
-  shellcheck -x -s sh -e 1090,2034,2119,2236 setup.sh || SHELLCHECK_FAIL=1
-  shellcheck -s sh -e 2034,2236 .onionrc || SHELLCHECK_FAIL=1
+  shellcheck -x -s sh -e 1090,2034,2086,2236 "${ONIONSERVICE_PWD}"/onionservice-tui || SHELLCHECK_FAIL=1
+  shellcheck -x -s sh -e 1090,2086,2153,2236 "${ONIONSERVICE_PWD}"/onionservice-cli || SHELLCHECK_FAIL=1
+  shellcheck -x -s sh -e 1090,2034,2119,2236 "${ONIONSERVICE_PWD}"/setup.sh || SHELLCHECK_FAIL=1
+  shellcheck -s sh -e 2034,2236 "${ONIONSERVICE_PWD}"/.onionrc || SHELLCHECK_FAIL=1
   [ -n "${SHELLCHECK_FAIL}" ] && exit 1
 }
 
@@ -46,7 +55,7 @@ check_syntax(){
 make_man(){
 	printf "# Creating man pages\n"
   sudo mkdir -p /usr/local/man/man1
-  pandoc docs/ONIONSERVICE-CLI.md -s -t man -o /tmp/onionservice-cli.1
+  pandoc "${ONIONSERVICE_PWD}"/docs/ONIONSERVICE-CLI.md -s -t man -o /tmp/onionservice-cli.1
   gzip -f /tmp/onionservice-cli.1
   sudo mv /tmp/onionservice-cli.1.gz /usr/local/man/man1/
   sudo mandb -q -f /usr/local/man/man1/onionservice-cli.1.gz
@@ -65,15 +74,7 @@ case "${ACTION}" in
     sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
     sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
     restarting_tor
-    [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
-    ## add repo to path
-    sed -i'' "/.*## DO NOT EDIT. Inserted automatically by onionservice setup.sh/d" ~/."${SHELL##*/}"rc
-    printf %s"PATH=\"\${PATH}:${PWD}/\" ## DO NOT EDIT. Inserted automatically by onionservice setup.sh\n" >> ~/."${SHELL##*/}"rc
-    . ~/."${SHELL##*/}"rc
-    sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" .onionrc
-    sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-cli
-    sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=\"${PWD}\"|" onionservice-tui
-    . .onionrc
+    [ -z "$(grep "ClientOnionAuthDir" "${TORRC}")" ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
     make_man
     ## finish
     printf %s"${FOREGROUND_BLUE}# OnionService enviroment is ready\n${UNSET_FORMAT}"
@@ -86,13 +87,10 @@ case "${ACTION}" in
   release|RELEASE)
 		printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
     check_syntax
-    ## empty var and cleanup
-    sed -i'' "s/set \-\x//g" .onionrc
-    sed -i'' "s/set \-\x//g" onionservice-cli
-    sed -i'' "s/set \-\x//g" onionservice-tui
-    sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" .onionrc
-    sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-cli
-    sed -i'' "s|ONIONSERVICE_PWD=.*|ONIONSERVICE_PWD=|" onionservice-tui
+    ## cleanup
+    sed -i'' "s/set \-\x//g" "${ONIONSERVICE_PWD}"/.onionrc
+    sed -i'' "s/set \-\x//g" "${ONIONSERVICE_PWD}"/onionservice-cli
+    sed -i'' "s/set \-\x//g" "${ONIONSERVICE_PWD}"/onionservice-tui
     printf %s"${FOREGROUND_GREEN}# Done!\n${UNSET_FORMAT}"
   ;;
 
