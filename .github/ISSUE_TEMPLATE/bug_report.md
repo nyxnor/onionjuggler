@@ -16,17 +16,18 @@ assignees: ''
 
 
 **Expected behavior**
-<!-- A clear and concise description of what you expected to happen.
+<!-- A clear and concise description of what you expected to happen. -->
 
 
 **Terminal output**
 <!-- What stdout shows you?-->
 
+
 **Screenshots**
-<!-- If applicable, add screenshots to help explain your problem.
+<!-- If applicable, add screenshots to help explain your problem. -->
 
 
-** Please complete the following specifications:**
+**Please complete the following specifications:**
 <!--
  - Operating system and Distribution: [e.g. Debian Bullseye (11) - $ lsb_release -sc]
  - Shell and its Version [e.g. BASH 5.1 - $ echo $SHELL]
@@ -35,3 +36,4 @@ assignees: ''
 
 **Additional context**
 <!-- Add any other context about the problem here. -->
+

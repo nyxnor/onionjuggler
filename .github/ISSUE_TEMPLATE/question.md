@@ -1,11 +1,14 @@
 ---
 name: Question
 about: Ask your questions here
-title: "[DOUBT]"
+title: "[QUESTION] "
 labels: question
 assignees: ''
 
 ---
 
-**My doubt is...**
-<!-- Have a doubt using this program? Be sure to read the documentation before asking questions! -->
+**My doubt is / How can I:**
+<!-- Read the documentation before asking questions!
+https://github.com/nyxnor/onionservice/blob/main/docs/ONIONSERVICE-CLI.md
+https://github.com/nyxnor/onionservice/blob/main/README.md
+-->
