@@ -76,8 +76,9 @@ cd onionservice
 
 #### Set custom vars
 
-Edit the required variables to fit your system inside `.onionrc`. Open the mentioned file with any editor:
+Edit the required variables to fit your system inside `.onionrc` following the same format from the already defined variables. Note that no variable that refers to a folder end with a trailing "/". Keep it that way, else it will break.
 
+Open the mentioned file with any editor:
 ```sh
 "${EDITOR:-nano}" .onionrc
 ```
@@ -96,7 +97,7 @@ sed "s|TOR_USER=.*|TOR_USER=\"tor\"|"
 #### Setup the enviroment
 
 The enviroment variable ${ONIONSERVICE_PWD} and add the directory to path.
-* add the enviroment variable ${ONIONSERVICE_PWD} -> exporting this variable possibilitate calling it from isnide shell scripts.
+* add the enviroment variable ${ONIONSERVICE_PWD} -> exporting this variable possibilitate calling it from inside shell scripts.
 * add directory to path -> call the scripts from any directory as if they were commands (without indicating the path to them or prepending with the shell name).
 
 For this, you have two options:
@@ -104,7 +105,7 @@ For this, you have two options:
 ```sh
 sh setup.sh
 ```
-* **Development**: Set the variable manually using the absolute path without trailing "/" at the end (e.g.: `\${HOME}/onionservice`, `/home/admin/onionservice`). Advantages are: no need to run from inside the cloned repository and facilitate scripting and porting to other projects):
+* **Development**: Set the variable manually using the absolute path without trailing "/" at the end (change `/absolute/path/to/onionservice/repo` to the path you cloned the repo, for example `\${HOME}/onionservice`, `/home/admin/onionservice`). Advantages are: no need to run from inside the cloned repository and facilitate scripting and porting to other projects:
 ```sh
 printf "\nexport ONIONSERVICE_PWD=\"/absolute/path/to/onionservice/repo\"\n" >> ~/."${SHELL##*/}"rc
 printf "PATH=\"\${PATH}:\${ONIONSERVICE_PWD}\"\n\n" >> ~/."${SHELL##*/}"rc
@@ -154,62 +155,60 @@ man onionservice-cli
 
 ## Portability
 
-### Requirements
-
-* Unix-like system
-* tor >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
-* grep
-* sed
-* python3-stem >=1.8.0 (for Vanguards)
-* openssl >= 1.1+ (for onion authentication)
-* basez >= 1.6.2 (for onion authentication)
-* git >= 2.0+ (for cloning the repo and vanguards)
-* qrencode >= 4.1.1 (for printing the hostname)
-* pandoc (creating the manual and reading markdown)
-* lynx (reading markdown)
-* systemd (for vanguards control) - for now, different services managers is a goal
-* user with root privileges
-* leave blank lines between Hidden Services torrc lines - the cli script create it correctly, no change needed when using this project, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block
-* HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
-* Path for folders variables must not contain "/" at the end.
-
-### Operating systems
-
-Works unix-like operating systems, tested by the maintainer specifically on GNU/Linux Debian 11.
-Work is being done for *bsd systems, sed is using [this trick](https://unix.stackexchange.com/a/401928). Missing different service managers, currently just supports Systemd, planning on implementing SysV, Runit, OpenRC.
-
 ### Shells
 
-Full compatibility with the following shells:
+Full compatibility with any POSIX compliant shells:
 * Korn Shell (ksh)
 * (Debian) Alquimist SHell (ash, dash)
 * Yet Another SHell (yash)
 * Bourne-Again SHell (bash)
+Tweak to be compatible with non-POSIX compliant shells::
 * Z SHell (zsh)
 
-#### Which shell to use?
+The project is POSIX compliant, but it is not "Pure shellscript", as other tools are [needed](#requirements), such as `grep` and `sed`.
 
-The best performance (most reliant, fastest and lightweight) you can get using these script is calling them with `sh` (not an actual shell, `/bin/sh` is symlinked to the distribution choice of POSIX compliant shell. FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`,Debian uses `dash`:
-`ls -l /bin/sh`: `/bin/sh -> dash`.
-
-You may call the scripts with the the POSIX compliant shell of your system by using only `sh`:
+The default POSIX shell of your unix-like operating system may vary depending on your system (FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`, Debian uses `dash`), but it has a symbolic link leading to it on `/bin/sh` it can always be called consistenly with only `sh`:
 ```sh
 sh onionservice-cli
 ```
 
-#### Zsh in `sh` compatibility
-
-The Z SHell is not POSIX compliant (works with the CLI but need workarounds when using the TUI). You can run the TUI:
-
-* with the Z Shell emulating a POSIX shell:
+Zsh is not POSIX compliant but it can emulate a POSIX shell:
 ```sh
 zsh --emulate sh -c onionservice-tui
 ```
 
-* calling the shell specifying its path:
-```sh
-/bin/sh -c onionservice-tui
-```
+### Operating systems
+
+Works unix-like operating systems, tested by the maintainer mostly on GNU/Linux Debian 11.
+Work is being done for *bsd systems, sed is using [this trick](https://unix.stackexchange.com/a/401928).
+
+### Service managers
+
+Currently only systemd is available, planning on implementing SysV, Runit, OpenRC.
+
+### Requirements
+
+* General:
+	* **Unix-like system**
+	* **systemd** (for vanguards control) - for now, different services managers is a goal
+	* user with root privileges
+* leave blank lines between Hidden Services torrc lines - the cli script create it correctly, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block (until next empty line)
+* HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
+* Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `${HOME}/onionservice/`, Correnct: `${HOME}/onionservice`).
+
+* Packages:
+	* **tor** >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
+	* **grep**
+	* **sed**
+	* **python3-stem** >=1.8.0 (for Vanguards)
+	* **openssl** >= 1.1+ (for onion authentication)
+	* **basez** >= 1.6.2 (for onion authentication)
+	* **git** >= 2.0+ (for cloning the repo and vanguards)
+	* **qrencode** >= 4.1.1 (for encoding the hostname)
+	* **pandoc** (creating the manual and reading markdown)
+	* **lynx** (reading markdown)
+
+The packages are downloaded when setting up the environment with [setup.sh](setup.sh).
 
 ## Bugs
 
@@ -220,7 +219,7 @@ zsh --emulate sh -c onionservice-tui
 
 ## To-do
 
-* improve backup method
+* TUI: edit auth files for server and client, this can reuse del functions and open the file instead of delete htem when they are presented on the menu.
 * [getopts](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/getopts.html)
 * support for different services managers
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
