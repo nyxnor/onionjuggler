@@ -1,8 +1,8 @@
 #!/bin/sh
 
-## This file is part of onionservice, an easy to use Tor hidden services manager.
+## This file is part of OnionService, an easy to use Tor hidden services manager.
 ##
-## Copyright (C) 2021 onionservice developers (GPLv3)
+## Copyright (C) 2021 OnionService developers (GPLv3)
 ## Github:  https://github.com/nyxnor/onionservice
 ##
 ## This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,10 @@
 ## SYNTAX
 ## sh onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
 ##
-## INCLUDE .onionrc
+## Lines that begin with "## " try to explain what's going on. Lines
+## that begin with just "#" are disabled commands.
+
+
 [ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: sh setup.sh\n"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onionrc
 
@@ -676,7 +679,7 @@ case "${COMMAND}" in
 				sudo cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
         sudo sed -i'' "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
         sudo sed -i'' "s|TARGET|${TARGET}|g" /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i'' "s|FOLDER|${WEBSITE_FOLDER}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
+        sudo sed -i'' "s|FOLDER|${WEBSITE_DIR}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
         sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-available/
         sudo ln -sfv /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-enabled/
         printf "\n# Web server configuration:\n\n"

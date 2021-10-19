@@ -1,8 +1,8 @@
 #!/bin/sh
 
-## This file is part of onionservice, an easy to use Tor hidden services manager.
+## This file is part of OnionService, an easy to use Tor hidden services manager.
 ##
-## Copyright (C) 2021 onionservice developers (GPLv3)
+## Copyright (C) 2021 OnionService developers (GPLv3)
 ## Github:  https://github.com/nyxnor/onionservice
 ##
 ## This program is free software: you can redistribute it and/or modify
@@ -20,11 +20,14 @@
 ##
 ## DESCRIPTION
 ## This file should be run from inside the cloned repository to set the correct PATH
-## It setup tor directories, user, packages need for onionservice.
+## It setup tor directories, user, packages need for OnionService.
 ## It also prepare for releases deleting my path ONIONSERVICE_PWD
 ##
 ## SYNTAX
 ## sh setup.sh [<setup>|release]
+##
+## Lines that begin with "## " try to explain what's going on. Lines
+## that begin with just "#" are disabled commands.
 ##
 ## SET ENV MANUALLY (dev)
 ##  Write:
@@ -54,7 +57,9 @@ if [ -z "${ONIONSERVICE_PWD}" ]; then
 	fi
 fi
 
+
 ## MAIN
+
 . "${ONIONSERVICE_PWD}"/.onionrc
 
 ACTION=${1:-SETUP}
@@ -63,7 +68,7 @@ case "${ACTION}" in
   setup|SETUP)
     ## configure tor
     #python3-stem
-    install_package tor grep sed openssl basez git qrencode pandoc lynx gzip "${WEBSERVER}"
+    install_package tor grep sed openssl basez git qrencode pandoc lynx gzip tar "${WEBSERVER}"
     sudo usermod -aG "${TOR_USER}" "${USER}"
     sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
     sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
@@ -73,6 +78,7 @@ case "${ACTION}" in
 		sudo mkdir -p /usr/local/man/man1
 		pandoc "${ONIONSERVICE_PWD}"/docs/ONIONSERVICE-CLI.md -s -t man -o /tmp/onionservice-cli.1
 		gzip -f /tmp/onionservice-cli.1
+		#tar -czvf --no-xattrs /tmp/onionservice-cli.1.gz /tmp/onionservice-cli.1 ## TODO: tar prints file information inside the file
 		sudo mv /tmp/onionservice-cli.1.gz /usr/local/man/man1/
 		sudo mandb -q -f /usr/local/man/man1/onionservice-cli.1.gz
     ## finish
@@ -97,6 +103,6 @@ case "${ACTION}" in
     printf %s"${FOREGROUND_GREEN}# Done!\n${UNSET_FORMAT}"
   ;;
 
-  *) printf "Commands: [help|setup|release]\n"
+  *) printf "${FOREGROUND_YELLOW}Commands: [help|setup|release]\n${UNSET_FORMAT}"
 
 esac

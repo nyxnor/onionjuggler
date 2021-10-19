@@ -1,6 +1,6 @@
 #!/bin/sh
 
-## This file is part of onionservice, an easy to use Tor hidden services manager.
+## This file is part of OnionService, an easy to use Tor hidden services manager.
 ## Portions of this file was source from TorBox, an easy to use anonymizing router based on Raspberry Pi.
 ##
 ## Copyright (C) 2021 Patrick Truffer
@@ -8,7 +8,7 @@
 ## Website: https://www.torbox.ch
 ## Github:  https://github.com/radio24/TorBox
 ##
-## Copyright (C) 2021 onionservice developers (GPLv3)
+## Copyright (C) 2021 OnionService developers (GPLv3)
 ## Github:  https://github.com/nyxnor/onionservice
 ##
 ## This program is free software: you can redistribute it and/or modify
@@ -41,14 +41,14 @@
 ######## VARIABLES ########
 
 
-## [ EDIT REQUIRED IF NOT DEBIAN]
+## [ EDIT REQUIRED ] (IF NOT DEBIAN)
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
 WEBSERVER="nginx" ## [nginx|apache2]
 TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 
 ## [ EDIT OPTIONAL ]
-WEBSITE_FOLDER="/var/www" # /var/www
+WEBSITE_DIR="/var/www" # /var/www
 ## Vanguards
 VANGUARDS_COMMIT_HASH=10942de
 ## Backup
@@ -185,7 +185,7 @@ restarting_tor()
     printf %s"${FOREGROUND_GREEN}# Restarted tor succesfully!\n${UNSET_FORMAT}"
   elif [ "${1}" = "" ]; then
     printf "# Reloading tor...\n"
-    sudo systemctl reload-or-restart "${TOR_SERVICE}"
+    sudo systemctl reload-or-restart "${TOR_SERVICE}" ## this gets stuck if the new config is wrong becayse it tries to restart, after correcting the config and running again it restarts from failed state to active
     printf %s"${FOREGROUND_GREEN}# Reloaded tor succesfully!\n${UNSET_FORMAT}"
   fi
 }
