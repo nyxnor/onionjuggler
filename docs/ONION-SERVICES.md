@@ -5,7 +5,7 @@ Onion services (formerly known as "hidden services") are services (like websites
 Onion services offer several advantages over ordinary services on the non-private web:
 
 * Onion services’ location and IP address are hidden, making it difficult for adversaries to censor them or identify their operators.
-* All traffic between Tor users and onion services is end-to-end encrypted, so you do not need to worry about [connecting over HTTPS](/secure-connections).
+* All traffic between Tor users and onion services is end-to-end encrypted, so you do not need to worry about connecting over HTTPS.
 * The address of an onion service is automatically generated, so the operators do not need to purchase a domain name; the .onion URL also helps Tor ensure that it is connecting to the right location and that the connection is not being tampered with.
 
 ### HOW TO ACCESS AN ONION SERVICE
@@ -20,8 +20,6 @@ Onion-Location is a non-standard HTTP header that websites can use to advertise 
 If the website that you are visiting has an onion site available, a purple suggestion pill will prompt at the URL bar in Tor Browser displaying ".onion available".
 When you click on ".onion available", the website will be reloaded and redirected to its onion counterpart.
 
-<img style="max-width:100%" class="col-md-6" src="../../static/images/onion-location.png" alt="Onion-Location">
-
 To prioritize an onion site version of a website, you can enable automatic Onion-Location redirects.
 Click on hamburger menu (≡), go to Preferences (or Options on Windows), click on Privacy & Security, and in the Onion Services section look for the entry "Prioritize .onion sites when known." and check the option "Always".
 Or, if you're already running Tor Browser, you can copy and paste this string in a new tab: `about:preferences#privacy` and change this setting.
@@ -33,8 +31,6 @@ As a Tor user, you may authenticate yourself directly in the Tor Browser.
 In order to access this service, you will need access credentials from the onion service operator.
 When accessing an authenticated onion service, Tor Browser will show in the URL bar an icon of a little gray key, accompanied by a tooltip.
 Enter your valid private key into the input field.
-
-<img class="col-md-6" src="../../static/images/client-auth.png" alt="Client Authorization">
 
 ### ONION SERVICES ERRORS
 
@@ -60,7 +56,7 @@ If you cannot reach the onion service you requested, make sure that you have ent
 
 If you are still unable to connect to the onion service after verifying the address, please try again later. There may be a temporary connection issue, or the site operators may have allowed it to go offline without warning.
 
-If the onion service you are trying to access consists of a string of 16 characters (V2 format), this type of address is [being deprecated](https://support.torproject.org/onionservices/v2-deprecation/).
+If the onion service you are trying to access consists of a string of 16 characters (V2 format), this type of address is [deprecated](https://support.torproject.org/onionservices/v2-deprecation/).
 
 You can also test if you are able to access other onion services by connecting to [DuckDuckGo's Onion Service](https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/).
 

@@ -74,13 +74,13 @@ gh repo fork https://github.com/nyxnor/onionservice
 #### Basic instructions
 
 Clone:
-```sh
+```git
 git clone https://github.com/<YOUR_USERNAME>/onionservice.git
 cd onionservice
 ```
 
 Create feature or fix branch based on the upstream project development branch as base:
-```sh
+```git
 git remote add upstream https://github.com/nyxnor/onionservice.git
 git checkout -b <NEW_BRANCH> upstream/<BASE_BRANCH>
 ```
@@ -101,7 +101,7 @@ sh setup.sh release
 ```
 
 Commit to your branch
-```sh
+```git
 git add <FILE_EDITED>
 git rm <FILE_DETELED>
 git commit -m "These changes does this thing"

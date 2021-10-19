@@ -18,9 +18,10 @@ To configure this header in Apache 2.2 or above, you will need to enable a `head
 
 **Step 1.** Enable headers and rewrite modules and reload Apache2
 
-     `sudo a2enmod headers rewrite`
-
-     `sudo systemctl reload apache2`
+```
+sudo a2enmod headers rewrite
+sudo systemctl reload apache2
+```
 
 If you get an error message, something has gone wrong and you cannot continue until you've figured out why this didn't work.
 
@@ -50,8 +51,9 @@ Virtual Host example:
 **Step 3.** Reload Apache
 
 Reload the apache2 service, so your configuration changes take effect:
-
-     `sudo systemctl reload apache2`
+```
+sudo systemctl reload apache2
+```
 
 If you get an error message, something has gone wrong and you cannot continue until you've figured out why this didn't work.
 
@@ -59,7 +61,9 @@ If you get an error message, something has gone wrong and you cannot continue un
 
 To test if Onion-Location is working, fetch the website HTTP headers, for example:
 
-     `wget --server-response --spider your-website.tld`
+```
+wget --server-response --spider your-website.tld
+```
 
 Look for `onion-location` entry and the onion service address.
 Or open the website in Tor Browser and a purple pill will appear in the address bar.
@@ -144,7 +148,9 @@ server {
 
 **Step 3.** Test website configuration
 
-     `sudo nginx -t`
+```
+sudo nginx -t
+```
 
 The web server should confirm that the new syntax is working:
 
@@ -155,7 +161,9 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 
 **Step 4.** Restart nginx
 
-     `sudo nginx -s reload`
+```
+sudo nginx -s reload
+```
 
 If you get an error message, something has gone wrong and you cannot continue until you've figured out why this didn't work.
 
@@ -163,7 +171,9 @@ If you get an error message, something has gone wrong and you cannot continue un
 
 To test if the Onion-Location is working, fetch the web site HTTP headers, for example:
 
-     `wget --server-response --spider your-website.tld`
+```
+wget --server-response --spider your-website.tld
+```
 
 Look for `onion-location` entry and the onion service address.
 Or, open the web site in Tor Browser and a purple pill will appear in the address bar.
@@ -189,7 +199,9 @@ file_server
 
 **Testing it out:** Test it out with:
 
-     `wget --server-response --spider your-website.tld`
+```
+wget --server-response --spider your-website.tld
+```
 
 Look for `onion-location` entry and the onion service address.
 Or, open the web site in Tor Browser and a purple pill will appear in the address bar.

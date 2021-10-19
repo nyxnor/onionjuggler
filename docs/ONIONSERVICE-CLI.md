@@ -192,7 +192,7 @@ onionservice-cli auth client list
 ```
 
 **web on** [SERV] [FOLDER]
-: Enable a website using a specific onion service by creating a configuration file inside the web server folder. The folder name is to be considered the wanted folder inside WEBSITE_FOLDER variable defined on .onionrc. File(s) modified: /etc/WEBSERVER/sites-enabled/.
+: Enable a website using a specific onion service by creating a configuration file inside the web server folder. The folder name is to be considered the wanted folder inside WEBSITE_DIR variable defined on .onionrc. File(s) modified: /etc/WEBSERVER/sites-enabled/.
 ```
 onionservice-cli web on nextcloud nextcloud-local-site
 ```
@@ -267,5 +267,5 @@ tor(1), sh(1), regex(7)
 
 # COPYRIGHT
 
-Copyright  ©  2021  nyxnor.   License  GPLv3+:  GNU  GPL  version  3 or later <https://gnu.org/licenses/gpl.html>.
+Copyright  ©  2021  OnionService developers.   License  GPLv3+:  GNU  GPL  version  3 or later <https://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
