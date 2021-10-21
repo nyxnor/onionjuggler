@@ -58,7 +58,7 @@ SCP_TARGET_PATH="/home/${SCP_TARGET_USER}/remote/path"
 SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" ## '[USER]@[SERVER]:[SERVER_DIR]'
 HS_BK_DIR="${HOME}/tor-hs-backup"
 LOCAL_DOWNLOAD_PATH="${HOME}/Downloads/tor-hs-backup"
-LOCAL_IP=$(hostname -I | cut -d " " -f1) ## awk '{print $1}'
+LOCAL_IP=$(hostname -I | cut -d " " -f1)
 ## tor defaults
 TORRC_ROOT="/etc/tor"
 TORRC="${TORRC_ROOT}/torrc"
@@ -72,19 +72,19 @@ SOCKS_PORT=9050
 CHECK_URL1="http://debian.org"
 
 ## Dialog
-export DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
+DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
 
 ## [ TODO ]
 BROWSER_DATA_DIR="/home/${USER}/.local/share/torbrowser/tbb/$(uname -m)/tor-browser_en-US/Browser/TorBrowser/Data/Tor"
 BROWSER_TORRC="${BROWSER_DATA_DIR}/torrc"
 BROWSER_ONION_AUTH_DIR="${BROWSER_DATA_DIR}/onion-auth"
 ## deb onion sources
-SOURCES_DEB_SECURITY_ONION="http://5ajw6aqf3ep7sijnscdzw77t7xq4xjpsy335yb2wiwgouo7yfxtjlmid.onion/"
-SOURCES_DEB_UPDATE_ONION="http://2s4yqjx5ul6okpp3f2gaunr2syex5jgbfpfvhxxbbjwnrsvbk5v3qbid.onion/"
+SOURCES_DEB_SECURITY_ONION="tor+http://5ajw6aqf3ep7sijnscdzw77t7xq4xjpsy335yb2wiwgouo7yfxtjlmid.onion/"
+SOURCES_DEB_UPDATE_ONION="tor+http://2s4yqjx5ul6okpp3f2gaunr2syex5jgbfpfvhxxbbjwnrsvbk5v3qbid.onion/"
 SOURCES_DEB_SECURITY_PLAIN="https://deb.debian.org/"
 SOURCES_DEB_UPDATE_PLAIN="https://deb.debian.org/"
 ## tpo onion sources
-SOURCES_TOR_UPDATE_ONION="http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
+SOURCES_TOR_UPDATE_ONION="tor+http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion/"
 SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org/"
 
 ## [ COLORS ]

@@ -27,8 +27,7 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
-
-[ ! -z "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: sh setup.sh\n"; exit 1; }
+[ -n "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: sh setup.sh\n"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onionrc
 
 ## COMMAND INFO
@@ -45,9 +44,9 @@ Usage: onionservice-cli COMMAND [REQUIRED] <OPTIONAL>
 Options:
   setup torrc                                                                        restore latest torrc
 
-  on tcp [VERSION] [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>               enable a service targeting tcp socket
+  on tcp [VERSION] [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                  enable a service targeting tcp socket
 
-  on unix [VERSION] [SERV] [VIRTPORT] <VIRTPORT2>                                 enable a service targeting unix socket
+  on unix [VERSION] [SERV] [VIRTPORT] <VIRTPORT2>                                    enable a service targeting unix socket
 
   off [SERV1,SERV2,...] <purge>                                                      disable a service and optionally purge its directory
 
@@ -97,7 +96,7 @@ It does not imply the code worked, you should always pay attention for errors in
 
 ## display error message with instructions to use the script correctly.
 error_msg(){
-  [ ! -z "${1}" ] && printf %s"${FOREGROUND_RED}ERROR: ${1}${UNSET_FORMAT}\n"
+  [ -n "${1}" ] && printf %s"${FOREGROUND_RED}ERROR: ${1}${UNSET_FORMAT}\n"
   exit 1
   #onion_usage
 }
@@ -148,8 +147,9 @@ test_service_exists(){
 ## save the clients names that are inside the <HiddenServiceDir>/authorized_clients/ in list format (CLIENT1,CLIENT2,...)
 create_client_list(){
   SERVICE="${1}"
-  CLIENT_NAME_LIST=$(printf %s"$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" ",")
-  CLIENT_COUNT=$(IFS=','; set -f -- ${CLIENT_NAME_LIST}; printf %s"${#}")
+  CLIENT_NAME_LIST="$(printf %s"$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" ",")"
+  CLIENT_COUNT="$(printf %s"${CLIENT_NAME_LIST}" | tr -dc "," | wc -c)"
+	CLIENT_COUNT=$((CLIENT_COUNT+1))
 }
 
 
@@ -226,7 +226,6 @@ case "${COMMAND}" in
       printf %s"# Deleted Hidden Service configuration in ${TORRC}\n"
       sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
       ## substitute multiple sequential empty lines to a single one per sequence
-      #awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       printf %s"# Disabled service: ${SERVICE}\n\n"
     }
@@ -252,7 +251,6 @@ case "${COMMAND}" in
 
     finish_service_activation(){
       ## remove double empty lines
-      #awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       restarting_tor
 
@@ -263,7 +261,7 @@ case "${COMMAND}" in
       printf %s"Service name    = ${SERVICE}\n"
       printf %s"Service address = ${ONION_HOSTNAME}\n"
       printf %s"Virtual port    = ${VIRTPORT}\n"
-      [ ! -z "${VIRTPORT2}" ] && printf %s"Virtual port    = ${VIRTPORT2}\n"
+      [ -n "${VIRTPORT2}" ] && printf %s"Virtual port    = ${VIRTPORT2}\n"
 			printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
     }
 
@@ -290,7 +288,7 @@ case "${COMMAND}" in
         ## Optional
         VIRTPORT2="${7}"
         TARGET2="${8}"
-        if [ ! -z "${VIRTPORT2}" ]; then
+        if [ -n "${VIRTPORT2}" ]; then
           TARGET2=${TARGET2:-127.0.0.1:${VIRTPORT2}}
 					TARGET2_ADDR=${TARGET2%%:*}
 					TARGET2_PORT=${TARGET2##*:}
@@ -307,14 +305,14 @@ case "${COMMAND}" in
         sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${TORRC}\n"
-        [ ! -z "${VIRTPORT2}" ] && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServiceVersion ${VERSION}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}\n\n" | sudo tee -a "${TORRC}"
-        [ ! -z "${VIRTPORT2}" ] || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServiceVersion ${VERSION}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n\n" | sudo tee -a "${TORRC}"
+        [ -n "${VIRTPORT2}" ] && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServiceVersion ${VERSION}\nHiddenServicePort ${VIRTPORT} ${TARGET}\nHiddenServicePort ${VIRTPORT2} ${TARGET2}\n\n" | sudo tee -a "${TORRC}"
+        [ -n "${VIRTPORT2}" ] || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServiceVersion ${VERSION}\nHiddenServicePort ${VIRTPORT} ${TARGET}\n\n" | sudo tee -a "${TORRC}"
         finish_service_activation
       ;;
 
       unix|UNIX)
         VIRTPORT="${5}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
-        VIRTPORT2="${6}"; [ ! -z "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
+        VIRTPORT2="${6}"; [ -n "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
         is_integer "${VIRTPORT}"
 
         ## delete any old entry for that servive
@@ -324,8 +322,8 @@ case "${COMMAND}" in
         UNIX_PATH="unix:/var/run/${SERVICE}-onion"
         SOCK_FILE="${UNIX_PATH}-${VIRTPORT}.sock"
         SOCK2_FILE="${UNIX_PATH}-${VIRTPORT2}.sock"
-        [ ! -z "${VIRTPORT2}" ] && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServiceVersion ${VERSION}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\nHiddenServicePort ${VIRTPORT2} ${SOCK2_FILE}\n\n" | sudo tee -a "${TORRC}"
-        [ ! -z "${VIRTPORT2}" ] || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServiceVersion ${VERSION}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\n\n" | sudo tee -a "${TORRC}"
+        [ -n "${VIRTPORT2}" ] && printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServiceVersion ${VERSION}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\nHiddenServicePort ${VIRTPORT2} ${SOCK2_FILE}\n\n" | sudo tee -a "${TORRC}"
+        [ -n "${VIRTPORT2}" ] || printf %s"\nHiddenServiceDir ${DATA_DIR_HS}/${SERVICE}\nHiddenServiceVersion ${VERSION}\nHiddenServicePort ${VIRTPORT} ${SOCK_FILE}\n\n" | sudo tee -a "${TORRC}"
         finish_service_activation
       ;;
 
@@ -360,8 +358,8 @@ case "${COMMAND}" in
               test_service_exists "${SERVICE}"
               ## Generate pem and derive pub and priv keys
               openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
-              grep -v "PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
-              openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v "PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
+              grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
+              openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
               ## save variables
               CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
               CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
@@ -458,9 +456,9 @@ case "${COMMAND}" in
               SERVICE="${1}"
               test_service_exists "${SERVICE}"
               create_client_list "${SERVICE}"
-              if [ ! -z "${CLIENT_COUNT}" ]; then
+              if [ -n "${CLIENT_COUNT}" ]; then
                 printf %s"\nService  = ${SERVICE}\n"
-								[ ! -z "${CLIENT_NAME_LIST}" ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
+								[ -n "${CLIENT_NAME_LIST}" ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
 								for AUTH in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}/${SERVICE}/authorized_clients/"); do
 									printf %s"\n# File name: ${AUTH}\n"
 									printf %s"# Content:   $(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${AUTH}")\n"
@@ -610,7 +608,7 @@ case "${COMMAND}" in
       ## reload tor now so auth option can get the new hostname
       restarting_tor
       ## generate auth for clients
-      if [ ! -z "${CLIENT_NAME_LIST}" ]; then
+      if [ -n "${CLIENT_NAME_LIST}" ]; then
         printf %s"\n${FOREGROUND_YELLOW}# Command to renew services requires new authorization for your clients.\n${UNSET_FORMAT}"
         sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"
       fi
@@ -647,7 +645,7 @@ case "${COMMAND}" in
       [ "${NO_QR}" = "no-qr" ] || { printf "\n"; qrencode -m 2 -t ANSIUTF8 "${ONION_HOSTNAME}"; }
       printf %s"\nAddress  = ${ONION_HOSTNAME}\n"
       printf %s"Service  = ${SERVICE}\n"
-      [ ! -z "${CLIENT_NAME_LIST}" ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
+      [ -n "${CLIENT_NAME_LIST}" ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
       if [ "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" = 0 ]; then
         printf "Status   = inactive\n"
       else
@@ -672,10 +670,10 @@ case "${COMMAND}" in
         is_service_dir_empty
         test_service_exists "${SERVICE}"
         FOLDER="${4}"; [ -z "${FOLDER}" ] && error_msg "FOLDER is missing"
-        printf %s"# Activating web server for the onion service: ${SERVICE}\n\n"
         VIRTPORT=$(sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | grep "HiddenServicePort 80")
         [ "${VIRTPORT}" = "" ] && error_msg "At least one VIRTPORT of the service must be listening on port 80"
         TARGET="$(printf "%s\n" "${VIRTPORT}" | cut -d " " -f3)"
+				printf %s"# Activating web server for the onion service: ${SERVICE}\n\n"
 				sudo cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
         sudo sed -i'' "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
         sudo sed -i'' "s|TARGET|${TARGET}|g" /tmp/"${SERVICE}"-onion.conf
@@ -710,7 +708,7 @@ case "${COMMAND}" in
         printf %s"# Web server = ${WEBSERVER}\n\n"
         printf "# Enabled websites:"
         SITES_ENABLED=$(sudo ls /etc/"${WEBSERVER}"/sites-enabled/ | sed "s/-onion.conf//g")
-        [ ! -z "${SITES_ENABLED}" ] && printf %s"\n${SITES_ENABLED}\n" || printf " No website enabled\n"
+        [ -n "${SITES_ENABLED}" ] && printf %s"\n${SITES_ENABLED}\n" || printf " No website enabled\n"
       ;;
 
       *)
@@ -820,7 +818,7 @@ sudo systemctl reload apache
 				sudo cp -rf "${HS_BK_DIR}"/integrate"${DATA_DIR_HS}"/* "${DATA_DIR_HS}"/
         sudo cp -rf "${HS_BK_DIR}"/integrate"${CLIENT_ONION_AUTH_DIR}"/* "${CLIENT_ONION_AUTH_DIR}"/
 				CLIENT_ONION_AUTH_DIR_BK="$(sudo grep "ClientOnionAuthDir" "${HS_BK_DIR}"/integrate"${TORRC}")"
-				if [ ! -z "${CLIENT_ONION_AUTH_DIR_BK}" ]; then
+				if [ -n "${CLIENT_ONION_AUTH_DIR_BK}" ]; then
 					sudo sed -i'' "/ClientOnionAuthDir .*/d" "${TORRC}"
 					printf '\n%s\n\n' "${CLIENT_ONION_AUTH_DIR_BK}" | sudo tee -a "${TORRC}" >/dev/null
 					sudo sed -i'' "/ClientOnionAuthDir .*/d" "${HS_BK_DIR}"/integrate"${TORRC}"
@@ -837,7 +835,6 @@ sudo systemctl reload apache
         #   sudo cat "${TORRC}".mod | sudo tee -a "${TORRC}" >/dev/null
         # done
         # sudo rm -f "${TORRC}".tmp "${TORRC}".mod
-        #awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2' "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
         #sudo cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
         sudo rm -rf "${HS_BK_DIR}"/integrate
         ## RESTORE BACKUP FROM REMOTE

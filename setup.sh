@@ -28,7 +28,9 @@
 ##
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
-##
+
+
+# shellcheck source=/dev/null
 ## SET ENV MANUALLY (dev)
 ##  Write:
 ##   printf "\nexport ONIONSERVICE_PWD=\"/absolute/path/to/onionservice/repo\"\n" >> ~/."${SHELL##*/}"rc
@@ -50,9 +52,9 @@ if [ -z "${ONIONSERVICE_PWD}" ]; then
 		printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first. There are two options to set the variable:\n"
 		printf "\\033[1;33mSAFE: Run this script again from inside the repository, it will automatically use the \${PWD}.\n"
 		printf "\\033[1;33mDEV:  Or input the path manually by running the command below (no trailing/not ending with \"/\"):\n"
-		printf "\033[0m\tprintf \"\\\nexport ONIONSERVICE_PWD=\\\"/absolute/path/to/onionservice/repo\\\"\\\n\" >> ~/."${SHELL##*/}"rc\n"
-		printf "\tprintf \"PATH=\\\"\\\${PATH}:\\\${ONIONSERVICE_PWD}\\\"\\\n\" >> ~/."${SHELL##*/}"rc\n"
-		printf "\t. ~/."${SHELL##*/}"rc\n"
+		printf "\033[0m\tprintf \"\\\nexport ONIONSERVICE_PWD=\\\\\"/absolute/path/to/onionservice/repo\\\\\"\\\n\" >> ~/.\"\${SHELL##*/}\"rc\n"
+		printf "\tprintf \"PATH=\\\\\"\\\${PATH}:\\\${ONIONSERVICE_PWD}\\\\\"\\\n\" >> ~/.\"\${SHELL##*/}\"rc\n"
+		printf "\t. ~/.\"\${SHELL##*/}\"rc\n"
 		exit 1
 	fi
 fi
@@ -73,7 +75,7 @@ case "${ACTION}" in
     sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
     sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
     restarting_tor
-    [ -z "$(grep "ClientOnionAuthDir" "${TORRC}")" ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
+		grep -q "ClientOnionAuthDir" "${TORRC}" || { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
     printf "# Creating man pages\n"
 		sudo mkdir -p /usr/local/man/man1
 		pandoc "${ONIONSERVICE_PWD}"/docs/ONIONSERVICE-CLI.md -s -t man -o /tmp/onionservice-cli.1
@@ -91,10 +93,10 @@ case "${ACTION}" in
 		## Customize severity with -s [error|warning|info|style]
 		## quits to warn workflow test failed
 		printf "# Checking syntax\n"
-		shellcheck -x -s sh -e 1090,2034,2086,2236 "${ONIONSERVICE_PWD}"/onionservice-tui || SHELLCHECK_FAIL=1
-		shellcheck -x -s sh -e 1090,2086,2153,2236 "${ONIONSERVICE_PWD}"/onionservice-cli || SHELLCHECK_FAIL=1
-		shellcheck -x -s sh -e 1090,2034,2119,2236 "${ONIONSERVICE_PWD}"/setup.sh || SHELLCHECK_FAIL=1
-		shellcheck -s sh -e 2034,2236 "${ONIONSERVICE_PWD}"/.onionrc || SHELLCHECK_FAIL=1
+		shellcheck -s sh "${ONIONSERVICE_PWD}"/setup.sh || SHELLCHECK_FAIL=1
+		shellcheck -s sh -e 2034 "${ONIONSERVICE_PWD}"/.onionrc || SHELLCHECK_FAIL=1
+		shellcheck -s sh -e 2153 "${ONIONSERVICE_PWD}"/onionservice-cli || SHELLCHECK_FAIL=1
+		shellcheck -s sh -e 2034,2086 "${ONIONSERVICE_PWD}"/onionservice-tui || SHELLCHECK_FAIL=1
 		[ -n "${SHELLCHECK_FAIL}" ] && exit 1
     ## cleanup
     sed -i'' "s/set \-\x//g" "${ONIONSERVICE_PWD}"/.onionrc
@@ -103,6 +105,6 @@ case "${ACTION}" in
     printf %s"${FOREGROUND_GREEN}# Done!\n${UNSET_FORMAT}"
   ;;
 
-  *) printf "${FOREGROUND_YELLOW}Commands: [help|setup|release]\n${UNSET_FORMAT}"
+  *) printf %s"${FOREGROUND_YELLOW}Commands: [help|setup|release]\n${UNSET_FORMAT}"
 
 esac
