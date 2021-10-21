@@ -46,6 +46,7 @@ i=0
 service_menu(){
   DIALOG_TYPE="${1}"
   COMPL_TITLE="${2}"
+
   for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
     i=$((i+1))
     ONION_HOSTNAME_WITHOUT_ONION="$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d "." -f1)"
@@ -198,8 +199,9 @@ case "${CHOICE_MAIN}" in
     TITLE="Client Authorization - Server"
     MENU="\nAs the onion service operator, manage client authorization to your services"
     AUTH_TYPE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-    --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 13 60 2 \
+    --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 14 60 2 \
     "LIST" "List all clients for specific HiddenService" \
+		"EDIT" "Edit an existing authorization" \
     "GEN" "Generate a new key pair (public and private key)" \
     "PUB" "Register the client public key" \
     "DEL" "Remove a client" \
@@ -215,6 +217,39 @@ case "${CHOICE_MAIN}" in
           printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
         fi
       ;;
+
+			EDIT)
+				i=0
+				for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
+					## only include services that have at least one client
+					CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
+					if [ -n "${CLIENT_EXIST}" ]; then
+						i=$((i+1))
+						ONION_HOSTNAME_WITHOUT_ONION="$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d "." -f1)"
+						SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)"
+					fi
+				done
+				if [ -z "${SERVICE_LIST}" ]; then
+					TITLE="Onion Service - INFO"
+					MENU="\nNone of your services have client authorization."
+					dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${MENU}" 10 50
+				else
+					TITLE="Client Authorization - Server - Deletion"
+					MENU="\nUse spacebar to select:"
+					CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
+					"$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
+				fi
+				if [ -n "${CHOICE_SERVICE}" ]; then
+					i=0
+					for CLIENT in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g"); do
+						i=$((i+1))
+						CLIENT_LIST="$(printf "%s\n%s\n%s\n" "${CLIENT_LIST}" "${CLIENT}" ".")"
+					done
+					CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
+					"$((i+8))" 50 2 ${CLIENT_LIST} 2>&1 >/dev/tty)"
+					[ -n "${CHOICE_CLIENT}" ] && sudo "${EDITOR:-nano}" "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CHOICE_CLIENT}".auth
+				fi
+			;;
 
       GEN)
         service_menu checklist "Auth Server Gen"
@@ -310,10 +345,11 @@ case "${CHOICE_MAIN}" in
 
   AUTH_CLIENT)
     TITLE="Client Authorization - Client"
-    MENU="As the onion service client: Would you like to 'add' or 'remove' authorization from a client?"
+    MENU="As the onion service client: Would you like to 'add' or 'remove' your authorization?"
     AUTH_TYPE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-    --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 12 80 4 \
+    --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 13 80 4 \
     "LIST" "List all the authorizations inside ClientOnionAuthDir" \
+		"EDIT" "Edit your client authorizations" \
     "GEN" "Generate a new key pair (public and private key)" \
     "PRIV" "Register your private key" \
     "DEL" "Remove expired authorization" \
@@ -325,6 +361,24 @@ case "${CHOICE_MAIN}" in
         sh "${ONIONSERVICE_PWD}"/onionservice-cli auth client list
         printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
       ;;
+
+			EDIT)
+				i=0
+				for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1); do
+					i=$((i+1))
+					ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" ".")"
+				done
+				TITLE="Client Onion Auth Directory"
+				if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
+					TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${CLIENT_ONION_AUTH_DIR}"
+					dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
+				else
+					MENU="\nUse spacebar to select:"
+					CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --menu "${MENU}" \
+					"$((i+8))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
+					[ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-nano}" "${CLIENT_ONION_AUTH_DIR}"/"${CHOICE_ONION_AUTH}".auth_private
+				fi
+			;;
 
       GEN)
         MENU="\nInsert the onion address of the service you want to authenticate:"
