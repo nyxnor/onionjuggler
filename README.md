@@ -105,9 +105,9 @@ For this, you have two options:
 ```sh
 sh setup.sh
 ```
-* **Development**: Set the variable manually using the absolute path without trailing "/" at the end (change `/absolute/path/to/onionservice/repo` to the path you cloned the repo, for example `\${HOME}/onionservice`, `/home/admin/onionservice`). Advantages are: no need to run from inside the cloned repository and facilitate scripting and porting to other projects:
+* **Development**: Set the variable manually using the absolute path without trailing "/" at the end (change `/path/to/onionservice/repo` to the path you cloned the repo, for example `${HOME}/onionservice`, `/home/admin/onionservice`). Advantages are: no need to run from inside the cloned repository and facilitate scripting and porting to other projects:
 ```sh
-printf "\nexport ONIONSERVICE_PWD=\"/absolute/path/to/onionservice/repo\"\n" >> ~/."${SHELL##*/}"rc
+printf "\nexport ONIONSERVICE_PWD=\"/path/to/onionservice/repo\"\n" >> ~/."${SHELL##*/}"rc
 printf "PATH=\"\${PATH}:\${ONIONSERVICE_PWD}\"\n\n" >> ~/."${SHELL##*/}"rc
 . ~/."${SHELL##*/}"rc
 sh setup.sh
@@ -192,9 +192,9 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 	* **Unix-like system**
 	* **systemd** (for vanguards control) - for now, different services managers is a goal
 	* user with root privileges
-* leave blank lines between Hidden Services torrc lines - the cli script create it correctly, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block (until next empty line)
-* HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
-* Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `${HOME}/onionservice/`, Correnct: `${HOME}/onionservice`).
+	* leave blank lines between Hidden Services torrc lines - the cli script create it correctly, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block (until next empty line)
+	* HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
+	* Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `${HOME}/onionservice/`, Correnct: `${HOME}/onionservice`).
 
 * Packages:
 	* **tor** >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
@@ -219,6 +219,8 @@ The packages are downloaded when setting up the environment with [setup.sh](setu
 
 ## To-do
 
+* should non env variables be all upercase? Env var should be distinguishable https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html. https://stackoverflow.com/questions/673055/correct-bash-and-shell-script-variable-capitalization. The .onionrc is a lib and "exports" vars to other scripts.
+* renew should not change authorized clients, that is PAIN, just print say to clients to change the hostname inside the files and bookmarks
 * TUI: edit auth files for server and client, this can reuse del functions and open the file instead of delete htem when they are presented on the menu.
 * [getopts](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/getopts.html)
 * support for different services managers

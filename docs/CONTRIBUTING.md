@@ -12,24 +12,31 @@ All executables are shell scripts and will stay that way till the limit.
 
 These are requirements and must be done. If not conformed, the merge request must not be accepted.
 
-1. Sacrificing some code legibility for speed is acceptable, but if the maintainer considers it messy because it does not help performance, it won't be approved. This is the only subjective requirements
+1. Lines that begin with "## " try to explain what's going on. Lines that begin with just "#" are disabled commands.
+
+1. Sacrificing some code legibility for speed is acceptable, but if the maintainer considers it messy because it does not help performance, it won't be approved. This is the only subjective requirement.
 
 1. POSIX compliant. The [Shellcheck Code 2039](https://github.com/koalaman/shellcheck/wiki/SC2039) must not be ignored. The project will never be pure POSIX alternative to external process such as git, grep, openssl, but it aims to use more of the shell capabilities than depending on more packages. Read the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) - POSIX compliant and efficiency guide while listening to [KISS](https://www.youtube.com/watch?v=EFMD7Usflbg) - Keep It Simple Stupid, but in audio and video format.
 
 1. Operating system extensions (GNU extesions on commands such as grep) and commands unique to some unix operating systems but not present on others need to be avoided.
 
+1. Less commands to install, more portable it becomes. Prefer pure-sh alternatives to external process, then shell builtin, after that commands/packages available on *nix systems that have similar options.
+
 1. The most efficient (fastest, least consumed resources). Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
 
+1. variable paths should not end with "/".
+
 1. `printf` instead of `echo` for portability reasons.
-1. for the rest, follow the same pattern predominant in the scripts
-1. for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`
+1. for the rest, follow the same pattern predominant in the scripts.
+1. for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`.
 1. exit codes -> `&&` for true or 0 and `||` for false or 0.
 1. case instead of if-then-else
 1. `-z` for null and `! -z` for not null. Avoid `-n` as it just considers integer variables, giving errors when it is text.
-1. variables on upper case letters -> `VAR=1`
-1. use brackes on variables to avoid some tiny errors -> `${VAR}`
-1. comment every variable if they are not supposed to expand -> `"${VAR}"`
-
+1. variables on upper case letters -> `VAR=`.
+1. variable values must be quoted -> `VAR="something"`.
+1. use brackes on variables to avoid some tiny errors -> `${VAR}`.
+1. quote every variable if they are not supposed to expand -> `"${VAR}"`.
+1. quote every command that are not supposed to expand -> `"$(command)"`
 
 ### Check
 
@@ -45,26 +52,21 @@ Shellcheck Codes that can be safely ingored:
 
 * SC1090
   * Warn: Can't follow non-constant source. Use a directive to specify location.
-  * Case: The source path is a variable (ONIONSERVICE_PWD). You sould have to configure `.shellcheckrc` and set `source=/path/to/sourced/script`, which is uncessary in this case. Run shellcheck directly on the sourced script, which is `.onionrc`.
+  * Case: The source path is a variable (ONIONSERVICE_PWD). Because of that, use `# shellcheck source=/dev/null`.
 * SC2086
   * Warn: Double quote to prevent globbing and word splitting.
   * Case: some variables need to expand, remove this for verification
 * SC2034
   * Warn: unused vars
   * Case: only for the `.onionrc` because the variables are not used there
-* SC2236
-  * Warn: Use -n instead of ! -z.
-  * Case: Does not fit most of the cases because almost no variable is integer, and if it is 0, it already has been handled by another line for that variable to be dismissed (be sure of that).
 
 ### Fork the repository
 
 Choose one of these options:
 
-Github.com:
-1. 1. Go to https://github.com/nyxnor/onionservice.
-1. 2. In the top-right corner of the page, click Fork.
+1. Github.com: Go to https://github.com/nyxnor/onionservice an in the top-right corner of the page, click Fork.
 
-or on GitHub CLI:
+1. or on GitHub CLI:
 ```sh
 gh repo fork https://github.com/nyxnor/onionservice
 ```
@@ -74,7 +76,7 @@ gh repo fork https://github.com/nyxnor/onionservice
 #### Basic instructions
 
 Clone:
-```git
+```sh
 git clone https://github.com/<YOUR_USERNAME>/onionservice.git
 cd onionservice
 ```
@@ -108,7 +110,7 @@ git commit -m "These changes does this thing"
 git push -u origin <NEW_BRANCH>
 ```
 
-Open a pull request on GitHub.
+Open a pull request on GitHub and compare it against the `upstream/<BASE_BRANCH>`.
 
 ## Confessions
 

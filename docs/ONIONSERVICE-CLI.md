@@ -246,6 +246,33 @@ onionservice-cli help
 ```
 
 
+# FILES
+
+**.onionrc**
+: Default configuration file
+
+**onionservice-cli**
+: Command Line Interface to interact directly with onion services.
+
+**onionservice-tui**
+: Terminal User Interface that wraps the CLI in a dialog menu.
+
+**setup.sh**
+: Prepares the environment for tor and download requirements for OnionServices.
+
+**docs/**
+: Contain documentation regarding onion services.
+
+**etc/**
+: Contain files that can optionally be placed inside the user */etc* folder.
+
+
+# ENVIRONMENT
+
+**ONIONSERVICE_PWD**
+: OnionService repository path. Used to run the scripts from any directory.
+
+
 # EXIT VALUE
 
 **0**
@@ -262,7 +289,7 @@ Bugs you may find. First search for related issues on https://github.com/nyxnor/
 
 # SEE ALSO
 
-tor(1), sh(1), regex(7)
+tor(1), sh(1), regex(7), sed(1), grep(1)
 
 
 # COPYRIGHT
