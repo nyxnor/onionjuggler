@@ -745,10 +745,7 @@ case "${COMMAND}" in
       nginx|NGINX)
         start_location
         printf "
-server {
-    listen 443 ssl http2;
-    add_header Onion-Location http://""%s${ONION_HOSTNAME}""\$request_uri;
-}
+server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONION_HOSTNAME}""\$request_uri;\n}
 \n# Reload web server:\n\n\tsudo nginx -t && sudo nginx -s reload\n"
         finish_location
       ;;
@@ -756,9 +753,7 @@ server {
       apache|APACHE)
         start_location
         printf "
-<VirtualHost *:443>
-        Header set Onion-Location \"http://%s${ONION_HOSTNAME}%%{REQUEST_URI}s\"
-</Virtualhost>
+<VirtualHost *:443>\n\tHeader set Onion-Location \"http://%s${ONION_HOSTNAME}%%{REQUEST_URI}s\"\n</Virtualhost>
 \n# Enable headers and rewrite modules:\n\n\tsudo a2enmod headers rewrite
 \n# Reload web server:\n\n\tsudo systemctl reload apache\n"
         finish_location
