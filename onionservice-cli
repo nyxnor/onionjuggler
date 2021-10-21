@@ -596,28 +596,20 @@ case "${COMMAND}" in
       printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
       printf %s"\n# Renewing hostname (address) of the service: ${SERVICE}\n"
       OLD_HOSTNAME="${ONION_HOSTNAME}"
-      ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
-      create_client_list "${SERVICE}"
-      ## delete the service folder
-      #sudo rm -rf ${DATA_DIR_HS}/${SERVICE}/
       ## delete service public and secret keys
       sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_secret_key
       sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hs_ed25519_public_key
-      ## delete authorized clients
-      sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/*
+			sudo rm -fv "${DATA_DIR_HS}"/"${SERVICE}"/hostname
       ## reload tor now so auth option can get the new hostname
       restarting_tor
-      ## generate auth for clients
-      if [ -n "${CLIENT_NAME_LIST}" ]; then
-        printf %s"\n${FOREGROUND_YELLOW}# Command to renew services requires new authorization for your clients.\n${UNSET_FORMAT}"
-        sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE}" "${CLIENT_NAME_LIST}"
-      fi
       test_service_exists "${SERVICE}"
       NEW_HOSTNAME="${ONION_HOSTNAME}"
-      printf %s"Current = ${OLD_HOSTNAME}\n"
+      printf %s"\nCurrent = ${OLD_HOSTNAME}\n"
       printf %s"New     = ${ONION_HOSTNAME}\n"
       if [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ]; then
-        printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"; printf "\nService address QR encoded format:\n"
+        printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"
+				printf "\n# Note: Remember to notify your clients about the new hostname and update their '.auth_private' files accordingly.\n"
+				printf "\nService address QR encoded format:\n"
         qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"
       else
         printf %s"${FOREGROUND_RED}# Failed to renew service: ${SERVICE}\n${UNSET_FORMAT}"
