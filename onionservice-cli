@@ -726,72 +726,49 @@ case "${COMMAND}" in
     test_service_exists "${SERVICE}"
 
     start_location(){
-    printf %s"# Onion-Location guided steps
-
-* The below output is printing text, no file was modified by this script, therefore, user needs to manually configure.
+    printf "# Onion-Location guided steps
+\n* The below output is printing text, no file was modified by this script, therefore, user needs to manually configure.
 * For web servers, include header line inside the plainnet ssl block (port 443).
 * It assumes you know how to run a plainnet server, configuration is an example and should be adapted to your needs.
-
-## Add to your \"${ACTION}\" configuration:
-"
+\n# Add to your \"%s${ACTION}\" configuration:\n"
 }
 
   finish_location(){
-  printf "## Test redirection
-
-* Open the web site in Tor Browser and a purple pill will appear in the address bar; or
+  printf "\n# Test redirection
+\n* Open the web site in Tor Browser and a purple pill will appear in the address bar; or
 * Fetch the web site HTTP headers and look for onion-location entry and the onion service address:
-
-wget --server-response --spider your-website.tld
-"
+\n\twget --server-response --spider your-website.tld\n"
 }
 
     case "${ACTION}" in
 
       nginx|NGINX)
         start_location
-        printf '%s\n' "
+        printf "
 server {
     listen 443 ssl http2;
-    add_header Onion-Location http://""${ONION_HOSTNAME}""\$request_uri;
+    add_header Onion-Location http://""%s${ONION_HOSTNAME}""\$request_uri;
 }
-
-## Reload web server:
-
-sudo nginx -t
-sudo nginx -s reload
-"
+\n# Reload web server:\n\n\tsudo nginx -t && sudo nginx -s reload\n"
         finish_location
       ;;
 
       apache|APACHE)
         start_location
-        printf '%s\n' "
+        printf "
 <VirtualHost *:443>
-        Header set Onion-Location \"http://${ONION_HOSTNAME}%{REQUEST_URI}s\"
+        Header set Onion-Location \"http://%s${ONION_HOSTNAME}%%{REQUEST_URI}s\"
 </Virtualhost>
-
-## Enable headers and rewrite modules:
-
-sudo a2enmod headers rewrite
-
-## Reload web server:
-
-sudo systemctl reload apache
-"
+\n# Enable headers and rewrite modules:\n\n\tsudo a2enmod headers rewrite
+\n# Reload web server:\n\n\tsudo systemctl reload apache\n"
         finish_location
       ;;
 
       html|HTML)
         start_location
-        printf '%s\n' "
-<meta http-equiv=\"onion-location\" content=\"http://${ONION_HOSTNAME}\"/>
-
-## Reload web server that you use:
-
-sudo nginx -t && sudo nginx -s reload
-sudo systemctl reload apache
-"
+        printf "
+<meta http-equiv=\"onion-location\" content=\"http://%s${ONION_HOSTNAME}\"/>
+\n# Reload web server that you use:\n\n\tsudo nginx -t && sudo nginx -s reload\n\t# or\n\tsudo systemctl reload apache\n"
         finish_location
       ;;
 
