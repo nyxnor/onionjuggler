@@ -1,3 +1,5 @@
+[![Build status](https://github.com/nyxnor/onionservice/workflows/CI/PR/badge.svg)](https://github.com/git/git/actions?query=branch%3Amaster+event%3Apush)
+
 # onionservice
 
 ### Feature-rich Onion Service manager for UNIX-like operating systems written in POSIX conformant shellscript
@@ -8,14 +10,12 @@ This project has not been released and should be considered for development only
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location**
 
-![tui](images/tui.png)
-![cli](images/cli.png)
-
-
 ## Table of Contents
 
-* [Analysis](#analysis)
-* [Goal](#goal)
+* [Images](#images)
+	* [Analysis](#analysis)
+		* [Problem](#problem)
+		* [Goal](#goal)
 * [Features](#features)
 * [Instructions](#instructions)
 	* [Setup](#setup)
@@ -31,7 +31,14 @@ This project has not been released and should be considered for development only
 * [Bugs](#bugs)
 * [To-Do](#to-do)
 
+## Images
+
+![tui](images/tui.png)
+![cli](images/cli.png)
+
 ## Analysis
+
+### Problem
 
 The current state of the internet (plain net) is:
 * **not private** - every server you connect to knows your public ip address and your Internet Service Provider knows to which site you are connecting to.
@@ -45,11 +52,12 @@ On the Tor echosystem, from [TPO metrics](https://metrics.torproject.org/), comp
 
 That was on the network level, but know on the user system, even if one chooses a Free and Open Source Operating System, GNU/Linux dominates a big share over *BSD, having a huge impact on the main software used for the kernel (Linux), shell (bash), service manager (systemd).
 
+### Goal
 
-## Goal
+The goal of this project is to be the solution of the above mentioned problem using onion services.
 
-The goal of this project:
-* facilitate onion service management, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
+This project:
+* facilitates onion service management, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
 * show the that managing the onion service is much more than just using a webserver with your pages.
 * distribution, from the source code level (FOSS) to the effect it takes when it allows anyone to run the code on any operating system, shell or service manager.
 
@@ -99,9 +107,16 @@ cd onionservice
 
 Edit the required variables to fit your system inside `.onionrc` following the same format from the already defined variables. Note that no variable that refers to a folder end with a trailing "/". Keep it that way, else it will break.
 
-Open the mentioned file with any editor:
+Set the default editor of your choice, else it will always fallback to [Vi](https://en.wikipedia.org/wiki/Vi). This is an example using `nano`, but could be any other editor:
 ```sh
-"${EDITOR:-nano}" .onionrc
+printf "\nexport EDITOR=\"nano\"\n" >> ~/."${SHELL##*/}"rc
+printf "export VISUAL=\"nano\"\n\n" >> ~/."${SHELL##*/}"rc
+. ~/."${SHELL##*/}"rc
+```
+
+Open the mentioned configuration file:
+```sh
+"${EDITOR:-vi}" .onionrc
 ```
 ```sh
 ## [ EDIT REQUIRED IF NOT DEBIAN ]
@@ -215,12 +230,12 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 	* user with root privileges
 	* leave blank lines between Hidden Services torrc lines - the cli script create it correctly, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block (until next empty line)
 	* HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
-	* Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `${HOME}/onionservice/`, Correnct: `${HOME}/onionservice`).
+	* Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionservice/`, Correct: `~/onionservice`).
 
 * Packages:
 	* **tor** >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
-	* **grep**
-	* **sed**
+	* **grep** >=2.0
+	* **sed** >= 2.0
 	* **python3-stem** >=1.8.0 (for Vanguards)
 	* **openssl** >= 1.1+ (for onion authentication)
 	* **basez** >= 1.6.2 (for onion authentication)

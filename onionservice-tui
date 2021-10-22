@@ -247,7 +247,7 @@ case "${CHOICE_MAIN}" in
 					done
 					CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
 					"$((i+8))" 50 2 ${CLIENT_LIST} 2>&1 >/dev/tty)"
-					[ -n "${CHOICE_CLIENT}" ] && sudo "${EDITOR:-nano}" "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CHOICE_CLIENT}".auth
+					[ -n "${CHOICE_CLIENT}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CHOICE_CLIENT}".auth
 				fi
 			;;
 
@@ -376,7 +376,7 @@ case "${CHOICE_MAIN}" in
 					MENU="\nUse spacebar to select:"
 					CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --menu "${MENU}" \
 					"$((i+8))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
-					[ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-nano}" "${CLIENT_ONION_AUTH_DIR}"/"${CHOICE_ONION_AUTH}".auth_private
+					[ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-vi}" "${CLIENT_ONION_AUTH_DIR}"/"${CHOICE_ONION_AUTH}".auth_private
 				fi
 			;;
 

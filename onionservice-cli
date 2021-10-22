@@ -91,7 +91,9 @@ It does not imply the code worked, you should always pay attention for errors in
   exit 1
 }
 
-[ "${USER}" = "root" ] && { printf %s"${FOREGROUND_RED}Do not run with the root user!!!\n${UNSET_FORMAT}" && exit 1; }
+
+#[ "${USER}" = "root" ]
+[ "$(id -u)" -eq 0 ] && { printf %s"${FOREGROUND_RED}Do not run with the root user!!!\n${UNSET_FORMAT}" && exit 1; }
 
 
 ## display error message with instructions to use the script correctly.
