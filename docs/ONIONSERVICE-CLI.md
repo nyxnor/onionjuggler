@@ -127,7 +127,7 @@ onionservice-cli list all-services no-qr
 ```
 
 **renew** [all-services|SERV1,SERV2,...]
-: Renew onion service hostname (.onion domain) and clients (inside HiddenServiceDir/authorized_clients/). The onion service keys (hs_ed25519_public_key and hs_ed25519_private_key) will be removed to override the hostname file. The authorized clients will have its public keys changed for operational security, meaning that all previously authorized clients will not be able to authenticate anymore unless you send to them the new private key. File(s) modified: HiddenServiceDir.
+: Renew onion service hostname (.onion domain) and clients (inside HiddenServiceDir/authorized_clients/). The onion service keys (hs_ed25519_public_key and hs_ed25519_private_key) will be removed to override the hostname file. File(s) modified: HiddenServiceDir.
 ```
 onionservice-cli renew ssh
 onionservice-cli renew ssh,xmpp
