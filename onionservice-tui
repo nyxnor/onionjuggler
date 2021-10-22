@@ -366,7 +366,7 @@ case "${CHOICE_MAIN}" in
 				i=0
 				for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1); do
 					i=$((i+1))
-					ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" ".")"
+					ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" ".")"
 				done
 				TITLE="Client Onion Auth Directory"
 				if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
