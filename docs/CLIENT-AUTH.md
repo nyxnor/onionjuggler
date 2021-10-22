@@ -2,6 +2,27 @@
 
 An authenticated onion service is an onion service that requires the client to provide an authentication credential to connect to the onion service. For v3 onion services, this method works with a pair of keys (a public and a private). The service side is configured with a public key and the client can only access it with a private key. The client private key is not transmitted to the service, and it's only used to decrypt its descriptor locally.
 
+Onion services authentication is only possible for private onion services with a limited number of visitors. This is impossible for a public onion service. For a public onion service this step should be skipped. Each visitor needs to be provided with a key file.
+
+With v3 onions addresses it is no longer possible for adversaries to learn about their existence if they are not published -- this was not the case previously with v2 onion addresses. Therefore, some readers might wonder what is the purpose of onion services authentication for v3 onions.
+
+Authentication for v3 onions exists to eliminate the side risks of the onion address accidentally being leaked. This is feasible due to human error, a bug in the software using the onion address, or other yet unknown possibilities. By using onion services authentication, the onion service could not be accessed even if the onion address was leaked.
+
+[Quote](https://lists.torproject.org/pipermail/tor-dev/2019-December/014106.html):
+
+<blockquote>
+Also, if you have multiple users, having one v3 address with authentication is much better than multiple addresses, for the following reasons:
+
+* easier management
+
+*	easier to configure and easier to maintain the application behind it (web server or whatever it is)
+
+* less resources needed by the Tor daemon
+
+*	less load on your guard(s) / bridge(s), thus more capacity and better experience for your clients / visitors (if you have multiple addresses you need to maintain active introduction point circuits for all of them, publish descriptors, etc.)
+</blockquote>
+
+
 ### ONION SERVICE OPERATOR
 
 Once you have configured client authorization, anyone with the address will not be able to access it from this point on. If no authorization is configured, the service will be accessible to anyone with the onion address.

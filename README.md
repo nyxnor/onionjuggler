@@ -1,9 +1,35 @@
 # onionservice
 
-### An easy to use Onion Service manager
+### Feature-rich Onion Service manager for UNIX-like operating systems written in POSIX conformant shellscript
+
+A collection of Onion Services features implemented for Unix-like systems following the Portable Operating System Interface standard.
+
+This project has not been released and should be considered for development only.
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location**
 
+![tui](images/tui.png)
+![cli](images/cli.png)
+
+
+## Table of Contents
+
+* [Analysis](#analysis)
+* [Goal](#goal)
+* [Features](#features)
+* [Instructions](#instructions)
+	* [Setup](#setup)
+		* [Clone the repository](#clone-the-repository)
+		* [Set custom vars](#set-custom-vars)
+		* [Setup the environment](#setup-the-environment)
+	* [Usage](#usage)
+* [Portability](#portability)
+	* [Shells](#shells)
+	* [Operating systems](#operating-systems)
+	* [Service managers](#service-managers)
+	* [Requirements](#requirements)
+* [Bugs](#bugs)
+* [To-Do](#to-do)
 
 ## Analysis
 
@@ -56,19 +82,14 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 * **Fool-proof** - The script tries its best to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
 
 
-## Images
-
-![tui](images/tui.png)
-![cli](images/cli.png)
-
-
 ## Instructions
 
 ### Setup
 
 Three easy steps to fully this project:
 
-#### Clone the repository:
+#### Clone the repository
+
 ```sh
 git clone https://github.com/nyxnor/onionservice.git
 cd onionservice
@@ -220,9 +241,8 @@ The packages are downloaded when setting up the environment with [setup.sh](setu
 ## To-do
 
 * should non env variables be all upercase? Env var should be distinguishable https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html. https://stackoverflow.com/questions/673055/correct-bash-and-shell-script-variable-capitalization. The .onionrc is a lib and "exports" vars to other scripts.
-* renew should not change authorized clients, that is PAIN, just print say to clients to change the hostname inside the files and bookmarks
-* TUI: edit auth files for server and client, this can reuse del functions and open the file instead of delete htem when they are presented on the menu.
 * [getopts](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/getopts.html)
 * support for different services managers
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
+* check wording on https://github.com/Whonix/anon-gw-anonymizer-config/blob/master/usr/bin/anon-auth-autogen

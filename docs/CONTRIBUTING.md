@@ -4,6 +4,8 @@ This project is not perfect and never will be, contributions are welcome. Don't 
 
 There is a TODO list at the end of the README. Those are tasks that will improve the usability and documentation, the difficulty level ranges a lot, so take what fits you.
 
+First, read the [docs](https://github.com/nyxnor/onionservice/tree/main/docs).
+
 ## Shell
 
 All executables are shell scripts and will stay that way till the limit.
@@ -30,8 +32,7 @@ These are requirements and must be done. If not conformed, the merge request mus
 1. for the rest, follow the same pattern predominant in the scripts.
 1. for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`.
 1. exit codes -> `&&` for true or 0 and `||` for false or 0.
-1. case instead of if-then-else
-1. `-z` for null and `! -z` for not null. Avoid `-n` as it just considers integer variables, giving errors when it is text.
+1. `case` instead of `if-then-else`
 1. variables on upper case letters -> `VAR=`.
 1. variable values must be quoted -> `VAR="something"`.
 1. use brackes on variables to avoid some tiny errors -> `${VAR}`.
