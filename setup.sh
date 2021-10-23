@@ -90,7 +90,7 @@ case "${ACTION}" in
   release|RELEASE)
 		printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
 		## syntax
-		## Customize severity with -s [error|warning|info|style]
+		## Customize severity with -S [error|warning|info|style]
 		## quits to warn workflow test failed
 		printf "# Checking syntax\n"
 		shellcheck -s sh "${ONIONSERVICE_PWD}"/setup.sh || SHELLCHECK_FAIL=1
