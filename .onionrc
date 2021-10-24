@@ -155,7 +155,8 @@ set_owner_permission(){
 check_tor()
 {
   printf %s"${FOREGROUND_RED}[+] Checking connectivity to the Tor network - please wait...${UNSET_FORMAT}\n"
-  [ "$(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 -m 5 -s https://check.torproject.org/api/ip | grep "\"IsTor\":true")" ] && TOR_STATUS="Tor is working"
+	TOR_STATUS=""
+  curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 -m 5 -s https://check.torproject.org/api/ip | grep -q "\"IsTor\":true" && TOR_STATUS="Tor is working"
 }
 
 
