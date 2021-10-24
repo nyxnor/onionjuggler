@@ -1,8 +1,12 @@
-[![Build status](https://github.com/nyxnor/onionservice/workflows/CI/PR/badge.svg)](https://github.com/git/git/actions?query=branch%3Amaster+event%3Apush)
+[![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/nyxnor/onionservice/shellcheck/main)](https://github.com/nyxnor/onionservice/actions/workflows/main.yaml?query=branch%3Amain+event%3Apush	)
+[![GitHub top language](https://img.shields.io/github/languages/top/nyxnor/onionservice.svg?style=flat-square)](https://github.com/nyxnor/onionservice/search?l=Shell)
+[![License](https://img.shields.io/github/license/nyxnor/onionservice.svg?style=flat-square)](https://github.com/nyxnor/onionservice/blob/main/LICENSE)
 
 # onionservice
 
 ### Feature-rich Onion Service manager for UNIX-like operating systems written in POSIX conformant shellscript
+
+Quick link to this repository: https://git.io/onionservice
 
 A collection of Onion Services features implemented for Unix-like systems following the Portable Operating System Interface standard.
 
@@ -141,9 +145,9 @@ For this, you have two options:
 ```sh
 sh setup.sh
 ```
-* **Development**: Set the variable manually using the absolute path without trailing "/" at the end (change `/path/to/onionservice/repo` to the path you cloned the repo, for example `${HOME}/onionservice`, `/home/admin/onionservice`). Advantages are: no need to run from inside the cloned repository and facilitate scripting and porting to other projects:
+* **Development**: Set the v/path/to/onionservice/repoariable manually using the absolute path without trailing "/" at the end (change `/PATH/TO/ONIONSERVICE/REPO` to the path you cloned the repo, for example `${HOME}/onionservice`). Advantages are: no need to run from inside the cloned repository and facilitate scripting and porting to other projects:
 ```sh
-printf "\nexport ONIONSERVICE_PWD=\"/path/to/onionservice/repo\"\n" >> ~/."${SHELL##*/}"rc
+printf "\nexport ONIONSERVICE_PWD=\"/PATH/TO/ONIONSERVICE/REPO\"\n" >> ~/."${SHELL##*/}"rc
 printf "PATH=\"\${PATH}:\${ONIONSERVICE_PWD}\"\n\n" >> ~/."${SHELL##*/}"rc
 . ~/."${SHELL##*/}"rc
 sh setup.sh
@@ -226,10 +230,11 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 
 * General:
 	* **Unix-like system**
-	* **systemd** (for vanguards control) - for now, different services managers is a goal
-	* user with root privileges
-	* leave blank lines between Hidden Services torrc lines - the cli script create it correctly, just be aware when editing your torrc or importing your torrc and deactivating a service, it will delete every line within the same block (until next empty line)
-	* HiddenServiceDir different root path than DataDir (facilitates a lot backup and other detections, else would need to prefix every HiddenServiceDir with hs_*)
+	* any POSIX shells: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `zsh` 3.1.9+, `yash` 2.29+, busybox `ash` 1.1.3+ etc.
+	* **systemd** (for tor and vanguards control) - for now, different services managers is a goal
+	* user with root privileges.
+	* blank lines between Hidden Services blocks in the torrc.
+	* HiddenServiceDir different path than DataDir - `DataDir/services/`.
 	* Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionservice/`, Correct: `~/onionservice`).
 
 * Packages:
