@@ -226,7 +226,8 @@ case "${COMMAND}" in
       fi
       ## remove service paragraph in torrc
       printf %s"# Deleted Hidden Service configuration in ${TORRC}\n"
-      sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
+      #sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
+			sudo sed -i'' "|HiddenServiceDir .*/${SERVICE}$|,|^\s*$|{d}" "${TORRC}"
       ## substitute multiple sequential empty lines to a single one per sequence
       cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       printf %s"# Disabled service: ${SERVICE}\n\n"
@@ -854,14 +855,12 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
 
     vanguards_config(){
       ## TODO: Better detection if using socket or control ip and port.
-      #sudo sed -i'' "s/^control_socket =.*/control_socket = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
-      #sudo sed -i'' "s/^control_port =.*/control_port = \/run\/tor\/control/" "${DATA_DIR}"/vanguards/vanguards.conf
+      #sudo sed -i'' "s|^control_socket =.*|control_socket = ${CONTROL_SOCKET}|" "${DATA_DIR}"/vanguards/vanguards.conf
+      #sudo sed -i'' "s|^control_port =.*|control_port = ${CONTROL_PORT}|" "${DATA_DIR}"/vanguards/vanguards.conf
       sudo -u "${TOR_USER}" cp "${DATA_DIR}"/vanguards/vanguards-example.conf "${DATA_DIR}"/vanguards/vanguards.conf
-      sudo sed -i'' "s/^logfile =.*/logfile = \/var\/log\/tor\/vanguards.log/" "${DATA_DIR}"/vanguards/vanguards.conf
+      sudo -u "${TOR_USER}" sed -i'' "s|^logfile =.*|logfile = /var/log/tor/vanguards.log|" "${DATA_DIR}"/vanguards/vanguards.conf
       [ "$(grep "ControlPort" "${TORRC}")" = "" ] && { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
-      if [ "$(grep "CookieAuthentication" "${TORRC}")" = "" ] && [ "$(grep "HashedControlPassword" "${TORRC}")" = "" ]; then
-        printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null
-      fi
+			{ grep -q "CookieAuthentication" "${TORRC}" || grep -q "HashedControlPassword" "${TORRC}"; } || { printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null; }
       set_owner_permission
       sudo cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
       sudo sed -i'' "s/TOR_SERVICE/${TOR_SERVICE}/g" /tmp/vanguards@default.service
