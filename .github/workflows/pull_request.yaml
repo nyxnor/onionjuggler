@@ -1,5 +1,5 @@
-name: shellcheck
-on: [push]
+name: party_stopper
+on: [pull_request]
 jobs:
     build:
         runs-on: ubuntu-latest
