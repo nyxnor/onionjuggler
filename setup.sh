@@ -70,8 +70,7 @@ case "${ACTION}" in
   setup|SETUP)
     ## configure tor
     #python3-stem
-		dependencies="tor grep sed openssl basez git qrencode pandoc lynx gzip tar ${WEBSERVER}"
-    install_package ${dependencies}
+    install_package tor grep sed openssl basez git qrencode pandoc lynx gzip tar "${WEBSERVER}"
     sudo usermod -aG "${TOR_USER}" "${USER}"
     sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
     sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
