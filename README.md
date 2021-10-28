@@ -215,7 +215,7 @@ Tweak to be compatible with non-POSIX compliant shells::
 
 The project is POSIX compliant, but it is not "Pure shellscript", as other tools are [needed](#requirements), such as `grep` and `sed` and these commands are helpers.
 
-The default POSIX shell of your unix-like operating system may vary depending on your system (FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`, Debian uses `dash`), but it has a symbolic link leading to it on `/bin/sh` it can always be called consistenly with only `sh`:
+The default POSIX shell of your unix-like operating system may vary depending on your system (FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`, Debian uses `dash`), but it has a symbolic link leading to it on `/bin/sh` and `/usr/bin/sh` it can always be called consistenly with only `sh`:
 ```sh
 sh onionservice-cli
 ```
