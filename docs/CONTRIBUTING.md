@@ -116,14 +116,7 @@ Shellcheck Codes that can be safely ingored:
 
 ### Fork the repository
 
-Choose one of these options:
-
-1. Github.com: Go to https://github.com/nyxnor/onionservice an in the top-right corner of the page, click Fork.
-
-1. or on GitHub CLI:
-```sh
-gh repo fork https://github.com/nyxnor/onionservice
-```
+Go to: https://github.com/nyxnor/onionservice/fork
 
 ### Changes
 
