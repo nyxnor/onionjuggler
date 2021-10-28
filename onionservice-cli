@@ -39,7 +39,7 @@ onion_usage(){
 
   printf "Configure an Onion Service
 
-Usage: onionservice-cli COMMAND [REQUIRED] <OPTIONAL>
+Usage: ${0##*/} COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
   setup torrc                                                                        restore latest torrc
@@ -74,7 +74,7 @@ Options:
 
   web list                                                                           list enabled websites
 
-  location [SERV] [nginx|apache|html]                                                onion-location guide, no execution
+  location [nginx|apache|html] [SERV]                                                onion-location guide, no execution
 
   backup [create|integrate]                                                          create backup or import backup and integrate the files
 
@@ -716,9 +716,9 @@ case "${COMMAND}" in
   ## https://matt.traudt.xyz/posts/website-setup/
   location|LOCATION)
     is_service_dir_empty
-    SERVICE="${2}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
-    ACTION="${3}"; [ -z "${ACTION}" ] && error_msg "ACTION is missing"
-    test_service_exists "${SERVICE}"
+    ACTION="${2}"; [ -z "${ACTION}" ] && error_msg "ACTION is missing"
+    SERVICE="${3}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
+		test_service_exists "${SERVICE}"
 
     start_location(){
     printf "# Onion-Location guided steps

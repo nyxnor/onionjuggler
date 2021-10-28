@@ -151,7 +151,7 @@ set_owner_permission(){
 }
 
 
-# This function checks the status on https://check.torproject.org/
+# This function checks TPO domain through Tor
 check_tor()
 {
   printf %s"${FOREGROUND_RED}[+] Checking connectivity to the Tor network - please wait...${UNSET_FORMAT}\n"
