@@ -1,6 +1,5 @@
 # onionservice
-
-[![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/nyxnor/onionservice/shellcheck/main)](https://github.com/nyxnor/onionservice/actions/workflows/main.yaml?query=branch%3Amain+event%3Apush	)
+[![shellcheck](https://github.com/nyxnor/onionservice/actions/workflows/main.yaml/badge.svg)](https://github.com/nyxnor/onionservice/actions/workflows/main.yaml)
 [![License](https://img.shields.io/github/license/nyxnor/onionservice.svg)](https://github.com/nyxnor/onionservice/blob/main/LICENSE)
 [![GitHub top language](https://img.shields.io/github/languages/top/nyxnor/onionservice.svg)](https://github.com/nyxnor/onionservice/search?l=Shell)
 ![Lines of code](https://img.shields.io/tokei/lines/github/nyxnor/onionservice)
