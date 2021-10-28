@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 ## This file is part of OnionService, an easy to use Tor hidden services manager.
 ## Portions of this file was source from TorBox, an easy to use anonymizing router based on Raspberry Pi.

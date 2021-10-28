@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 ## This file is part of OnionService, an easy to use Tor hidden services manager.
 ##
@@ -70,7 +70,8 @@ case "${ACTION}" in
   setup|SETUP)
     ## configure tor
     #python3-stem
-    install_package tor grep sed openssl basez git qrencode pandoc lynx gzip tar "${WEBSERVER}"
+		dependencies="tor grep sed openssl basez git qrencode pandoc lynx gzip tar ${WEBSERVER}"
+    install_package ${dependencies}
     sudo usermod -aG "${TOR_USER}" "${USER}"
     sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
     sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
