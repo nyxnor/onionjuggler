@@ -226,8 +226,7 @@ case "${COMMAND}" in
       fi
       ## remove service paragraph in torrc
       printf %s"# Deleted Hidden Service configuration in ${TORRC}\n"
-      #sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
-			sudo sed -i'' "|HiddenServiceDir .*/${SERVICE}$|,|^\s*$|{d}" "${TORRC}"
+      sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
       ## substitute multiple sequential empty lines to a single one per sequence
       cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       printf %s"# Disabled service: ${SERVICE}\n\n"
