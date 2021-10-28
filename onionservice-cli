@@ -39,7 +39,7 @@ onion_usage(){
 
   printf "Configure an Onion Service
 
-Usage: ${0##*/} COMMAND [REQUIRED] <OPTIONAL>
+Usage: %s${0##*/} COMMAND [REQUIRED] <OPTIONAL>
 
 Options:
   setup torrc                                                                        restore latest torrc
