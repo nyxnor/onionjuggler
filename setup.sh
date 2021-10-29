@@ -75,7 +75,6 @@ case "${ACTION}" in
     sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
     sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
     restarting_tor
-		grep -q "ClientOnionAuthDir" "${TORRC}" || { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
     printf "# Creating man pages\n"
 		sudo mkdir -p /usr/local/man/man1
 		pandoc "${ONIONSERVICE_PWD}"/docs/ONIONSERVICE-CLI.md -s -t man -o /tmp/onionservice-cli.1
