@@ -281,11 +281,10 @@ case "${COMMAND}" in
         TARGET=${TARGET:-127.0.0.1:${VIRTPORT}}
         TARGET_ADDR=${TARGET%%:*}
         TARGET_PORT=${TARGET##*:}
-        [ "${TARGET_ADDR}" = "localhost" ] && TARGET="127.0.0.1:${TARGET_PORT}"
-        TARGET_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" grep -c "HiddenServicePort .*${TARGET}$" "${TORRC}")
+        { [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
         TARGET_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
         TARGET_ALREADY_INSERTED_SERVICE=${TARGET_ALREADY_INSERTED_BLOCK##*/}
-        [ "${TARGET_ALREADY_INSERTED}" -gt 0 ] && error_msg "TARGET=${TARGET} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}\nINFO: Choose another port or disable the service that is using the wanted port"
+        sudo -u "${CONF_DIR_OWNER}" grep -qc "HiddenServicePort .*${TARGET}$" "${TORRC}" && error_msg "TARGET=${TARGET} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}\nINFO: Choose another port or disable the service that is using the wanted port"
         is_integer "${VIRTPORT}"; is_addr_port "${TARGET}" "TARGET"
         ## Optional
         VIRTPORT2="${7}"
@@ -294,12 +293,11 @@ case "${COMMAND}" in
           TARGET2=${TARGET2:-127.0.0.1:${VIRTPORT2}}
 					TARGET2_ADDR=${TARGET2%%:*}
 					TARGET2_PORT=${TARGET2##*:}
-					{ [ "${TARGET2_ADDR}" -eq "${TARGET2_PORT}" ] || [ "${TARGET2_ADDR}" = "localhost" ]; } && TARGET2="127.0.0.1:${TARGET2_PORT}"
+					{ [ "${TARGET2_ADDR}" = "${TARGET2_PORT}" ] || [ "${TARGET2_ADDR}" = "localhost" ]; } && TARGET2="127.0.0.1:${TARGET2_PORT}"
           [ "${TARGET}" = "${TARGET2}" ] && error_msg "TARGET is the same as TARGET2"
-          TARGET2_ALREADY_INSERTED=$(sudo -u "${CONF_DIR_OWNER}" grep -c "HiddenServicePort .*${TARGET2}$" "${TORRC}")
           TARGET2_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET2}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
           TARGET2_ALREADY_INSERTED_SERVICE=${TARGET2_ALREADY_INSERTED_BLOCK##*/}
-          [ "${TARGET2_ALREADY_INSERTED}" -gt 0 ] && error_msg "TARGET2=${TARGET2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
+          sudo -u "${CONF_DIR_OWNER}" grep -qc "HiddenServicePort .*${TARGET2}$" "${TORRC}" && error_msg "TARGET2=${TARGET2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
           is_integer "${VIRTPORT2}"; is_addr_port "${TARGET2}" "TARGET2"
         fi
 
@@ -640,10 +638,10 @@ case "${COMMAND}" in
       printf %s"\nAddress  = ${ONION_HOSTNAME}\n"
       printf %s"Service  = ${SERVICE}\n"
       [ -n "${CLIENT_NAME_LIST}" ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
-      if [ "$(sudo grep -c "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}")" = 0 ]; then
-        printf "Status   = inactive\n"
-      else
+      if sudo grep -qc "^HiddenServiceDir .*/${SERVICE}$" "${TORRC}"; then
         printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | sed "/^[[:space:]]*$/d"
+      else
+				printf "Status   = inactive\n"
       fi
       printf "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
@@ -858,7 +856,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
       #sudo sed -i'' "s|^control_port =.*|control_port = ${CONTROL_PORT}|" "${DATA_DIR}"/vanguards/vanguards.conf
       sudo -u "${TOR_USER}" cp "${DATA_DIR}"/vanguards/vanguards-example.conf "${DATA_DIR}"/vanguards/vanguards.conf
       sudo -u "${TOR_USER}" sed -i'' "s|^logfile =.*|logfile = /var/log/tor/vanguards.log|" "${DATA_DIR}"/vanguards/vanguards.conf
-      [ "$(grep "ControlPort" "${TORRC}")" = "" ] && { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
+      grep -q "ControlPort" "${TORRC}" || { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
 			{ grep -q "CookieAuthentication" "${TORRC}" || grep -q "HashedControlPassword" "${TORRC}"; } || { printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null; }
       set_owner_permission
       sudo cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
