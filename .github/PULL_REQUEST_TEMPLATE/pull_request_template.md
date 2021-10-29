@@ -1,7 +1,7 @@
 ---
 name: Pull request
 about: Thanks for contributing
-title: "[PULL REQUEST]"
+title: "[PULL REQUEST] "
 labels: pull request pending
 assignees: ''
 
