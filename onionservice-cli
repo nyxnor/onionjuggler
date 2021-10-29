@@ -499,7 +499,7 @@ case "${COMMAND}" in
             [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#ONION_HOSTNAME}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#ONION_HOSTNAME} is different than 62 characters (<56-char-base32>.onion)"
             [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
-            [ "$(grep -c "ClientOnionAuthDir" "${TORRC}")" -eq 0 ] && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
+            grep -q "ClientOnionAuthDir" "${TORRC}" && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
             sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
             if [ "${CLIENT_PRIV_KEY}" = "" ]; then
               ## Generate pem and derive pub and priv keys
