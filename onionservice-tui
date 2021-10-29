@@ -105,7 +105,7 @@ fi
 case "${CHOICE_MAIN}" in
 
   MAN)
-    man "${ONIONSERVICE_PWD}"/docs/onionservice-cli.1
+    man onionservice-cli
   ;;
 
 
