@@ -7,4 +7,3 @@ jobs:
             - uses: actions/checkout@main
             - name: Run shellcheck.
               run: ./setup.sh release
-							shell: sh
