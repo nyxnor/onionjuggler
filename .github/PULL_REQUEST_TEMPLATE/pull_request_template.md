@@ -1,12 +1,3 @@
----
-name: Pull request
-about: Thanks for contributing
-title: "[PULL REQUEST] "
-labels: pull request pending
-assignees: ''
-
----
-
 **Related issue.**
 <!-- Insert the URL or '#n' (n being the number) -->
 
