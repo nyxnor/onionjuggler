@@ -35,7 +35,6 @@ This project has not been released and should be considered for development only
 	* [Operating systems](#operating-systems)
 	* [Service managers](#service-managers)
 	* [Requirements](#requirements)
-* [Bugs](#bugs)
 * [To-Do](#to-do)
 * [Credits](#credits)
 	* [Inspirations](#inspirations)
@@ -261,13 +260,6 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 
 The packages are downloaded when setting up the environment with [setup.sh](setup.sh).
 
-## Bugs
-
-* There are no accidents - Master Oogway
-* Bugs, you may find - Master Yoda
-* It is the program that should fear your commands and not the other way around - Mix of Pai Mei with Richard M. Stallman
-* Please report the bug, open an issue with enough description to reproduce the steps and solve the problem.
-
 ## To-do
 
 * should non env variables be all upercase? Env var should be distinguishable https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html. https://stackoverflow.com/questions/673055/correct-bash-and-shell-script-variable-capitalization. The .onionrc is a lib and "exports" vars to other scripts.
@@ -285,7 +277,7 @@ These are projects that inspires OnionService development, each with their own u
 
 * [OnionShare CLI](https://github.com/onionshare/onionshare/tree/develop/cli) possibilitates ephemeral onion services that never touch the disk and can be run on Tails or Whonix easily. It provides onion authentication, focusing on running servers to send and receive files, chat and host a static website. OnionService evolved by watching the sharing capabilities of OnionShare and converting them to shellscript.
 
-* [Raspiblitz](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh) provides a ton of bitcoin related services that can be run over tor, so onion services is the choice to access your node from outside LAN. OnionService started by forking Blitz script to remove hardcoded paths.
+* [RaspiBlitz](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh) provides a ton of bitcoin related services that can be run over tor, so onion services is the choice to access your node from outside LAN. OnionService started by forking Blitz script to remove hardcoded paths.
 
 * [TorBox](https://github.com/radio24/TorBox) is an easy to use, anonymizing router that creates a separate WiFi that routes the encrypted network data over the Tor network. It also helps configuring bridges and other countermeasures to bypass censorship. OnionService aims to help people on surveillance countries to communicate privately.
 

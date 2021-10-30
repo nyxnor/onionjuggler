@@ -114,6 +114,30 @@ Shellcheck Codes that can be safely ingored:
   * Warn: unused vars
   * Case: only for the `.onionrc` because the variables are not used there
 
+### Texts
+
+#### Documentation
+
+Not only code is important, making it understandable by anyone who reads the documentation is relevant, improve the docs, spell mistakes, better wording.
+
+#### Issues and Pull Request
+
+Help with open issues by responding in details to the author.
+Help with pull requests by reviewing it.
+
+Regarding reviewing pull requests, the vocabulary is:
+* **cACK** - Concept ACK - Agree with the idea and overall direction, but haven't reviewed the code changes or tested them.
+* **utACK** - Untested ACK - Reviewed and agree with the code changes but haven't actually tested them.
+* **tACK** - Tested ACK -Reviewed the code changes and have verified the functionality or bug fix.
+* **ACK** - A loose ACK can be confusing. It's best to avoid them unless it's a documentation/comment only change in which case there is nothing to test/verify; therefore the tested/untested distinction is not there.
+* **NACK** - Not ACK - Disagree with the code changes/concept. Should be accompanied by an explanation.
+
+Maintainers/Collaborators:
+* Before closing any issue, explain the reason for that actions, which can be:
+	* lack of respone to the latest comment after 7 (seven days).
+	* no longer relevant to the current code base.
+	* if the issue won't be fixed.
+
 ### Fork the repository
 
 Go to: https://github.com/nyxnor/onionservice/fork
