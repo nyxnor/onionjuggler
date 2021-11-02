@@ -60,7 +60,7 @@ service_menu(){
       menu)      SERVICE_LIST="$(printf "%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}")";;
     esac
   done
-exit 0
+
 	if [ -n "${SERVICE_LIST}" ]; then
 		TITLE="Onion Services - ${COMPL_TITLE}"
 		MENU="\nUse spacebar to select"
