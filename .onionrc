@@ -179,11 +179,11 @@ restarting_tor()
   set_owner_permission
   if [ "${1}" = "force" ]; then
     printf "# Restarting tor...\n"
-    sudo systemctl restart "${TOR_SERVICE}"
+    sudo systemctl restart "${TOR_SERVICE}" &
     printf %s"${FOREGROUND_GREEN}# Restarted tor succesfully!\n${UNSET_FORMAT}"
   elif [ "${1}" = "" ]; then
     printf "# Reloading tor...\n"
-    sudo systemctl reload-or-restart "${TOR_SERVICE}" ## this gets stuck if the new config is wrong becayse it tries to restart, after correcting the config and running again it restarts from failed state to active
+    sudo systemctl reload-or-restart "${TOR_SERVICE}" &
     printf %s"${FOREGROUND_GREEN}# Reloaded tor succesfully!\n${UNSET_FORMAT}"
   fi
 }
