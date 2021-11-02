@@ -178,12 +178,12 @@ restarting_tor()
 {
   set_owner_permission
   if [ "${1}" = "force" ]; then
-    printf "# Restarting tor...\n"
+    printf "\n# Restarting tor...\n"
     sudo systemctl restart "${TOR_SERVICE}" &
     sleep 2
 		printf %s"${FOREGROUND_GREEN}# Restarted tor succesfully!\n${UNSET_FORMAT}"
   elif [ "${1}" = "" ]; then
-    printf "# Reloading tor...\n"
+    printf "\n# Reloading tor...\n"
     sudo systemctl reload-or-restart "${TOR_SERVICE}" &
 		sleep 2
     printf %s"${FOREGROUND_GREEN}# Reloaded tor succesfully!\n${UNSET_FORMAT}"
