@@ -138,7 +138,7 @@ install_package(){
 }
 
 is_service_dir_empty(){
-  [ "$(sudo -u "${TOR_USER}" dir "${DATA_DIR_HS}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
+  [ "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
 }
 
 
