@@ -262,12 +262,13 @@ The packages are downloaded when setting up the environment with [setup.sh](setu
 
 ## To-do
 
-* should non env variables be all upercase? Env var should be distinguishable https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html. https://stackoverflow.com/questions/673055/correct-bash-and-shell-script-variable-capitalization. The .onionrc is a lib and "exports" vars to other scripts.
+* change `ls` loops to `find`. See [SC2045](https://github.com/koalaman/shellcheck/wiki/SC2045) and [shell pitfalls](http://mywiki.wooledge.org/BashPitfalls#for_f_in_.24.28ls_.2A.mp3.29)
+* should non env variables be all upercase? Env var should be [distinguishable](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html. https://stackoverflow.com/questions/673055/correct-bash-and-shell-script-variable-capitalization). The .onionrc is a lib and "exports" vars to other scripts.
 * [getopts](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/getopts.html)
 * support for different services managers
 * Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
 * [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
-* check wording on https://github.com/Whonix/anon-gw-anonymizer-config/blob/master/usr/bin/anon-auth-autogen
+* check wording on [Whonix/anon-gw-anonymizer](https://github.com/Whonix/anon-gw-anonymizer-config/blob/master/usr/bin/anon-auth-autogen)
 
 ## Credits
 
