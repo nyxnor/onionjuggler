@@ -48,7 +48,6 @@ trap 'clear_posix' EXIT
 ## $1 [checklist|menu]
 ## $2 complementary title
 service_menu(){
-	set -x
   DIALOG_TYPE="${1}"
   COMPL_TITLE="${2}"
 
