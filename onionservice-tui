@@ -49,20 +49,23 @@ service_menu(){
 
   for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
     i=$((i+1))
-    ONION_HOSTNAME_WITHOUT_ONION="$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d "." -f1)"
+    ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_HS}"/"${SERVICE}"/hostname)"
+		ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
     case "${DIALOG_TYPE}" in
       checklist) SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)";;
       menu)      SERVICE_LIST="$(printf "%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}")";;
     esac
   done
 
-  TITLE="Onion Services - ${COMPL_TITLE}"
-  MENU="\nUse spacebar to select"
-	# shellcheck disable=SC2086
-  CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-  "$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
+	if [ -n "${SERVICE_LIST}" ]; then
+		TITLE="Onion Services - ${COMPL_TITLE}"
+		MENU="\nUse spacebar to select"
+		# shellcheck disable=SC2086
+		CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
+		"$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
 
-  [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
+		[ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
+	fi
 }
 
 
@@ -175,6 +178,7 @@ case "${CHOICE_MAIN}" in
   ;;
 
 
+  ## improve this, not ctrl+c thing to cancel, it must be a menu option to return to the main menu
   DISABLE)
     service_menu checklist "Disable"
     if [ -n "${SERVICE_NAME_LIST}" ]; then
@@ -230,7 +234,8 @@ case "${CHOICE_MAIN}" in
 					CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
 					if [ -n "${CLIENT_EXIST}" ]; then
 						i=$((i+1))
-						ONION_HOSTNAME_WITHOUT_ONION="$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d "." -f1)"
+						ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_HS}"/"${SERVICE}"/hostname)"
+						ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
 						SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)"
 					fi
 				done
@@ -300,7 +305,8 @@ case "${CHOICE_MAIN}" in
 					CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
 					if [ -n "${CLIENT_EXIST}" ]; then
 						i=$((i+1))
-						ONION_HOSTNAME_WITHOUT_ONION="$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null | cut -d "." -f1)"
+						ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_HS}"/"${SERVICE}"/hostname)"
+						ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
 						SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)"
 					fi
 				done
@@ -374,9 +380,10 @@ case "${CHOICE_MAIN}" in
 
 			EDIT)
 				i=0
-				for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1); do
+				for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/); do
+					ONION_AUTH_WITHOUT_SUFFIX=${ONION_AUTH%.auth_private}
 					i=$((i+1))
-					ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" ".")"
+					ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH_WITHOUT_SUFFIX}" ".")"
 				done
 				TITLE="Client Onion Auth Directory"
 				if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
@@ -418,9 +425,10 @@ case "${CHOICE_MAIN}" in
 
       DEL)
 				i=0
-				for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1); do
+				for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/); do
+					ONION_AUTH_WITHOUT_SUFFIX=${ONION_AUTH%.auth_private}
 					i=$((i+1))
-					ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" "." 0)"
+					ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH_WITHOUT_SUFFIX}" "." 0)"
 				done
 				TITLE="Onion Service - INFO"
 				if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then

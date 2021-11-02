@@ -664,7 +664,7 @@ case "${COMMAND}" in
         FOLDER="${4}"; [ -z "${FOLDER}" ] && error_msg "FOLDER is missing"
         VIRTPORT=$(sudo sed -n "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{p}" "${TORRC}" | grep "HiddenServicePort 80")
         [ "${VIRTPORT}" = "" ] && error_msg "At least one VIRTPORT of the service must be listening on port 80"
-        TARGET="$(printf "%s\n" "${VIRTPORT}" | cut -d " " -f3)"
+				TARGET=${VIRTPORT##* }
 				printf %s"# Activating web server for the onion service: ${SERVICE}\n\n"
 				sudo cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
         sudo sed -i'' "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
