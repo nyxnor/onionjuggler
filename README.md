@@ -162,31 +162,47 @@ sh setup.sh
 
 #### Usage
 
-Take a loot at the documentation inside `docs` folder.
+The repo is now in your `$PATH`, if you have setup the environment as described above. This means you can call the scripts as if they were any other command.
 
-Call the TUI
+There are three ways to call the scripts now, evaluate the advantages and disadvantages:
+
+1. **Command**
+  * Advantages:
+	  * follows the shebang
+    * can be used from any directory
+  * Disadvantages: None
 ```sh
-sh onionservice-tui
+onionservice-cli
 ```
 
-Call the CLI
+2. **Dot slash**
+  * Advantages:
+	  * follows the shebang
+  * Disadvantages:
+	  * the scripts must be executable
+	  * needs to specify path if not in the same directory
+```sh
+./onionservice-cli
+## or if running from a different directory
+./"${ONIONSERVICE_PWD}"/onionservice-cli
+```
+
+3. **Specifying the shell**
+
+  * Advantages:
+	  * Can specify the shell
+  * Disadvantages:
+	  * ignores the shebang
+	  * needs to specify path if not in the same directory
 ```sh
 sh onionservice-cli
+## or if wanting to specify the path to shell binaries
+/usr/bin/sh onionservice-cli
+## or if running from a different directory plus the above
+/usr/bin/sh "${ONIONSERVICE_PWD}"/onionservice-cli
 ```
 
-Restore the latest torrc backup:
-```sh
-sh onionservice-cli setup torrc
-```
-
-The repository is in your path (set by `setup.sh`). Call `onionservice-cli` as a command from any directory you are without prepending with the shell name. Go to any folder and call the `cli`:
-```sh
-cd
-onionservice-cli
-onionservice-tui
-```
-
-Read:
+Take a loot at the documentation inside `docs` folder. Read:
 
 * any markdown file formatted on the shell (with `pandoc` and `lynx`):
 ```sh
@@ -214,10 +230,7 @@ Tweak to be compatible with non-POSIX compliant shells::
 
 The project is POSIX compliant, but it is not "Pure shellscript", as other tools are [needed](#requirements), such as `grep` and `sed` and these commands are helpers.
 
-The default POSIX shell of your unix-like operating system may vary depending on your system (FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`, Debian uses `dash`), but it has a symbolic link leading to it on `/bin/sh` and `/usr/bin/sh` it can always be called consistenly with only `sh`:
-```sh
-sh onionservice-cli
-```
+The default POSIX shell of your unix-like operating system may vary depending on your system (FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`, Debian uses `dash`), but it has a symbolic link leading to it on `/usr/bin/sh`.
 
 Zsh is not POSIX compliant but it can emulate a POSIX shell:
 ```sh
