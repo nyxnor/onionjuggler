@@ -120,9 +120,7 @@ Edit the required variables to fit your system inside `.onionrc` following the s
 
 Set the default editor of your choice, else it will always fallback to [Vi](https://en.wikipedia.org/wiki/Vi). This is an example using `nano`, but could be any other editor:
 ```sh
-printf "\nexport EDITOR=\"nano\"\n" >> ~/."${SHELL##*/}"rc
-printf "export VISUAL=\"nano\"\n\n" >> ~/."${SHELL##*/}"rc
-. ~/."${SHELL##*/}"rc
+printf "\nexport EDITOR=\"nano\"\n" >> ~/."${SHELL##*/}"rc && . ~/."${SHELL##*/}"rc
 ```
 
 Open the mentioned configuration file:
@@ -136,28 +134,25 @@ WEBSERVER="nginx" ## [nginx|apache2]
 TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 ```
-Edit with sed:
+Edit with sed (use insert option -> `sed -i''`):
 ```sh
-sed "s|TOR_USER=.*|TOR_USER=\"tor\"|"
+sed "s|TOR_USER=.*|TOR_USER=\"tor\"|" .onionrc
 ```
 
 #### Setup the enviroment
 
-The enviroment variable ${ONIONSERVICE_PWD} and add the directory to path.
-* add the enviroment variable ${ONIONSERVICE_PWD} -> exporting this variable possibilitate calling it from inside shell scripts.
+Determine the enviromental variable `${ONIONSERVICE_PWD}` and add the directory to `${PATH}`.
+* add the enviromental variable  to find the repo-> exporting this variable possibilitate calling it from inside shell scripts.
 * add directory to path -> call the scripts from any directory as if they were commands (without indicating the path to them or prepending with the shell name).
 
 For this, you have two options:
-* **Easy**: run from inside the cloned repository and it will use the same path as ${PWD}:
+* **Easy**: run from inside the cloned repository and it will use the same path as in`${PWD}`:
 ```sh
 ./setup.sh
 ```
-* **Development**: Set the v/path/to/onionservice/repoariable manually using the absolute path without trailing "/" at the end (change `/PATH/TO/ONIONSERVICE/REPO` to the path you cloned the repo, for example `${HOME}/onionservice`). Advantages are: no need to run from inside the cloned repository and facilitate scripting and porting to other projects:
+* **Development**:  set the variable manually using the absolute path without trailing "/" at the end. Favorable for integrating into other projects. Run from any directory (need to specify the path)
 ```sh
-printf "\nexport ONIONSERVICE_PWD=\"/PATH/TO/ONIONSERVICE/REPO\"\n" >> ~/."${SHELL##*/}"rc
-printf "PATH=\"\${PATH}:\${ONIONSERVICE_PWD}\"\n\n" >> ~/."${SHELL##*/}"rc
-. ~/."${SHELL##*/}"rc
-./setup.sh
+./setup.sh -s -p /PATH/TO/ONIONSERVICE/REPO && . ~/."${SHELL##*/}"rc
 ```
 
 #### Usage
@@ -167,20 +162,20 @@ The repo is now in your `$PATH`, if you have setup the environment as described 
 There are three ways to call the scripts now, evaluate the advantages and disadvantages:
 
 1. **Command**
-  * Advantages:
-	  * follows the shebang
-    * can be used from any directory
-  * Disadvantages: None
+* Advantages:
+	* follows the shebang
+	* can be used from any directory
+* Disadvantages: None
 ```sh
 onionservice-cli
 ```
 
 2. **Dot slash**
-  * Advantages:
-	  * follows the shebang
-  * Disadvantages:
-	  * the scripts must be executable
-	  * needs to specify path if not in the same directory
+* Advantages:
+	* follows the shebang
+* Disadvantages:
+	* the scripts must be executable
+	* needs to specify path if not in the same directory
 ```sh
 ./onionservice-cli
 ## or if running from a different directory
@@ -188,12 +183,11 @@ onionservice-cli
 ```
 
 3. **Specifying the shell**
-
-  * Advantages:
-	  * Can specify the shell
-  * Disadvantages:
-	  * ignores the shebang
-	  * needs to specify path if not in the same directory
+* Advantages:
+	* Can specify the shell
+* Disadvantages:
+	* ignores the shebang
+	* needs to specify path if not in the same directory
 ```sh
 sh onionservice-cli
 ## or if wanting to specify the path to shell binaries
@@ -214,7 +208,6 @@ pandoc ${ONIONSERVICE_PWD}/docs/CONTRIBUTING.md | lynx -stdin
 ```sh
 man onionservice-cli
 ```
-
 
 ## Portability
 

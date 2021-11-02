@@ -11,9 +11,11 @@ First, read the [docs](https://github.com/nyxnor/onionservice/tree/main/docs).
 ### Commands
 
 It must be POSIX compliant. The [Shellcheck Code 2039](https://github.com/koalaman/shellcheck/wiki/SC2039) must not be ignored.
-Read [Shell & Utilities: Detailed Toc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html)
+Commands used by OnionService must follow the [Shell & Utilities: Detailed Toc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html), read the POSIX-compliant commands manuals.
 
-OnionService uses shell built-in commands and some basic [POSIX-compliant commands](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html) to support wide range of environments.
+Currentyl there are many command used and there has been a constant development to use less commands.
+
+Commands used by this project:
 
 * Builtins:
 	* [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
@@ -33,14 +35,12 @@ OnionService uses shell built-in commands and some basic [POSIX-compliant comman
 	* [cp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cp.html#tag_20_24)
 	* [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html#tag_20_28)
 	* [date](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/date.html#tag_20_30)
-	* [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
 	* [ln](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ln.html#tag_20_67)
 	* [ls](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ls.html#tag_20_73)
 	* [man](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/man.html#tag_20_77)
 	* [mkdir](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mkdir.html#tag_20_79)
 	* [mv](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mv.html#tag_20_82)
 	* [rm](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/rm.html#tag_20_111)
-	* [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
 	* [sh](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html#tag_20_117)
 	* [sort](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sort.html#tag_20_119)
 	* [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html#tag_20_125)
@@ -50,6 +50,24 @@ OnionService uses shell built-in commands and some basic [POSIX-compliant comman
 	* [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
 	* [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
 	* [wc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/wc.html#tag_20_154)
+
+* Installed:
+	* [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
+	* [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
+	* [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
+	* [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html)
+	* [basez](http://www.quarkline.net/basez/)
+	* [git](https://git-scm.com/docs/user-manual)
+	* [qrencode](https://github.com/fukuchi/libqrencode/)
+	* [pandoc](https://pandoc.org/MANUAL.html)
+	* [lynx](https://linux.die.net/man/1/lynx)
+	* [gzip](https://www.gnu.org/software/gzip/manual/gzip.html)
+	* [tar](https://linux.die.net/man/1/tar)
+	* [dialog](https://www.freebsd.org/cgi/man.cgi?dialog)
+
+* Optionally installed
+  * [nginx](https://docs.nginx.com/nginx/admin-guide/)
+  * [apache](https://httpd.apache.org/docs/current/)
 
 ### Builtins
 
@@ -64,36 +82,32 @@ curl -o /tmp/builtins.sh https://raw.githubusercontent.com/shellspec/shellspec/m
 # or
 wget -P /tmp/ https://raw.githubusercontent.com/shellspec/shellspec/master/contrib/builtins.sh
 ```
-1. Run it with `sh`:
+1. Run it with the desired shell:
 ```sh
-sh /tmp/builtins.sh
+chmod u+x /tmp/builtins.sh
+./tmp/builtins.sh
 ```
 
 ### External commands limitations
 
-Operating system extensions (GNU extesions on commands such as grep) and commands unique to some unix operating systems but not present on others need to be avoided. If you still need to use external commands, check their POSIX manual, for example:
-* [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
-* [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
-
-Check [commands](#commands) to see the listed commands used on the project and their respective manual.
+Operating system extensions (GNU extesions on commands such as grep) and commands unique to some unix operating systems but not present on others need to be avoided. If you still need to use external commands, check their POSIX manual, mentioned on [commands](#commands).
 
 ### Syntax
 
 1. Identation is 2.
 1. Lines that begin with "## " try to explain what's going on. Lines that begin with just "#" are disabled commands.
 1. Sacrificing some code legibility for speed is acceptable, but if the maintainer considers it messy because it does not help performance, it won't be approved. This is the only subjective requirement.
-1. The most efficient (fastest, least consumed resources). Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
+1. Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
 1. variable paths should not end with "/", because it is not viable to check if it exists everytime then act with the result.
 1. `printf` instead of `echo` for portability reasons.
-1. for the rest, follow the same pattern predominant in the scripts.
-1. for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`.
-1. exit codes -> `&&` for true or 1 and `||` for false or 0.
+1. exit codes managed with `&&` for true or 1 and `||` for false or 0.
 1. `case` instead of `if-then-else`
-1. variables on upper case letters -> `VAR=`.
+1. for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`.
+1. variables should be reffered with brackets `{}` and double quotes `""`, resulting in `"${VAR}"`.
+1. unquoted variabes and commands expand, if it is supposed to do so, disable SC2086.
+1. environmental variables are upper case letters -> `VAR=`.
 1. variable values must be quoted -> `VAR="something"`.
-1. use brackes on variables to avoid some tiny errors -> `${VAR}`.
-1. quote every variable if they are not supposed to expand -> `"${VAR}"`.
-1. quote every command that are not supposed to expand -> `"$(command)"`
+1. for the rest, follow the same pattern predominant in the scripts.
 
 ### Check
 
@@ -102,13 +116,17 @@ Run [shellcheck](https://github.com/koalaman/shellcheck) before commiting your c
 Some checks are not needed for certain files and are cherry picked to be disabled. It is recommended to check before every commit:
 
 ```sh
-sh setup.sh release
+./setup.sh -r
 ```
 
 Shellcheck Codes:
 * Global: specify on [`.shellcheckrc`](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-or-more-type-of-error-forever).
 * Applicable to the entire file: [specify the line after the shebang](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-specific-instance-in-a-file)
 * Applicable to certain lines: [specify on the line above the occurence](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-all-instances-in-a-file-044)
+
+Some pitfalls can occur when writing that shellcheck won't recognize, as it doesn't warn about [SC2045](https://github.com/koalaman/shellcheck/wiki/SC2045), even though it should (we need to find a way to circumvent that as `DataDir` is owned by the tor user, not by your normal login user. This is way checking with `-d DIR` or ` -f FILE` doesn't work. A possiblle solution is `sudo -u "${TOR_USER} find ${DATA_DIR_HS} -maxdepth 1 -type d | tail -n +2`)
+
+Read [Bash Pitfalls](http://mywiki.wooledge.org/BashPitfalls) (some rules are applicable to POSIX shells).
 
 ### Texts
 
@@ -134,13 +152,10 @@ Maintainers/Collaborators:
 	* no longer relevant to the current code base.
 	* if the issue won't be fixed.
 
-### Fork the repository
+### Pull requests
 
+Fork the repository:
 Go to: https://github.com/nyxnor/onionservice/fork
-
-### Changes
-
-#### Basic instructions
 
 Clone:
 ```sh
@@ -154,31 +169,20 @@ git remote add upstream https://github.com/nyxnor/onionservice.git
 git checkout -b <NEW_BRANCH> upstream/<BASE_BRANCH>
 ```
 
-After making changes, it is recommended to shellcheck with the predefined arguments:
-```sh
-sh setup.sh check
-```
-
-#### Commit
-
 After changes are finished, test thoroughly to see if it works.
 If it does and is valuable to the upstream project, first open an issue to be this discussed, after it is evaluated, create a merge request.
 
-Before commiting, shellcheck and empty `ONIONSERVICE_PWD`
+Before commiting, shellcheck with:
 ```sh
-sh setup.sh release
+./setup.sh -r
 ```
 
-Commit to your branch
+Commit to your branch:
 ```git
 git add <FILE_EDITED>
 git rm <FILE_DETELED>
-git commit -m "These changes does this thing"
+git commit -m "Title with short description" -m "Detailed description of the changes
 git push -u origin <NEW_BRANCH>
 ```
 
 Open a pull request on GitHub and compare it against the `upstream/<BASE_BRANCH>`.
-
-## Confessions
-
-The project understand that using `ls` is not the best way to check if file or folder exists and their names, but still needs to find a way to circumvent that as `DataDir` is owned by the tor user (and should stay like that), not by your normal login user. This is way checking with `-d DIR` or ` -f FILE` won't work. The `find` command can be used with `-maxdepth=1` if it does not shown the
