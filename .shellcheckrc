@@ -1,5 +1,2 @@
-## these are global options: https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-or-more-type-of-error-forever
-## dedicated options must inserted in a file for only one instance: https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-specific-instance-in-a-file
-## unless it is the .onionrc wich contains unused vars of course: https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-all-instances-in-a-file-044
 shell=sh
 source=/dev/null

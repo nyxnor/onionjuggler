@@ -8,6 +8,8 @@ First, read the [docs](https://github.com/nyxnor/onionservice/tree/main/docs).
 
 ## Shell
 
+### Commands
+
 It must be POSIX compliant. The [Shellcheck Code 2039](https://github.com/koalaman/shellcheck/wiki/SC2039) must not be ignored.
 Read [Shell & Utilities: Detailed Toc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html)
 
@@ -73,7 +75,7 @@ Operating system extensions (GNU extesions on commands such as grep) and command
 * [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
 * [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
 
-Check [requirements](README#requirements) to see the listed commands used on the project and their respective manual.
+Check [commands](#commands) to see the listed commands used on the project and their respective manual.
 
 ### Syntax
 
@@ -81,11 +83,11 @@ Check [requirements](README#requirements) to see the listed commands used on the
 1. Lines that begin with "## " try to explain what's going on. Lines that begin with just "#" are disabled commands.
 1. Sacrificing some code legibility for speed is acceptable, but if the maintainer considers it messy because it does not help performance, it won't be approved. This is the only subjective requirement.
 1. The most efficient (fastest, least consumed resources). Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
-1. variable paths should not end with "/".
+1. variable paths should not end with "/", because it is not viable to check if it exists everytime then act with the result.
 1. `printf` instead of `echo` for portability reasons.
 1. for the rest, follow the same pattern predominant in the scripts.
 1. for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`.
-1. exit codes -> `&&` for true or 0 and `||` for false or 0.
+1. exit codes -> `&&` for true or 1 and `||` for false or 0.
 1. `case` instead of `if-then-else`
 1. variables on upper case letters -> `VAR=`.
 1. variable values must be quoted -> `VAR="something"`.
@@ -100,20 +102,13 @@ Run [shellcheck](https://github.com/koalaman/shellcheck) before commiting your c
 Some checks are not needed for certain files and are cherry picked to be disabled. It is recommended to check before every commit:
 
 ```sh
-sh setup.sh check
+sh setup.sh release
 ```
 
-Shellcheck Codes that can be safely ingored:
-
-* SC1090
-  * Warn: Can't follow non-constant source. Use a directive to specify location.
-  * Case: The source path is a variable (ONIONSERVICE_PWD). Because of that, use `# shellcheck source=/dev/null`.
-* SC2086
-  * Warn: Double quote to prevent globbing and word splitting.
-  * Case: some variables need to expand, remove this for verification
-* SC2034
-  * Warn: unused vars
-  * Case: only for the `.onionrc` because the variables are not used there
+Shellcheck Codes:
+* Global: specify on [`.shellcheckrc`](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-or-more-type-of-error-forever).
+* Applicable to the entire file: [specify the line after the shebang](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-specific-instance-in-a-file)
+* Applicable to certain lines: [specify on the line above the occurence](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-all-instances-in-a-file-044)
 
 ### Texts
 
