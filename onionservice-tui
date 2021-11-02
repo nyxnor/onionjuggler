@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
 ## This file is part of OnionService, an easy to use Tor hidden services manager.
 ##

@@ -140,9 +140,8 @@ is_addr_port(){
 ## if the service exists, will save the hostname for when requested.
 test_service_exists(){
   SERVICE="${1}"
-  ONION_HOSTNAME=$(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/hostname 2>/dev/null)
-  [ "${ONION_HOSTNAME}" = "" ] \
-  && { printf %s"${FOREGROUND_RED}ERROR: Service does not exist: ${SERVICE}\n${UNSET_FORMAT}"; exit 1; }
+  ONION_HOSTNAME=$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_HS}"/"${SERVICE}"/hostname)
+  [ -z "${ONION_HOSTNAME}" ] && { printf %s"${FOREGROUND_RED}ERROR: Service does not exist: ${SERVICE}\n${UNSET_FORMAT}"; exit 1; }
 }
 
 
@@ -461,7 +460,7 @@ case "${COMMAND}" in
 								[ -n "${CLIENT_NAME_LIST}" ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
 								for AUTH in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}/${SERVICE}/authorized_clients/"); do
 									printf %s"\n# File name: ${AUTH}\n"
-									printf %s"# Content:   $(sudo -u "${TOR_USER}" cat "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${AUTH}")\n"
+									printf %s"# Content:   $(sudo -u "${TOR_USER}" grep ":descriptor:x25519:" "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${AUTH}")\n"
 								done
 								printf "\n"
               else
@@ -564,7 +563,7 @@ case "${COMMAND}" in
               printf %s"# ClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n"
               for AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"); do
                 printf %s"\n# File name: ${AUTH}\n"
-                printf %s"# Content:   $(sudo -u "${TOR_USER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}")"
+                printf %s"# Content:   $(sudo -u "${TOR_USER}" grep "descriptor:x25519:" "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}")"
               done
               printf "\n"
 							printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
@@ -666,18 +665,19 @@ case "${COMMAND}" in
         [ "${VIRTPORT}" = "" ] && error_msg "At least one VIRTPORT of the service must be listening on port 80"
 				TARGET=${VIRTPORT##* }
 				printf %s"# Activating web server for the onion service: ${SERVICE}\n\n"
-				sudo cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i'' "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i'' "s|TARGET|${TARGET}|g" /tmp/"${SERVICE}"-onion.conf
+				cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
+        sed -i'' "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
+        sed -i'' "s|TARGET|${TARGET}|g" /tmp/"${SERVICE}"-onion.conf
 				## If starts with '/', user specified the path, if started with anything else expect a folder inside ${WEBSITE_DIR}
 				case "${FOLDER}" in
-					/*) sudo sed -i'' "s|FOLDER|${FOLDER}|" /tmp/"${SERVICE}"-onion.conf;;
-					*) sudo sed -i'' "s|FOLDER|${WEBSITE_DIR}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
+					/*) sed -i'' "s|FOLDER|${FOLDER}|" /tmp/"${SERVICE}"-onion.conf;;
+					*) sed -i'' "s|FOLDER|${WEBSITE_DIR}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
 				esac
         sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-available/
         sudo ln -sfv /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-enabled/
         printf "\n# Web server configuration:\n\n"
-        sudo cat /tmp/"${SERVICE}"-onion.conf
+        #sudo cat /tmp/"${SERVICE}"-onion.conf
+				while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${SERVICE}-onion.conf"
         printf "\n# Reloading web server to apply new configuration\n"
         [ "${WEBSERVER}" = "nginx" ] && sudo nginx -tq && sudo nginx -s reload
         [ "${WEBSERVER}" = "apache2" ] && sudo systemctl reload apache2
@@ -864,14 +864,15 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
       grep -q "ControlPort" "${TORRC}" || { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
 			{ grep -q "CookieAuthentication" "${TORRC}" || grep -q "HashedControlPassword" "${TORRC}"; } || { printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null; }
       set_owner_permission
-      sudo cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
-      sudo sed -i'' "s/TOR_SERVICE/${TOR_SERVICE}/g" /tmp/vanguards@default.service
-      sudo sed -i'' "s|DATA_DIR|${DATA_DIR}|g" /tmp/vanguards@default.service
-      sudo sed -i'' "s/CONTROL_PORT/${CONTROL_PORT}/g" /tmp/vanguards@default.service
-      sudo sed -i'' "s/TOR_USER/${TOR_USER}/g" /tmp/vanguards@default.service
+      cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
+      sed -i'' "s/TOR_SERVICE/${TOR_SERVICE}/g" /tmp/vanguards@default.service
+      sed -i'' "s|DATA_DIR|${DATA_DIR}|g" /tmp/vanguards@default.service
+      sed -i'' "s/CONTROL_PORT/${CONTROL_PORT}/g" /tmp/vanguards@default.service
+      sed -i'' "s/TOR_USER/${TOR_USER}/g" /tmp/vanguards@default.service
       sudo cp -v /tmp/vanguards@default.service /etc/systemd/system/
       printf "\n>>>>>>>>>>>>>>>>>>>\n"
-      sudo cat /tmp/vanguards@default.service
+      while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/vanguards@default.service"
+			#cat /tmp/vanguards@default.service
       printf ">>>>>>>>>>>>>>>>>>>\n\n"
       sudo systemctl daemon-reload
       sudo systemctl enable vanguards@default.service
