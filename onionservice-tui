@@ -58,6 +58,7 @@ service_menu(){
 
   TITLE="Onion Services - ${COMPL_TITLE}"
   MENU="\nUse spacebar to select"
+	# shellcheck disable=SC2086
   CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
   "$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
 
@@ -117,6 +118,7 @@ case "${CHOICE_MAIN}" in
 		done
 		TITLE="Markdown guides"
 		MENU="Select a guide:"
+		# shellcheck disable=SC2086
 		CHOICE_MD="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
 		--menu "${MENU}" "$((i+7))" 50 10 ${MD_LIST} 2>&1 >/dev/tty)"
 		[ -n "${CHOICE_MD}" ] && { pandoc "${ONIONSERVICE_PWD}"/docs/"${CHOICE_MD}" | lynx -stdin ; }
@@ -148,6 +150,7 @@ case "${CHOICE_MAIN}" in
           --inputbox "${UNIX_PORT_MSG}" 10 60 3>&1 1>&2 2>&3)"
           if [ -n "${SERVICE_PORTS}" ]; then
             clear
+						# shellcheck disable=SC2086
             sh "${ONIONSERVICE_PWD}"/onionservice-cli on unix 3 "${SERVICE_NAME}" ${SERVICE_PORTS}
             printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
           fi
@@ -161,6 +164,7 @@ case "${CHOICE_MAIN}" in
           SERVICE_PORTS="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${TCP_PORT_MSG}" 13 80 3>&1 1>&2 2>&3)"
           if [ -n "${SERVICE_PORTS}" ]; then
+						# shellcheck disable=SC2086
             sh "${ONIONSERVICE_PWD}"/onionservice-cli on tcp 3 "${SERVICE_NAME}" ${SERVICE_PORTS}
             printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
           fi
@@ -190,7 +194,8 @@ case "${CHOICE_MAIN}" in
     if [ -n "${SERVICE_NAME_LIST}" ]; then
       clear
       sh "${ONIONSERVICE_PWD}"/onionservice-cli renew "${SERVICE_NAME_LIST}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2
+			read -r confirmation
     fi
   ;;
 
@@ -236,6 +241,7 @@ case "${CHOICE_MAIN}" in
 				else
 					TITLE="Client Authorization - Server - Deletion"
 					MENU="\nUse spacebar to select:"
+					# shellcheck disable=SC2086
 					CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
 					"$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
 				fi
@@ -245,6 +251,7 @@ case "${CHOICE_MAIN}" in
 						i=$((i+1))
 						CLIENT_LIST="$(printf "%s\n%s\n%s\n" "${CLIENT_LIST}" "${CLIENT}" ".")"
 					done
+					# shellcheck disable=SC2086
 					CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
 					"$((i+8))" 50 2 ${CLIENT_LIST} 2>&1 >/dev/tty)"
 					[ -n "${CHOICE_CLIENT}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CHOICE_CLIENT}".auth
@@ -304,10 +311,12 @@ case "${CHOICE_MAIN}" in
 				else
 					TITLE="Client Authorization - Server - Deletion"
 					MENU="\nUse spacebar to select:"
+					# shellcheck disable=SC2086
 					CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
 					"$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
 				fi
 				if [ -n "${CHOICE_SERVICE}" ]; then
+					# shellcheck disable=SC2086
 					SERVICE_TOTAL=$(IFS=' '; set -f -- ${CHOICE_SERVICE}; printf %s"${#}")
 					for SERVICE in $(printf %s"${CHOICE_SERVICE}"); do
 						CLIENT="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
@@ -324,6 +333,7 @@ case "${CHOICE_MAIN}" in
 						TEXT_NO_CLIENT="\nNo client exist inside the intersection of the chosen services."
 						dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
 					else
+						# shellcheck disable=SC2086
 						CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
 						"$((i+8))" 50 2 ${CLIENT_BUILD_LIST} 2>&1 >/dev/tty)"
 					fi
@@ -374,6 +384,7 @@ case "${CHOICE_MAIN}" in
 					dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
 				else
 					MENU="\nUse spacebar to select:"
+					# shellcheck disable=SC2086
 					CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --menu "${MENU}" \
 					"$((i+8))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
 					[ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-vi}" "${CLIENT_ONION_AUTH_DIR}"/"${CHOICE_ONION_AUTH}".auth_private
@@ -417,6 +428,7 @@ case "${CHOICE_MAIN}" in
 					dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
 				else
 					MENU="\nUse spacebar to select:"
+					# shellcheck disable=SC2086
 					CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --checklist "${MENU}" \
 					"$((i+8))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
 					[ -n "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
@@ -487,6 +499,7 @@ case "${CHOICE_MAIN}" in
 				done
 				TITLE="Folder"
 				MENU="\nUse spacebar to select:"
+				# shellcheck disable=SC2086
 				CHOICE_FOLDER="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
 				"$((i+8))" 50 2 ${FOLDER_LIST} 2>&1 >/dev/tty)"
 				[ -n "${CHOICE_FOLDER}" ] && FOLDER_NAME_LIST="$(printf %s"${CHOICE_FOLDER}" | sed "s/ /,/g")"
@@ -504,6 +517,7 @@ case "${CHOICE_MAIN}" in
 			done
 			TITLE="Web Server - Disable Site"
 			MENU="\nUse spacebar to select:"
+			# shellcheck disable=SC2086
 			CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
 			"$((i+8))" 50 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
 			[ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
@@ -542,7 +556,6 @@ case "${CHOICE_MAIN}" in
     fi
   ;;
 
-
   IMPORT)
     sh "${ONIONSERVICE_PWD}"/onionservice-cli backup integrate
     printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
@@ -550,8 +563,10 @@ case "${CHOICE_MAIN}" in
 
 
   EXPORT)
-    sh "${ONIONSERVICE_PWD}"/onionservice-cli backup create
-    printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+	  sh "${ONIONSERVICE_PWD}"/onionservice-cli backup create
+    printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2
+		# shellcheck disable=SC2034
+		read -r confirmation
   ;;
 
 

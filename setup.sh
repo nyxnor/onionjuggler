@@ -29,6 +29,7 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
+# TODO: THINK: symlink to /usr/local/bin instead of adding dir to path? ONIONSERVICE_PWD still has to be on the shell rc.
 
 # shellcheck source=/dev/null
 ## SET ENV MANUALLY (dev)
@@ -87,16 +88,11 @@ case "${ACTION}" in
   ;;
 
   release|RELEASE)
+		install_package shellcheck
 		printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
-		## syntax
-		## Customize severity with -S [error|warning|info|style]
-		## quits to warn workflow test failed
-		printf "# Checking syntax\n"
-		shellcheck -s sh "${ONIONSERVICE_PWD}"/setup.sh || SHELLCHECK_FAIL=1
-		shellcheck -s sh -e 2034 "${ONIONSERVICE_PWD}"/.onionrc || SHELLCHECK_FAIL=1
-		shellcheck -s sh -e 2153 "${ONIONSERVICE_PWD}"/onionservice-cli || SHELLCHECK_FAIL=1
-		shellcheck -s sh -e 2034,2086 "${ONIONSERVICE_PWD}"/onionservice-tui || SHELLCHECK_FAIL=1
-		[ -n "${SHELLCHECK_FAIL}" ] && exit 1
+		printf "# Checking syntax\n" ## quits to warn workflow test failed
+	  ## Customize severity with -S [error|warning|info|style]
+		shellcheck "${ONIONSERVICE_PWD}"/setup.sh "${ONIONSERVICE_PWD}"/.onionrc "${ONIONSERVICE_PWD}"/onionservice-cli "${ONIONSERVICE_PWD}"/onionservice-tui || exit 1
     ## cleanup
     sed -i'' "s/set \-\x//g" "${ONIONSERVICE_PWD}"/.onionrc
     sed -i'' "s/set \-\x//g" "${ONIONSERVICE_PWD}"/onionservice-cli

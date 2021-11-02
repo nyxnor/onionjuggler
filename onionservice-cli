@@ -284,7 +284,7 @@ case "${COMMAND}" in
         { [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
         TARGET_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
         TARGET_ALREADY_INSERTED_SERVICE=${TARGET_ALREADY_INSERTED_BLOCK##*/}
-        sudo -u "${CONF_DIR_OWNER}" grep -qc "HiddenServicePort .*${TARGET}$" "${TORRC}" && error_msg "TARGET=${TARGET} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}\nINFO: Choose another port or disable the service that is using the wanted port"
+        sudo -u "${CONF_DIR_OWNER}" grep -q "HiddenServicePort .* ${TARGET}$" "${TORRC}" && error_msg "TARGET=${TARGET} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}\nINFO: Choose another port or disable the service that is using the wanted port"
         is_integer "${VIRTPORT}"; is_addr_port "${TARGET}" "TARGET"
         ## Optional
         VIRTPORT2="${7}"
@@ -297,7 +297,7 @@ case "${COMMAND}" in
           [ "${TARGET}" = "${TARGET2}" ] && error_msg "TARGET is the same as TARGET2"
           TARGET2_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET2}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
           TARGET2_ALREADY_INSERTED_SERVICE=${TARGET2_ALREADY_INSERTED_BLOCK##*/}
-          sudo -u "${CONF_DIR_OWNER}" grep -qc "HiddenServicePort .*${TARGET2}$" "${TORRC}" && error_msg "TARGET2=${TARGET2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
+          sudo -u "${CONF_DIR_OWNER}" grep -q "HiddenServicePort .* ${TARGET2}$" "${TORRC}" && error_msg "TARGET2=${TARGET2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
           is_integer "${VIRTPORT2}"; is_addr_port "${TARGET2}" "TARGET2"
         fi
 
@@ -669,7 +669,11 @@ case "${COMMAND}" in
 				sudo cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
         sudo sed -i'' "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
         sudo sed -i'' "s|TARGET|${TARGET}|g" /tmp/"${SERVICE}"-onion.conf
-        sudo sed -i'' "s|FOLDER|${WEBSITE_DIR}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
+				## If starts with '/', user specified the path, if started with anything else expect a folder inside ${WEBSITE_DIR}
+				case "${FOLDER}" in
+					/*) sudo sed -i'' "s|FOLDER|${FOLDER}|" /tmp/"${SERVICE}"-onion.conf;;
+					*) sudo sed -i'' "s|FOLDER|${WEBSITE_DIR}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
+				esac
         sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-available/
         sudo ln -sfv /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-enabled/
         printf "\n# Web server configuration:\n\n"
@@ -773,6 +777,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
       ## backup tar file will be extracted and integrated into their respective tor folders
       ## scp instructions to import backup from remote host
       integrate|INTEGRATE)
+				# shellcheck disable=SC2153,SC2154
 				sudo -u "${USER}" mkdir -p "${HS_BK_DIR}"/integrate
 				HS_BK_TAR=$(sudo -u "${USER}" ls "${HS_BK_DIR}" | grep ".tar.gz" | tail -1)
         printf %s"# Integrating backup from file: ${HS_BK_TAR}\n\n"
