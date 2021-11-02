@@ -603,8 +603,8 @@ case "${COMMAND}" in
       restarting_tor
       test_service_exists "${SERVICE}"
       NEW_HOSTNAME="${ONION_HOSTNAME}"
-      printf %s"\nCurrent = ${OLD_HOSTNAME}\n"
-      printf %s"New     = ${ONION_HOSTNAME}\n"
+      printf %s"\nOld = ${OLD_HOSTNAME}\n"
+      printf %s"New = ${ONION_HOSTNAME}\n"
       if [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ]; then
         printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"
 				printf "\n# Note: Remember to notify your clients about the new hostname and update their '.auth_private' files accordingly.\n"
@@ -617,7 +617,6 @@ case "${COMMAND}" in
     }
     [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
     loop_list renew_service_address "${SERVICE}"
-		restarting_tor
 		printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
   ;;
 
