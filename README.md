@@ -150,14 +150,14 @@ The enviroment variable ${ONIONSERVICE_PWD} and add the directory to path.
 For this, you have two options:
 * **Easy**: run from inside the cloned repository and it will use the same path as ${PWD}:
 ```sh
-sh setup.sh
+./setup.sh
 ```
 * **Development**: Set the v/path/to/onionservice/repoariable manually using the absolute path without trailing "/" at the end (change `/PATH/TO/ONIONSERVICE/REPO` to the path you cloned the repo, for example `${HOME}/onionservice`). Advantages are: no need to run from inside the cloned repository and facilitate scripting and porting to other projects:
 ```sh
 printf "\nexport ONIONSERVICE_PWD=\"/PATH/TO/ONIONSERVICE/REPO\"\n" >> ~/."${SHELL##*/}"rc
 printf "PATH=\"\${PATH}:\${ONIONSERVICE_PWD}\"\n\n" >> ~/."${SHELL##*/}"rc
 . ~/."${SHELL##*/}"rc
-sh setup.sh
+./setup.sh
 ```
 
 #### Usage
