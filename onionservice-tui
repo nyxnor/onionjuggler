@@ -31,9 +31,6 @@
 [ -n "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: sh setup.sh\n"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onionrc
 
-## Clear screen on script exit (even using Ctrl+C)
-trap 'printf \\033[2J\\033[H\\033[m' EXIT
-
 ## default values
 i=0
 
@@ -41,9 +38,17 @@ i=0
 ######## FUNCTIONS ########
 
 
+## clear is not a posix command
+clear_posix(){
+  printf \\033[2J\\033[H\\033[m
+}
+
+trap 'clear_posix' EXIT
+
 ## $1 [checklist|menu]
 ## $2 complementary title
 service_menu(){
+	set -x
   DIALOG_TYPE="${1}"
   COMPL_TITLE="${2}"
 
@@ -56,7 +61,7 @@ service_menu(){
       menu)      SERVICE_LIST="$(printf "%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}")";;
     esac
   done
-
+exit 0
 	if [ -n "${SERVICE_LIST}" ]; then
 		TITLE="Onion Services - ${COMPL_TITLE}"
 		MENU="\nUse spacebar to select"
@@ -152,7 +157,7 @@ case "${CHOICE_MAIN}" in
           SERVICE_PORTS="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${UNIX_PORT_MSG}" 10 60 3>&1 1>&2 2>&3)"
           if [ -n "${SERVICE_PORTS}" ]; then
-            clear
+            clear_posix
 						# shellcheck disable=SC2086
             sh "${ONIONSERVICE_PWD}"/onionservice-cli on unix 3 "${SERVICE_NAME}" ${SERVICE_PORTS}
             printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
@@ -186,7 +191,7 @@ case "${CHOICE_MAIN}" in
       MENU="\nWould you also like to DELETE (purge) the HiddenServiceDir?\n\nYES: All the directory data, including hidden service keys and clients will be deleted permanently (you won't be able to use the same onion address).\n\nNO (default): Service will be disabled, lines from the torrc deleted but the folder will be kept.\n\nCtrl+C to cancel deactivation (neither option)"
       if CHOICE_PURGE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       --defaultno --yesno "${MENU}" 15 80 2>&1 >/dev/tty)"; then CHOICE_PURGE="purge"; fi
-      clear
+      clear_posix
       sh "${ONIONSERVICE_PWD}"/onionservice-cli off "${SERVICE_NAME_LIST}" "${CHOICE_PURGE}"
       printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
     fi
@@ -196,7 +201,7 @@ case "${CHOICE_MAIN}" in
   RENEW)
     service_menu checklist "Renew"
     if [ -n "${SERVICE_NAME_LIST}" ]; then
-      clear
+      clear_posix
       sh "${ONIONSERVICE_PWD}"/onionservice-cli renew "${SERVICE_NAME_LIST}"
       printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2
 			read -r confirmation
@@ -221,7 +226,7 @@ case "${CHOICE_MAIN}" in
       LIST)
         service_menu checklist "Auth Server List"
         if [ -n "${SERVICE_NAME_LIST}" ]; then
-          clear
+          clear_posix
           sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server list "${SERVICE_NAME_LIST}"
           printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
         fi
@@ -272,7 +277,7 @@ case "${CHOICE_MAIN}" in
           --inputbox "${MENU}" 10 50 3>&1 1>&2 2>&3)"
           CLIENT_NAME_LIST="$(printf %s"${CLIENT_NAME_LIST}" | tr -s ' ' ',' | tr -s ',' ',')"
           if { [ -n "${SERVICE_NAME_LIST}" ] && [ -n "${CLIENT_NAME_LIST}" ]; }; then
-            clear
+            clear_posix
             sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE_NAME_LIST}" "${CLIENT_NAME_LIST}"
             printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
           fi
@@ -291,7 +296,7 @@ case "${CHOICE_MAIN}" in
           CLIENT_PUB_KEY="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${MENU}" 10 50 3>&1 1>&2 2>&3)"
           if { [ -n "${SERVICE_NAME_LIST}" ] && [ -n "${CLIENT_NAME_LIST}" ] && [ -n "${CLIENT_PUB_KEY}" ]; }; then
-            clear
+            clear_posix
             sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE_NAME_LIST}" "${CLIENT_NAME_LIST}" "${CLIENT_PUB_KEY}"
             printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
           fi
@@ -349,7 +354,7 @@ case "${CHOICE_MAIN}" in
 					fi
 				fi
         if [ -n "${CLIENT_NAME_LIST}" ]; then
-          clear
+          clear_posix
           sh "${ONIONSERVICE_PWD}"/onionservice-cli auth server off "${SERVICE_NAME_LIST}" "${CLIENT_NAME_LIST}"
           printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
         fi
@@ -403,7 +408,7 @@ case "${CHOICE_MAIN}" in
         ONION_HOSTNAME="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
         --inputbox "${MENU}" 9 80 3>&1 1>&2 2>&3)"
         if [ -n "${ONION_HOSTNAME}" ]; then
-          clear
+          clear_posix
           sh "${ONIONSERVICE_PWD}"/onionservice-cli auth client on "${ONION_HOSTNAME}"
           printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
         fi
@@ -417,7 +422,7 @@ case "${CHOICE_MAIN}" in
         CLIENT_PRIV_KEY="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
         --inputbox "${MENU}" 9 80 3>&1 1>&2 2>&3)"
         if { [ -n "${ONION_HOSTNAME}" ] && [ -n "${CLIENT_PRIV_KEY}" ]; }; then
-          clear
+          clear_posix
           sh "${ONIONSERVICE_PWD}"/onionservice-cli auth client on "${ONION_HOSTNAME}" "${CLIENT_PRIV_KEY}"
           printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
         fi
@@ -442,7 +447,7 @@ case "${CHOICE_MAIN}" in
 					[ -n "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
 				fi
         if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
-          clear
+          clear_posix
           sh "${ONIONSERVICE_PWD}"/onionservice-cli auth client off "${ONION_AUTH_NAME_LIST}"
           printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
         fi
@@ -455,7 +460,7 @@ case "${CHOICE_MAIN}" in
   CREDENTIALS)
     service_menu checklist "Credentials"
     if [ -n "${SERVICE_NAME_LIST}" ]; then
-      clear
+      clear_posix
       sh "${ONIONSERVICE_PWD}"/onionservice-cli list "${SERVICE_NAME_LIST}"
       printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
     fi
@@ -473,7 +478,7 @@ case "${CHOICE_MAIN}" in
       "HTML" "hmtl <meta> http-equiv attribute" \
       2>&1 >/dev/tty)"
       if [ -n "${CHOICE_ACTION}" ]; then
-        clear
+        clear_posix
         sh "${ONIONSERVICE_PWD}"/onionservice-cli location "${SERVICE_NAME_LIST}" "${CHOICE_ACTION}"
         printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
       fi
@@ -490,7 +495,7 @@ case "${CHOICE_MAIN}" in
     "OFF" "Stop serving web site" \
     2>&1 >/dev/tty)"
     if [ "${STATUS}" = "LIST" ]; then
-      clear
+      clear_posix
       sh "${ONIONSERVICE_PWD}"/onionservice-cli "${WEBSERVER}" "${STATUS}"
       printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
     elif [ "${STATUS}" = "ON" ]; then
@@ -512,7 +517,7 @@ case "${CHOICE_MAIN}" in
 				"$((i+8))" 50 2 ${FOLDER_LIST} 2>&1 >/dev/tty)"
 				[ -n "${CHOICE_FOLDER}" ] && FOLDER_NAME_LIST="$(printf %s"${CHOICE_FOLDER}" | sed "s/ /,/g")"
         if [ -n "${FOLDER_NAME_LIST}" ]; then
-          clear
+          clear_posix
           sh "${ONIONSERVICE_PWD}"/onionservice-cli web "${STATUS}" "${SERVICE_NAME_LIST}" "${FOLDER_NAME_LIST}"
           printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
         fi
@@ -530,7 +535,7 @@ case "${CHOICE_MAIN}" in
 			"$((i+8))" 50 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
 			[ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
       if [ -n "${SERVICE_NAME_LIST}" ]; then
-        clear
+        clear_posix
         sh "${ONIONSERVICE_PWD}"/onionservice-cli web "${STATUS}" "${SERVICE_NAME_LIST}"
         printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
       fi
@@ -540,7 +545,7 @@ case "${CHOICE_MAIN}" in
 
   VANGUARDS)
     TITLE="Vanguards"
-    if [ "$(sudo -u "${TOR_USER}" ls "${DATA_DIR}"/vanguards)" = "" ]; then
+    if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR}"/vanguards)" ]; then
       CHOICE_ACTION="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 8 50 2 \
       "INSTALL" "Use Vanguards protections" 2>&1 >/dev/tty)"
@@ -554,11 +559,11 @@ case "${CHOICE_MAIN}" in
     fi
 
     if [ "${CHOICE_ACTION}" = "LOGS" ]; then
-      clear
+      clear_posix
       trap 'sh "${ONIONSERVICE_PWD}"/onionservice-tui; exit 0' INT
       sudo tail -f -n 25 /var/log/tor/vanguards.log
     elif [ -n "${CHOICE_ACTION}" ]; then
-      clear
+      clear_posix
       sh "${ONIONSERVICE_PWD}"/onionservice-cli vanguards "${CHOICE_ACTION}"
       printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
     fi
@@ -579,11 +584,11 @@ case "${CHOICE_MAIN}" in
 
 
   QUIT)
-    clear
+    clear_posix
     exit 0
   ;;
 
 esac
 
-clear
+clear_posix
 sh "${ONIONSERVICE_PWD}"/onionservice-tui
