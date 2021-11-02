@@ -27,67 +27,44 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
-[ -n "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: sh setup.sh\n"; exit 1; }
+[ -n "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: ./setup.sh\n"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onionrc
 
 ## COMMAND INFO
 onion_usage(){
-  if [ -f "${ONIONSERVICE_PWD}"/images/onion-ascii-closed.txt ]; then
-    ASCII="$(cat "${ONIONSERVICE_PWD}"/images/onion-ascii-closed.txt)"
+	ASCII="${ONIONSERVICE_PWD}/images/onion-ascii-closed.txt"
+  if [ -f "${ASCII}" ]; then
+		ASCII="$(while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "${ASCII}")"
     printf %s"${FOREGROUND_MAGENTA} ${ASCII} ${UNSET_FORMAT}\n\n"
   fi
 
   printf "Configure an Onion Service
-
-Usage: %s${0##*/} COMMAND [REQUIRED] <OPTIONAL>
-
-Options:
-  setup torrc                                                                        restore latest torrc
-
-  on tcp [VERSION] [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                  enable a service targeting tcp socket
-
-  on unix [VERSION] [SERV] [VIRTPORT] <VIRTPORT2>                                    enable a service targeting unix socket
-
-  off [SERV1,SERV2,...] <purge>                                                      disable a service and optionally purge its directory
-
-  list [all-services|SERV1,SERV2,...] <no-qr>                                        see credentials from indicated services
-
-  renew [all-services|SERV1,SERV2,...]                                               renew indicated|all services addresses
-
-  auth server on [SERV] [CLIENT] <CLIENT_PUB_KEY>                                    when auth content is especified, use the public key given by the client
-
-  auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]                add authorization of client access
-
-  auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]   remove authorization of client access
-
-  auth server list [all-services|SERV1,SERV2,...]                                    list clients for indicated service
-
-  auth client on [ONION] <CLIENT_PRIV_KEY>                                           add your client key, if no key specified, will create one
-
-  auth client off [ONION1,ONION2,...]                                                remote your client key
-
-  auth client list                                                                   list your keys as a client
-
-  web on [SERV] [FOLDER]                                                             start serving a website for certain service and its folder
-
-  web off [SERV]                                                                     stop serving a website for certain service and its folder
-
-  web list                                                                           list enabled websites
-
-  location [nginx|apache|html] [SERV]                                                onion-location guide, no execution
-
-  backup [create|integrate]                                                          create backup or import backup and integrate the files
-
-  vanguards [install|logs|upgrade|remove]                                            install, upgrade, remove or see logs for vanguards addon
-
-  [-h|-help|--help|help]                                                             display this help message
-
-
-'# Done': You should always see it at the end, else something unexpected occured.
+\nUsage: %s${0##*/} COMMAND [REQUIRED] <OPTIONAL>
+\nOptions:
+\n  setup torrc                                                                        restore latest torrc
+\n  on tcp [VERSION] [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                  enable a service targeting tcp socket
+\n  on unix [VERSION] [SERV] [VIRTPORT] <VIRTPORT2>                                    enable a service targeting unix socket
+\n  off [SERV1,SERV2,...] <purge>                                                      disable a service and optionally purge its directory
+\n  list [all-services|SERV1,SERV2,...] <no-qr>                                        see credentials from indicated services
+\n  renew [all-services|SERV1,SERV2,...]                                               renew indicated|all services addresses
+\n  auth server on [SERV] [CLIENT] <CLIENT_PUB_KEY>                                    when auth content is especified, use the public key given by the client
+\n  auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]                add authorization of client access
+\n  auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]   remove authorization of client access
+\n  auth server list [all-services|SERV1,SERV2,...]                                    list clients for indicated service
+\n  auth client on [ONION] <CLIENT_PRIV_KEY>                                           add your client key, if no key specified, will create one
+\n  auth client off [ONION1,ONION2,...]                                                remote your client key
+\n  auth client list                                                                   list your keys as a client
+\n  web on [SERV] [FOLDER]                                                             start serving a website for certain service and its folder
+\n  web off [SERV]                                                                     stop serving a website for certain service and its folder
+\n  web list                                                                           list enabled websites
+\n  location [nginx|apache|html] [SERV]                                                onion-location guide, no execution
+\n  backup [create|integrate]                                                          create backup or import backup and integrate the files
+\n  vanguards [install|logs|upgrade|remove]                                            install, upgrade, remove or see logs for vanguards addon
+\n  [-h|-help|--help|help]                                                             display this help message
+\n\n'# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs.
-
-# If your services are unreacheable, restart tor.
-"
+If your services are unreacheable, restart tor.
+\nReport bugs to: https://github.com/nyxnor/onionservice/issues\n"
   exit 1
 }
 
@@ -603,10 +580,10 @@ case "${COMMAND}" in
       restarting_tor
       test_service_exists "${SERVICE}"
       NEW_HOSTNAME="${ONION_HOSTNAME}"
-      printf %s"\nOld = ${OLD_HOSTNAME}\n"
-      printf %s"New = ${ONION_HOSTNAME}\n"
       if [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ]; then
         printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"
+				printf %s"\nOld = ${OLD_HOSTNAME}\n"
+        printf %s"New = ${ONION_HOSTNAME}\n"
 				printf "\n# Note: Remember to notify your clients about the new hostname and update their '.auth_private' files accordingly.\n"
 				printf "\nService address QR encoded format:\n"
         qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"
