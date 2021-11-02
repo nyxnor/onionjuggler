@@ -17,6 +17,7 @@ OnionService uses shell built-in commands and some basic [POSIX-compliant comman
 	* [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
 	* [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
 	* [export](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_22)
+	* [id](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/id.html#tag_20_59)
 	* [trap](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28)
 	* [printf](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html#tag_20_94)
 	* [pwd](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pwd.html#tag_20_97)

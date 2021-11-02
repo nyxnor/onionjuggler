@@ -20,12 +20,12 @@ This project has not been released and should be considered for development only
 ## Table of Contents
 
 * [Images](#images)
-	* [Analysis](#analysis)
-		* [Problem](#problem)
+  * [Analysis](#analysis)
+  	* [Problem](#problem)
 		* [Goal](#goal)
 * [Features](#features)
 * [Instructions](#instructions)
-	* [Setup](#setup)
+  * [Setup](#setup)
 		* [Clone the repository](#clone-the-repository)
 		* [Set custom vars](#set-custom-vars)
 		* [Setup the environment](#setup-the-environment)
