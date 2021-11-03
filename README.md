@@ -116,7 +116,7 @@ cd onionservice
 
 #### Set custom vars
 
-Edit the required variables to fit your system inside `.onionrc` following the same format from the already defined variables. Note that no variable that refers to a folder end with a trailing "/". Keep it that way, else it will break.
+Edit the required variables to fit your system inside `.onionrc` following the same format from the already defined variables. Note that no variable that refers to a folder end with a trailing "/". Keep it that way, else it will break. The packages can have different names depending on the operating system, modify accordingly.
 
 Set the default editor of your choice, else it will always fallback to [Vi](https://en.wikipedia.org/wiki/Vi). This is an example using `nano`, but could be any other editor:
 ```sh
@@ -128,11 +128,12 @@ Open the mentioned configuration file:
 "${EDITOR:-vi}" .onionrc
 ```
 ```sh
-## [ EDIT REQUIRED IF NOT DEBIAN ]
-PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
-WEBSERVER="nginx" ## [nginx|apache2]
+## [ EDIT REQUIRED ] (IF NOT DEBIAN)
 TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
+PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+WEBSERVER="nginx" ## [nginx|apache2]
+REQUIREMENTS="tor grep sed openssl basez git qrencode pandoc lynx gzip tar dialog ${WEBSERVER}"
 ```
 Edit with sed (use insert option -> `sed -i''`):
 ```sh
@@ -268,6 +269,7 @@ The packages are downloaded when setting up the environment with [setup.sh](setu
 
 ## To-do
 
+* setup.sh appars on the path and should not, how to fix this?
 * change `ls` loops to `find`. See [SC2045](https://github.com/koalaman/shellcheck/wiki/SC2045) and [shell pitfalls](http://mywiki.wooledge.org/BashPitfalls#for_f_in_.24.28ls_.2A.mp3.29)
 * should non env variables be all upercase? Env var should be [distinguishable](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html. https://stackoverflow.com/questions/673055/correct-bash-and-shell-script-variable-capitalization). The .onionrc is a lib and "exports" vars to other scripts.
 * [getopts](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/getopts.html)

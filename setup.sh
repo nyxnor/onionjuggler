@@ -98,9 +98,8 @@ case "${action}" in
 			fi
 		fi
 		. "${ONIONSERVICE_PWD}"/.onionrc
-    ## configure tor
-    #python3-stem
-    install_package tor grep sed openssl basez git qrencode pandoc lynx gzip tar dialog "${WEBSERVER}"
+    ## configure
+    install_package "${REQUIREMENTS}"
     sudo usermod -aG "${TOR_USER}" "${USER}"
     sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
     sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
