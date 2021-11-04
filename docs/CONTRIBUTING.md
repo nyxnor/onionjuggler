@@ -18,52 +18,52 @@ Currentyl there are many command used and there has been a constant development 
 Commands used by this project:
 
 * Builtins:
-	* [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
-	* [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
-	* [export](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_22)
-	* [id](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/id.html#tag_20_59)
-	* [trap](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28)
-	* [printf](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html#tag_20_94)
-	* [pwd](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pwd.html#tag_20_97)
-	* [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
+  * [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
+  * [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
+  * [export](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_22)
+  * [id](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/id.html#tag_20_59)
+  * [trap](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28)
+  * [printf](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html#tag_20_94)
+  * [pwd](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pwd.html#tag_20_97)
+  * [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
 
 * Not builtins:
-	* [awk](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/awk.html#tag_20_06)
-	* [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
-	* [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
-	* [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
-	* [cp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cp.html#tag_20_24)
-	* [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html#tag_20_28)
-	* [date](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/date.html#tag_20_30)
-	* [ln](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ln.html#tag_20_67)
-	* [ls](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ls.html#tag_20_73)
-	* [man](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/man.html#tag_20_77)
-	* [mkdir](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mkdir.html#tag_20_79)
-	* [mv](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mv.html#tag_20_82)
-	* [rm](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/rm.html#tag_20_111)
-	* [sh](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html#tag_20_117)
-	* [sort](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sort.html#tag_20_119)
-	* [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html#tag_20_125)
-	* [tee](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tee.html#tag_20_127)
-	* [touch](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/touch.html#tag_20_130)
-	* [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html#tag_20_132)
-	* [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
-	* [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
-	* [wc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/wc.html#tag_20_154)
+  * [awk](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/awk.html#tag_20_06)
+  * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
+  * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
+  * [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
+  * [cp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cp.html#tag_20_24)
+  * [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html#tag_20_28)
+  * [date](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/date.html#tag_20_30)
+  * [ln](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ln.html#tag_20_67)
+  * [ls](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ls.html#tag_20_73)
+  * [man](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/man.html#tag_20_77)
+  * [mkdir](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mkdir.html#tag_20_79)
+  * [mv](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mv.html#tag_20_82)
+  * [rm](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/rm.html#tag_20_111)
+  * [sh](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html#tag_20_117)
+  * [sort](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sort.html#tag_20_119)
+  * [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html#tag_20_125)
+  * [tee](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tee.html#tag_20_127)
+  * [touch](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/touch.html#tag_20_130)
+  * [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html#tag_20_132)
+  * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
+  * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
+  * [wc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/wc.html#tag_20_154)
 
 * Installed:
-	* [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
-	* [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
-	* [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
-	* [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html)
-	* [basez](http://www.quarkline.net/basez/)
-	* [git](https://git-scm.com/docs/user-manual)
-	* [qrencode](https://github.com/fukuchi/libqrencode/)
-	* [pandoc](https://pandoc.org/MANUAL.html)
-	* [lynx](https://linux.die.net/man/1/lynx)
-	* [gzip](https://www.gnu.org/software/gzip/manual/gzip.html)
-	* [tar](https://linux.die.net/man/1/tar)
-	* [dialog](https://www.freebsd.org/cgi/man.cgi?dialog)
+  * [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
+  * [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
+  * [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
+  * [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html)
+  * [basez](http://www.quarkline.net/basez/)
+  * [git](https://git-scm.com/docs/user-manual)
+  * [qrencode](https://github.com/fukuchi/libqrencode/)
+  * [pandoc](https://pandoc.org/MANUAL.html)
+  * [lynx](https://linux.die.net/man/1/lynx)
+  * [gzip](https://www.gnu.org/software/gzip/manual/gzip.html)
+  * [tar](https://linux.die.net/man/1/tar)
+  * [dialog](https://www.freebsd.org/cgi/man.cgi?dialog)
 
 * Optionally installed
   * [nginx](https://docs.nginx.com/nginx/admin-guide/)
@@ -148,9 +148,9 @@ Regarding reviewing pull requests, the vocabulary is:
 
 Maintainers/Collaborators:
 * Before closing any issue, explain the reason for that actions, which can be:
-	* lack of respone to the latest comment after 7 (seven days).
-	* no longer relevant to the current code base.
-	* if the issue won't be fixed.
+  * lack of respone to the latest comment after 7 (seven days).
+  * no longer relevant to the current code base.
+  * if the issue won't be fixed.
 
 ### Pull requests
 

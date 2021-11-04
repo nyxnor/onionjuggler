@@ -21,15 +21,15 @@ This project has not been released and should be considered for development only
 
 * [Images](#images)
   * [Analysis](#analysis)
-  	* [Problem](#problem)
-	* [Goal](#goal)
+  * [Problem](#problem)
+  * [Goal](#goal)
 * [Features](#features)
 * [Instructions](#instructions)
   * [Setup](#setup)
-	* [Clone the repository](#clone-the-repository)
-	* [Set custom vars](#set-custom-vars)
-	* [Setup the environment](#setup-the-environment)
-	* [Usage](#usage)
+  * [Clone the repository](#clone-the-repository)
+  * [Set custom vars](#set-custom-vars)
+  * [Setup the environment](#setup-the-environment)
+  * [Usage](#usage)
 * [Portability](#portability)
   * [Shells](#shells)
   * [Operating systems](#operating-systems)
@@ -93,8 +93,8 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * **Create** -  Backup of your `torrc` lines containing hidden service configuration, all of your directories of `HiddenServiceDir` and `ClientOnionAuthDir`. Guide to export the backup to a remote host with scp.
   * **Integrate** - Integrate hidden serivces lines configuration from `torrc` and the directories `HiddenServiceDir` and `ClientOnionAuthDir` to your current system. This option should be used after creating a backup and importing to the current host. Guide to import backup to the current host with scp.
 * [**OpSec**](https://community.torproject.org/onion-services/advanced/opsec/) - Operation Security
-	* [**Vanguards**](https://github.com/mikeperry-tor/vanguards) - This addon protects against guard discovery and related traffic analysis attacks. A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
-	* [**Unix socket**](https://riseup.net/en/security/network-security/tor/onionservices-best-practices) - Support for enabling an onion service over unix socket to avoid localhost bypasses.
+  * [**Vanguards**](https://github.com/mikeperry-tor/vanguards) - This addon protects against guard discovery and related traffic analysis attacks. A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
+  * [**Unix socket**](https://riseup.net/en/security/network-security/tor/onionservices-best-practices) - Support for enabling an onion service over unix socket to avoid localhost bypasses.
 * **Web server** - Serve files with your hidden service using Nginx or Apache2 web server.
 * **Bulk** - Some commands can be bulked with `all-clients`, `all-services`, `[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected. They are specified inside `<>` (e.g. `<VIRTPORT2>`)
@@ -164,8 +164,8 @@ There are three ways to call the scripts now, evaluate the advantages and disadv
 
 1. **Command**
 * Advantages:
-	* follows the shebang
-	* can be used from any directory
+  * follows the shebang
+  * can be used from any directory
 * Disadvantages: None
 ```sh
 onionservice-cli
@@ -173,10 +173,10 @@ onionservice-cli
 
 2. **Dot slash**
 * Advantages:
-	* follows the shebang
+  * follows the shebang
 * Disadvantages:
-	* the scripts must be executable
-	* needs to specify path if not in the same directory
+  * the scripts must be executable
+  * needs to specify path if not in the same directory
 ```sh
 ./onionservice-cli
 ## or if running from a different directory
@@ -185,10 +185,10 @@ onionservice-cli
 
 3. **Specifying the shell**
 * Advantages:
-	* Can specify the shell
+  * Can specify the shell
 * Disadvantages:
-	* ignores the shebang
-	* needs to specify path if not in the same directory
+  * ignores the shebang
+  * needs to specify path if not in the same directory
 ```sh
 sh onionservice-cli
 ## or if wanting to specify the path to shell binaries
@@ -214,22 +214,12 @@ man onionservice-cli
 
 ### Shells
 
-Full compatibility with any POSIX compliant shells:
-* Korn Shell (ksh)
-* (Debian) Alquimist SHell (ash, dash)
-* Yet Another SHell (yash)
-* Bourne-Again SHell (bash)
+Full compatibility with any POSIX compliant shells: dash, bash, ksh, mksh, yash, ash
+
+The default POSIX shell of your unix-like operating system may vary depending on your system (FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`, Debian uses `dash`), but it has a symbolic link leading to it on `/usr/bin/sh` and/or `/bin/sh`.
+
 Tweak to be compatible with non-POSIX compliant shells::
-* Z SHell (zsh)
-
-The project is POSIX compliant, but it is not "Pure shellscript", as other tools are [needed](#requirements), such as `grep` and `sed` and these commands are helpers.
-
-The default POSIX shell of your unix-like operating system may vary depending on your system (FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`, Debian uses `dash`), but it has a symbolic link leading to it on `/usr/bin/sh`.
-
-Zsh is not POSIX compliant but it can emulate a POSIX shell:
-```sh
-zsh --emulate sh -c onionservice-tui
-```
+* Z SHell (zsh) -> `zsh --emulate sh -c onionservice-tui`
 
 ### Operating systems
 
@@ -243,27 +233,27 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 ### Requirements
 
 * General:
-	* Unix-like system.
-	* any POSIX shells: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `zsh` 3.1.9+, `yash` 2.29+, busybox `ash` 1.1.3+ etc.
-	* systemd (for tor and vanguards control) - for now, different services managers is a goal
-	* sudo privileges.
-	* blank lines between Hidden Services blocks in the torrc.
-	* HiddenServiceDir different path than DataDir - `DataDir/services`.
-	* Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionservice/`, Correct: `~/onionservice`).
+  * Unix-like system.
+  * any POSIX shells: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `zsh` 3.1.9+, `yash` 2.29+, busybox `ash` 1.1.3+ etc.
+  * systemd (for tor and vanguards control) - for now, different services managers is a goal
+  * sudo privileges.
+  * blank lines between Hidden Services blocks in the torrc.
+  * HiddenServiceDir different path than DataDir - `DataDir/services`.
+  * Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionservice/`, Correct: `~/onionservice`).
 
 * Packages:
-	* **tor** >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
-	* **grep** >=2.0 (general purposes)
-	* **sed** >= 2.0 (general purposes)
-	* **python3-stem** >=1.8.0 (for Vanguards)
-	* **openssl** >= 1.1+ (for onion authentication)
-	* **basez** >= 1.6.2 (for onion authentication)
-	* **git** >= 2.0+ (for cloning the repo and vanguards)
-	* **qrencode** >= 4.1.1 (for encoding the hostname)
-	* **pandoc** (creating the manual and reading markdown)
-	* **lynx** (reading markdown)
-	* **tar** (compressing and extracting the backup)
-	* **gzip** (compressing the manual)
+  * **tor** >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
+  * **grep** >=2.0 (general purposes)
+  * **sed** >= 2.0 (general purposes)
+  * **python3-stem** >=1.8.0 (for Vanguards)
+  * **openssl** >= 1.1+ (for onion authentication)
+  * **basez** >= 1.6.2 (for onion authentication)
+  * **git** >= 2.0+ (for cloning the repo and vanguards)
+  * **qrencode** >= 4.1.1 (for encoding the hostname)
+  * **pandoc** (creating the manual and reading markdown)
+  * **lynx** (reading markdown)
+  * **tar** (compressing and extracting the backup)
+  * **gzip** (compressing the manual)
 
 The packages are downloaded when setting up the environment with [setup.sh](setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
 The absolute minimum you can go to is `tor grep sed`, and you will be limited to enable, disable and renew services.

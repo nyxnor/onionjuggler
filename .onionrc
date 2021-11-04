@@ -185,11 +185,11 @@ restarting_tor()
     printf "\n# Restarting tor...\n"
     sudo systemctl restart "${TOR_SERVICE}" &
     sleep 2
-		printf %s"${FOREGROUND_GREEN}# Restarted tor succesfully!\n${UNSET_FORMAT}"
+    printf %s"${FOREGROUND_GREEN}# Restarted tor succesfully!\n${UNSET_FORMAT}"
   elif [ "${1}" = "" ]; then
     printf "\n# Reloading tor...\n"
     sudo systemctl reload-or-restart "${TOR_SERVICE}" &
-		sleep 2
+    sleep 2
     printf %s"${FOREGROUND_GREEN}# Reloaded tor succesfully!\n${UNSET_FORMAT}"
   fi
 }
