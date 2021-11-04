@@ -132,8 +132,6 @@ BACKGROUND_WHIT="\033[107"
 
 ## install space separated list of packages (e.g.: install_package tor openssl git)
 #command -v "${PACKAGE}"
-#which "${PACKAGE}"
-#whereis "${PACKAGE}"
 #type "${PACKAGE}"
 install_package(){
   for PACKAGE in "${@}"; do
@@ -149,9 +147,10 @@ is_service_dir_empty(){
 ## set correct permissions for tor directories and files
 set_owner_permission(){
   sudo chown -R "${TOR_USER}:${TOR_USER}" "${DATA_DIR}"
-  sudo chown -R root:root "${TORRC_ROOT}"
   sudo chmod -R 700 "${DATA_DIR}"
-  sudo chmod -R 644 "${TORRC_ROOT}"
+  sudo chown -R root:root "${TORRC_ROOT}"
+  sudo chmod 700 "${TORRC_ROOT}"
+  sudo chmod 644 "${TORRC}"
 }
 
 
