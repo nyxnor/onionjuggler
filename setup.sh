@@ -99,7 +99,8 @@ case "${action}" in
 		fi
 		. "${ONIONSERVICE_PWD}"/.onionrc
     ## configure
-    install_package "${REQUIREMENTS}"
+		# shellcheck disable=SC2086
+    install_package ${REQUIREMENTS}
     sudo usermod -aG "${TOR_USER}" "${USER}"
     sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
     sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"

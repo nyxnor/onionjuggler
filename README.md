@@ -51,7 +51,7 @@ This project has not been released and should be considered for development only
 
 The current state of the internet (plain net) is:
 * **not private** - every server you connect to knows your public ip address and your Internet Service Provider knows to which site you are connecting to.
-* **not trustless** - to add encryption to an website, there is the [Certificate Authority](https://en.wikipedia.org/wiki/Certificate_authority) problem, the conglomerate dictates. Your Let's Encrypt self signed certificates is not the solution if noone verifies the fingerprint.
+* **not trustless** - to add encryption to an website, there is the [Certificate Authority](https://en.wikipedia.org/wiki/Certificate_authority), the [problem](https://www.whonix.org/wiki/Warning#The_Fallible_Certificate_Authority_Model), the conglomerate dictates. Your Let's Encrypt self signed certificates is not the solution if noone verifies the fingerprint.
 * **not censorship resistant** - dns attacks as well as many other still occurs
 * **not descentralized** - you can not purely peer to peer (running your own internet, connecting directly to the wanted host)
 
@@ -253,8 +253,8 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 
 * Packages:
 	* **tor** >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
-	* **grep** >=2.0
-	* **sed** >= 2.0
+	* **grep** >=2.0 (general purposes)
+	* **sed** >= 2.0 (general purposes)
 	* **python3-stem** >=1.8.0 (for Vanguards)
 	* **openssl** >= 1.1+ (for onion authentication)
 	* **basez** >= 1.6.2 (for onion authentication)
@@ -265,7 +265,8 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 	* **tar** (compressing and extracting the backup)
 	* **gzip** (compressing the manual)
 
-The packages are downloaded when setting up the environment with [setup.sh](setup.sh).
+The packages are downloaded when setting up the environment with [setup.sh](setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
+The absolute minimum you can go to is `tor grep sed`, and you will be limited to enable, disable and renew services.
 
 ## To-do
 
