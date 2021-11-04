@@ -890,6 +890,6 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
   ;;
 
   *)
-    onion_usage
+    usage
 
 esac
