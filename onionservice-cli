@@ -204,7 +204,7 @@ case "${COMMAND}" in
       printf %s"# Deleted Hidden Service configuration in ${TORRC}\n"
       sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
       ## substitute multiple sequential empty lines to a single one per sequence
-      cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
+      sudo cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       printf %s"# Disabled service: ${SERVICE}\n\n"
     }
     loop_list delete_service "${SERVICE}" "${PURGE}"
@@ -229,7 +229,7 @@ case "${COMMAND}" in
 
     finish_service_activation(){
       ## remove double empty lines
-      cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
+      sudo cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
       restarting_tor
 
       ## show the Hidden Service address
@@ -258,9 +258,9 @@ case "${COMMAND}" in
         TARGET_ADDR=${TARGET%%:*}
         TARGET_PORT=${TARGET##*:}
         { [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && TARGET="127.0.0.1:${TARGET_PORT}"
-        TARGET_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
+        TARGET_ALREADY_INSERTED_BLOCK=$(sudo tac "${TORRC}" | sudo sed -n "/^HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")
         TARGET_ALREADY_INSERTED_SERVICE=${TARGET_ALREADY_INSERTED_BLOCK##*/}
-        sudo grep -q "HiddenServicePort .* ${TARGET}$" "${TORRC}" && error_msg "TARGET=${TARGET} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}\nINFO: Choose another port or disable the service that is using the wanted port"
+        sudo grep -q "^HiddenServicePort .* ${TARGET}$" "${TORRC}" && error_msg "TARGET=${TARGET} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}\nINFO: Choose another port or disable the service that is using the wanted port"
         is_integer "${VIRTPORT}"; is_addr_port "${TARGET}" "TARGET"
         ## Optional
         VIRTPORT2="${7}"
@@ -271,9 +271,9 @@ case "${COMMAND}" in
           TARGET2_PORT=${TARGET2##*:}
           { [ "${TARGET2_ADDR}" = "${TARGET2_PORT}" ] || [ "${TARGET2_ADDR}" = "localhost" ]; } && TARGET2="127.0.0.1:${TARGET2_PORT}"
           [ "${TARGET}" = "${TARGET2}" ] && error_msg "TARGET is the same as TARGET2"
-          TARGET2_ALREADY_INSERTED_BLOCK=$(tac "${TORRC}" | sudo sed -n "/HiddenServicePort .*${TARGET2}$/,/^\s*$/{p}" | grep "HiddenServiceDir")
+          TARGET2_ALREADY_INSERTED_BLOCK=$(sudo tac "${TORRC}" | sudo sed -n "/^HiddenServicePort .*${TARGET2}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")
           TARGET2_ALREADY_INSERTED_SERVICE=${TARGET2_ALREADY_INSERTED_BLOCK##*/}
-          sudo grep -q "HiddenServicePort .* ${TARGET2}$" "${TORRC}" && error_msg "TARGET2=${TARGET2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
+          sudo grep -q "^HiddenServicePort .* ${TARGET2}$" "${TORRC}" && error_msg "TARGET2=${TARGET2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
           is_integer "${VIRTPORT2}"; is_addr_port "${TARGET2}" "TARGET2"
         fi
 
@@ -655,8 +655,10 @@ case "${COMMAND}" in
         #sudo cat /tmp/"${SERVICE}"-onion.conf
         while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${SERVICE}-onion.conf"
         printf "\n# Reloading web server to apply new configuration\n"
-        [ "${WEBSERVER}" = "nginx" ] && sudo nginx -tq && sudo nginx -s reload
-        [ "${WEBSERVER}" = "apache2" ] && sudo systemctl reload apache2
+        case "${WEBSERVER}" in
+          nginx) sudo nginx -t && sudo nginx -s reload;;
+          apache2) sudo apache2 -t && sudo apache -k graceful;;
+        esac
         #sudo rm -f /tmp/"${SERVICE}"-onion.conf
         printf %s"\n# Address: ${ONION_HOSTNAME}\n"
         printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
@@ -671,8 +673,10 @@ case "${COMMAND}" in
         }
         loop_list disable_site "${SERVICE}" 0
         printf "\n# Reloading web server to apply new configuration\n"
-        [ "${WEBSERVER}" = "nginx" ] && sudo nginx -tq && sudo nginx -s reload
-        [ "${WEBSERVER}" = "apache2" ] && sudo systemctl reload apache2
+        case "${WEBSERVER}" in
+          nginx) sudo nginx -t && sudo nginx -s reload;;
+          apache2) sudo apache2 -t && sudo apache2 -k graceful;;
+        esac
         printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
       ;;
 
@@ -727,7 +731,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
         printf "
 <VirtualHost *:443>\n\tHeader set Onion-Location \"http://%s${ONION_HOSTNAME}%%{REQUEST_URI}s\"\n</Virtualhost>
 \n# Enable headers and rewrite modules:\n\n\tsudo a2enmod headers rewrite
-\n# Reload web server:\n\n\tsudo systemctl reload apache\n"
+\n# Reload web server:\n\n\tsudo apache2 -t && sudo apache2 -k graceful\n"
         finish_location
       ;;
 
@@ -735,7 +739,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
         start_location
         printf "
 <meta http-equiv=\"onion-location\" content=\"http://%s${ONION_HOSTNAME}\"/>
-\n# Reload web server that you use:\n\n\tsudo nginx -t && sudo nginx -s reload\n\t# or\n\tsudo systemctl reload apache\n"
+\n# Reload web server that you use:\n\n\tsudo nginx -t && sudo nginx -s reload\n\t# or\n\tsudo apache2 -t && sudo apache2 -k graceful\n"
         finish_location
       ;;
 
@@ -889,7 +893,6 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
     esac
   ;;
 
-  *)
-    usage
+  *) usage
 
 esac
