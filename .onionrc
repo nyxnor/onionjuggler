@@ -67,7 +67,6 @@ DATA_DIR_ROOT="/var/lib"
 DATA_DIR="${DATA_DIR_ROOT}/tor"
 DATA_DIR_HS="${DATA_DIR}/services"
 CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
-CONF_DIR_OWNER="${USER}"
 CONTROL_PORT=9051
 SOCKS_PORT=9050
 CHECK_URL1="http://debian.org"
@@ -132,6 +131,10 @@ BACKGROUND_WHIT="\033[107"
 ######## FUNCTIONS ########
 
 ## install space separated list of packages (e.g.: install_package tor openssl git)
+#command -v "${PACKAGE}"
+#which "${PACKAGE}"
+#whereis "${PACKAGE}"
+#type "${PACKAGE}"
 install_package(){
   for PACKAGE in "${@}"; do
     command -v "${PACKAGE}" >/dev/null || ${PKG_MANAGER_INSTALL} "${PACKAGE}"
@@ -146,9 +149,9 @@ is_service_dir_empty(){
 ## set correct permissions for tor directories and files
 set_owner_permission(){
   sudo chown -R "${TOR_USER}:${TOR_USER}" "${DATA_DIR}"
-  sudo chown "${CONF_DIR_OWNER}:${CONF_DIR_OWNER}" "${TORRC}"
-  sudo chmod 700 "${DATA_DIR}"
-  sudo chmod 644 "${TORRC}"
+  sudo chown -R root:root "${TORRC_ROOT}"
+  sudo chmod -R 700 "${DATA_DIR}"
+  sudo chmod -R 644 "${TORRC_ROOT}"
 }
 
 
