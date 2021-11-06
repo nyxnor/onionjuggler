@@ -181,14 +181,18 @@ restarting_tor()
 {
   set_owner_permission
   if [ "${1}" = "force" ]; then
-    printf "\n# Restarting tor...\n"
-    sudo systemctl restart "${TOR_SERVICE}" &
-    sleep 2
+    printf "\n# Restarting tor, please be patient.\n"
+    printf "\n# Getting stuck after several minutes? Press CTR-C\n"
+    printf "\n# and use onionservice-cli setup torrc to restore \n"
+    printf "\n# the latest torrc.\n"
+    sudo systemctl restart "${TOR_SERVICE}"
     printf %s"${FOREGROUND_GREEN}# Restarted tor succesfully!\n${UNSET_FORMAT}"
   elif [ "${1}" = "" ]; then
-    printf "\n# Reloading tor...\n"
-    sudo systemctl reload-or-restart "${TOR_SERVICE}" &
-    sleep 2
+    printf "\n# Reloading tor, please be patient.\n"
+    printf "\n# Getting stuck after several minutes? Press CTR-C\n"
+    printf "\n# and use onionservice-cli setup torrc to restore \n"
+    printf "\n# the latest torrc.\n"
+    sudo systemctl reload-or-restart "${TOR_SERVICE}"
     printf %s"${FOREGROUND_GREEN}# Reloaded tor succesfully!\n${UNSET_FORMAT}"
   fi
 }
