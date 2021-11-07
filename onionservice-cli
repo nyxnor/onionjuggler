@@ -59,6 +59,7 @@ usage(){
 \n  web list                                                                           list enabled websites
 \n  location [nginx|apache|html] [SERV]                                                onion-location guide, no execution
 \n  backup [create|integrate]                                                          create backup or import backup and integrate the files
+\n  restore torrc                                                                      restore latest torrc backup
 \n  vanguards [install|logs|upgrade|remove]                                            install, upgrade, remove or see logs for vanguards addon
 \n  [-h|-help|--help|help]                                                             display this help message
 \n\n'# Done': You should always see it at the end, else something unexpected occured.
@@ -149,19 +150,14 @@ loop_list(){
 
 ###########################
 ########## MAIN ###########
-
-## tor needs to be running to create services and renew addresses (on, renew)
-## tor does not need to be running to delete service, authorize or remove authorization from clients or see credentials (off, auth, credentials)
-#check_tor
-COMMAND="${1}"
 sudo sed -i'' 's/\/$//' "${TORRC}" ## no config should end with '/' to find exact match.
-sudo cp "${TORRC}" "${TORRC}".bak
 
+COMMAND="${1}"
 case "${COMMAND}" in
 
   ## disabled the service wrongly and don't remember the ports? no worries, will restore the latest torrc.bak
   ## beaware this only works for the torrc, if you deleted your data directory with command "off" and "purge" option, the keys will not be restored, insteadm new ones will be created
-  setup|SETUP)
+  restore|RESTORE)
     ACTION="${2}"; [ -z "${ACTION}" ] && error_msg "ACTION is missing"
     case "${ACTION}" in
 
@@ -200,6 +196,7 @@ case "${COMMAND}" in
       else
         printf "\n# HiddenServiceDiretory was kept\n"
       fi
+      sudo cp "${TORRC}" "${TORRC}".bak
       ## remove service paragraph in torrc
       printf %s"# Deleted Hidden Service configuration in ${TORRC}\n"
       sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
@@ -276,7 +273,7 @@ case "${COMMAND}" in
           sudo grep -q "^HiddenServicePort .* ${TARGET2}$" "${TORRC}" && error_msg "TARGET2=${TARGET2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
           is_integer "${VIRTPORT2}"; is_addr_port "${TARGET2}" "TARGET2"
         fi
-
+        sudo cp "${TORRC}" "${TORRC}".bak
         ## delete any old entry for that servive
         sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
         ## add configuration block, empty line after and before it
@@ -290,7 +287,7 @@ case "${COMMAND}" in
         VIRTPORT="${5}"; [ -z "${VIRTPORT}" ] && error_msg "VIRTPORT is missing"
         VIRTPORT2="${6}"; [ -n "${VIRTPORT2}" ] && is_integer "${VIRTPORT2}" ## var not mandatory
         is_integer "${VIRTPORT}"
-
+        sudo cp "${TORRC}" "${TORRC}".bak
         ## delete any old entry for that servive
         sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE}$/,/^\s*$/{d}" "${TORRC}"
         ## add configuration block, empty line after and before it
@@ -473,6 +470,7 @@ case "${COMMAND}" in
             [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#ONION_HOSTNAME}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#ONION_HOSTNAME} is different than 62 characters (<56-char-base32>.onion)"
             [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
+            sudo cp "${TORRC}" "${TORRC}".bak
             grep -q "ClientOnionAuthDir" "${TORRC}" && { printf %s"\nClientOnionAuthDir ${DATA_DIR_AUTH}\n\n" | sudo tee -a "${TORRC}"; }
             sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_AUTH}"
             if [ "${CLIENT_PRIV_KEY}" = "" ]; then
@@ -841,6 +839,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
       #sudo sed -i'' "s|^control_port =.*|control_port = ${CONTROL_PORT}|" "${DATA_DIR}"/vanguards/vanguards.conf
       sudo -u "${TOR_USER}" cp "${DATA_DIR}"/vanguards/vanguards-example.conf "${DATA_DIR}"/vanguards/vanguards.conf
       sudo -u "${TOR_USER}" sed -i'' "s|^logfile =.*|logfile = /var/log/tor/vanguards.log|" "${DATA_DIR}"/vanguards/vanguards.conf
+      sudo cp "${TORRC}" "${TORRC}".bak
       grep -q "ControlPort" "${TORRC}" || { printf %s"\nControlPort ${CONTROL_PORT}\n\n" | sudo tee -a "${TORRC}" >/dev/null; }
       { grep -q "CookieAuthentication" "${TORRC}" || grep -q "HashedControlPassword" "${TORRC}"; } || { printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${TORRC}"  >/dev/null; }
       set_owner_permission
