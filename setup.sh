@@ -120,6 +120,7 @@ case "${action}" in
   ;;
 
   -r|--release|release)
+    [ -f .onionrc ] && ONIONSERVICE_PWD="${PWD}"
     . "${ONIONSERVICE_PWD}"/.onionrc
     install_package shellcheck
     printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
