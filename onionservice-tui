@@ -52,9 +52,9 @@ service_menu(){
   DIALOG_TYPE="${1}"
   COMPL_TITLE="${2}"
 
-  for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
+  for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/); do
     i=$((i+1))
-    ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_HS}"/"${SERVICE}"/hostname)"
+    ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)"
     ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
     case "${DIALOG_TYPE}" in
       checklist) SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)";;
@@ -79,7 +79,7 @@ service_menu(){
 TITLE="Onion Services - Main Menu"
 MENU="\nUse spacepar to select:"
 BACKTITLE="Onion Services Manager"
-if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/)" ]; then
+if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/)" ]; then
   CHOICE_MAIN="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
   --ok-label "Select" --no-cancel --menu "${MENU}" 16 80 2 \
   "MAN" "Manual pages for the onionservice-cli" \
@@ -232,12 +232,12 @@ case "${CHOICE_MAIN}" in
 
       EDIT)
         i=0
-        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
+        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/); do
           ## only include services that have at least one client
-          CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
+          CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
           if [ -n "${CLIENT_EXIST}" ]; then
             i=$((i+1))
-            ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_HS}"/"${SERVICE}"/hostname)"
+            ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)"
             ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
             SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)"
           fi
@@ -255,14 +255,14 @@ case "${CHOICE_MAIN}" in
         fi
         if [ -n "${CHOICE_SERVICE}" ]; then
           i=0
-          for CLIENT in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g"); do
+          for CLIENT in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g"); do
             i=$((i+1))
             CLIENT_LIST="$(printf "%s\n%s\n%s\n" "${CLIENT_LIST}" "${CLIENT}" ".")"
           done
           # shellcheck disable=SC2086
           CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
           "$((i+8))" 50 2 ${CLIENT_LIST} 2>&1 >/dev/tty)"
-          [ -n "${CHOICE_CLIENT}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/"${CHOICE_CLIENT}".auth
+          [ -n "${CHOICE_CLIENT}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/"${CHOICE_CLIENT}".auth
         fi
       ;;
 
@@ -303,12 +303,12 @@ case "${CHOICE_MAIN}" in
 
       DEL)
         i=0
-        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/); do
+        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/); do
           ## only include services that have at least one client
-          CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
+          CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
           if [ -n "${CLIENT_EXIST}" ]; then
             i=$((i+1))
-            ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_HS}"/"${SERVICE}"/hostname)"
+            ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)"
             ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
             SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)"
           fi
@@ -328,7 +328,7 @@ case "${CHOICE_MAIN}" in
           # shellcheck disable=SC2086
           SERVICE_TOTAL=$(IFS=' '; set -f -- ${CHOICE_SERVICE}; printf %s"${#}")
           for SERVICE in $(printf %s"${CHOICE_SERVICE}"); do
-            CLIENT="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_HS}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
+            CLIENT="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
             CLIENT_LIST="$(printf "%s\n%s\n" "${CLIENT_LIST}" "${CLIENT}")"
           done
           i=0
@@ -383,21 +383,21 @@ case "${CHOICE_MAIN}" in
 
       EDIT)
         i=0
-        for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/); do
+        for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_AUTH}"/); do
           ONION_AUTH_WITHOUT_SUFFIX=${ONION_AUTH%.auth_private}
           i=$((i+1))
           ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH_WITHOUT_SUFFIX}" ".")"
         done
         TITLE="Client Onion Auth Directory"
         if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
-          TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${CLIENT_ONION_AUTH_DIR}"
+          TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${DATA_DIR_AUTH}"
           dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
         else
           MENU="\nUse spacebar to select:"
           # shellcheck disable=SC2086
           CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --menu "${MENU}" \
           "$((i+8))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
-          [ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-vi}" "${CLIENT_ONION_AUTH_DIR}"/"${CHOICE_ONION_AUTH}".auth_private
+          [ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_AUTH}"/"${CHOICE_ONION_AUTH}".auth_private
         fi
       ;;
 
@@ -428,14 +428,14 @@ case "${CHOICE_MAIN}" in
 
       DEL)
         i=0
-        for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/); do
+        for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_AUTH}"/); do
           ONION_AUTH_WITHOUT_SUFFIX=${ONION_AUTH%.auth_private}
           i=$((i+1))
           ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH_WITHOUT_SUFFIX}" "." 0)"
         done
         TITLE="Onion Service - INFO"
         if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
-          TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${CLIENT_ONION_AUTH_DIR}"
+          TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${DATA_DIR_AUTH}"
           dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
         else
           MENU="\nUse spacebar to select:"

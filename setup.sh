@@ -81,42 +81,45 @@ definition=${3}
 
 case "${action}" in
 
-  -s|--setup|SETUP)
-    if [ "${argument}" = "-p" ]; then
-      [ -f "${definition}"/.onionrc ] || { printf "\033[1;31mERROR: Path is invalid.\033[0m\n"; exit 1; }
-      ## delete previous configuration just in case
-      sed -i'' "/ONIONSERVICE_PWD/d" ~/."${SHELL##*/}"rc
-      ONIONSERVICE_PWD="${definition}"
-      add_onionservice_to_path
-    elif [ -z "${ONIONSERVICE_PWD}" ]; then
-      if [ -f .onionrc ] && [ -f onionservice-cli ]; then ## onionservice-tui is not required to exist
-        ## this is necessary because on the first run, the var is empty and lead to wrong paths down below
-        ONIONSERVICE_PWD="${PWD}"
+  -s|--setup|setup)
+    case "${argument}" in
+      -p|--path|path)
+        [ -f "${definition}"/.onionrc ] || { printf "\033[1;31mERROR: Path is invalid.\033[0m\n"; exit 1; }
+        ## delete previous configuration just in case
+        sed -i'' "/ONIONSERVICE_PWD/d" ~/."${SHELL##*/}"rc
+        ONIONSERVICE_PWD="${definition}"
         add_onionservice_to_path
-      else
-        inform_to_add_onionservice_to_path
-      fi
-    fi
+      ;;
+
+      *)
+        if [ -f .onionrc ] && [ -f onionservice-cli ]; then ## onionservice-tui is not required to exist
+          ## this is necessary because on the first run, the var is empty and lead to wrong paths down below
+          ONIONSERVICE_PWD="${PWD}"
+          add_onionservice_to_path
+        else
+          inform_to_add_onionservice_to_path
+        fi
+    esac
     . "${ONIONSERVICE_PWD}"/.onionrc
     ## configure
     # shellcheck disable=SC2086
     install_package ${REQUIREMENTS}
     sudo usermod -aG "${TOR_USER}" "${USER}"
-    sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_HS}"
-    sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
+    sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_SERVICES}"
+    sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_AUTH}"
     restarting_tor
     printf "# Creating man pages\n"
     sudo mkdir -p /usr/local/man/man1
     pandoc "${ONIONSERVICE_PWD}"/docs/ONIONSERVICE-CLI.md -s -t man -o /tmp/onionservice-cli.1
     gzip -f /tmp/onionservice-cli.1
-    #tar -czvf --no-xattrs /tmp/onionservice-cli.1.gz /tmp/onionservice-cli.1 ## TODO: tar prints file information inside the file
+    #tar -czvf --no-xattrs /tmp/onionservice-cli.1.gz /tmp/onionservice-cli.1 ## TODO: tar prints file bits information inside the file
     sudo mv /tmp/onionservice-cli.1.gz /usr/local/man/man1/
     sudo mandb -q -f /usr/local/man/man1/onionservice-cli.1.gz
     ## finish
     printf %s"${FOREGROUND_BLUE}# OnionService enviroment is ready\n${UNSET_FORMAT}"
   ;;
 
-  -r|--release|RELEASE)
+  -r|--release|release)
     . "${ONIONSERVICE_PWD}"/.onionrc
     install_package shellcheck
     printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
