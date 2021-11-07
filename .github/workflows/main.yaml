@@ -6,4 +6,7 @@ jobs:
         steps:
             - uses: actions/checkout@main
             - name: Run shellcheck.
+              shell: sh
               run: ./setup.sh release
+              env:
+                ONIONSERVICE_PWD: ${{ GITHUB_WORKSPACE }}
