@@ -19,10 +19,11 @@ This project has not been released and should be considered for development only
 
 ## Table of Contents
 
-* [Images](#images)
+* [Introduction](#introduction)
+  * [Images](#images)
   * [Echosystem](#echosystem)
   * [Goal](#goal)
-* [Features](#features)
+  * [Features](#features)
 * [Instructions](#instructions)
   * [Setup](#setup)
   * [Clone the repository](#clone-the-repository)
@@ -39,12 +40,14 @@ This project has not been released and should be considered for development only
   * [Inspirations](#inspirations)
   * [Contributors](#contributors)
 
-## Images
+## Introduction
+
+### Images
 
 ![tui](images/tui.png)
 ![cli](images/cli.png)
 
-## Echosystem
+### Echosystem
 
 Onion Services are the Hidden Services of Tor which use onion routing as its base for stablishing private connections. [They offer](https://community.torproject.org/onion-services/overview/):
 * Location hiding - IP address aren't used, so your location is protected.
@@ -58,7 +61,7 @@ Onion Routing tries to solve most of these problems but it is still centralized 
 
 On the Tor echosystem, from [TPO metrics](https://metrics.torproject.org/), comparing only Free and Open Source Operating Systems, `Linux` dominates on [relays by platform](https://metrics.torproject.org/platforms.html) and [Tor Browser downloads by platform](https://metrics.torproject.org/webstats-tb-platform.html) over BSD. Data regarding which operating system the onion service operator can not be easily acquired for obvious reasons. That was on the network level, but know on the user system, even if one chooses a Free and Open Source Operating System, GNU/Linux dominates a big share over *BSD, having a huge impact on the main software used for the kernel (Linux), shell (bash), service manager (systemd).
 
-## Goal
+### Goal
 
 The goal of this project is:
 * facilitates onion service management, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
@@ -75,7 +78,7 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 * complete uniformity
 * graphical interface to help newbies
 
-## Features
+### Features
 
 * [**Enable service**](https://community.torproject.org/onion-services/setup/) - Create directory if not existent (HiddenServiceDir), select onion version (HiddenServiceVersion), custom socket type being unix or tcp, up to two virtual ports, up to two targets (HiddenServicePort).
 * **Disable service** - Remove service configuration from the torrc, the service will not be acessible anymore, but you can enable it again any time you want. Optionally purge the service, deleting its configuration and directory, which will delete its keys permanently.
