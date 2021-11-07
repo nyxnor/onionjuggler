@@ -65,9 +65,10 @@ service_menu(){
   if [ -n "${SERVICE_LIST}" ]; then
     TITLE="Onion Services - ${COMPL_TITLE}"
     MENU="\nUse spacebar to select"
+    [ "${i}" -gt 11 ] && i=11
     # shellcheck disable=SC2086
     CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-    "$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
+    "$((i+8))" 80 ${i} ${SERVICE_LIST} 2>&1 >/dev/tty)"
 
     [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
   fi
@@ -249,9 +250,10 @@ case "${CHOICE_MAIN}" in
         else
           TITLE="Client Authorization - Server - Deletion"
           MENU="\nUse spacebar to select:"
+          [ "${i}" -gt 11 ] && i=11
           # shellcheck disable=SC2086
           CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
-          "$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
+          "$((i+8))" 80 ${i} ${SERVICE_LIST} 2>&1 >/dev/tty)"
         fi
         if [ -n "${CHOICE_SERVICE}" ]; then
           i=0
@@ -320,9 +322,10 @@ case "${CHOICE_MAIN}" in
         else
           TITLE="Client Authorization - Server - Deletion"
           MENU="\nUse spacebar to select:"
+          [ "${i}" -gt 11 ] && i=11
           # shellcheck disable=SC2086
           CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-          "$((i+8))" 80 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
+          "$((i+8))" 80 ${i} ${SERVICE_LIST} 2>&1 >/dev/tty)"
         fi
         if [ -n "${CHOICE_SERVICE}" ]; then
           # shellcheck disable=SC2086
@@ -394,9 +397,10 @@ case "${CHOICE_MAIN}" in
           dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
         else
           MENU="\nUse spacebar to select:"
+          [ "${i}" -gt 11 ] && i=11
           # shellcheck disable=SC2086
           CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --menu "${MENU}" \
-          "$((i+8))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
+          "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
           [ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_AUTH}"/"${CHOICE_ONION_AUTH}".auth_private
         fi
       ;;
@@ -439,9 +443,10 @@ case "${CHOICE_MAIN}" in
           dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
         else
           MENU="\nUse spacebar to select:"
+          [ "${i}" -gt 11 ] && i=11
           # shellcheck disable=SC2086
           CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --checklist "${MENU}" \
-          "$((i+8))" 80 2 ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
+          "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
           [ -n "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
         fi
         if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
