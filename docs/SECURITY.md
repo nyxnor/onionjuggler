@@ -8,9 +8,9 @@ No upgrade is enforced and will never be. If there is a security update, upgrade
 
 * Unwanted deletion of the onion service `hs_ed25519_secret_key`.
 * Extravagantly `high permissions` for files and folders that are not tor's default and are modified by this project. Defaults:
-  * 600 -  `hostname`, `hs_ed25519_public_key`, `hs_ed25519_secret_key`
-  * 644 - `torrc`
-  * 700 - `/var/lib/tor` (DataDirectory)
+  * 600 -  `HiddenServiceDir/hostname`, `HiddenServiceDir/hs_ed25519_public_key`, `HiddenServiceDir/hs_ed25519_secret_key` (HiddenService files)
+  * 644 - `torrc` (Configuration file)
+  * 700 - `/var/lib/tor|DataDirectory`, `DataDirectory/services/*`, `DataDirectory/onion_auth` (DataDirectory, HiddenServiceDir and ClientOnionAuthDir)
   * 755 - `/etc/tor/` (Configuration directory)
 
 ## Reporting a Vulnerability
