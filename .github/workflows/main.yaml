@@ -9,4 +9,4 @@ jobs:
               shell: sh
               run: ./setup.sh release
               env:
-                ONIONSERVICE_PWD: ${{ GITHUB_WORKSPACE }}
+                ONIONSERVICE_PWD: ${{ env.GITHUB_WORKSPACE }}
