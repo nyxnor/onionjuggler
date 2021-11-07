@@ -20,8 +20,7 @@ This project has not been released and should be considered for development only
 ## Table of Contents
 
 * [Images](#images)
-  * [Analysis](#analysis)
-  * [Problem](#problem)
+  * [Echosystem](#echosystem)
   * [Goal](#goal)
 * [Features](#features)
 * [Instructions](#instructions)
@@ -45,39 +44,36 @@ This project has not been released and should be considered for development only
 ![tui](images/tui.png)
 ![cli](images/cli.png)
 
-## Analysis
+## Echosystem
 
-### Problem
+Onion Services are the Hidden Services of Tor which use onion routing as its base for stablishing private connections. [They offer](https://community.torproject.org/onion-services/overview/):
+* Location hiding - IP address aren't used, so your location is protected.
+* End-to-end authentication - Only the owner of the hs secret key can host the same onion, so no impersonation is possible, no man-in-the-middle.
+* End-to-end encryption - Traffic is encrypted from the client to the onion host, no need to trust [CAs](https://en.wikipedia.org/wiki/Certificate_authority) which are a [fallible model](https://www.whonix.org/wiki/Warning#The_Fallible_Certificate_Authority_Model).
+* NAT punching - On a firewalled network, no need to open ports
 
-The current state of the internet (plain net) is:
-* **not private** - every server you connect to knows your public ip address and your Internet Service Provider knows to which site you are connecting to.
-* **not trustless** - to add encryption to an website, there is the [Certificate Authority](https://en.wikipedia.org/wiki/Certificate_authority), the [problem](https://www.whonix.org/wiki/Warning#The_Fallible_Certificate_Authority_Model), the conglomerate dictates. Your Let's Encrypt self signed certificates is not the solution if noone verifies the fingerprint.
-* **not censorship resistant** - dns attacks as well as many other still occurs
-* **not descentralized** - you can not purely peer to peer (running your own internet, connecting directly to the wanted host)
+For a deeper understanding, read the [Rendezvous Specification](https://gitweb.torproject.org/torspec.git/tree/rend-spec-v3.txt) and [Tor design](https://svn-archive.torproject.org/svn/projects/design-paper/tor-design.pdf).
 
 Onion Routing tries to solve most of these problems but it is still centralized by the [Directory Authorities](https://metrics.torproject.org/rs.html#search/flag:authority), and referencing [Matt Traudt's blog post](https://matt.traudt.xyz/posts/Debunking:_OSINT_Analysis_of_the_TOR_Foundation/#index4h2): replacing it for something more distributed is [not a trivial task](https://www.freehaven.net/anonbib/#wpes09-dht-attack).
 
-On the Tor echosystem, from [TPO metrics](https://metrics.torproject.org/), comparing only Free and Open Source Operating Systems, `Linux` dominates [on relays by platform](https://metrics.torproject.org/platforms.html) and [Tor Browser downloads by platform](https://metrics.torproject.org/webstats-tb-platform.html) over BSD. Data regarding which operating system the onion service operator can not be easily acquired for obvious reasons.
+On the Tor echosystem, from [TPO metrics](https://metrics.torproject.org/), comparing only Free and Open Source Operating Systems, `Linux` dominates on [relays by platform](https://metrics.torproject.org/platforms.html) and [Tor Browser downloads by platform](https://metrics.torproject.org/webstats-tb-platform.html) over BSD. Data regarding which operating system the onion service operator can not be easily acquired for obvious reasons. That was on the network level, but know on the user system, even if one chooses a Free and Open Source Operating System, GNU/Linux dominates a big share over *BSD, having a huge impact on the main software used for the kernel (Linux), shell (bash), service manager (systemd).
 
-That was on the network level, but know on the user system, even if one chooses a Free and Open Source Operating System, GNU/Linux dominates a big share over *BSD, having a huge impact on the main software used for the kernel (Linux), shell (bash), service manager (systemd).
+## Goal
 
-### Goal
-
-The goal of this project is to be the solution of the above mentioned problem using onion services.
-
-This project:
+The goal of this project is:
 * facilitates onion service management, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
 * show the that managing the onion service is much more than just using a webserver with your pages.
-* distribution, from the source code level (FOSS) to the effect it takes when it allows anyone to run the code on any operating system, shell or service manager.
+* distribution, from the source code level (FOSS) to the effect it takes when it allows anyone to run the code on any operating system, shell or service manager. Mitigation from a single point of failure
 
 Descentralization from a single point of failure:
 * **Kernel** from predominant `Linux` to also `BSD`.
 * **Shell** from predominant `bash` to also any POSIX shell such as `ksh`, `(y,d)ash` and `zsh` (emulating sh).
-* **Service manager** from predominant `systemd` to also `Runit`, `OpenRC`.
+* **Service manager** from predominant `systemd` to also `OpenRC`.
 
 Editing the tor configuration file (torrc) is not difficult, but automation solves problem of misconfiguration and having:
 * less time spent
 * complete uniformity
+* graphical interface to help newbies
 
 ## Features
 
