@@ -6,6 +6,10 @@ There is a TODO list at the end of the README. Those are tasks that will improve
 
 First, read the [docs](https://github.com/nyxnor/onionservice/tree/main/docs).
 
+## License
+
+Every contribution will licensed accordingly to the [LICENSE](LICENSE), which currently is MIT.
+
 ## Shell
 
 ### Commands
@@ -152,8 +156,7 @@ Maintainers/Collaborators:
 
 ### Pull requests
 
-Fork the repository:
-Go to: https://github.com/nyxnor/onionservice/fork
+Fork the repository on https://github.com/nyxnor/onionservice/fork
 
 Clone:
 ```sh
@@ -162,7 +165,7 @@ cd onionservice
 ```
 
 Create feature or fix branch based on the upstream project development branch as base:
-```git
+```sh
 git remote add upstream https://github.com/nyxnor/onionservice.git
 git checkout -b <NEW_BRANCH> upstream/<BASE_BRANCH>
 ```
@@ -176,10 +179,10 @@ Before commiting, shellcheck with:
 ```
 
 Commit to your branch:
-```git
+```sh
 git add <FILE_EDITED>
 git rm <FILE_DETELED>
-git commit -m "Title with short description" -m "Detailed description of the changes
+git commit -m "Title with short description" -m "Detailed description of the changes"
 git push -u origin <NEW_BRANCH>
 ```
 

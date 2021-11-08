@@ -21,10 +21,7 @@ i=0
 
 
 ## clear is not a posix command
-clear_posix(){
-  printf \\033[2J\\033[H\\033[m
-}
-
+clear_posix(){ printf \\033[2J\\033[H\\033[m ; }
 trap 'clear_posix' EXIT
 
 

@@ -73,15 +73,15 @@ is_integer(){ printf %d "${1}" >/dev/null 2>&1 || error_msg "Not an integer: ${1
 ## accept localhos:port if port is valid.
 ## this is not perfect but it is better than nothing
 is_addr_port(){
-  ADDR_PORT=${1}
-  PORT=${ADDR_PORT##*:}
-  ADDR=${ADDR_PORT%%:*}
-  ADDR_1=${ADDR%%.*}
-  ADDR_MID=${ADDR##*${ADDR_1}.}
-  ADDR_2=${ADDR_MID%%.*}
-  ADDR_4=${ADDR_MID##*.}
-  ADDR_MID=${ADDR_MID##*${ADDR_2}.}
-  ADDR_3=${ADDR_MID%%.*}
+  ADDR_PORT="${1}"
+  PORT="${ADDR_PORT##*:}"
+  ADDR="${ADDR_PORT%%:*}"
+  ADDR_1="${ADDR%%.*}"
+  ADDR_MID="${ADDR##*"${ADDR_1}".}"
+  ADDR_2="${ADDR_MID%%.*}"
+  ADDR_4="${ADDR_MID##*.}"
+  ADDR_MID="${ADDR_MID##*"${ADDR_2}".}"
+  ADDR_3="${ADDR_MID%%.*}"
 
   is_integer "${PORT}"; is_integer "${ADDR_1}"; is_integer "${ADDR_2}"; is_integer "${ADDR_3}"; is_integer "${ADDR_4}"
 
