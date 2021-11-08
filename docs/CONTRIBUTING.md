@@ -28,7 +28,6 @@ Commands used by this project:
   * [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
 
 * Not builtins:
-  * [awk](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/awk.html#tag_20_06)
   * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
   * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
   * [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
@@ -49,7 +48,6 @@ Commands used by this project:
   * [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html#tag_20_132)
   * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
   * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
-  * [wc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/wc.html#tag_20_154)
 
 * Installed:
   * [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)

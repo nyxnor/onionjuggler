@@ -127,8 +127,8 @@ test_service_exists(){
 create_client_list(){
   SERVICE="${1}"
   CLIENT_NAME_LIST="$(printf %s"$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" ",")"
-  CLIENT_COUNT="$(printf %s"${CLIENT_NAME_LIST}" | tr -dc "," | wc -c)"
-  [ -n "${CLIENT_COUNT}" ] && CLIENT_COUNT=$((CLIENT_COUNT+1))
+  # shellcheck disable=SC2086
+  [ -n "${CLIENT_NAME_LIST}" ] && CLIENT_COUNT="$(IFS=','; set -f -- ${CLIENT_NAME_LIST}; printf %s"${#}")"
 }
 
 
