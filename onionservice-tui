@@ -345,9 +345,10 @@ case "${CHOICE_MAIN}" in
             TEXT_NO_CLIENT="\nNo client exist inside the intersection of the chosen services."
             dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
           else
+            [ "${i}" -gt 11 ] && i=11
             # shellcheck disable=SC2086
             CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-            "$((i+8))" 50 2 ${CLIENT_BUILD_LIST} 2>&1 >/dev/tty)"
+            "$((i+8))" 50 ${i} ${CLIENT_BUILD_LIST} 2>&1 >/dev/tty)"
           fi
           if [ -n "${CHOICE_CLIENT}" ]; then
             SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
@@ -515,9 +516,10 @@ case "${CHOICE_MAIN}" in
         done
         TITLE="Folder"
         MENU="\nUse spacebar to select:"
+        [ "${i}" -gt 11 ] && i=11
         # shellcheck disable=SC2086
         CHOICE_FOLDER="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-        "$((i+8))" 50 2 ${FOLDER_LIST} 2>&1 >/dev/tty)"
+        "$((i+8))" 50 ${i} ${FOLDER_LIST} 2>&1 >/dev/tty)"
         [ -n "${CHOICE_FOLDER}" ] && FOLDER_NAME_LIST="$(printf %s"${CHOICE_FOLDER}" | sed "s/ /,/g")"
         if [ -n "${FOLDER_NAME_LIST}" ]; then
           clear_posix
@@ -533,9 +535,10 @@ case "${CHOICE_MAIN}" in
       done
       TITLE="Web Server - Disable Site"
       MENU="\nUse spacebar to select:"
+      [ "${i}" -gt 11 ] && i=11
       # shellcheck disable=SC2086
       CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-      "$((i+8))" 50 2 ${SERVICE_LIST} 2>&1 >/dev/tty)"
+      "$((i+8))" 50 ${i} ${SERVICE_LIST} 2>&1 >/dev/tty)"
       [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
       if [ -n "${SERVICE_NAME_LIST}" ]; then
         clear_posix
