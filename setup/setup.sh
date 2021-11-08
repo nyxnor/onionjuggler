@@ -24,7 +24,7 @@
 ## It also prepare for releases deleting my path ONIONSERVICE_PWD
 ##
 ## SYNTAX
-## sh setup.sh [<setup>|release]
+## ./setup.sh [<setup>|release]
 ##
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
@@ -54,9 +54,9 @@ add_onionservice_to_path(){
 inform_to_add_onionservice_to_path(){
   printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first. There are two options to set the variable:\n"
   printf "\\033[1;33mSAFE: Run this script again from inside the repository, it will automatically use the \${PWD}.\n"
-  printf "\033[0m  ./setup.sh\n"
+  printf "\033[0m  ./setup/setup.sh\n"
   printf "\\033[1;33mDEV:  Or input the path manually by running the command below (no trailing/not ending with \"/\"):\n"
-  printf "\033[0m  ./setup.sh -s -p /absolute/path/to/onionservice\n\n"
+  printf "\033[0m  ./setup/setup.sh -s -p /absolute/path/to/onionservice\n\n"
   printf "\\033[1;33mSee usage:\033[0m\n"
   usage
   exit 1
@@ -93,11 +93,20 @@ case "${action}" in
 
       *)
         if [ -f .onionrc ] && [ -f onionservice-cli ]; then ## onionservice-tui is not required to exist
+          ## delete previous configuration just in case
+          sed -i'' "/ONIONSERVICE_PWD/d" ~/."${SHELL##*/}"rc
           ## this is necessary because on the first run, the var is empty and lead to wrong paths down below
           ONIONSERVICE_PWD="${PWD}"
           add_onionservice_to_path
         else
-          inform_to_add_onionservice_to_path
+          printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first. There are two options to set the variable:\n"
+          printf "\\033[1;33mSAFE: Run this script again from inside the repository, it will automatically use the \${PWD}.\n"
+          printf "\033[0m  ./setup/setup.sh\n"
+          printf "\\033[1;33mDEV:  Or input the path manually by running the command below (no trailing/not ending with \"/\"):\n"
+          printf "\033[0m  ./setup/setup.sh -s -p /absolute/path/to/onionservice\n\n"
+          printf "\\033[1;33mSee usage:\033[0m\n"
+          usage
+          exit 1
         fi
     esac
     . "${ONIONSERVICE_PWD}"/.onionrc
@@ -126,7 +135,7 @@ case "${action}" in
     printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
     printf "# Checking syntax\n" ## quits to warn workflow test failed
     ## Customize severity with -S [error|warning|info|style]
-    shellcheck "${ONIONSERVICE_PWD}"/setup.sh "${ONIONSERVICE_PWD}"/.onionrc "${ONIONSERVICE_PWD}"/onionservice-cli "${ONIONSERVICE_PWD}"/onionservice-tui || exit 1
+    shellcheck "${ONIONSERVICE_PWD}"/setup/setup.sh "${ONIONSERVICE_PWD}"/.onionrc "${ONIONSERVICE_PWD}"/onionservice-cli "${ONIONSERVICE_PWD}"/onionservice-tui || exit 1
     ## cleanup
     find "${ONIONSERVICE_PWD}" -type f -exec sed -i'' "s/set \-\x//g" {} \; ## should not delete, could destroy lines, just leave empty lines
     printf %s"${FOREGROUND_GREEN}# Done!\n${UNSET_FORMAT}"

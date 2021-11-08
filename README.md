@@ -9,13 +9,12 @@
 
 ### Feature-rich Onion Service manager for UNIX-like operating systems written in POSIX conformant shellscript
 
-Quick link to this repository: https://git.io/onionservice
-
 A collection of Onion Services features implemented for Unix-like systems following the Portable Operating System Interface standard.
 
-This project has not been released and should be considered for development only.
 
-**WARNING: `do not trust this repo yet`, backup your hs keys in another location**
+**WARNING: `do not trust this repo yet`, backup your hs keys in another location. This project has not been released and should be considered for development only.**
+
+Quick link to this repository: https://git.io/onionservice
 
 ## Table of Contents
 
@@ -148,53 +147,29 @@ Determine the enviromental variable `${ONIONSERVICE_PWD}` and add the directory 
 For this, you have two options:
 * **Easy**: run from inside the cloned repository and it will use the same path as in`${PWD}`:
 ```sh
-./setup.sh
+./setup/setup.sh
 ```
 * **Development**:  set the variable manually using the absolute path without trailing "/" at the end. Favorable for integrating into other projects. Run from any directory (need to specify the path)
 ```sh
-./setup.sh -s -p /PATH/TO/ONIONSERVICE/REPO && . ~/."${SHELL##*/}"rc
+./setup/setup.sh -s -p /PATH/TO/ONIONSERVICE/REPO && . ~/."${SHELL##*/}"rc
 ```
 
-#### Usage
+### Usage
 
 The repo is now in your `$PATH`, if you have setup the environment as described above. This means you can call the scripts as if they were any other command.
 
+#### Scripts
+
 There are three ways to call the scripts now, evaluate the advantages and disadvantages:
 
-1. **Command**
-* Advantages:
-  * follows the shebang
-  * can be used from any directory
-* Disadvantages: None
-```sh
-onionservice-cli
-```
+||Command|Dot slash|Specifying shell|
+|-|-------|---------|----------------|
+|Advantages|follows the shebang, can be used from any directory|follows the shebang|can choose the shell|
+|Disadvantages|none|the scripts must be executable, needs to specify path if not in the same directory|ignores the shebang, needs to specify path if not in the same directory|
+|Syntax|`onionservice-cli`|`./onionservice-cli`|`sh onionservice-cli`|
 
-2. **Dot slash**
-* Advantages:
-  * follows the shebang
-* Disadvantages:
-  * the scripts must be executable
-  * needs to specify path if not in the same directory
-```sh
-./onionservice-cli
-## or if running from a different directory
-./"${ONIONSERVICE_PWD}"/onionservice-cli
-```
 
-3. **Specifying the shell**
-* Advantages:
-  * Can specify the shell
-* Disadvantages:
-  * ignores the shebang
-  * needs to specify path if not in the same directory
-```sh
-sh onionservice-cli
-## or if wanting to specify the path to shell binaries
-/usr/bin/sh onionservice-cli
-## or if running from a different directory plus the above
-/usr/bin/sh "${ONIONSERVICE_PWD}"/onionservice-cli
-```
+#### Documentation
 
 Take a loot at the documentation inside `docs` folder. Read:
 
@@ -254,12 +229,11 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **tar** (compressing and extracting the backup)
   * **gzip** (compressing the manual)
 
-The packages are downloaded when setting up the environment with [setup.sh](setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
+The packages are downloaded when setting up the environment with [setup.sh](setup/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
 The absolute minimum you can go to is `tor grep sed`, and you will be limited to enable, disable and renew services.
 
 ## To-do
 
-* setup.sh appars on the path and should not, how to fix this?
 * change `ls` loops to `find`. See [SC2045](https://github.com/koalaman/shellcheck/wiki/SC2045) and [shell pitfalls](http://mywiki.wooledge.org/BashPitfalls#for_f_in_.24.28ls_.2A.mp3.29)
 * should non env variables be all upercase? Env var should be [distinguishable](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html. https://stackoverflow.com/questions/673055/correct-bash-and-shell-script-variable-capitalization). The .onionrc is a lib and "exports" vars to other scripts.
 * [getopts](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/getopts.html)
