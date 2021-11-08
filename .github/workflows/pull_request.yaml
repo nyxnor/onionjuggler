@@ -6,7 +6,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@main
-			      with:
-			        ref: ${{ github.event.pull_request.head.sha }}
+            with:
+              ref: ${{ github.event.pull_request.head.sha }}
             - name: Run shellcheck.
               run: ./setup/setup.sh release
