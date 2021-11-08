@@ -9,7 +9,7 @@ onionservice-cli - dinamically manage your onion services with a POSIX compliant
 
 # SYNOPSIS
 
-**onionservice-cli** [COMMAND] <*OPTION*>\
+**onionservice-cli** COMMAND [REQUIRED] <*OPTION*>\
 **onionservice-cli setup torrc**\
 **onionservice-cli on tcp** [VERSION] [SERV] [VIRTPORT] <*TARGET*> <*VIRTPORT2*> <*TARGET2*>\
 **onionservice-cli on unix** [VERSION] [SERV] [VIRTPORT] <*VIRTPORT2*>\
@@ -297,5 +297,5 @@ tor(1), sh(1), regex(7), sed(1), grep(1)
 
 # COPYRIGHT
 
-Copyright  ©  2021  OnionService developers.   License  GPLv3+:  GNU  GPL  version  3 or later <https://gnu.org/licenses/gpl.html>.
+Copyright  ©  2021  OnionService developers (MIT)
 This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.

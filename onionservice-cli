@@ -1,28 +1,10 @@
 #!/usr/bin/env sh
 
-## This file is part of OnionService, an easy to use Tor hidden services manager.
-##
-## Copyright (C) 2021 OnionService developers (GPLv3)
-## Github:  https://github.com/nyxnor/onionservice
-##
-## This program is free software: you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## This program is distributed in the hope that it is useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with this program. If not, see <http://www.gnu.org/licenses/>.
-##
 ## DESCRIPTION
 ## This file lets you manage your hidden services to all its capability
 ##
 ## SYNTAX
-## sh onionservice-cli COMMAND [REQ_OPTION] <OPTIONAL>
+## ./onionservice-cli COMMAND [REQUIRED] <OPTIONL>
 ##
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
