@@ -14,10 +14,10 @@ Every contribution will licensed accordingly to the [LICENSE](LICENSE), which cu
 
 ### Commands
 
-It must be POSIX compliant. The [Shellcheck Code 2039](https://github.com/koalaman/shellcheck/wiki/SC2039) must not be ignored.
+It must be POSIX compliant (the [Shellcheck Code 2039](https://github.com/koalaman/shellcheck/wiki/SC2039) can't be ignored).
 Commands used by OnionService must follow the [Shell & Utilities: Detailed Toc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html), read the POSIX-compliant commands manuals.
 
-Currentyl there are many command used and there has been a constant development to use less commands.
+Currently there are many command used and there has been a constant development to use less commands.
 
 Commands used by this project:
 
@@ -73,21 +73,15 @@ Commands used by this project:
 
 ### Builtins
 
-The project will never be pure POSIX alternative to external process such as git, grep, openssl, but it aims to use more of the shell capabilities than depending on more packages. Read the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible) - POSIX compliant and efficiency guide while listening to [KISS](https://www.youtube.com/watch?v=EFMD7Usflbg) - Keep It Simple Stupid, but in audio and video format.
-
-Less commands to install, more portable it becomes. Prefer [pure-sh](https://github.com/dylanaraps/pure-sh-bible) alternatives to external process, then shell builtin, after that commands/packages available on *nix systems that have similar options.
+The project will never be pure POSIX alternative to external process such as git, grep, openssl, but it aims to use more of the shell capabilities than depending on more packages. Read the [pure-sh-bible](https://github.com/dylanaraps/pure-sh-bible), a POSIX compliant and efficiency guide, less commands to install, more portable it becomes. Prefer builtins alternatives to external process, then shell builtin, after that commands/packages available on *nix systems that have similar options.
 
 Shell builtins are preferred. To find all builtins:
-1. Download shellspec builtins script:
+* Download shellspec builtins script:
 ```sh
-curl -o /tmp/builtins.sh https://raw.githubusercontent.com/shellspec/shellspec/master/contrib/builtins.sh
-# or
-wget -P /tmp/ https://raw.githubusercontent.com/shellspec/shellspec/master/contrib/builtins.sh
-```
-1. Run it with the desired shell:
-```sh
+curl --tlsv1.3 --proto =https --location -o /tmp/builtins.sh https://raw.githubusercontent.com/shellspec/shellspec/master/contrib/builtins.sh
+#wget --https-only -P /tmp/ https://raw.githubusercontent.com/shellspec/shellspec/master/contrib/builtins.sh
 chmod u+x /tmp/builtins.sh
-./tmp/builtins.sh
+/tmp/builtins.sh
 ```
 
 ### External commands limitations
@@ -122,7 +116,7 @@ Some checks are not needed for certain files and are cherry picked to be disable
 ```
 
 Shellcheck Codes:
-* Global: specify on [`.shellcheckrc`](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-or-more-type-of-error-forever).
+* Global: specify on [.shellcheckrc](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-or-more-type-of-error-forever).
 * Applicable to the entire file: [specify the line after the shebang](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-specific-instance-in-a-file)
 * Applicable to certain lines: [specify on the line above the occurence](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-all-instances-in-a-file-044)
 
@@ -130,13 +124,11 @@ Some pitfalls can occur when writing that shellcheck won't recognize, as it does
 
 Read [Bash Pitfalls](http://mywiki.wooledge.org/BashPitfalls) (some rules are applicable to POSIX shells).
 
-### Texts
-
-#### Documentation
+## Documentation
 
 Not only code is important, making it understandable by anyone who reads the documentation is relevant, improve the docs, spell mistakes, better wording.
 
-#### Issues and Pull Request
+## Issues and Pull Request
 
 Help with open issues by responding in details to the author.
 Help with pull requests by reviewing it.
@@ -154,7 +146,7 @@ Maintainers/Collaborators:
   * no longer relevant to the current code base.
   * if the issue won't be fixed.
 
-### Pull requests
+## Commits
 
 Fork the repository on https://github.com/nyxnor/onionservice/fork
 
