@@ -1,4 +1,4 @@
-#!/bin/sh
+# OnionService(1) completion                             -*- shell-script -*-
 
 # only bash, https://unix.stackexchange.com/a/158523
 # http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2
@@ -27,59 +27,59 @@
 
 ## TODO: hierarchy is not working, only the main commands are displayed, the derived are not yet working...
 
-_onionservice-cli()
-{
-    local cur prev words cword package
-    COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
+# _onionservice-cli()
+# {
+#     local cur prev words cword package
+#     COMPREPLY=()
+#     cur="${COMP_WORDS[COMP_CWORD]}"
+#     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    opts="auth backup credentials on onion-location off renew vanguards"
+#     opts="auth backup credentials on onion-location off renew vanguards"
 
-    if [[ ${cur} == * ]] ; then
-        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-        return 0
-    fi
+#     if [[ ${cur} == * ]] ; then
+#         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+#         return 0
+#     fi
 
-    case $prev in
-        setup)
-            local opts="torrc env"
-            COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
-        ;;
+#     case $prev in
+#         setup)
+#             local opts="torrc env"
+#             COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
+#         ;;
 
-        on)
-            local opts="unix tcp"
-            COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
-        ;;
+#         on)
+#             local opts="unix tcp"
+#             COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
+#         ;;
 
-        auth)
-            #local opts="server client"
-            COMPREPLY=()
-            cur="${COMP_WORDS[COMP_CWORD]}"
-            prev="${COMP_WORDS[COMP_CWORD-1]}"
-            #if [[ ${cur} == * ]] ; then
-                local names="server client"
-                COMPREPLY=($(compgen -W "${names}" -- "$cur"))
-                case $prev in
-                    server | client)
-                        local opts="on off list"
-                        COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
-                    ;;
-                esac
-                return 0
-            #fi
-        ;;
+#         auth)
+#             #local opts="server client"
+#             COMPREPLY=()
+#             cur="${COMP_WORDS[COMP_CWORD]}"
+#             prev="${COMP_WORDS[COMP_CWORD-1]}"
+#             #if [[ ${cur} == * ]] ; then
+#                 local names="server client"
+#                 COMPREPLY=($(compgen -W "${names}" -- "$cur"))
+#                 case $prev in
+#                     server | client)
+#                         local opts="on off list"
+#                         COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
+#                     ;;
+#                 esac
+#                 return 0
+#             #fi
+#         ;;
 
-        backup)
-            local opts="create integrate"
-            COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
-        ;;
+#         backup)
+#             local opts="create integrate"
+#             COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
+#         ;;
 
-        vanguards)
-            local opts="install upgrade logs remove"
-            COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
-        ;;
-    esac
+#         vanguards)
+#             local opts="install upgrade logs remove"
+#             COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
+#         ;;
+#     esac
 
-} &&
-complete -F _onionservice-cli onionservice-cli
+# } &&
+# complete -F _onionservice-cli onionservice-cli
