@@ -455,14 +455,14 @@ case "${CHOICE_MAIN}" in
     if [ -n "${SERVICE_NAME_LIST}" ]; then
       TITLE="Onion-Location"
       CHOICE_ACTION="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 10 50 2 \
+      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 11 50 2 \
       "NGINX" "Nginx web server header" \
       "APACHE" "Apache web server header" \
       "HTML" "hmtl <meta> http-equiv attribute" \
       3>&1 1>&2 2>&3)"
       if [ -n "${CHOICE_ACTION}" ]; then
         clear_posix
-        "${ONIONSERVICE_PWD}"/onionservice-cli location "${SERVICE_NAME_LIST}" "${CHOICE_ACTION}"
+        "${ONIONSERVICE_PWD}"/onionservice-cli location "${CHOICE_ACTION}" "${SERVICE_NAME_LIST}"
         printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
       fi
     fi
