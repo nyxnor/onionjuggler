@@ -47,7 +47,7 @@ service_menu(){
     [ "${i}" -gt 11 ] && i=11
     # shellcheck disable=SC2086
     CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-    "$((i+8))" 80 ${i} ${SERVICE_LIST} 2>&1 >/dev/tty)"
+    "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
 
     [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
   fi
@@ -69,7 +69,7 @@ if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/)" ]; then
   "VANGUARDS" "Add to protect against traffic analysis" \
   "IMPORT" "Import backup from another machine" \
   "QUIT" "Exit menu to the terminal" \
-  2>&1 >/dev/tty)"
+  3>&1 1>&2 2>&3)"
 else
   CHOICE_MAIN="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
   --ok-label "Select" --no-cancel --menu "${MENU}" 22 80 2 \
@@ -87,7 +87,7 @@ else
   "IMPORT" "Import backup from another machine" \
   "EXPORT" "Export backup to another machine" \
   "QUIT" "Exit menu to the terminal" \
-  2>&1 >/dev/tty)"
+  3>&1 1>&2 2>&3)"
 fi
 
 
@@ -106,7 +106,7 @@ case "${CHOICE_MAIN}" in
     MENU="Select a guide:"
     # shellcheck disable=SC2086
     CHOICE_MD="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-    --menu "${MENU}" "$((i+7))" 50 10 ${MD_LIST} 2>&1 >/dev/tty)"
+    --menu "${MENU}" "$((i+7))" 50 10 ${MD_LIST} 3>&1 1>&2 2>&3)"
     [ -n "${CHOICE_MD}" ] && { pandoc "${ONIONSERVICE_PWD}"/docs/"${CHOICE_MD}" | lynx -stdin ; }
   ;;
 
@@ -168,7 +168,7 @@ case "${CHOICE_MAIN}" in
       TITLE="Onion Service - Deactivation"
       MENU="\nWould you also like to DELETE (purge) the HiddenServiceDir?\n\nYES: All the directory data, including hidden service keys and clients will be deleted permanently (you won't be able to use the same onion address).\n\nNO (default): Service will be disabled, lines from the torrc deleted but the folder will be kept.\n\nCtrl+C to cancel deactivation (neither option)"
       if CHOICE_PURGE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --defaultno --yesno "${MENU}" 15 80 2>&1 >/dev/tty)"; then CHOICE_PURGE="purge"; fi
+      --defaultno --yesno "${MENU}" 15 80 3>&1 1>&2 2>&3)"; then CHOICE_PURGE="purge"; fi
       clear_posix
       "${ONIONSERVICE_PWD}"/onionservice-cli off "${SERVICE_NAME_LIST}" "${CHOICE_PURGE}"
       printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
@@ -197,7 +197,7 @@ case "${CHOICE_MAIN}" in
     "GEN" "Generate a new key pair (public and private key)" \
     "PUB" "Register the client public key" \
     "DEL" "Remove a client" \
-    2>&1 >/dev/tty)"
+    3>&1 1>&2 2>&3)"
 
     case "${AUTH_TYPE}" in
 
@@ -232,7 +232,7 @@ case "${CHOICE_MAIN}" in
           [ "${i}" -gt 11 ] && i=11
           # shellcheck disable=SC2086
           CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
-          "$((i+8))" 80 ${i} ${SERVICE_LIST} 2>&1 >/dev/tty)"
+          "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
         fi
         if [ -n "${CHOICE_SERVICE}" ]; then
           i=0
@@ -242,7 +242,7 @@ case "${CHOICE_MAIN}" in
           done
           # shellcheck disable=SC2086
           CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
-          "$((i+8))" 50 2 ${CLIENT_LIST} 2>&1 >/dev/tty)"
+          "$((i+8))" 50 2 ${CLIENT_LIST} 3>&1 1>&2 2>&3)"
           [ -n "${CHOICE_CLIENT}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/"${CHOICE_CLIENT}".auth
         fi
       ;;
@@ -304,7 +304,7 @@ case "${CHOICE_MAIN}" in
           [ "${i}" -gt 11 ] && i=11
           # shellcheck disable=SC2086
           CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-          "$((i+8))" 80 ${i} ${SERVICE_LIST} 2>&1 >/dev/tty)"
+          "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
         fi
         if [ -n "${CHOICE_SERVICE}" ]; then
           # shellcheck disable=SC2086
@@ -327,7 +327,7 @@ case "${CHOICE_MAIN}" in
             [ "${i}" -gt 11 ] && i=11
             # shellcheck disable=SC2086
             CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-            "$((i+8))" 50 ${i} ${CLIENT_BUILD_LIST} 2>&1 >/dev/tty)"
+            "$((i+8))" 50 ${i} ${CLIENT_BUILD_LIST} 3>&1 1>&2 2>&3)"
           fi
           if [ -n "${CHOICE_CLIENT}" ]; then
             SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
@@ -355,7 +355,7 @@ case "${CHOICE_MAIN}" in
     "GEN" "Generate a new key pair (public and private key)" \
     "PRIV" "Register your private key" \
     "DEL" "Remove expired authorization" \
-    2>&1 >/dev/tty)"
+    3>&1 1>&2 2>&3)"
 
     case "${AUTH_TYPE}" in
 
@@ -380,7 +380,7 @@ case "${CHOICE_MAIN}" in
           [ "${i}" -gt 11 ] && i=11
           # shellcheck disable=SC2086
           CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --menu "${MENU}" \
-          "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
+          "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
           [ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_AUTH}"/"${CHOICE_ONION_AUTH}".auth_private
         fi
       ;;
@@ -426,7 +426,7 @@ case "${CHOICE_MAIN}" in
           [ "${i}" -gt 11 ] && i=11
           # shellcheck disable=SC2086
           CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --checklist "${MENU}" \
-          "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 2>&1 >/dev/tty)"
+          "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
           [ -n "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
         fi
         if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
@@ -459,7 +459,7 @@ case "${CHOICE_MAIN}" in
       "NGINX" "Nginx web server header" \
       "APACHE" "Apache web server header" \
       "HTML" "hmtl <meta> http-equiv attribute" \
-      2>&1 >/dev/tty)"
+      3>&1 1>&2 2>&3)"
       if [ -n "${CHOICE_ACTION}" ]; then
         clear_posix
         "${ONIONSERVICE_PWD}"/onionservice-cli location "${SERVICE_NAME_LIST}" "${CHOICE_ACTION}"
@@ -476,7 +476,7 @@ case "${CHOICE_MAIN}" in
     "LIST" "List enabled websites" \
     "ON" "Serve web site" \
     "OFF" "Stop serving web site" \
-    2>&1 >/dev/tty)"
+    3>&1 1>&2 2>&3)"
     if [ "${STATUS}" = "LIST" ]; then
       clear_posix
       "${ONIONSERVICE_PWD}"/onionservice-cli "${WEBSERVER}" "${STATUS}"
@@ -498,7 +498,7 @@ case "${CHOICE_MAIN}" in
         [ "${i}" -gt 11 ] && i=11
         # shellcheck disable=SC2086
         CHOICE_FOLDER="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-        "$((i+8))" 50 ${i} ${FOLDER_LIST} 2>&1 >/dev/tty)"
+        "$((i+8))" 50 ${i} ${FOLDER_LIST} 3>&1 1>&2 2>&3)"
         [ -n "${CHOICE_FOLDER}" ] && FOLDER_NAME_LIST="$(printf %s"${CHOICE_FOLDER}" | sed "s/ /,/g")"
         if [ -n "${FOLDER_NAME_LIST}" ]; then
           clear_posix
@@ -517,7 +517,7 @@ case "${CHOICE_MAIN}" in
       [ "${i}" -gt 11 ] && i=11
       # shellcheck disable=SC2086
       CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-      "$((i+8))" 50 ${i} ${SERVICE_LIST} 2>&1 >/dev/tty)"
+      "$((i+8))" 50 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
       [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
       if [ -n "${SERVICE_NAME_LIST}" ]; then
         clear_posix
@@ -533,14 +533,14 @@ case "${CHOICE_MAIN}" in
     if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR}"/vanguards)" ]; then
       CHOICE_ACTION="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 8 50 2 \
-      "INSTALL" "Use Vanguards protections" 2>&1 >/dev/tty)"
+      "INSTALL" "Use Vanguards protections" 3>&1 1>&2 2>&3)"
     else
       CHOICE_ACTION="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 10 50 2 \
       "LOGS" "Follow vanguards logs" \
       "UPGRADE" "Set new config and upgrade" \
       "REMOVE" "Delete the Vanguards directory" \
-      2>&1 >/dev/tty)"
+      3>&1 1>&2 2>&3)"
     fi
 
     if [ "${CHOICE_ACTION}" = "LOGS" ]; then
