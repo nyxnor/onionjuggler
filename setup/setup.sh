@@ -107,22 +107,22 @@ case "${action}" in
     sudo mv /tmp/onionservice-cli.1.gz /usr/local/man/man1/
     sudo mandb -q -f /usr/local/man/man1/onionservice-cli.1.gz
     ## finish
-    printf %s"${FOREGROUND_BLUE}# OnionService enviroment is ready\n${UNSET_FORMAT}"
+    printf %s"${BLUE}# OnionService enviroment is ready\n${NOCOLOR}"
   ;;
 
   -r|--release|release)
     [ -f .onionrc ] && ONIONSERVICE_PWD="${PWD}"
     . "${ONIONSERVICE_PWD}"/.onionrc
     install_package shellcheck
-    printf %s"${FOREGROUND_BLUE}# Preparing Release\n"
+    printf %s"${BLUE}# Preparing Release\n"
     printf "# Checking syntax\n" ## quits to warn workflow test failed
     ## Customize severity with -S [error|warning|info|style]
     shellcheck "${ONIONSERVICE_PWD}"/setup/setup.sh "${ONIONSERVICE_PWD}"/.onionrc "${ONIONSERVICE_PWD}"/onionservice-cli "${ONIONSERVICE_PWD}"/onionservice-tui || exit 1
     ## cleanup
     find "${ONIONSERVICE_PWD}" -type f -exec sed -i'' "s/set \-\x//g" {} \; ## should not delete, could destroy lines, just leave empty lines
-    printf %s"${FOREGROUND_GREEN}# Done!\n${UNSET_FORMAT}"
+    printf %s"${GREEN}# Done!\n${NOCOLOR}"
   ;;
 
-  *) printf %s"${FOREGROUND_YELLOW}"; usage; printf %s"${UNSET_FORMAT}"
+  *) printf %s"${YELLOW}"; usage; printf %s"${NOCOLOR}"
 
 esac

@@ -17,7 +17,7 @@ usage(){
   ASCII="${ONIONSERVICE_PWD}/images/onion-ascii-closed.txt"
   if [ -f "${ASCII}" ]; then
     ASCII="$(while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "${ASCII}")"
-    printf %s"${FOREGROUND_MAGENTA} ${ASCII} ${UNSET_FORMAT}\n\n"
+    printf %s"${MAGENTA} ${ASCII} ${NOCOLOR}\n\n"
   fi
 
   printf "Configure an Onion Service
@@ -53,12 +53,12 @@ If your services are unreacheable, restart tor.
 
 
 #[ "${USER}" = "root" ]
-[ "$(id -u)" -eq 0 ] && { printf %s"${FOREGROUND_RED}Do not run with the root user!!!\n${UNSET_FORMAT}" && exit 1; }
+[ "$(id -u)" -eq 0 ] && { printf %s"${RED}Do not run with the root user!!!\n${NOCOLOR}" && exit 1; }
 
 
 ## display error message with instructions to use the script correctly.
 error_msg(){
-  [ -n "${1}" ] && printf %s"${FOREGROUND_RED}ERROR: ${1}${UNSET_FORMAT}\n"
+  [ -n "${1}" ] && printf %s"${RED}ERROR: ${1}${NOCOLOR}\n"
   exit 1
   #usage
 }
@@ -101,7 +101,7 @@ is_addr_port(){
 test_service_exists(){
   SERVICE="${1}"
   ONION_HOSTNAME=$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)
-  [ -z "${ONION_HOSTNAME}" ] && { printf %s"${FOREGROUND_RED}ERROR: Service does not exist: ${SERVICE}\n${UNSET_FORMAT}"; exit 1; }
+  [ -z "${ONION_HOSTNAME}" ] && { printf %s"${RED}ERROR: Service does not exist: ${SERVICE}\n${NOCOLOR}"; exit 1; }
 }
 
 
@@ -151,7 +151,7 @@ case "${COMMAND}" in
         sudo cat -s "${TORRC}".mod "${TORRC}".tmp | sudo tee "${TORRC}" >/dev/null
         printf "# Restored torrc with its latest backup\n"
         restarting_tor
-        printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+        printf %s"${GREEN}\n# Done\n${NOCOLOR}"
       ;;
 
       *)
@@ -174,7 +174,7 @@ case "${COMMAND}" in
       PURGE="${2}"
       ## remove service service data
       if [ "${PURGE}" = "purge" ] || [ "${PURGE}" = "PURGE" ]; then
-        printf %s"${FOREGROUND_RED}\n# Deleted Hidden Service data in ${DATA_DIR_SERVICES}/${SERVICE}\n${UNSET_FORMAT}"
+        printf %s"${RED}\n# Deleted Hidden Service data in ${DATA_DIR_SERVICES}/${SERVICE}\n${NOCOLOR}"
         sudo rm -rfv "${DATA_DIR_SERVICES}"/"${SERVICE}"
       else
         printf "\n# HiddenServiceDiretory was kept\n"
@@ -189,7 +189,7 @@ case "${COMMAND}" in
     }
     loop_list delete_service "${SERVICE}" "${PURGE}"
     restarting_tor
-    printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+    printf %s"${GREEN}\n# Done\n${NOCOLOR}"
   ;;
 
 
@@ -220,7 +220,7 @@ case "${COMMAND}" in
       printf %s"Service address = ${ONION_HOSTNAME}\n"
       printf %s"Virtual port    = ${VIRTPORT}\n"
       [ -n "${VIRTPORT2}" ] && printf %s"Virtual port    = ${VIRTPORT2}\n"
-      printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+      printf %s"${GREEN}\n# Done\n${NOCOLOR}"
     }
 
     case "${SOCKET}" in
@@ -370,7 +370,7 @@ case "${COMMAND}" in
               #instructions_auth
             fi
             restarting_tor
-            printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+            printf %s"${GREEN}\n# Done\n${NOCOLOR}"
           ;;
 
           ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
@@ -404,7 +404,7 @@ case "${COMMAND}" in
             fi
             loop_list auth_server_remove_clients "${SERVICE}" "${CLIENT}"
             restarting_tor
-            printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+            printf %s"${GREEN}\n# Done\n${NOCOLOR}"
           ;;
 
           list|LIST)
@@ -427,7 +427,7 @@ case "${COMMAND}" in
             printf "# Authorized clients for Hidden Services\n"
             [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
             loop_list auth_server_list "${SERVICE}"
-            printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+            printf %s"${GREEN}\n# Done\n${NOCOLOR}"
           ;;
 
           *)
@@ -496,7 +496,7 @@ case "${COMMAND}" in
               printf %s"\n CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
               printf "\n# As you inserted the private key manually, we expect that you have already sent/received the public key to/from the onion service operator\n"
             fi
-            printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+            printf %s"${GREEN}\n# Done\n${NOCOLOR}"
           ;;
 
           ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
@@ -510,9 +510,9 @@ case "${COMMAND}" in
             if [ "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_AUTH}")" != "" ]; then
               loop_list auth_client_remove "${ONION_HOSTNAME}"
               printf "\n# Client side authorization removed\n"
-              printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+              printf %s"${GREEN}\n# Done\n${NOCOLOR}"
             else
-              printf %s"${FOREGROUND_RED}INFO: ClientOnionAuthDir is empty\n${UNSET_FORMAT}"
+              printf %s"${RED}INFO: ClientOnionAuthDir is empty\n${NOCOLOR}"
             fi
           ;;
 
@@ -524,9 +524,9 @@ case "${COMMAND}" in
                 printf %s"# Content:   $(sudo -u "${TOR_USER}" grep "descriptor:x25519:" "${DATA_DIR_AUTH}"/"${AUTH}")"
               done
               printf "\n"
-              printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+              printf %s"${GREEN}\n# Done\n${NOCOLOR}"
             else
-              printf %s"${FOREGROUND_RED}INFO: ClientOnionAuthDir is empty\n${UNSET_FORMAT}"
+              printf %s"${RED}INFO: ClientOnionAuthDir is empty\n${NOCOLOR}"
             fi
           ;;
 
@@ -562,20 +562,20 @@ case "${COMMAND}" in
       test_service_exists "${SERVICE}"
       NEW_HOSTNAME="${ONION_HOSTNAME}"
       if [ "${OLD_HOSTNAME}" != "${NEW_HOSTNAME}" ]; then
-        printf %s"${FOREGROUND_BLUE}# Service renewed.\n${UNSET_FORMAT}"
+        printf %s"${BLUE}# Service renewed.\n${NOCOLOR}"
         printf %s"\nOld = ${OLD_HOSTNAME}\n"
         printf %s"New = ${ONION_HOSTNAME}\n"
         printf "\n# Note: Remember to notify your clients about the new hostname and update their '.auth_private' files accordingly.\n"
         printf "\nService address QR encoded format:\n"
         qrencode -m 2 -t ANSIUTF8 "${NEW_HOSTNAME}"
       else
-        printf %s"${FOREGROUND_RED}# Failed to renew service: ${SERVICE}\n${UNSET_FORMAT}"
+        printf %s"${RED}# Failed to renew service: ${SERVICE}\n${NOCOLOR}"
       fi
       printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
     [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
     loop_list renew_service_address "${SERVICE}"
-    printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+    printf %s"${GREEN}\n# Done\n${NOCOLOR}"
   ;;
 
   ## show all the necessary information to access the service such as the hostname and the QR encoded hostname to scan for Tor Browser Mobile
@@ -604,7 +604,7 @@ case "${COMMAND}" in
     NO_QR="${3}"
     [ "${SERVICE}" = "all-services" ] && { create_service_list; SERVICE="${SERVICE_NAME_LIST}"; }
     loop_list get_service_info "${SERVICE}" "${NO_QR}"
-    printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+    printf %s"${GREEN}\n# Done\n${NOCOLOR}"
   ;;
 
   ## start serving files with a webserver for a specific onion service and specific website folder
@@ -642,7 +642,7 @@ case "${COMMAND}" in
         esac
         #sudo rm -f /tmp/"${SERVICE}"-onion.conf
         printf %s"\n# Address: ${ONION_HOSTNAME}\n"
-        printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+        printf %s"${GREEN}\n# Done\n${NOCOLOR}"
       ;;
 
       off|OFF)
@@ -658,7 +658,7 @@ case "${COMMAND}" in
           nginx) sudo nginx -t && sudo nginx -s reload;;
           apache2) sudo apache2 -t && sudo apache2 -k graceful;;
         esac
-        printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+        printf %s"${GREEN}\n# Done\n${NOCOLOR}"
       ;;
 
       list|LIST)
@@ -840,7 +840,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
       sudo systemctl enable vanguards@default.service
       sudo systemctl restart vanguards@default.service
       sudo systemctl status vanguards@default.service --no-pager
-      printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+      printf %s"${GREEN}\n# Done\n${NOCOLOR}"
     }
 
     case "${ACTION}" in
@@ -863,7 +863,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${ONIO
       remove|REMOVE)
         printf "# Removing Vanguards...\n\n"
         sudo rm -rfv "${DATA_DIR}"/vanguards
-        printf %s"${FOREGROUND_GREEN}\n# Done\n${UNSET_FORMAT}"
+        printf %s"${GREEN}\n# Done\n${NOCOLOR}"
       ;;
 
       logs|LOGS)

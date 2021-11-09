@@ -138,7 +138,7 @@ case "${CHOICE_MAIN}" in
             clear_posix
             # shellcheck disable=SC2086
             "${ONIONSERVICE_PWD}"/onionservice-cli on unix 3 "${SERVICE_NAME}" ${SERVICE_PORTS}
-            printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+            printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
           fi
         fi
       ;;
@@ -152,7 +152,7 @@ case "${CHOICE_MAIN}" in
           if [ -n "${SERVICE_PORTS}" ]; then
             # shellcheck disable=SC2086
             "${ONIONSERVICE_PWD}"/onionservice-cli on tcp 3 "${SERVICE_NAME}" ${SERVICE_PORTS}
-            printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+            printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
           fi
         fi
       ;;
@@ -171,7 +171,7 @@ case "${CHOICE_MAIN}" in
       --defaultno --yesno "${MENU}" 15 80 2>&1 >/dev/tty)"; then CHOICE_PURGE="purge"; fi
       clear_posix
       "${ONIONSERVICE_PWD}"/onionservice-cli off "${SERVICE_NAME_LIST}" "${CHOICE_PURGE}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+      printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
     fi
   ;;
 
@@ -181,7 +181,7 @@ case "${CHOICE_MAIN}" in
     if [ -n "${SERVICE_NAME_LIST}" ]; then
       clear_posix
       "${ONIONSERVICE_PWD}"/onionservice-cli renew "${SERVICE_NAME_LIST}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2
+      printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2
       read -r confirmation
     fi
   ;;
@@ -206,7 +206,7 @@ case "${CHOICE_MAIN}" in
         if [ -n "${SERVICE_NAME_LIST}" ]; then
           clear_posix
           "${ONIONSERVICE_PWD}"/onionservice-cli auth server list "${SERVICE_NAME_LIST}"
-          printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+          printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
         fi
       ;;
 
@@ -258,7 +258,7 @@ case "${CHOICE_MAIN}" in
           if { [ -n "${SERVICE_NAME_LIST}" ] && [ -n "${CLIENT_NAME_LIST}" ]; }; then
             clear_posix
             "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE_NAME_LIST}" "${CLIENT_NAME_LIST}"
-            printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+            printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
           fi
         fi
       ;;
@@ -277,7 +277,7 @@ case "${CHOICE_MAIN}" in
           if { [ -n "${SERVICE_NAME_LIST}" ] && [ -n "${CLIENT_NAME_LIST}" ] && [ -n "${CLIENT_PUB_KEY}" ]; }; then
             clear_posix
             "${ONIONSERVICE_PWD}"/onionservice-cli auth server on "${SERVICE_NAME_LIST}" "${CLIENT_NAME_LIST}" "${CLIENT_PUB_KEY}"
-            printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+            printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
           fi
         fi
       ;;
@@ -337,7 +337,7 @@ case "${CHOICE_MAIN}" in
         if [ -n "${CLIENT_NAME_LIST}" ]; then
           clear_posix
           "${ONIONSERVICE_PWD}"/onionservice-cli auth server off "${SERVICE_NAME_LIST}" "${CLIENT_NAME_LIST}"
-          printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+          printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
         fi
       ;;
 
@@ -361,7 +361,7 @@ case "${CHOICE_MAIN}" in
 
       LIST)
         "${ONIONSERVICE_PWD}"/onionservice-cli auth client list
-        printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+        printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
       ;;
 
       EDIT)
@@ -392,7 +392,7 @@ case "${CHOICE_MAIN}" in
         if [ -n "${ONION_HOSTNAME}" ]; then
           clear_posix
           "${ONIONSERVICE_PWD}"/onionservice-cli auth client on "${ONION_HOSTNAME}"
-          printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+          printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
         fi
       ;;
 
@@ -406,7 +406,7 @@ case "${CHOICE_MAIN}" in
         if { [ -n "${ONION_HOSTNAME}" ] && [ -n "${CLIENT_PRIV_KEY}" ]; }; then
           clear_posix
           "${ONIONSERVICE_PWD}"/onionservice-cli auth client on "${ONION_HOSTNAME}" "${CLIENT_PRIV_KEY}"
-          printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+          printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
         fi
       ;;
 
@@ -432,7 +432,7 @@ case "${CHOICE_MAIN}" in
         if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
           clear_posix
           "${ONIONSERVICE_PWD}"/onionservice-cli auth client off "${ONION_AUTH_NAME_LIST}"
-          printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+          printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
         fi
       ;;
 
@@ -445,7 +445,7 @@ case "${CHOICE_MAIN}" in
     if [ -n "${SERVICE_NAME_LIST}" ]; then
       clear_posix
       "${ONIONSERVICE_PWD}"/onionservice-cli list "${SERVICE_NAME_LIST}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+      printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
     fi
   ;;
 
@@ -463,7 +463,7 @@ case "${CHOICE_MAIN}" in
       if [ -n "${CHOICE_ACTION}" ]; then
         clear_posix
         "${ONIONSERVICE_PWD}"/onionservice-cli location "${SERVICE_NAME_LIST}" "${CHOICE_ACTION}"
-        printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+        printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
       fi
     fi
   ;;
@@ -480,7 +480,7 @@ case "${CHOICE_MAIN}" in
     if [ "${STATUS}" = "LIST" ]; then
       clear_posix
       "${ONIONSERVICE_PWD}"/onionservice-cli "${WEBSERVER}" "${STATUS}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+      printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
     elif [ "${STATUS}" = "ON" ]; then
       service_menu menu "Web server "
       if [ -n "${SERVICE_NAME_LIST}" ]; then
@@ -503,7 +503,7 @@ case "${CHOICE_MAIN}" in
         if [ -n "${FOLDER_NAME_LIST}" ]; then
           clear_posix
           "${ONIONSERVICE_PWD}"/onionservice-cli web "${STATUS}" "${SERVICE_NAME_LIST}" "${FOLDER_NAME_LIST}"
-          printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+          printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
         fi
       fi
     elif [ "${STATUS}" = "OFF" ]; then
@@ -522,7 +522,7 @@ case "${CHOICE_MAIN}" in
       if [ -n "${SERVICE_NAME_LIST}" ]; then
         clear_posix
         "${ONIONSERVICE_PWD}"/onionservice-cli web "${STATUS}" "${SERVICE_NAME_LIST}"
-        printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+        printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
       fi
     fi
   ;;
@@ -550,19 +550,19 @@ case "${CHOICE_MAIN}" in
     elif [ -n "${CHOICE_ACTION}" ]; then
       clear_posix
       "${ONIONSERVICE_PWD}"/onionservice-cli vanguards "${CHOICE_ACTION}"
-      printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+      printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
     fi
   ;;
 
   IMPORT)
     "${ONIONSERVICE_PWD}"/onionservice-cli backup integrate
-    printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2; read -r confirmation
+    printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
   ;;
 
 
   EXPORT)
     "${ONIONSERVICE_PWD}"/onionservice-cli backup create
-    printf %s"${FOREGROUND_YELLOW}\nPress ENTER to return to the TUI: ${UNSET_FORMAT}" >&2
+    printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2
     # shellcheck disable=SC2034
     read -r confirmation
   ;;
