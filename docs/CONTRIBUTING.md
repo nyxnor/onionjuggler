@@ -14,14 +14,13 @@ Every contribution will licensed accordingly to the [LICENSE](LICENSE), which cu
 
 ### Commands
 
-It must be POSIX compliant (the [Shellcheck Code 2039](https://github.com/koalaman/shellcheck/wiki/SC2039) can't be ignored).
-Commands used by OnionService must follow the [Shell & Utilities: Detailed Toc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html), read the POSIX-compliant commands manuals.
+It must be POSIX compliant, follow the [Shell & Utilities: Detailed Toc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html), read the POSIX-compliant commands manuals.
 
 Currently there are many command used and there has been a constant development to use less commands.
 
 Commands used by this project:
 
-* Builtins:
+* Builtins (POSIX):
   * [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
   * [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
   * [export](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_22)
@@ -31,7 +30,7 @@ Commands used by this project:
   * [pwd](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pwd.html#tag_20_97)
   * [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
 
-* Not builtins:
+* Not builtins (POSIX):
   * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
   * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
   * [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
@@ -53,10 +52,10 @@ Commands used by this project:
   * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
   * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
 
-* Installed:
+* Installed (most are not defined on POSIX):
+  * [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55) (POSIX)
+  * [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116) (POSIX)
   * [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
-  * [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
-  * [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
   * [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html)
   * [basez](http://www.quarkline.net/basez/)
   * [git](https://git-scm.com/docs/user-manual)
@@ -96,8 +95,8 @@ Operating system extensions (GNU extesions on commands such as grep) and command
 1. Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
 1. variable paths should not end with "/", because it is not viable to check if it exists everytime then act with the result.
 1. `printf` instead of `echo` for portability reasons.
-1. exit codes managed with `&&` for true or 1 and `||` for false or 0.
-1. `case` instead of `if-then-else`
+1. exit codes managed with `&&` for true and `||` for false.
+1. `case` instead of `if-then-else` on most of the cases.
 1. for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`.
 1. variables should be reffered with brackets `{}` and double quotes `""`, resulting in `"${VAR}"`.
 1. unquoted variabes and commands expand, if it is supposed to do so, disable SC2086.
@@ -128,17 +127,9 @@ Read [Bash Pitfalls](http://mywiki.wooledge.org/BashPitfalls) (some rules are ap
 
 Not only code is important, making it understandable by anyone who reads the documentation is relevant, improve the docs, spell mistakes, better wording.
 
-## Issues and Pull Request
+## Issues
 
 Help with open issues by responding in details to the author.
-Help with pull requests by reviewing it.
-
-Regarding reviewing pull requests, the vocabulary is:
-* **cACK** - Concept ACK - Agree with the idea and overall direction, but haven't reviewed the code changes or tested them.
-* **utACK** - Untested ACK - Reviewed and agree with the code changes but haven't actually tested them.
-* **tACK** - Tested ACK -Reviewed the code changes and have verified the functionality or bug fix.
-* **ACK** - A loose ACK can be confusing. It's best to avoid them unless it's a documentation/comment only change in which case there is nothing to test/verify; therefore the tested/untested distinction is not there.
-* **NACK** - Not ACK - Disagree with the code changes/concept. Should be accompanied by an explanation.
 
 Maintainers/Collaborators:
 * Before closing any issue, explain the reason for that actions, which can be:
@@ -179,3 +170,14 @@ git push -u origin <NEW_BRANCH>
 ```
 
 Open a pull request on GitHub and compare it against the `upstream/<BASE_BRANCH>`.
+
+## Pull Requests
+
+Help with pull requests by reviewing it.
+
+Regarding reviewing pull requests, the vocabulary is:
+* **cACK** - Concept ACK - Agree with the idea and overall direction, but haven't reviewed the code changes or tested them.
+* **utACK** - Untested ACK - Reviewed and agree with the code changes but haven't actually tested them.
+* **tACK** - Tested ACK -Reviewed the code changes and have verified the functionality or bug fix.
+* **ACK** - A loose ACK can be confusing. It's best to avoid them unless it's a documentation/comment only change in which case there is nothing to test/verify; therefore the tested/untested distinction is not there.
+* **NACK** - Not ACK - Disagree with the code changes/concept. Should be accompanied by an explanation.
