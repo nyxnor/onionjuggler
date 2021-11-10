@@ -64,7 +64,7 @@ service_menu(){
 
 
 ###########################
-set -x
+
 TITLE="Onion Services - Main Menu"
 MENU="\nUse spacepar to select:"
 BACKTITLE="Onion Services Manager"
