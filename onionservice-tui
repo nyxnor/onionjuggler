@@ -48,12 +48,12 @@ service_menu(){
     case "${DIALOG_TYPE}" in
       checklist)
         # shellcheck disable=SC2086
-        CHOICE_SERVICE="$(dialog --clear --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
+        CHOICE_SERVICE="$("${DIALOG_BOX}" --clear --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
         "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
       ;;
       menu)
         # shellcheck disable=SC2086
-        CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
+        CHOICE_SERVICE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
         "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
       ;;
     esac
@@ -64,12 +64,12 @@ service_menu(){
 
 
 ###########################
-
+set -x
 TITLE="Onion Services - Main Menu"
 MENU="\nUse spacepar to select:"
 BACKTITLE="Onion Services Manager"
 if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/)" ]; then
-  CHOICE_MAIN="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+  CHOICE_MAIN="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
   --ok-label "Select" --no-cancel --menu "${MENU}" 15 80 2 \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
@@ -80,7 +80,7 @@ if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/)" ]; then
   "QUIT" "Exit menu to the terminal" \
   3>&1 1>&2 2>&3)"
 else
-  CHOICE_MAIN="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+  CHOICE_MAIN="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
   --ok-label "Select" --no-cancel --menu "${MENU}" 22 80 2 \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
@@ -114,7 +114,7 @@ case "${CHOICE_MAIN}" in
     TITLE="Markdown guides"
     MENU="Select a guide:"
     # shellcheck disable=SC2086
-    CHOICE_MD="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+    CHOICE_MD="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
     --menu "${MENU}" "$((i+7))" 50 10 ${MD_LIST} 3>&1 1>&2 2>&3)"
     [ -n "${CHOICE_MD}" ] && { pandoc "${ONIONSERVICE_PWD}"/docs/"${CHOICE_MD}" | lynx -stdin ; }
   ;;
@@ -124,7 +124,7 @@ case "${CHOICE_MAIN}" in
 
     TITLE="Onion Service - Activation"
     MENU="Choose socket type:"
-    SOCKET_CHOICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+    SOCKET_CHOICE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
     --menu "${MENU}" 9 70 8 \
     "UNIX" "unix:path (more secure)" \
     "TCP" "addr:port (leak onion address to the local network)" \
@@ -138,10 +138,10 @@ case "${CHOICE_MAIN}" in
     case "${SOCKET_CHOICE}" in
 
       UNIX)
-        SERVICE_NAME="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+        SERVICE_NAME="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
         --inputbox "${SERVICE_MSG}" 10 60 3>&1 1>&2 2>&3)"
         if [ -n "${SERVICE_NAME}" ]; then
-          SERVICE_PORTS="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+          SERVICE_PORTS="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${UNIX_PORT_MSG}" 10 60 3>&1 1>&2 2>&3)"
           if [ -n "${SERVICE_PORTS}" ]; then
             clear_posix
@@ -153,10 +153,10 @@ case "${CHOICE_MAIN}" in
       ;;
 
       TCP)
-        SERVICE_NAME="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+        SERVICE_NAME="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
         --inputbox "${SERVICE_MSG}" 10 60 3>&1 1>&2 2>&3)"
         if [ -n "${SERVICE_NAME}" ]; then
-          SERVICE_PORTS="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+          SERVICE_PORTS="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${TCP_PORT_MSG}" 13 80 3>&1 1>&2 2>&3)"
           if [ -n "${SERVICE_PORTS}" ]; then
             # shellcheck disable=SC2086
@@ -176,7 +176,7 @@ case "${CHOICE_MAIN}" in
     if [ -n "${SERVICE_NAME_LIST}" ]; then
       TITLE="Onion Service - Deactivation"
       MENU="\nWould you also like to DELETE (purge) the HiddenServiceDir?\n\nYES: All the directory data, including hidden service keys and clients will be deleted permanently (you won't be able to use the same onion address).\n\nNO (default): Service will be disabled, lines from the torrc deleted but the folder will be kept.\n\nCtrl+C to cancel deactivation (neither option)"
-      if CHOICE_PURGE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      if CHOICE_PURGE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       --defaultno --yesno "${MENU}" 15 80 3>&1 1>&2 2>&3)"; then CHOICE_PURGE="purge"; fi
       clear_posix
       "${ONIONSERVICE_PWD}"/onionservice-cli off "${SERVICE_NAME_LIST}" "${CHOICE_PURGE}"
@@ -199,7 +199,7 @@ case "${CHOICE_MAIN}" in
   AUTH_SERVER)
     TITLE="Client Authorization - Server"
     MENU="\nAs the onion service operator, manage client authorization to your services"
-    AUTH_TYPE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+    AUTH_TYPE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
     --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 14 60 2 \
     "LIST" "List all clients for specific HiddenService" \
     "EDIT" "Edit an existing authorization" \
@@ -234,13 +234,13 @@ case "${CHOICE_MAIN}" in
         if [ -z "${SERVICE_LIST}" ]; then
           TITLE="Onion Service - INFO"
           MENU="\nNone of your services have client authorization."
-          dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${MENU}" 10 50
+          "${DIALOG_BOX}" --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${MENU}" 10 50
         else
           TITLE="Client Authorization - Server - Deletion"
           MENU="\nUse spacebar to select:"
           [ "${i}" -gt 11 ] && i="11"
           # shellcheck disable=SC2086
-          CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
+          CHOICE_SERVICE="$("${DIALOG_BOX}" --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
           "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
         fi
         if [ -n "${CHOICE_SERVICE}" ]; then
@@ -250,7 +250,7 @@ case "${CHOICE_MAIN}" in
             CLIENT_LIST="$(printf "%s\n%s\n%s\n" "${CLIENT_LIST}" "${CLIENT}" ".")"
           done
           # shellcheck disable=SC2086
-          CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
+          CHOICE_CLIENT="$("${DIALOG_BOX}" --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
           "$((i+8))" 50 2 ${CLIENT_LIST} 3>&1 1>&2 2>&3)"
           [ -n "${CHOICE_CLIENT}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/"${CHOICE_CLIENT}".auth
         fi
@@ -261,7 +261,7 @@ case "${CHOICE_MAIN}" in
         if [ -n "${SERVICE_NAME_LIST}" ]; then
           TITLE="Client Authorization - Server - Generate"
           MENU="Client(s) name(s) delimited by space or/and comma (e.g.: alice, bob, carol)"
-          CLIENT_NAME_LIST="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+          CLIENT_NAME_LIST="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${MENU}" 10 50 3>&1 1>&2 2>&3)"
           CLIENT_NAME_LIST="$(printf %s"${CLIENT_NAME_LIST}" | tr -s ' ' ',' | tr -s ',' ',')"
           if { [ -n "${SERVICE_NAME_LIST}" ] && [ -n "${CLIENT_NAME_LIST}" ]; }; then
@@ -277,11 +277,11 @@ case "${CHOICE_MAIN}" in
         if [ -n "${SERVICE_NAME_LIST}" ]; then
           TITLE="Client Authorization - Server - Pub"
           MENU="Client name (e.g.: alice)"
-          CLIENT_NAME_LIST="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+          CLIENT_NAME_LIST="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${MENU}" 10 50 3>&1 1>&2 2>&3)"
           TITLE="Client Authorization - Server - Pub"
           MENU="Client public key in base32:"
-          CLIENT_PUB_KEY="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+          CLIENT_PUB_KEY="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
           --inputbox "${MENU}" 10 50 3>&1 1>&2 2>&3)"
           if { [ -n "${SERVICE_NAME_LIST}" ] && [ -n "${CLIENT_NAME_LIST}" ] && [ -n "${CLIENT_PUB_KEY}" ]; }; then
             clear_posix
@@ -306,13 +306,13 @@ case "${CHOICE_MAIN}" in
         if [ -z "${SERVICE_LIST}" ]; then
           TITLE="Onion Service - INFO"
           MENU="\nNone of your services have client authorization."
-          dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${MENU}" 10 50
+          "${DIALOG_BOX}" --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${MENU}" 10 50
         else
           TITLE="Client Authorization - Server - Deletion"
           MENU="\nUse spacebar to select:"
           [ "${i}" -gt 11 ] && i="11"
           # shellcheck disable=SC2086
-          CHOICE_SERVICE="$(dialog --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+          CHOICE_SERVICE="$("${DIALOG_BOX}" --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
           "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
         fi
         if [ -n "${CHOICE_SERVICE}" ]; then
@@ -331,11 +331,11 @@ case "${CHOICE_MAIN}" in
           if [ -z "${CLIENT_BUILD_LIST}" ]; then
             TITLE="Onion Service - INFO"
             TEXT_NO_CLIENT="\nNo client exist inside the intersection of the chosen services."
-            dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
+            "${DIALOG_BOX}" --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
           else
             [ "${i}" -gt 11 ] && i="11"
             # shellcheck disable=SC2086
-            CHOICE_CLIENT="$(dialog --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+            CHOICE_CLIENT="$("${DIALOG_BOX}" --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
             "$((i+8))" 50 ${i} ${CLIENT_BUILD_LIST} 3>&1 1>&2 2>&3)"
           fi
           if [ -n "${CHOICE_CLIENT}" ]; then
@@ -357,7 +357,7 @@ case "${CHOICE_MAIN}" in
   AUTH_CLIENT)
     TITLE="Client Authorization - Client"
     MENU="As the onion service client: Would you like to 'add' or 'remove' your authorization?"
-    AUTH_TYPE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+    AUTH_TYPE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
     --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 13 80 4 \
     "LIST" "List all the authorizations inside ClientOnionAuthDir" \
     "EDIT" "Edit your client authorizations" \
@@ -383,12 +383,12 @@ case "${CHOICE_MAIN}" in
         TITLE="Client Onion Auth Directory"
         if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
           TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${DATA_DIR_AUTH}"
-          dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
+          "${DIALOG_BOX}"  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
         else
           MENU="\nUse spacebar to select:"
           [ "${i}" -gt 11 ] && i="11"
           # shellcheck disable=SC2086
-          CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --menu "${MENU}" \
+          CHOICE_ONION_AUTH="$("${DIALOG_BOX}" --title "${TITLE}" --menu "${MENU}" \
           "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
           [ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_AUTH}"/"${CHOICE_ONION_AUTH}".auth_private
         fi
@@ -396,7 +396,7 @@ case "${CHOICE_MAIN}" in
 
       GEN)
         MENU="\nInsert the onion address of the service you want to authenticate:"
-        ONION_HOSTNAME="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+        ONION_HOSTNAME="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
         --inputbox "${MENU}" 9 80 3>&1 1>&2 2>&3)"
         if [ -n "${ONION_HOSTNAME}" ]; then
           clear_posix
@@ -407,10 +407,10 @@ case "${CHOICE_MAIN}" in
 
       PRIV)
         MENU="\nInsert the onion address of the service you want to authenticate:"
-        ONION_HOSTNAME="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+        ONION_HOSTNAME="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
         --inputbox "${MENU}" 9 80 3>&1 1>&2 2>&3)"
         MENU="Insert the client's private key:"
-        CLIENT_PRIV_KEY="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+        CLIENT_PRIV_KEY="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
         --inputbox "${MENU}" 9 80 3>&1 1>&2 2>&3)"
         if { [ -n "${ONION_HOSTNAME}" ] && [ -n "${CLIENT_PRIV_KEY}" ]; }; then
           clear_posix
@@ -429,12 +429,12 @@ case "${CHOICE_MAIN}" in
         TITLE="Onion Service - INFO"
         if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
           TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${DATA_DIR_AUTH}"
-          dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
+          "${DIALOG_BOX}"  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
         else
           MENU="\nUse spacebar to select:"
           [ "${i}" -gt 11 ] && i="11"
           # shellcheck disable=SC2086
-          CHOICE_ONION_AUTH="$(dialog --separate-output --title "${TITLE}" --checklist "${MENU}" \
+          CHOICE_ONION_AUTH="$("${DIALOG_BOX}" --separate-output --title "${TITLE}" --checklist "${MENU}" \
           "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
           [ -n "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
         fi
@@ -463,7 +463,7 @@ case "${CHOICE_MAIN}" in
     service_menu menu "Location"
     if [ -n "${SERVICE_NAME_LIST}" ]; then
       TITLE="Onion-Location"
-      CHOICE_ACTION="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      CHOICE_ACTION="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 11 50 2 \
       "NGINX" "Nginx web server header" \
       "APACHE" "Apache web server header" \
@@ -481,7 +481,7 @@ case "${CHOICE_MAIN}" in
   WEB_SERVER)
     TITLE="Web server - Status"
     MENU="\nWould you like to enable or disable serving a web site?"
-    STATUS="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" 12 50 2 \
+    STATUS="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" 12 50 2 \
     "LIST" "List enabled websites" \
     "ON" "Serve web site" \
     "OFF" "Stop serving web site" \
@@ -506,7 +506,7 @@ case "${CHOICE_MAIN}" in
         MENU="\nUse spacebar to select:"
         [ "${i}" -gt 11 ] && i="11"
         # shellcheck disable=SC2086
-        CHOICE_FOLDER="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
+        CHOICE_FOLDER="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
         "$((i+8))" 50 ${i} ${FOLDER_LIST} 3>&1 1>&2 2>&3)"
         [ -n "${CHOICE_FOLDER}" ] && FOLDER_NAME_LIST="$(printf %s"${CHOICE_FOLDER}" | sed "s/ /,/g")"
         if [ -n "${FOLDER_NAME_LIST}" ]; then
@@ -525,7 +525,7 @@ case "${CHOICE_MAIN}" in
       MENU="\nUse spacebar to select:"
       [ "${i}" -gt 11 ] && i="11"
       # shellcheck disable=SC2086
-      CHOICE_SERVICE="$(dialog --separate-output --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+      CHOICE_SERVICE="$("${DIALOG_BOX}" --separate-output --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
       "$((i+8))" 50 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
       [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
       if [ -n "${SERVICE_NAME_LIST}" ]; then
@@ -540,11 +540,11 @@ case "${CHOICE_MAIN}" in
   VANGUARDS)
     TITLE="Vanguards"
     if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR}"/vanguards)" ]; then
-      CHOICE_ACTION="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      CHOICE_ACTION="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 8 50 2 \
       "INSTALL" "Use Vanguards protections" 3>&1 1>&2 2>&3)"
     else
-      CHOICE_ACTION="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      CHOICE_ACTION="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 10 50 2 \
       "LOGS" "Follow vanguards logs" \
       "UPGRADE" "Set new config and upgrade" \

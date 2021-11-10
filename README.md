@@ -130,8 +130,8 @@ Open the mentioned configuration file:
 TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
-WEBSERVER="nginx" ## [nginx|apache2]
-REQUIREMENTS="tor grep sed openssl basez git qrencode pandoc lynx gzip tar dialog ${WEBSERVER}"
+DIALOG_BOX="dialog" ## [dialog|whiptail]
+REQUIREMENTS="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${DIALOG_BOX} ${WEBSERVER"
 ```
 Edit with sed (use insert option -> `sed -i''`):
 ```sh

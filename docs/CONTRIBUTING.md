@@ -64,7 +64,7 @@ Commands used by this project:
   * [lynx](https://linux.die.net/man/1/lynx)
   * [gzip](https://www.gnu.org/software/gzip/manual/gzip.html)
   * [tar](https://linux.die.net/man/1/tar)
-  * [dialog](https://www.freebsd.org/cgi/man.cgi?dialog)
+  * [dialog](https://www.freebsd.org/cgi/man.cgi?dialog) or [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
 
 * Optionally installed
   * [nginx](https://docs.nginx.com/nginx/admin-guide/)

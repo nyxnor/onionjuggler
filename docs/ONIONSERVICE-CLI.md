@@ -258,7 +258,7 @@ onionservice-cli help
 : Command Line Interface to interact directly with onion services.
 
 **onionservice-tui**
-: Terminal User Interface that wraps the CLI in a dialog menu.
+: Terminal User Interface that wraps the CLI in a dialog box.
 
 **setup.sh**
 : Prepares the environment for tor and download requirements for OnionServices.
