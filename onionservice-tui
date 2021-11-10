@@ -137,7 +137,7 @@ case "${CHOICE_MAIN}" in
           if [ -n "${SERVICE_PORTS}" ]; then
             clear_posix
             # shellcheck disable=SC2086
-            "${ONIONSERVICE_PWD}"/onionservice-cli on unix 3 "${SERVICE_NAME}" ${SERVICE_PORTS}
+            "${ONIONSERVICE_PWD}"/onionservice-cli on "${SERVICE_NAME}" 3 unix ${SERVICE_PORTS}
             printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
           fi
         fi
@@ -151,7 +151,7 @@ case "${CHOICE_MAIN}" in
           --inputbox "${TCP_PORT_MSG}" 13 80 3>&1 1>&2 2>&3)"
           if [ -n "${SERVICE_PORTS}" ]; then
             # shellcheck disable=SC2086
-            "${ONIONSERVICE_PWD}"/onionservice-cli on tcp 3 "${SERVICE_NAME}" ${SERVICE_PORTS}
+            "${ONIONSERVICE_PWD}"/onionservice-cli on "${SERVICE_NAME}" 3 tcp ${SERVICE_PORTS}
             printf %s"${YELLOW}\nPress ENTER to return to the TUI: ${NOCOLOR}" >&2; read -r confirmation
           fi
         fi

@@ -24,8 +24,8 @@ usage(){
 \nUsage: %s${0##*/} COMMAND [REQUIRED] <OPTIONAL>
 \nOptions:
 \n  setup torrc                                                                        restore latest torrc
-\n  on tcp [VERSION] [SERV] [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                  enable a service targeting tcp socket
-\n  on unix [VERSION] [SERV] [VIRTPORT] <VIRTPORT2>                                    enable a service targeting unix socket
+\n  on [SERV] [VERSION] tcp [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                  enable a service targeting tcp socket
+\n  on [SERV] [VERSION] unix [VIRTPORT] <VIRTPORT2>                                    enable a service targeting unix socket
 \n  off [SERV1,SERV2,...] <purge>                                                      disable a service and optionally purge its directory
 \n  list [all-services|SERV1,SERV2,...] <no-qr>                                        see credentials from indicated services
 \n  renew [all-services|SERV1,SERV2,...]                                               renew indicated|all services addresses
@@ -202,9 +202,9 @@ case "${COMMAND}" in
   ##  if TARGET only contains the port number and not the address, will bind to localhost.
   ## VIRTPORT2 and TARGET 2 are optional
   on|ON)
-    SOCKET="${2}"; [ -z "${SOCKET}" ] && error_msg "SOCKET is missing"
+    SERVICE="${2}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
     VERSION="${3}"; [ -z "${VERSION}" ] && error_msg "VERSION is missing"
-    SERVICE="${4}"; [ -z "${SERVICE}" ] && error_msg "SERVICE is missing"
+    SOCKET="${4}"; [ -z "${SOCKET}" ] && error_msg "SOCKET is missing"
     [ "${VERSION}" != "3" ] && error_msg "VERSION is not available" ## wait for v4 to change this
 
     finish_service_activation(){

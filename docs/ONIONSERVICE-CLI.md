@@ -11,8 +11,8 @@ onionservice-cli - dinamically manage your onion services with a POSIX compliant
 
 **onionservice-cli** COMMAND [REQUIRED] <*OPTION*>\
 **onionservice-cli setup torrc**\
-**onionservice-cli on tcp** [VERSION] [SERV] [VIRTPORT] <*TARGET*> <*VIRTPORT2*> <*TARGET2*>\
-**onionservice-cli on unix** [VERSION] [SERV] [VIRTPORT] <*VIRTPORT2*>\
+**onionservice-cli on** [SERV] [VERSION] tcp [VIRTPORT] <*TARGET*> <*VIRTPORT2*> <*TARGET2*>\
+**onionservice-cli on**  [SERV] [VERSION] unix [VIRTPORT] <*VIRTPORT2*>\
 **onionservice-cli off** [SERV1,SERV2,...] <*purge*>\
 **onionservice-cli list** [all-services|SERV1,SERV2,...] <*no-qr*>\
 **onionservice-cli renew** [all-services|SERV1,SERV2,...]\
@@ -90,19 +90,19 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 **setup torrc**
 : Restore the latest torrc backup and reload tor. Every time onionservice-cli is ran, it creates a torrc.bak, with this option, it will copy the backup file to the torrc named file. File(s) modified: torrc.
 
-**on tcp** [SERV] [VIRTPORT] <*TARGET*> <*VIRTPORT2*> <*TARGET2*>
+**on** [SERV] [VIRTPORT] tcp <*TARGET*> <*VIRTPORT2*> <*TARGET2*>
 : Enable an onion service using TCP socket (addr:port) as target. If the TARGET is only the port of it TARGET was not provided, will use the same port as VIRTPORT and bind to 127.0.0.1. TARGET examples: 127.0.0.1:80, 192.168.1.100:80, 140.82.121.3. File(s) modified: torrc.
 ```
-onionservice-cli on tcp 3 ssh 22
-onionservice-cli on tcp 3 ssh 22 22
-onionservice-cli on tcp 3 ssh 22 22 80
-onionservice-cli on tcp 3 ssh 22 22 80 80
-onionservice-cli on tcp 3 ssh 22 127.0.0.1:22
-onionservice-cli on tcp 3 ssh 22 127.0.0.1:22 80
-onionservice-cli on tcp 3 ssh 22 127.0.0.1:22 80 127.0.0.1:80
+onionservice-cli on ssh 3 tcp 22
+onionservice-cli on ssh 3 tcp 22 22
+onionservice-cli on ssh 3 tcp 22 22 80
+onionservice-cli on ssh 3 tcp 22 22 80 80
+onionservice-cli on ssh 3 tcp 22 127.0.0.1:22
+onionservice-cli on ssh 3 tcp 22 127.0.0.1:22 80
+onionservice-cli on ssh 3 stcp 22 127.0.0.1:22 80 127.0.0.1:80
 ```
 
-**on unix** [SERV] [VIRTPORT] <*VIRTPORT2*>
+**on** [SERV] unix [VIRTPORT] <*VIRTPORT2*>
 : Enable an onion service using UNIX socket (unix:path) as target. The TARGET is handled automatically by the script. This method avoids leaking the onion service address to the local network. File(s) modified: torrc.
 ```
 onionservice-cli on unix 3 ssh 22
