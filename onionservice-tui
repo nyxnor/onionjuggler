@@ -34,7 +34,7 @@ service_menu(){
   for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/); do
     i=$((i+1))
     ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)"
-    ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
+    ONION_HOSTNAME_WITHOUT_ONION="${ONION_HOSTNAME%.onion}"
     case "${DIALOG_TYPE}" in
       checklist) SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)";;
       menu) SERVICE_LIST="$(printf "%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME_WITHOUT_ONION}")";;
@@ -44,11 +44,20 @@ service_menu(){
   if [ -n "${SERVICE_LIST}" ]; then
     TITLE="Onion Services - ${COMPL_TITLE}"
     MENU="\nUse spacebar to select"
-    [ "${i}" -gt 11 ] && i=11
-    # shellcheck disable=SC2086
-    CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-    "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
-
+    [ "${i}" -gt 11 ] && i="11"
+    case "${DIALOG_TYPE}" in
+      checklist)
+        # shellcheck disable=SC2086
+        CHOICE_SERVICE="$(dialog --clear --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
+        "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
+      ;;
+      menu)
+        # shellcheck disable=SC2086
+        CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
+        "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
+      ;;
+    esac
+    SERVICE_NAME_LIST=""
     [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
   fi
 }
@@ -61,7 +70,7 @@ MENU="\nUse spacepar to select:"
 BACKTITLE="Onion Services Manager"
 if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/)" ]; then
   CHOICE_MAIN="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-  --ok-label "Select" --no-cancel --menu "${MENU}" 16 80 2 \
+  --ok-label "Select" --no-cancel --menu "${MENU}" 15 80 2 \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
   "ENABLE" "Enable a onion service" \
@@ -229,7 +238,7 @@ case "${CHOICE_MAIN}" in
         else
           TITLE="Client Authorization - Server - Deletion"
           MENU="\nUse spacebar to select:"
-          [ "${i}" -gt 11 ] && i=11
+          [ "${i}" -gt 11 ] && i="11"
           # shellcheck disable=SC2086
           CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
           "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
@@ -301,9 +310,9 @@ case "${CHOICE_MAIN}" in
         else
           TITLE="Client Authorization - Server - Deletion"
           MENU="\nUse spacebar to select:"
-          [ "${i}" -gt 11 ] && i=11
+          [ "${i}" -gt 11 ] && i="11"
           # shellcheck disable=SC2086
-          CHOICE_SERVICE="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+          CHOICE_SERVICE="$(dialog --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
           "$((i+8))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
         fi
         if [ -n "${CHOICE_SERVICE}" ]; then
@@ -324,9 +333,9 @@ case "${CHOICE_MAIN}" in
             TEXT_NO_CLIENT="\nNo client exist inside the intersection of the chosen services."
             dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
           else
-            [ "${i}" -gt 11 ] && i=11
+            [ "${i}" -gt 11 ] && i="11"
             # shellcheck disable=SC2086
-            CHOICE_CLIENT="$(dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+            CHOICE_CLIENT="$(dialog --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
             "$((i+8))" 50 ${i} ${CLIENT_BUILD_LIST} 3>&1 1>&2 2>&3)"
           fi
           if [ -n "${CHOICE_CLIENT}" ]; then
@@ -377,7 +386,7 @@ case "${CHOICE_MAIN}" in
           dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
         else
           MENU="\nUse spacebar to select:"
-          [ "${i}" -gt 11 ] && i=11
+          [ "${i}" -gt 11 ] && i="11"
           # shellcheck disable=SC2086
           CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --menu "${MENU}" \
           "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
@@ -423,9 +432,9 @@ case "${CHOICE_MAIN}" in
           dialog  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
         else
           MENU="\nUse spacebar to select:"
-          [ "${i}" -gt 11 ] && i=11
+          [ "${i}" -gt 11 ] && i="11"
           # shellcheck disable=SC2086
-          CHOICE_ONION_AUTH="$(dialog --title "${TITLE}" --checklist "${MENU}" \
+          CHOICE_ONION_AUTH="$(dialog --separate-output --title "${TITLE}" --checklist "${MENU}" \
           "$((i+8))" 80 ${i} ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
           [ -n "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
         fi
@@ -495,7 +504,7 @@ case "${CHOICE_MAIN}" in
         done
         TITLE="Folder"
         MENU="\nUse spacebar to select:"
-        [ "${i}" -gt 11 ] && i=11
+        [ "${i}" -gt 11 ] && i="11"
         # shellcheck disable=SC2086
         CHOICE_FOLDER="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
         "$((i+8))" 50 ${i} ${FOLDER_LIST} 3>&1 1>&2 2>&3)"
@@ -514,9 +523,9 @@ case "${CHOICE_MAIN}" in
       done
       TITLE="Web Server - Disable Site"
       MENU="\nUse spacebar to select:"
-      [ "${i}" -gt 11 ] && i=11
+      [ "${i}" -gt 11 ] && i="11"
       # shellcheck disable=SC2086
-      CHOICE_SERVICE="$(dialog --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+      CHOICE_SERVICE="$(dialog --separate-output --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
       "$((i+8))" 50 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
       [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
       if [ -n "${SERVICE_NAME_LIST}" ]; then
