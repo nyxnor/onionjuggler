@@ -417,7 +417,7 @@ case "${COMMAND}" in
                 [ -n "${CLIENT_NAME_LIST}" ] && printf %s"Clients  = ${CLIENT_NAME_LIST} (${CLIENT_COUNT})\n"
                 for AUTH in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}/${SERVICE}/authorized_clients/"); do
                   printf %s"\n# File name: ${AUTH}\n"
-                  printf %s"# Content:   $(sudo -u "${TOR_USER}" grep ":descriptor:x25519:" "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/"${AUTH}")\n"
+                  printf %s"# Content:   $(sudo -u "${TOR_USER}" grep "descriptor:x25519:" "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/"${AUTH}")\n"
                 done
                 printf "\n"
               else
