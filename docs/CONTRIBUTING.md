@@ -2,7 +2,7 @@
 
 This project is not perfect and never will be, contributions are welcome. Don't be afraid to correct anyone with you spot something wrong or that can be improved.
 
-There is a TODO list at the end of the README. Those are tasks that will improve the usability and documentation, the difficulty level ranges a lot, so take what fits you.
+See the open issues and find one to contribute if possible.
 
 First, read the [docs](https://github.com/nyxnor/onionservice/tree/main/docs).
 
@@ -14,61 +14,55 @@ Every contribution will licensed accordingly to the [LICENSE](LICENSE), which cu
 
 ### Commands
 
-It must be POSIX compliant, follow the [Shell & Utilities: Detailed Toc](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html), read the POSIX-compliant commands manuals.
-
-Currently there are many command used and there has been a constant development to use less commands.
+Currently there are many commands used and there is a constant development to use less commands, focusing on installing less packages.
 
 Commands used by this project:
 
-* Builtins (POSIX):
-  * [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
-  * [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
-  * [export](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_22)
-  * [id](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/id.html#tag_20_59)
-  * [trap](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28)
-  * [printf](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html#tag_20_94)
-  * [pwd](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pwd.html#tag_20_97)
-  * [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
+* [Shell and Utilities volume of POSIX.1-2017](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html):
+  * Builtins:
+    * [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
+    * [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
+    * [export](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_22)
+    * [id](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/id.html#tag_20_59)
+    * [trap](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28)
+    * [printf](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html#tag_20_94)
+    * [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
+  * Not builtins:
+    * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
+    * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
+    * [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
+    * [cp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cp.html#tag_20_24)
+    * [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html#tag_20_28)
+    * [date](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/date.html#tag_20_30)
+    * [env](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/env.html#tag_20_39)
+    * [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
+    * [ln](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ln.html#tag_20_67)
+    * [ls](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ls.html#tag_20_73)
+    * [man](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/man.html#tag_20_77)
+    * [mkdir](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mkdir.html#tag_20_79)
+    * [mv](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mv.html#tag_20_82)
+    * [rm](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/rm.html#tag_20_111)
+    * [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
+    * [sh](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html#tag_20_117)
+    * [sort](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sort.html#tag_20_119)
+    * [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html#tag_20_125)
+    * [tee](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tee.html#tag_20_127)
+    * [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html#tag_20_132)
+    * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
+    * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
 
-* Not builtins (POSIX):
-  * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
-  * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
-  * [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
-  * [cp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cp.html#tag_20_24)
-  * [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html#tag_20_28)
-  * [date](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/date.html#tag_20_30)
-  * [ln](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ln.html#tag_20_67)
-  * [ls](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ls.html#tag_20_73)
-  * [man](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/man.html#tag_20_77)
-  * [mkdir](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mkdir.html#tag_20_79)
-  * [mv](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mv.html#tag_20_82)
-  * [rm](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/rm.html#tag_20_111)
-  * [sh](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html#tag_20_117)
-  * [sort](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sort.html#tag_20_119)
-  * [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html#tag_20_125)
-  * [tee](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tee.html#tag_20_127)
-  * [touch](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/touch.html#tag_20_130)
-  * [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html#tag_20_132)
-  * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
-  * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
-
-* Installed (most are not defined on POSIX):
-  * [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55) (POSIX)
-  * [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116) (POSIX)
-  * [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
-  * [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html)
-  * [basez](http://www.quarkline.net/basez/)
-  * [git](https://git-scm.com/docs/user-manual)
-  * [qrencode](https://github.com/fukuchi/libqrencode/)
-  * [pandoc](https://pandoc.org/MANUAL.html)
-  * [lynx](https://linux.die.net/man/1/lynx)
-  * [gzip](https://www.gnu.org/software/gzip/manual/gzip.html)
-  * [tar](https://linux.die.net/man/1/tar)
-  * [dialog](https://www.freebsd.org/cgi/man.cgi?dialog) or [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
-
-* Optionally installed
-  * [nginx](https://docs.nginx.com/nginx/admin-guide/)
-  * [apache](https://httpd.apache.org/docs/current/)
+* Installed:
+  * Required:
+    * Main - [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
+    * Backup - [tar](https://linux.die.net/man/1/tar)
+    * Onion authentication - [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html), [basez](http://www.quarkline.net/basez/)
+    * Vanguards - [git](https://git-scm.com/docs/user-manual), [python3-stem](https://stem.torproject.org/download.html), [systemd](https://www.freedesktop.org/software/systemd/man/)
+    * Dialog Box (`TUI`) - [dialog](https://www.freebsd.org/cgi/man.cgi?dialog), [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
+    * Web Server (`web` option on `CLI`) - [nginx](https://docs.nginx.com/nginx/admin-guide/), [apache](https://httpd.apache.org/docs/current/)
+  * Optional (not using them will break minimal functionalities)
+    * Reading markdown - [lynx](https://linux.die.net/man/1/lynx), [pandoc](https://pandoc.org/MANUAL.html) (also creates the manual)
+    * Compressing the manual - [gzip](https://www.gnu.org/software/gzip/manual/gzip.html)
+    * QR encoding - [qrencode](https://github.com/fukuchi/libqrencode/)
 
 ### Builtins
 
@@ -79,8 +73,7 @@ Shell builtins are preferred. To find all builtins:
 ```sh
 curl --tlsv1.3 --proto =https --location -o /tmp/builtins.sh https://raw.githubusercontent.com/shellspec/shellspec/master/contrib/builtins.sh
 #wget --https-only -P /tmp/ https://raw.githubusercontent.com/shellspec/shellspec/master/contrib/builtins.sh
-chmod u+x /tmp/builtins.sh
-/tmp/builtins.sh
+sh /tmp/builtins.sh
 ```
 
 ### External commands limitations

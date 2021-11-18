@@ -3,7 +3,6 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/nyxnor/onionservice/badge/main)](https://www.codefactor.io/repository/github/nyxnor/onionservice/overview/main)
 [![License](https://img.shields.io/github/license/nyxnor/onionservice.svg)](https://github.com/nyxnor/onionservice/blob/main/LICENSE)
 [![GitHub top language](https://img.shields.io/github/languages/top/nyxnor/onionservice.svg)](https://github.com/nyxnor/onionservice/search?l=Shell)
-![Lines of code](https://img.shields.io/tokei/lines/github/nyxnor/onionservice)
 [![Just works](https://img.shields.io/badge/works-on_my_machine-darkred.svg?style=flat)](https://en.wikipedia.org/wiki/Typewriter)
 
 
@@ -34,7 +33,6 @@ Quick link to this repository: https://git.io/onionservice
   * [Operating systems](#operating-systems)
   * [Service managers](#service-managers)
   * [Requirements](#requirements)
-* [To-Do](#to-do)
 * [Credits](#credits)
   * [Inspirations](#inspirations)
   * [Contributors](#contributors)
@@ -160,12 +158,12 @@ The repo is now in your `$PATH`, if you have setup the environment as described 
 
 #### Scripts
 
-There are three ways to call the scripts now, evaluate the advantages and disadvantages:
+There are some ways to call the scripts, evaluate the advantages and disadvantages:
 
-||Command|Dot slash|Specifying shell|
-|-|-------|---------|----------------|
-|Advantages|follows the shebang, can be used from any directory|follows the shebang|can choose the shell|
-|Disadvantages|none|the scripts must be executable, needs to specify path if not in the same directory|ignores the shebang, needs to specify path if not in the same directory|
+||Command|Specifying shell|
+|-|-------|----------------|
+|Advantages|follows the shebang, can be used from any directory|can choose the shell|
+|Disadvantages|the scripts must be executable|ignores the shebang, needs to specify path if not in the same directory|
 |Syntax|`onionservice-cli`|`./onionservice-cli`|`sh onionservice-cli`|
 
 
@@ -176,7 +174,7 @@ Take a loot at the documentation inside `docs` folder. Read:
 * any markdown file formatted on the shell (with `pandoc` and `lynx`):
 ```sh
 ls docs/*.md
-pandoc ${ONIONSERVICE_PWD}/docs/CONTRIBUTING.md | lynx -stdin
+pandoc "${ONIONSERVICE_PWD}"/docs/CONTRIBUTING.md | lynx -stdin
 ```
 
 * the [CLI manual](docs/ONIONSERVICE-CLI.md):
@@ -216,31 +214,21 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionservice/`, Correct: `~/onionservice`).
 
 * Packages:
-  * **tor** >= 0.3.5 (HiddenServiceVersion 3 for onion authentication)
-  * **grep** >=2.0 (general purposes)
-  * **sed** >= 2.0 (general purposes)
-  * **python3-stem** >=1.8.0 (for Vanguards)
-  * **openssl** >= 1.1+ (for onion authentication)
-  * **basez** >= 1.6.2 (for onion authentication)
-  * **git** >= 2.0+ (for cloning the repo and vanguards)
-  * **qrencode** >= 4.1.1 (for encoding the hostname)
-  * **pandoc** (creating the manual and reading markdown)
-  * **lynx** (reading markdown)
-  * **tar** (compressing and extracting the backup)
-  * **gzip** (compressing the manual)
+  * **tor** >= 0.3.5
+  * **grep** >=2.0
+  * **sed** >= 2.0
+  * **python3-stem** >=1.8.0
+  * **openssl** >= 1.1
+  * **basez** >= 1.6.2
+  * **git** >= 2.0
+  * **qrencode** >= 4.1.1
+  * **pandoc**
+  * **lynx**
+  * **tar**
+  * **gzip**
 
 The packages are downloaded when setting up the environment with [setup.sh](setup/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
 The absolute minimum you can go to is `tor grep sed`, and you will be limited to enable, disable and renew services.
-
-## To-do
-
-* change `ls` loops to `find`. See [SC2045](https://github.com/koalaman/shellcheck/wiki/SC2045) and [shell pitfalls](http://mywiki.wooledge.org/BashPitfalls#for_f_in_.24.28ls_.2A.mp3.29)
-* should non env variables be all upercase? Env var should be [distinguishable](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html. https://stackoverflow.com/questions/673055/correct-bash-and-shell-script-variable-capitalization). The .onionrc is a lib and "exports" vars to other scripts.
-* [getopts](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/getopts.html)
-* support for different services managers
-* Bash completion [official package](https://github.com/scop/bash-completion/) and [debian guide](http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2)
-* [Whonix HS Guide](https://www.whonix.org/wiki/Onion_Services#Security_Recommendations). Important: This is not whonix and whonix is more secure as it has different access control over workstation and gateway, use that for maximum security and anonymity. This is just to get the best I can and implement it. Also, Whonix-anon is no Tails, check it out too.
-* check wording on [Whonix/anon-gw-anonymizer](https://github.com/Whonix/anon-gw-anonymizer-config/blob/master/usr/bin/anon-auth-autogen)
 
 ## Credits
 
