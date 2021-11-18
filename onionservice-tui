@@ -19,11 +19,26 @@ i=0
 ###########################
 ######## FUNCTIONS ########
 
-
 ## clear is not a posix command
 clear_posix(){ printf \\033[2J\\033[H\\033[m ; }
 trap 'clear_posix' EXIT
 
+case "${DIALOG_BOX}" in
+  dialog)
+    #YES_FLAG="--yes-label"
+    #NO_FLAG="--no-label"
+    OK_FLAG="--ok-label"
+    CANCEL_FLAG="--cancel-label"
+    NO_CANCEL_FLAG="--no-cancel"
+  ;;
+  whiptail)
+    #YES_FLAG="--yes-button"
+    #NO_FLAG="--no-button"
+    OK_FLAG="--ok-button"
+    CANCEL_FLAG="--cancel-button"
+    NO_CANCEL_FLAG="--nocancel"
+  ;;
+esac
 
 ## $1 [checklist|menu]
 ## $2 complementary title
@@ -31,7 +46,7 @@ service_menu(){
   DIALOG_TYPE="${1}"
   COMPL_TITLE="${2}"
 
-  for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/); do
+  for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"); do
     i=$((i+1))
     ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)"
     ONION_HOSTNAME_WITHOUT_ONION="${ONION_HOSTNAME%.onion}"
@@ -66,11 +81,11 @@ service_menu(){
 ###########################
 
 TITLE="Onion Services - Main Menu"
-MENU="\nUse spacepar to select:"
+MENU="Use enter/spacebar to select:"
 BACKTITLE="Onion Services Manager"
-if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/)" ]; then
+if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}")" ]; then
   CHOICE_MAIN="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-  --ok-label "Select" --no-cancel --menu "${MENU}" 15 80 2 \
+  "${OK_FLAG}" "Select" "${NO_CANCEL_FLAG}" --menu "${MENU}" 15 80 11 \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
   "ENABLE" "Enable a onion service" \
@@ -81,7 +96,7 @@ if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/)" ]; then
   3>&1 1>&2 2>&3)"
 else
   CHOICE_MAIN="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-  --ok-label "Select" --no-cancel --menu "${MENU}" 22 80 2 \
+  "${OK_FLAG}" "Select" "${NO_CANCEL_FLAG}" --menu "${MENU}" 19 80 11 \
   "MAN" "Manual pages for the onionservice-cli" \
   "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
   "ENABLE" "Enable a onion service" \
@@ -115,7 +130,7 @@ case "${CHOICE_MAIN}" in
     MENU="Select a guide:"
     # shellcheck disable=SC2086
     CHOICE_MD="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-    --menu "${MENU}" "$((i+7))" 50 10 ${MD_LIST} 3>&1 1>&2 2>&3)"
+    --menu "${MENU}" "$((i+8))" 45 10 ${MD_LIST} 3>&1 1>&2 2>&3)"
     [ -n "${CHOICE_MD}" ] && { pandoc "${ONIONSERVICE_PWD}"/docs/"${CHOICE_MD}" | lynx -stdin ; }
   ;;
 
@@ -125,7 +140,7 @@ case "${CHOICE_MAIN}" in
     TITLE="Onion Service - Activation"
     MENU="Choose socket type:"
     SOCKET_CHOICE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-    --menu "${MENU}" 9 70 8 \
+    --menu "${MENU}" 10 70 2 \
     "UNIX" "unix:path (more secure)" \
     "TCP" "addr:port (leak onion address to the local network)" \
     3>&1 1>&2 2>&3)"
@@ -198,9 +213,9 @@ case "${CHOICE_MAIN}" in
 
   AUTH_SERVER)
     TITLE="Client Authorization - Server"
-    MENU="\nAs the onion service operator, manage client authorization to your services"
+    MENU="\nAs the onion service operator, manage client authorization to your services:"
     AUTH_TYPE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-    --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 14 60 2 \
+    "${OK_FLAG}" "Select" "${CANCEL_FLAG}" "Cancel" --menu "${MENU}" 15 60 5 \
     "LIST" "List all clients for specific HiddenService" \
     "EDIT" "Edit an existing authorization" \
     "GEN" "Generate a new key pair (public and private key)" \
@@ -221,7 +236,7 @@ case "${CHOICE_MAIN}" in
 
       EDIT)
         i=0
-        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/); do
+        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"); do
           ## only include services that have at least one client
           CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
           if [ -n "${CLIENT_EXIST}" ]; then
@@ -251,7 +266,7 @@ case "${CHOICE_MAIN}" in
           done
           # shellcheck disable=SC2086
           CHOICE_CLIENT="$("${DIALOG_BOX}" --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
-          "$((i+8))" 50 2 ${CLIENT_LIST} 3>&1 1>&2 2>&3)"
+          "$((i+8))" 50 "${i}" ${CLIENT_LIST} 3>&1 1>&2 2>&3)"
           [ -n "${CHOICE_CLIENT}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/"${CHOICE_CLIENT}".auth
         fi
       ;;
@@ -293,7 +308,7 @@ case "${CHOICE_MAIN}" in
 
       DEL)
         i=0
-        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/); do
+        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"); do
           ## only include services that have at least one client
           CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
           if [ -n "${CLIENT_EXIST}" ]; then
@@ -358,7 +373,7 @@ case "${CHOICE_MAIN}" in
     TITLE="Client Authorization - Client"
     MENU="As the onion service client: Would you like to 'add' or 'remove' your authorization?"
     AUTH_TYPE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-    --ok-label "Select" --cancel-label "Cancel" --menu "${MENU}" 13 80 4 \
+    "${OK_FLAG}" "Select" "${CANCEL_FLAG}" "Cancel" --menu "${MENU}" 14 80 5 \
     "LIST" "List all the authorizations inside ClientOnionAuthDir" \
     "EDIT" "Edit your client authorizations" \
     "GEN" "Generate a new key pair (public and private key)" \
@@ -382,7 +397,7 @@ case "${CHOICE_MAIN}" in
         done
         TITLE="Client Onion Auth Directory"
         if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
-          TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty.\n\nYou don't have any '.auth_private' file inside\n${DATA_DIR_AUTH}"
+          TEXT_NO_CLIENT="\nThe folder ClientOnionAuthDir is empty: ${DATA_DIR_AUTH}\n"
           "${DIALOG_BOX}"  --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${TEXT_NO_CLIENT}" 10 50
         else
           MENU="\nUse spacebar to select:"
@@ -464,7 +479,7 @@ case "${CHOICE_MAIN}" in
     if [ -n "${SERVICE_NAME_LIST}" ]; then
       TITLE="Onion-Location"
       CHOICE_ACTION="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 11 50 2 \
+      "${OK_FLAG}" "Select" "${CANCEL_FLAG}" "Exit" --menu "${MENU}" 12 50 3 \
       "NGINX" "Nginx web server header" \
       "APACHE" "Apache web server header" \
       "HTML" "hmtl <meta> http-equiv attribute" \
@@ -481,7 +496,7 @@ case "${CHOICE_MAIN}" in
   WEB_SERVER)
     TITLE="Web server - Status"
     MENU="\nWould you like to enable or disable serving a web site?"
-    STATUS="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" 12 50 2 \
+    STATUS="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" 13 50 3 \
     "LIST" "List enabled websites" \
     "ON" "Serve web site" \
     "OFF" "Stop serving web site" \
@@ -541,11 +556,11 @@ case "${CHOICE_MAIN}" in
     TITLE="Vanguards"
     if [ -z "$(sudo -u "${TOR_USER}" ls "${DATA_DIR}"/vanguards)" ]; then
       CHOICE_ACTION="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 8 50 2 \
+      "${OK_FLAG}" "Select" "${CANCEL_FLAG}" "Exit" --menu "${MENU}" 11 50 1 \
       "INSTALL" "Use Vanguards protections" 3>&1 1>&2 2>&3)"
     else
       CHOICE_ACTION="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-      --ok-label "Select" --cancel-label "Exit" --menu "${MENU}" 10 50 2 \
+      "${OK_FLAG}" "Select" "${CANCEL_FLAG}" "Exit" --menu "${MENU}" 12 50 3 \
       "LOGS" "Follow vanguards logs" \
       "UPGRADE" "Set new config and upgrade" \
       "REMOVE" "Delete the Vanguards directory" \
