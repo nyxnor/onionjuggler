@@ -29,9 +29,10 @@ assignees: ''
 
 **Please complete the following specifications:**
 <!--
- - Operating system and Distribution: [e.g. Debian Bullseye (11) - $ lsb_release -sc]
- - Shell and its Version [e.g. BASH 5.1 - $ echo $SHELL]
- - Last git commit [e.g. 2ca0ed0220a0bcce05d67c13690eac68e07398ff - $ git log -1] -->
+ - Operating system and Distribution: - $ uname -vno
+ - Shell and its Version - $ echo $SHELL]
+ - Last git commit - $ git log -1
+-->
 
 
 **Additional context**
