@@ -92,6 +92,7 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * [**Vanguards**](https://github.com/mikeperry-tor/vanguards) - This addon protects against guard discovery and related traffic analysis attacks. A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
   * [**Unix socket**](https://riseup.net/en/security/network-security/tor/onionservices-best-practices) - Support for enabling an onion service over unix socket to avoid localhost bypasses.
 * **Web server** - Serve files with your hidden service using Nginx or Apache2 web server.
+* **Usability** - There are two dialog boxes compatible with the project, `dialog` and `whiptail`.
 * **Bulk** - Some commands can be bulked with `all-clients`, `all-services`, `[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected. They are specified inside `<>` (e.g. `<VIRTPORT2>`)
 * **Fool-proof** - The script tries its best to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
@@ -128,8 +129,9 @@ Open the mentioned configuration file:
 TOR_USER="debian-tor" ## [debian-tor|tor]
 TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
 PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+WEB_SERVER="nginx" ## [nginx|apache2]
 DIALOG_BOX="dialog" ## [dialog|whiptail]
-REQUIREMENTS="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${DIALOG_BOX} ${WEBSERVER"
+REQUIREMENTS="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${DIALOG_BOX} ${WEB_SERVER}" ## search pkg name for your OS
 ```
 Edit with sed (use insert option -> `sed -i''`):
 ```sh
