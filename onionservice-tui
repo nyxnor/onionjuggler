@@ -60,7 +60,7 @@ service_menu(){
 
   if [ -n "${SERVICE_LIST}" ]; then
     TITLE="Onion Services - ${COMPL_TITLE}"
-    MENU="\nUse spacebar to select"
+    MENU="\nUse spacebar to select:"
     [ "${i}" -gt 11 ] && i="11"
     case "${DIALOG_TYPE}" in
       checklist)
@@ -258,7 +258,14 @@ case "${CHOICE_MAIN}" in
     case "${AUTH_TYPE}" in
 
       LIST)
-        service_menu checklist "Auth Server List"
+        TITLE="Client Authorization - Server - List "
+        MENU="\nUse spacebar to select:"
+        [ "${i}" -gt 11 ] && i="11"
+        # shellcheck disable=SC2086
+        CHOICE_SERVICE="$("${DIALOG_BOX}" --clear --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+        "$((i+8+WHIPTAIL_HEIGHT))" 80 "${i}" ${SERVICE_LIST_CHECKLIST} 3>&1 1>&2 2>&3)"
+        SERVICE_NAME_LIST=""
+        [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
         if [ -n "${SERVICE_NAME_LIST}" ]; then
           clear_posix
           "${ONIONSERVICE_PWD}"/onionservice-cli auth server list "${SERVICE_NAME_LIST}"
