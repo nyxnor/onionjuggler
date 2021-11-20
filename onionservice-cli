@@ -70,7 +70,6 @@ is_integer(){ printf %d "${1}" >/dev/null 2>&1 || error_msg "Not an integer: ${1
 
 ## checks if the TARGET is valid.
 ## Address range from 0.0.0.0 to 255.255.255.255. Port ranges from 0 to 65535
-## accept localhos:port if port is valid.
 ## this is not perfect but it is better than nothing
 is_addr_port(){
   ADDR_PORT="${1}"
@@ -241,7 +240,7 @@ case "${COMMAND}" in
         TARGET_ALREADY_INSERTED_BLOCK=$(sudo tac "${TORRC}" | sudo sed -n "/^HiddenServicePort .*${TARGET}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")
         TARGET_ALREADY_INSERTED_SERVICE=${TARGET_ALREADY_INSERTED_BLOCK##*/}
         sudo grep -q "^HiddenServicePort .* ${TARGET}$" "${TORRC}" && error_msg "TARGET=${TARGET} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}\nINFO: Choose another port or disable the service that is using the wanted port"
-        is_integer "${VIRTPORT}"; is_addr_port "${TARGET}" "TARGET"
+        is_integer "${VIRTPORT}"; is_addr_port "${TARGET}"
         ## Optional
         VIRTPORT2="${7}"
         TARGET2="${8}"
@@ -254,7 +253,7 @@ case "${COMMAND}" in
           TARGET2_ALREADY_INSERTED_BLOCK=$(sudo tac "${TORRC}" | sudo sed -n "/^HiddenServicePort .*${TARGET2}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")
           TARGET2_ALREADY_INSERTED_SERVICE=${TARGET2_ALREADY_INSERTED_BLOCK##*/}
           sudo grep -q "^HiddenServicePort .* ${TARGET2}$" "${TORRC}" && error_msg "TARGET2=${TARGET2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
-          is_integer "${VIRTPORT2}"; is_addr_port "${TARGET2}" "TARGET2"
+          is_integer "${VIRTPORT2}"; is_addr_port "${TARGET2}"
         fi
         sudo cp "${TORRC}" "${TORRC}".bak
         ## delete any old entry for that servive
@@ -320,7 +319,7 @@ case "${COMMAND}" in
               CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
               CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
               ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
-              CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+              CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME%.onion}:descriptor:x25519:${CLIENT_PRIV_KEY}"
               CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
               # Server side configuration
               printf %s"${CLIENT_PUB_KEY_CONFIG}\n" | sudo tee "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
@@ -357,9 +356,8 @@ case "${COMMAND}" in
             [ "${SERVICE}" = "all-services" ] && { create_service_list ; SERVICE="${SERVICE_NAME_LIST}" ; }
             [ "${CLIENT}" = "all-clients" ] && error_msg "Client name cannot be equal to: all-clients"
             CLIENT_PUB_KEY="${6}"
-            if [ "${CLIENT_PUB_KEY}" != "" ]; then
+            if [ -n "${CLIENT_PUB_KEY}" ]; then
               test_service_exists "${SERVICE}"
-              ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
               CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
               printf %s"${CLIENT_PUB_KEY_CONFIG}" | sudo tee "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/"${CLIENT}".auth >/dev/null
               printf "\n# Server side authorization configured\n\n"
@@ -367,7 +365,7 @@ case "${COMMAND}" in
               printf "\n# As you inserted the public key manually, we expect that the client already has the private key\n"
             else
               loop_list auth_server_add "${SERVICE}" "${CLIENT}"
-              #instructions_auth
+              instructions_auth
             fi
             restarting_tor
             printf %s"${GREEN}\n# Done\n${NOCOLOR}"
@@ -464,8 +462,7 @@ case "${COMMAND}" in
               ## save variables
               CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
               CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
-              ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
-              CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+              CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME%.onion}:descriptor:x25519:${CLIENT_PRIV_KEY}"
               CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
               ## Delete pem and keys
               sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
@@ -490,7 +487,7 @@ case "${COMMAND}" in
               printf " sudo systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             else
-              CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+              CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME%.onion}:descriptor:x25519:${CLIENT_PRIV_KEY}"
               printf %s"${CLIENT_PRIV_KEY_CONFIG}\n" | sudo tee "${DATA_DIR_AUTH}"/"${ONION_HOSTNAME}".auth_private >/dev/null
               printf "\n# Client side authorization configured\n"
               printf %s"\n CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
@@ -609,7 +606,7 @@ case "${COMMAND}" in
 
   ## start serving files with a webserver for a specific onion service and specific website folder
   web|WEB)
-    [ -z "${WEBSERVER}" ] && error_msg "WEBSERVER variable is empty on .onionrc"
+    [ -z "${WEB_SERVER}" ] && error_msg "WEB_SERVER variable is empty on .onionrc"
     STATUS="${2}"; [ -z "${STATUS}" ] && error_msg "STATUS is missing"
     SERVICE="${3}"; [ -z "${STATUS}" ] && error_msg "SERVICE is missing"
     case "${STATUS}" in
@@ -622,7 +619,7 @@ case "${COMMAND}" in
         [ "${VIRTPORT}" = "" ] && error_msg "At least one VIRTPORT of the service must be listening on port 80"
         TARGET=${VIRTPORT##* }
         printf %s"# Activating web server for the onion service: ${SERVICE}\n\n"
-        cp -v "${ONIONSERVICE_PWD}"/etc/"${WEBSERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
+        cp -v "${ONIONSERVICE_PWD}"/etc/"${WEB_SERVER}"/sites-available/sample-onion.conf /tmp/"${SERVICE}"-onion.conf
         sed -i'' "s|SERVICE|${SERVICE}|g" /tmp/"${SERVICE}"-onion.conf
         sed -i'' "s|TARGET|${TARGET}|g" /tmp/"${SERVICE}"-onion.conf
         ## If starts with '/', user specified the path, if started with anything else expect a folder inside ${WEBSITE_DIR}
@@ -630,13 +627,13 @@ case "${COMMAND}" in
           /*) sed -i'' "s|FOLDER|${FOLDER}|" /tmp/"${SERVICE}"-onion.conf;;
           *) sed -i'' "s|FOLDER|${WEBSITE_DIR}/${FOLDER}|" /tmp/"${SERVICE}"-onion.conf
         esac
-        sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-available/
-        sudo ln -sfv /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf /etc/"${WEBSERVER}"/sites-enabled/
+        sudo cp -v /tmp/"${SERVICE}"-onion.conf /etc/"${WEB_SERVER}"/sites-available/
+        sudo ln -sfv /etc/"${WEB_SERVER}"/sites-available/"${SERVICE}"-onion.conf /etc/"${WEB_SERVER}"/sites-enabled/
         printf "\n# Web server configuration:\n\n"
         #sudo cat /tmp/"${SERVICE}"-onion.conf
         while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${SERVICE}-onion.conf"
         printf "\n# Reloading web server to apply new configuration\n"
-        case "${WEBSERVER}" in
+        case "${WEB_SERVER}" in
           nginx) sudo nginx -t && sudo nginx -s reload;;
           apache2) sudo apache2 -t && sudo apache -k graceful;;
         esac
@@ -649,12 +646,12 @@ case "${COMMAND}" in
         disable_site(){
           SERVICE="${1}"
           printf %s"\n# Stopping website of the service: ${SERVICE}\n"
-          sudo rm -fv /etc/"${WEBSERVER}"/sites-available/"${SERVICE}"-onion.conf ## for cleanliness
-          sudo rm -fv /etc/"${WEBSERVER}"/sites-enabled/"${SERVICE}"-onion.conf
+          sudo rm -fv /etc/"${WEB_SERVER}"/sites-available/"${SERVICE}"-onion.conf ## for cleanliness
+          sudo rm -fv /etc/"${WEB_SERVER}"/sites-enabled/"${SERVICE}"-onion.conf
         }
         loop_list disable_site "${SERVICE}" 0
         printf "\n# Reloading web server to apply new configuration\n"
-        case "${WEBSERVER}" in
+        case "${WEB_SERVER}" in
           nginx) sudo nginx -t && sudo nginx -s reload;;
           apache2) sudo apache2 -t && sudo apache2 -k graceful;;
         esac
@@ -662,9 +659,9 @@ case "${COMMAND}" in
       ;;
 
       list|LIST)
-        printf %s"# Web server = ${WEBSERVER}\n\n"
+        printf %s"# Web server = ${WEB_SERVER}\n\n"
         printf "# Enabled websites:"
-        SITES_ENABLED=$(sudo ls /etc/"${WEBSERVER}"/sites-enabled/ | sed "s/-onion.conf//g")
+        SITES_ENABLED=$(sudo ls /etc/"${WEB_SERVER}"/sites-enabled/ | sed "s/-onion.conf//g")
         [ -n "${SITES_ENABLED}" ] && printf %s"\n${SITES_ENABLED}\n" || printf " No website enabled\n"
       ;;
 
