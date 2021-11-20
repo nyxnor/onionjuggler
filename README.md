@@ -166,14 +166,14 @@ There are some ways to call the scripts, evaluate the advantages and disadvantag
 |-|-------|----------------|
 |Advantages|follows the shebang, can be used from any directory|can choose the shell|
 |Disadvantages|the scripts must be executable|ignores the shebang, needs to specify path if not in the same directory|
-|Syntax|`onionservice-cli`|`./onionservice-cli`|`sh onionservice-cli`|
+|Syntax|`onionservice-cli`|`sh onionservice-cli`|
 
 
 #### Documentation
 
 Take a loot at the documentation inside `docs` folder. Read:
 
-* any markdown file formatted on the shell (with `pandoc` and `lynx`):
+* any markdown file formatted on the shell:
 ```sh
 ls docs/*.md
 pandoc "${ONIONSERVICE_PWD}"/docs/CONTRIBUTING.md | lynx -stdin
