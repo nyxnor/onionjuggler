@@ -48,7 +48,7 @@ esac
 service_menu(){
   DIALOG_TYPE="${1}"
   COMPL_TITLE="${2}"
-
+  i=0
   for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"); do
     i=$((i+1))
     ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)"
@@ -66,12 +66,12 @@ service_menu(){
       checklist)
         # shellcheck disable=SC2086
         CHOICE_SERVICE="$("${DIALOG_BOX}" --clear --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-        "$((i+8+WHIPTAIL_HEIGHT))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
+        "$((i+8+WHIPTAIL_HEIGHT))" 80 "${i}" ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
       ;;
       menu)
         # shellcheck disable=SC2086
         CHOICE_SERVICE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --"${DIALOG_TYPE}" "${MENU}" \
-        "$((i+8+WHIPTAIL_HEIGHT))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
+        "$((i+8+WHIPTAIL_HEIGHT))" 80 "${i}" ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
       ;;
     esac
     SERVICE_NAME_LIST=""
@@ -222,16 +222,38 @@ case "${CHOICE_MAIN}" in
 
 
   AUTH_SERVER)
-    TITLE="Client Authorization - Server"
-    MENU="\nManage client authorization of your services:"
-    AUTH_TYPE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
-    "${OK_FLAG}" "Select" "${CANCEL_FLAG}" "Cancel" --menu "${MENU}" "$((13+WHIPTAIL_HEIGHT))" 60 5 \
-    "LIST" "List all clients for specific HiddenService" \
-    "EDIT" "Edit an existing authorization" \
-    "GEN" "Generate a new key pair (public and private key)" \
-    "PUB" "Register the client public key" \
-    "DEL" "Remove a client" \
-    3>&1 1>&2 2>&3)"
+    i=0
+    SERVICE_LIST=""
+    for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"); do
+      ## only include services that have at least one client
+      CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
+      if [ -n "${CLIENT_EXIST}" ]; then
+        i=$((i+1))
+        ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)"
+        SERVICE_LIST_MENU="$(printf "%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME%.onion}")"
+        SERVICE_LIST_CHECKLIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME%.onion}" 0)"
+      fi
+    done
+    if [ -z "${i}" ]; then
+      TITLE="Client Authorization - Server"
+      MENU="\nManage client authorization of your services:"
+      AUTH_TYPE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      "${OK_FLAG}" "Select" "${CANCEL_FLAG}" "Cancel" --menu "${MENU}" "$((10+WHIPTAIL_HEIGHT))" 60 2 \
+      "GEN" "Generate a new key pair (public and private key)" \
+      "PUB" "Register the client public key" \
+      3>&1 1>&2 2>&3)"
+    else
+      TITLE="Client Authorization - Server"
+      MENU="\nManage client authorization of your services:"
+      AUTH_TYPE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
+      "${OK_FLAG}" "Select" "${CANCEL_FLAG}" "Cancel" --menu "${MENU}" "$((13+WHIPTAIL_HEIGHT))" 60 5 \
+      "LIST" "List all clients for specific HiddenService" \
+      "EDIT" "Edit an existing authorization" \
+      "GEN" "Generate a new key pair (public and private key)" \
+      "PUB" "Register the client public key" \
+      "DEL" "Remove a client" \
+      3>&1 1>&2 2>&3)"
+    fi
 
     case "${AUTH_TYPE}" in
 
@@ -245,28 +267,12 @@ case "${CHOICE_MAIN}" in
       ;;
 
       EDIT)
-        i=0
-        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"); do
-          ## only include services that have at least one client
-          CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
-          if [ -n "${CLIENT_EXIST}" ]; then
-            i=$((i+1))
-            ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)"
-            SERVICE_LIST="$(printf "%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME%.onion}")"
-          fi
-        done
-        if [ -z "${SERVICE_LIST}" ]; then
-          TITLE="Onion Service - INFO"
-          MENU="\nNone of your services have client authorization."
-          "${DIALOG_BOX}" --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${MENU}" 10 50
-        else
-          TITLE="Client Authorization - Server - Edit"
-          MENU="\nUse spacebar to select:"
-          [ "${i}" -gt 11 ] && i="11"
-          # shellcheck disable=SC2086
-          CHOICE_SERVICE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
-          "$((i+8+WHIPTAIL_HEIGHT))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
-        fi
+        TITLE="Client Authorization - Server - Edit"
+        MENU="\nUse spacebar to select:"
+        [ "${i}" -gt 11 ] && i="11"
+        # shellcheck disable=SC2086
+        CHOICE_SERVICE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
+        "$((i+8+WHIPTAIL_HEIGHT))" 80 "${i}" ${SERVICE_LIST_MENU} 3>&1 1>&2 2>&3)"
         if [ -n "${CHOICE_SERVICE}" ]; then
           SERVICE="${CHOICE_SERVICE}"
           i=0
@@ -319,28 +325,12 @@ case "${CHOICE_MAIN}" in
       ;;
 
       DEL)
-        i=0
-        for SERVICE in $(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"); do
-          ## only include services that have at least one client
-          CLIENT_EXIST="$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/"${SERVICE}"/authorized_clients/ | sed "s/\.auth//g")"
-          if [ -n "${CLIENT_EXIST}" ]; then
-            i=$((i+1))
-            ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_SERVICES}"/"${SERVICE}"/hostname)"
-            SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE}" "${ONION_HOSTNAME%.onion}" 0)"
-          fi
-        done
-        if [ -z "${SERVICE_LIST}" ]; then
-          TITLE="Onion Service - INFO"
-          MENU="\nNone of your services have client authorization."
-          "${DIALOG_BOX}" --backtitle "${BACKTITLE}" --title "${TITLE}" --msgbox "${MENU}" 10 50
-        else
-          TITLE="Client Authorization - Server - Deletion"
-          MENU="\nUse spacebar to select:"
-          [ "${i}" -gt 11 ] && i="11"
-          # shellcheck disable=SC2086
-          CHOICE_SERVICE="$("${DIALOG_BOX}" --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-          "$((i+8+WHIPTAIL_HEIGHT))" 80 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
-        fi
+        TITLE="Client Authorization - Server - Deletion"
+        MENU="\nUse spacebar to select:"
+        [ "${i}" -gt 11 ] && i="11"
+        # shellcheck disable=SC2086
+        CHOICE_SERVICE="$("${DIALOG_BOX}" --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
+        "$((i+8+WHIPTAIL_HEIGHT))" 80 "${i}" ${SERVICE_LIST_CHECKLIST} 3>&1 1>&2 2>&3)"
         if [ -n "${CHOICE_SERVICE}" ]; then
           # shellcheck disable=SC2086
           SERVICE_TOTAL=$(IFS=' '; set -f -- ${CHOICE_SERVICE}; printf %s"${#}")
@@ -362,7 +352,7 @@ case "${CHOICE_MAIN}" in
             [ "${i}" -gt 11 ] && i="11"
             # shellcheck disable=SC2086
             CHOICE_CLIENT="$("${DIALOG_BOX}" --separate-output --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-            "$((i+8+WHIPTAIL_HEIGHT))" 50 ${i} ${CLIENT_BUILD_LIST} 3>&1 1>&2 2>&3)"
+            "$((i+8+WHIPTAIL_HEIGHT))" 50 "${i}" ${CLIENT_BUILD_LIST} 3>&1 1>&2 2>&3)"
           fi
           if [ -n "${CHOICE_CLIENT}" ]; then
             SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
@@ -418,7 +408,7 @@ case "${CHOICE_MAIN}" in
         [ "${i}" -gt 11 ] && i="11"
         # shellcheck disable=SC2086
         CHOICE_ONION_AUTH="$("${DIALOG_BOX}" --title "${TITLE}" --menu "${MENU}" \
-        "$((i+8+WHIPTAIL_HEIGHT))" 80 ${i} ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
+        "$((i+8+WHIPTAIL_HEIGHT))" 80 "${i}" ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
         [ -n "${CHOICE_ONION_AUTH}" ] && sudo "${EDITOR:-vi}" "${DATA_DIR_AUTH}"/"${CHOICE_ONION_AUTH}".auth_private
       ;;
 
@@ -452,7 +442,7 @@ case "${CHOICE_MAIN}" in
         [ "${i}" -gt 11 ] && i="11"
         # shellcheck disable=SC2086
         CHOICE_ONION_AUTH="$("${DIALOG_BOX}" --separate-output --title "${TITLE}" --checklist "${MENU}" \
-        "$((i+8+WHIPTAIL_HEIGHT))" 80 ${i} ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
+        "$((i+8+WHIPTAIL_HEIGHT))" 80 "${i}" ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)"
         [ -n "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
         if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
           clear_posix
@@ -519,7 +509,7 @@ case "${CHOICE_MAIN}" in
         [ "${i}" -gt 11 ] && i="11"
         # shellcheck disable=SC2086
         CHOICE_FOLDER="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "${MENU}" \
-        "$((i+8+WHIPTAIL_HEIGHT))" 50 ${i} ${FOLDER_LIST} 3>&1 1>&2 2>&3)"
+        "$((i+8+WHIPTAIL_HEIGHT))" 50 "${i}" ${FOLDER_LIST} 3>&1 1>&2 2>&3)"
         [ -n "${CHOICE_FOLDER}" ] && FOLDER_NAME_LIST="$(printf %s"${CHOICE_FOLDER}" | sed "s/ /,/g")"
         if [ -n "${FOLDER_NAME_LIST}" ]; then
           clear_posix
@@ -538,7 +528,7 @@ case "${CHOICE_MAIN}" in
       [ "${i}" -gt 11 ] && i="11"
       # shellcheck disable=SC2086
       CHOICE_SERVICE="$("${DIALOG_BOX}" --separate-output --clear --backtitle "${BACKTITLE}" --title "${TITLE}" --checklist "${MENU}" \
-      "$((i+8+WHIPTAIL_HEIGHT))" 50 ${i} ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
+      "$((i+8+WHIPTAIL_HEIGHT))" 50 "${i}" ${SERVICE_LIST} 3>&1 1>&2 2>&3)"
       [ -n "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST="$(printf %s"${CHOICE_SERVICE}" | sed "s/ /,/g")"
       if [ -n "${SERVICE_NAME_LIST}" ]; then
         clear_posix
