@@ -191,12 +191,14 @@ case "${CHOICE_MAIN}" in
     service_menu checklist "Disable"
     if [ -n "${SERVICE_NAME_LIST}" ]; then
       TITLE="Onion Service - Deactivation"
-      MENU="\nDISABLE: Service will be disabled, lines from the torrc deleted but the folder will be kept.
-      \nPURGE: Service will be permanently disabled, all the directory data, including hidden service keys and clients will be deleted permanently (you won't be able to use the same onion address)."
+      MENU="
+DISABLE: Service will be disabled, lines from the torrc deleted but the folder will be kept.
+
+PURGE: Service will be permanently disabled, all the directory data, including hidden service keys and clients will be deleted permanently (you won't be able to use the same onion address)."
       CHOICE_DISABLE="$("${DIALOG_BOX}" --clear --backtitle "${BACKTITLE}" --title "${TITLE}" \
       "${OK_FLAG}" "Select" "${CANCEL_FLAG}" "Cancel" --menu "${MENU}" "$((15+WHIPTAIL_HEIGHT))" 80 2 \
       "DISABLE" "Only disable (remove configuration lines)" \
-      "PURGE" "Disable and Purge HiddenServiceDir permanently (delete onion keys)" \
+      "PURGE" "Disable and Purge HiddenServiceDir (delete onion keys)" \
       3>&1 1>&2 2>&3)"
       if [ -n "${CHOICE_DISABLE}" ]; then
         [ "${CHOICE_DISABLE}" = "PURGE" ] && PURGE="purge"
