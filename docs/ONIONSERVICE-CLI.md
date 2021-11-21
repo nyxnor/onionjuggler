@@ -9,7 +9,7 @@ onionservice-cli - dinamically manage your onion services with a POSIX compliant
 
 # SYNOPSIS
 
-**onionservice-cli** COMMAND [REQUIRED] <*OPTION*>\
+**onionservice-cli** command [REQUIRED] <*OPTION*>\
 **onionservice-cli setup torrc**\
 **onionservice-cli on** [SERV] [VERSION] tcp [VIRTPORT] <*TARGET*> <*VIRTPORT2*> <*TARGET2*>\
 **onionservice-cli on**  [SERV] [VERSION] unix [VIRTPORT] <*VIRTPORT2*>\
@@ -192,19 +192,19 @@ onionservice-cli auth client list
 ```
 
 **web on** [SERV] [FOLDER]
-: Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside $WEBSITE_DIR variable defined on .onionrc. If the path starts with forward slash "/", that path will be considered instead. File(s) modified: /etc/WEB_SERVER/sites-enabled/.
+: Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside $website_dir variable defined on .onionrc. If the path starts with forward slash "/", that path will be considered instead. File(s) modified: /etc/${web_server}/sites-enabled/.
 ```
 onionservice-cli web on nextcloud nextcloud-local-site
 ```
 
 **web off** [SERV]
-: Disable a website from a specific onion service by removing its configuration file from the webserver folder. File(s) modified: /etc/WEB_SERVER/sites-enabled/.
+: Disable a website from a specific onion service by removing its configuration file from the webserver folder. File(s) modified: /etc/${web_server}/sites-enabled/.
 ```
 onionservice-cli web off nextcloud
 ```
 
 **web list**
-: List enabled websites, meaning the confiuration files inside the webserver folder /etc/WEB_SERVER/sites-enabled/. File(s) modified: none.
+: List enabled websites, meaning the confiuration files inside the webserver folder /etc/${web_server}/sites-enabled/. File(s) modified: none.
 ```
 onionservice-cli web list
 ```
@@ -230,7 +230,7 @@ onionservice-cli backup integrate
 **vanguards** [install|logs|upgrade|remove]
 : Manage Vanguards addon using the repository https://github.com/mikeperry-tor/vanguards. This addon protects against guard discovery and related traffic analysis attacks.
 A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
-Installation (git clone) and Upgrade (git pull) are bound to a commit hash set on the .onionrc (git reset --hard VANGUARDS_COMMIT_HASH). Remove will delete the vanguards directory. Logs follow the service logs. When installing, it create a service called vanguards@default, which you can stop and start. File(s) modified: DataDir/vanguards/vanguards.conf.
+Installation (git clone) and Upgrade (git pull) are bound to a commit hash set on the .onionrc (git reset --hard vanguards_commit). Remove will delete the vanguards directory. Logs follow the service logs. When installing, it create a service called vanguards@default, which you can stop and start. File(s) modified: DataDir/vanguards/vanguards.conf.
 ```
 onionservice-cli vanguards install
 onionservice-cli vanguards logs

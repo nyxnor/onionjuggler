@@ -19,6 +19,7 @@ Currently there are many commands used and there is a constant development to us
 Commands used by this project:
 
 * [Shell and Utilities volume of POSIX.1-2017](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html):
+
   * Builtins:
     * [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
     * [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
@@ -27,6 +28,7 @@ Commands used by this project:
     * [trap](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28)
     * [printf](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html#tag_20_94)
     * [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
+
   * Not builtins:
     * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
     * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
@@ -55,10 +57,10 @@ Commands used by this project:
   * Required:
     * Main - [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
     * Backup - [tar](https://linux.die.net/man/1/tar)
-    * Onion authentication - [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html), [basez](http://www.quarkline.net/basez/)
+    * Auth - [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html), [basez](http://www.quarkline.net/basez/)
     * Vanguards - [git](https://git-scm.com/docs/user-manual), [python3-stem](https://stem.torproject.org/download.html), [systemd](https://www.freedesktop.org/software/systemd/man/)
-    * Dialog Box (`TUI`) - [dialog](https://www.freebsd.org/cgi/man.cgi?dialog), [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
-    * Web Server (`web` option on `CLI`) - [nginx](https://docs.nginx.com/nginx/admin-guide/), [apache](https://httpd.apache.org/docs/current/)
+    * Web - [nginx](https://docs.nginx.com/nginx/admin-guide/), [apache](https://httpd.apache.org/docs/current/)
+    * TUI - [dialog](https://www.freebsd.org/cgi/man.cgi?dialog), [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
   * Optional (not using them will break minimal functionalities)
     * Reading markdown - [lynx](https://linux.die.net/man/1/lynx), [pandoc](https://pandoc.org/MANUAL.html) (also creates the manual)
     * Compressing the manual - [gzip](https://www.gnu.org/software/gzip/manual/gzip.html)
@@ -107,12 +109,12 @@ Some checks are not needed for certain files and are cherry picked to be disable
 ./setup/setup.sh -r
 ```
 
-Shellcheck Codes:
+**Shellcheck Codes**:
 * Global: specify on [.shellcheckrc](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-or-more-type-of-error-forever).
 * Applicable to the entire file: [specify the line after the shebang](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-specific-instance-in-a-file)
 * Applicable to certain lines: [specify on the line above the occurence](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-all-instances-in-a-file-044)
 
-Some pitfalls can occur when writing that shellcheck won't recognize, as it doesn't warn about [SC2045](https://github.com/koalaman/shellcheck/wiki/SC2045), even though it should (we need to find a way to circumvent that as `DataDir` is owned by the tor user, not by your normal login user. This is way checking with `-d DIR` or ` -f FILE` doesn't work. A possiblle solution is `sudo -u "${TOR_USER} find ${DATA_DIR_SERVICES} -maxdepth 1 -type d | tail -n +2`)
+Some pitfalls can occur when writing that shellcheck won't recognize, as it doesn't warn about [SC2045](https://github.com/koalaman/shellcheck/wiki/SC2045), even though it should (we need to find a way to circumvent that as `DataDir` is owned by the tor user, not by your normal login user. This is way checking with `-d DIR` or ` -f FILE` doesn't work. A possiblle solution is `sudo -u "${tor_user} find ${data_dir_services} -maxdepth 1 -type d | tail -n +2`)
 
 Read [Bash Pitfalls](http://mywiki.wooledge.org/BashPitfalls) (some rules are applicable to POSIX shells).
 
@@ -132,7 +134,7 @@ Maintainers/Collaborators:
 
 ## Commits
 
-Fork the repository on https://github.com/nyxnor/onionservice/fork
+Fork the repository [here](https://github.com/nyxnor/onionservice/fork)
 
 Clone:
 ```sh

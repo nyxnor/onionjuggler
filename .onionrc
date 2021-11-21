@@ -18,80 +18,75 @@
 ######## VARIABLES ########
 
 ## [ EDIT REQUIRED ] (IF NOT DEBIAN)
-TOR_USER="debian-tor" ## [debian-tor|tor]
-TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
-PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
-WEB_SERVER="nginx" ## [nginx|apache2]
-DIALOG_BOX="dialog" ## [dialog|whiptail]
-REQUIREMENTS="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${DIALOG_BOX} ${WEB_SERVER}" ## search pkg name for your OS
+tor_user="debian-tor" ## [debian-tor|tor]
+tor_service="tor@default.service" ## [tor@default.service|tor.service]
+pkg_mngr_install="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+web_server="nginx" ## [nginx|apache2]
+dialog_box="dialog" ## [dialog|whiptail]
+requirements="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${dialog_box} ${web_server}" ## search pkg name for your OS
 
 ## [ EDIT OPTIONAL ]
-WEBSITE_DIR="/var/www"
+website_dir="/var/www"
 ## Vanguards - https://github.com/mikeperry-tor/vanguards/commits/master
-VANGUARDS_COMMIT_HASH="10942de"
+vanguards_commit="10942de"
 ## Dialog
-DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc"
+DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc" ## ~/.dialogrc
 ## Backup
-SCP_TARGET_USER="remoteUser"
-SCP_TARGET_IP="remoteIp"
-SCP_TARGET_PATH="/home/${SCP_TARGET_USER}/remote/path"
-SCP_TARGET_FULL="${SCP_TARGET_USER}@${SCP_TARGET_IP}:${SCP_TARGET_PATH}" ## '[USER]@[SERVER]:[SERVER_DIR]'
-HS_BK_DIR="${HOME}/tor-hs-backup"
-LOCAL_DOWNLOAD_PATH="${HOME}/tor-hs-backup"
-LOCAL_IP=$(hostname -I | cut -d " " -f1) ## There is no posix way of handling network interfaces
+scp_target_user="remoteUser"
+scp_target_ip="remoteIp"
+scp_target_path="/home/${scp_target_user}/remote/path"
+scp_target_full="${scp_target_user}@${scp_target_ip}:${scp_target_path}" ## '[USER]@[SERVER]:[SERVER_DIR]'
+hs_bk_dir="${HOME}/tor-hs-backup"
+local_dowload_path="${HOME}/tor-hs-backup"
+local_ip=$(hostname -I | cut -d " " -f1) ## There is no posix way of handling network interfaces
 ## tor defaults
-TORRC_ROOT="/etc/tor"
-TORRC="${TORRC_ROOT}/torrc"
-DATA_DIR="/var/lib/tor"
-DATA_DIR_SERVICES="${DATA_DIR}/services"
-DATA_DIR_AUTH="${DATA_DIR}/onion_auth"
-CONTROL_PORT="9051"
+torrc_root="/etc/tor"
+torrc="${torrc_root}/torrc"
+data_dir="/var/lib/tor"
+data_dir_services="${data_dir}/services"
+data_dir_auth="${data_dir}/onion_auth"
+control_port="9051"
 
 ## [ TODO ] ## expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
-BROWSER_HOME="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-browser_${LANG%.*}" ## this is where https://github.com/micahflee/torbrowser-launcher saves it
-BROWSER_DATA_DIR="${BROWSER_HOME}/Browser/TorBrowser/Data/Tor"
-BROWSER_TORRC="${BROWSER_DATA_DIR}/torrc"
-BROWSER_DATA_DIR_AUTH="${BROWSER_DATA_DIR}/onion-auth"
+tor_browser_root="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}" ## this is where https://github.com/micahflee/torbrowser-launcher saves it
+tor_browser_data_dir="${tor_browser_root}/Browser/TorBrowser/Data/Tor"
+tor_browser_torrc="${tor_browser_data_dir}/torrc"
+tor_browser_data_dir_auth="${tor_browser_data_dir}/onion-auth"
 
 ## [ COLORS ]
-BOLD="1" ## [0|1]
-BOLD="${BOLD:-0}" ## If BOLD is empty or unset, don't use bold
-NOCOLOR="\033[0m"
-WHITE="\033[${BOLD};97m"
-BLACK="\033[${BOLD};30m"
-RED="\033[${BOLD};31m"
-GREEN="\033[${BOLD};32m"
-YELLOW="\033[${BOLD};33m"
-BLUE="\033[${BOLD};34m"
-MAGENTA="\033[${BOLD};35m"
-CYAN="\033[${BOLD};36m"
+bold="1" ## [0|1]
+bold="${bold:-0}" ## If bold is empty or unset, don't use bold
+nocolor="\033[0m"
+white="\033[${bold};97m"
+black="\033[${bold};30m"
+red="\033[${bold};31m"
+green="\033[${bold};32m"
+yellow="\033[${bold};33m"
+blue="\033[${bold};34m"
+magenta="\033[${bold};35m"
+cyan="\033[${bold};36m"
 
 
 ###########################
 ######## FUNCTIONS ########
 
 ## install space separated list of packages (e.g.: install_package tor openssl git)
-#command -v "${PACKAGE}"
-#type "${PACKAGE}"
+#command -v "${package}"
+#type "${package}"
 install_package(){
-  for PACKAGE in "${@}"; do
-    command -v "${PACKAGE}" >/dev/null || ${PKG_MANAGER_INSTALL} "${PACKAGE}"
+  for package in "${@}"; do
+    command -v "${package}" >/dev/null || ${pkg_mngr_install} "${package}"
   done
 }
 
-is_service_dir_empty(){
-  [ "$(sudo -u "${TOR_USER}" ls "${DATA_DIR_SERVICES}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
-}
-
-
 ## set correct permissions for tor directories and files
 set_owner_permission(){
-  sudo chown -R "${TOR_USER}:${TOR_USER}" "${DATA_DIR}"
-  sudo chmod 700 "${DATA_DIR}"
+  sudo chown -R "${tor_user}:${tor_user}" "${data_dir}"
+  sudo chmod 700 "${data_dir}"
 
-  sudo chown -R root:root "${TORRC_ROOT}"
-  sudo chmod 755 "${TORRC_ROOT}"
-  sudo chmod 644 "${TORRC}"
+  sudo chown -R root:root "${torrc_root}"
+  sudo chmod 755 "${torrc_root}"
+  sudo chmod 644 "${torrc}"
 }
 
 
@@ -104,14 +99,14 @@ restarting_tor()
     printf "# Getting stuck after several minutes? Press Ctrl-C\n"
     printf "# and to restore the lastest torrc backup run:\n"
     printf "$ onionservice-cli setup torrc\n"
-    sudo systemctl restart "${TOR_SERVICE}"
-    printf %s"${GREEN}# Restarted tor succesfully!\n${NOCOLOR}"
+    sudo systemctl restart "${tor_service}"
+    printf %s"${green}# Restarted tor succesfully!\n${nocolor}"
   elif [ -z "${1}" ]; then
     printf "\n# Reloading tor if active else will restart tor, please be patient.\n"
     printf "# Getting stuck after several minutes? Press Ctrl-C\n"
     printf "# and to restore the lastest torrc backup run:\n"
     printf "$ onionservice-cli setup torrc\n"
-    sudo systemctl reload-or-restart "${TOR_SERVICE}"
-    printf %s"${GREEN}# Reloaded tor succesfully!\n${NOCOLOR}"
+    sudo systemctl reload-or-restart "${tor_service}"
+    printf %s"${green}# Reloaded tor succesfully!\n${nocolor}"
   fi
 }

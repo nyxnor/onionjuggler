@@ -23,6 +23,29 @@
 ##   . ~/."${SHELL##*/}"rc
 ## SET ENV GUIDED (easy)
 
+###################
+#### VARIABLES ####
+: "${tor_user:?}"
+: "${tor_service:?}"
+: "${pkg_mngr_install:?}"
+: "${web_server:?}"
+: "${requirements:?}"
+
+: "${website_dir:?}"
+
+: "${nocolor:?}"
+: "${red:?}"
+: "${green:?}"
+: "${yellow:?}"
+: "${blue:?}"
+
+: "${data_dir:?}"
+: "${data_dir_services:?}"
+: "${data_dir_auth:?}"
+: "${torrc:?}"
+
+###################
+#### FUNCTIONS ####
 
 add_onionservice_to_path(){
   ## add variable to enviroment and export it to call from inside shell scripts
@@ -46,7 +69,7 @@ inform_to_add_onionservice_to_path(){
 
 usage(){
   printf "Configure the environment for OnionService
-\nUsage: %s${0##*/} COMMAND [REQUIRED] <OPTIONAL>
+\nUsage: %s${0##*/} command [REQUIRED] <OPTIONAL>
 \nOptions:
   -s, --setup             setup environment
   -r, --release           prepare for commiting
@@ -94,10 +117,10 @@ case "${action}" in
     . "${ONIONSERVICE_PWD}"/.onionrc
     ## configure
     # shellcheck disable=SC2086
-    install_package ${REQUIREMENTS}
-    sudo usermod -aG "${TOR_USER}" "${USER}"
-    sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_SERVICES}"
-    sudo -u "${TOR_USER}" mkdir -p "${DATA_DIR_AUTH}"
+    install_package ${requirements}
+    sudo usermod -aG "${tor_user}" "${USER}"
+    sudo -u "${tor_user}" mkdir -p "${data_dir_services}"
+    sudo -u "${tor_user}" mkdir -p "${data_dir_auth}"
     restarting_tor
     printf "# Creating man pages\n"
     sudo mkdir -p /usr/local/man/man1
@@ -107,22 +130,22 @@ case "${action}" in
     sudo mv /tmp/onionservice-cli.1.gz /usr/local/man/man1/
     sudo mandb -q -f /usr/local/man/man1/onionservice-cli.1.gz
     ## finish
-    printf %s"${BLUE}# OnionService enviroment is ready\n${NOCOLOR}"
+    printf %s"${blue}# OnionService enviroment is ready\n${nocolor}"
   ;;
 
   -r|--release|release)
     [ -f .onionrc ] && ONIONSERVICE_PWD="${PWD}"
     . "${ONIONSERVICE_PWD}"/.onionrc
     install_package shellcheck
-    printf %s"${BLUE}# Preparing Release\n"
+    printf %s"${blue}# Preparing Release\n"
     printf "# Checking syntax\n" ## quits to warn workflow test failed
     ## Customize severity with -S [error|warning|info|style]
     shellcheck "${ONIONSERVICE_PWD}"/setup/setup.sh "${ONIONSERVICE_PWD}"/.onionrc "${ONIONSERVICE_PWD}"/onionservice-cli "${ONIONSERVICE_PWD}"/onionservice-tui || exit 1
     ## cleanup
     find "${ONIONSERVICE_PWD}" -type f -exec sed -i'' "s/set \-\x//g" {} \; ## should not delete, could destroy lines, just leave empty lines
-    printf %s"${GREEN}# Done!\n${NOCOLOR}"
+    printf %s"${green}# Done!\n${nocolor}"
   ;;
 
-  *) printf %s"${YELLOW}"; usage; printf %s"${NOCOLOR}"
+  *) printf %s"${yellow}"; usage; printf %s"${nocolor}"
 
 esac

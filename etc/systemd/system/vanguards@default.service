@@ -1,14 +1,14 @@
 [Unit]
 Description=Additional protections for Tor onion services
-Wants=TOR_SERVICE
+Wants=tor_service
 After=network.target nss-lookup.target
 
 [Service]
-WorkingDirectory=DATA_DIR/vanguards
-ExecStart=/usr/bin/python3 src/vanguards.py --control_port CONTROL_PORT
-Environment=VANGUARDS_CONFIG=DATA_DIR/vanguards/vanguards.conf
-User=TOR_USER
-Group=TOR_USER
+WorkingDirectory=data_dir/vanguards
+ExecStart=/usr/bin/python3 src/vanguards.py --control_port control_port
+Environment=VANGUARDS_CONFIG=data_dir/vanguards/vanguards.conf
+User=tor_user
+Group=tor_user
 Type=simple
 Restart=always
 

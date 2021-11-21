@@ -126,16 +126,16 @@ Open the mentioned configuration file:
 ```
 ```sh
 ## [ EDIT REQUIRED ] (IF NOT DEBIAN)
-TOR_USER="debian-tor" ## [debian-tor|tor]
-TOR_SERVICE="tor@default.service" ## [tor@default.service|tor.service]
-PKG_MANAGER_INSTALL="sudo apt install -y" ## always use the 'yes' flag to be non interactive
-WEB_SERVER="nginx" ## [nginx|apache2]
-DIALOG_BOX="dialog" ## [dialog|whiptail]
-REQUIREMENTS="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${DIALOG_BOX} ${WEB_SERVER}" ## search pkg name for your OS
+tor_user="debian-tor" ## [debian-tor|tor]
+tor_service="tor@default.service" ## [tor@default.service|tor.service]
+pkg_mngr_install="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+web_server="nginx" ## [nginx|apache2]
+dialog_box="dialog" ## [dialog|whiptail]
+requirements="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${dialog_box} ${web_server}" ## search pkg name for your OS
 ```
 Edit with sed (use insert option -> `sed -i''`):
 ```sh
-sed "s|TOR_USER=.*|TOR_USER=\"tor\"|" .onionrc
+sed "s|tor_user=.*|tor_user=\"tor\"|" .onionrc
 ```
 
 #### Setup the enviroment
