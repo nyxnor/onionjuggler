@@ -25,24 +25,7 @@
 
 ###################
 #### VARIABLES ####
-: "${tor_user:?}"
-: "${tor_service:?}"
-: "${pkg_mngr_install:?}"
-: "${web_server:?}"
-: "${requirements:?}"
 
-: "${website_dir:?}"
-
-: "${nocolor:?}"
-: "${red:?}"
-: "${green:?}"
-: "${yellow:?}"
-: "${blue:?}"
-
-: "${data_dir:?}"
-: "${data_dir_services:?}"
-: "${data_dir_auth:?}"
-: "${torrc:?}"
 
 ###################
 #### FUNCTIONS ####
@@ -115,6 +98,14 @@ case "${action}" in
         fi
     esac
     . "${ONIONSERVICE_PWD}"/.onionrc
+    : "${tor_user:?}"
+    : "${tor_service:?}"
+    : "${requirements:?}"
+    : "${nocolor:?}"
+    : "${blue:?}"
+    : "${data_dir:?}"
+    : "${data_dir_services:?}"
+    : "${data_dir_auth:?}"
     ## configure
     # shellcheck disable=SC2086
     install_package ${requirements}
@@ -136,6 +127,10 @@ case "${action}" in
   -r|--release|release)
     [ -f .onionrc ] && ONIONSERVICE_PWD="${PWD}"
     . "${ONIONSERVICE_PWD}"/.onionrc
+    : "${nocolor:?}"
+    : "${blue:?}"
+    : "${green:?}"
+    : "${yellow:?}"
     install_package shellcheck
     printf %s"${blue}# Preparing Release\n"
     printf "# Checking syntax\n" ## quits to warn workflow test failed
