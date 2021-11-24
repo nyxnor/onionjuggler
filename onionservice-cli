@@ -653,8 +653,10 @@ case "${command}" in
         is_service_dir_empty
         test_service_exists "${service}"
         folder="${4}"; [ -z "${folder}" ] && error_msg "folder is missing"
-        virtport=$(sudo sed -n "/HiddenServiceDir .*\/${service}$/,/^\s*$/{p}" "${torrc}" | grep "HiddenServicePort 80")
-        [ "${virtport}" = "" ] && error_msg "At least one virtport of the service must be listening on port 80"
+        port=$(sudo sed -n "/HiddenServiceDir .*\/${service}$/,/^\s*$/{p}" "${torrc}" | grep "HiddenServicePort 80")
+        [ "${port}" = "" ] && error_msg "At least one virtport of the service must be listening on port 80"
+        only_ports=${port#* }
+        virtport=${only_ports% *}
         target=${virtport##* }
         printf %s"# Activating web server for the onion service: ${service}\n\n"
         cp -v "${ONIONSERVICE_PWD}"/etc/"${web_server}"/sites-available/sample-onion.conf /tmp/"${service}"-onion.conf
@@ -676,7 +678,7 @@ case "${command}" in
           apache2) sudo apache2 -t && sudo apache -k graceful;;
         esac
         #sudo rm -f /tmp/"${service}"-onion.conf
-        printf %s"\n# Address: ${onion_hostname}\n"
+        printf %s"\n# Address: http://${onion_hostname}:${virtport}\n"
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 

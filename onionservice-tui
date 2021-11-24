@@ -261,17 +261,15 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         service_list_checklist="$(printf "%s\n%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}" 0)"
       fi
     done
-    if [ -z "${i}" ]; then
-      title="Client Authorization - Server"
-      menu="\nManage client authorization of your services:"
+    title="Client Authorization - Server"
+    menu="\nManage client authorization of your services:"
+    if [ -z "${service_list_menu}" ]; then
       auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
       "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((10+whiptail_height))" 60 2 \
       "GEN" "Generate a new key pair (public and private key)" \
       "PUB" "Register the client public key" \
       3>&1 1>&2 2>&3)"
     else
-      title="Client Authorization - Server"
-      menu="\nManage client authorization of your services:"
       auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
       "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 60 5 \
       "LIST" "List all clients for specific HiddenService" \
@@ -421,7 +419,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       3>&1 1>&2 2>&3)"
     else
       auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-      "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((14+whiptail_height))" 80 5 \
+      "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 80 5 \
       "LIST" "List all the authorizations inside ClientOnionAuthDir" \
       "EDIT" "Edit your client authorizations" \
       "GEN" "Generate a new key pair (public and private key)" \

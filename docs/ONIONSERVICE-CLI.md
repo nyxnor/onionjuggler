@@ -192,7 +192,7 @@ onionservice-cli auth client list
 ```
 
 **web on** [SERV] [FOLDER]
-: Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside $website_dir variable defined on .onionrc. If the path starts with forward slash "/", that path will be considered instead. File(s) modified: /etc/${web_server}/sites-enabled/.
+: Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside website_dir variable defined on .onionrc. If the path starts with forward slash "/", that path will be considered instead. File(s) modified: /etc/${web_server}/sites-enabled/.
 ```
 onionservice-cli web on nextcloud nextcloud-local-site
 ```
@@ -275,6 +275,11 @@ onionservice-cli help
 **ONIONSERVICE_PWD**
 : OnionService repository path. Used to run the scripts from any directory.
 
+**EDITOR**
+: Use the default editor, else will fallback to Vi.
+
+**DIALOGRC**
+: Source the dialog box run commands file.
 
 # EXIT VALUE
 
