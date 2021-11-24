@@ -657,7 +657,7 @@ case "${command}" in
         [ "${port}" = "" ] && error_msg "At least one virtport of the service must be listening on port 80"
         only_ports=${port#* }
         virtport=${only_ports% *}
-        target=${virtport##* }
+        target=${only_ports##* }
         printf %s"# Activating web server for the onion service: ${service}\n\n"
         cp -v "${ONIONSERVICE_PWD}"/etc/"${web_server}"/sites-available/sample-onion.conf /tmp/"${service}"-onion.conf
         sed -i'' "s|service|${service}|g" /tmp/"${service}"-onion.conf
