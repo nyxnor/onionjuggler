@@ -5,8 +5,8 @@ After=network.target nss-lookup.target
 
 [Service]
 WorkingDirectory=data_dir/vanguards
-ExecStart=/usr/bin/python3 src/vanguards.py --control_port control_port
-Environment=VANGUARDS_CONFIG=data_dir/vanguards/vanguards.conf
+ExecStart=/usr/bin/python3 src/vanguards.py
+Environment=VANGUARDS_CONFIG=torrc_root/vanguards.conf
 User=tor_user
 Group=tor_user
 Type=simple

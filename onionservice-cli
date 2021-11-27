@@ -32,6 +32,7 @@
 : "${data_dir:?}"
 : "${data_dir_services:?}"
 : "${data_dir_auth:?}"
+: "${torrc_root:?}"
 : "${torrc:?}"
 : "${control_port:?}"
 
@@ -849,30 +850,39 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
   ## This addon protects against guard discovery and related traffic analysis attacks.
   ## A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
   ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
-  ##  TODO: hardening (as in $ sytemctl cat tor@default), but got permission denied :unable to read '/run/tor/control.authcookie'
+  ##  TODO: hardening (as in $ sytemctl cat tor@default), but got permission denied: unable to read '/run/tor/control.authcookie'
   vanguards|VANGUARDS)
     action="${2}"; [ -z "${action}" ] && error_msg "action is missing"
 
     vanguards_config(){
-      ## TODO: Better detection if using socket or control ip and port.
-      #sudo sed -i'' "s|^control_socket =.*|control_socket = ${CONTROL_SOCKET}|" "${data_dir}"/vanguards/vanguards.conf
-      #sudo sed -i'' "s|^control_port =.*|control_port = ${control_port}|" "${data_dir}"/vanguards/vanguards.conf
-      sudo -u "${tor_user}" cp "${data_dir}"/vanguards/vanguards-example.conf "${data_dir}"/vanguards/vanguards.conf
-      sudo -u "${tor_user}" sed -i'' "s|^logfile =.*|logfile = /var/log/tor/vanguards.log|" "${data_dir}"/vanguards/vanguards.conf
       sudo cp "${torrc}" "${torrc}".bak
-      grep -q "ControlPort" "${torrc}" || { printf %s"\nControlPort ${control_port}\n\n" | sudo tee -a "${torrc}" >/dev/null; }
-      { grep -q "CookieAuthentication" "${torrc}" || grep -q "HashedControlPassword" "${torrc}"; } || { printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${torrc}"  >/dev/null; }
-      set_owner_permission
+      ## Keep config with the torrc and torsocks.conf
+      sudo cp -v "${data_dir}"/vanguards/vanguards-example.conf "${torrc_root}"/vanguards.conf
+      sudo sed -i'' "s|control_port =.*|control_port = ${control_port}|g" "${torrc_root}"/vanguards.conf
+      sudo sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${torrc_root}"/vanguards.conf
+      ## Control and Authentication methods are needed. Use the easiest to configure if the manual ones are not present, else do nothing.
+      ## Control methods are Port (default: 9051) and Socket (default: /run/tor/control). Prefer port because socket path may differ on different systems https://github.com/mikeperry-tor/vanguards/pull/54#issuecomment-812185302.
+      if ! grep -q "ControlPort ${control_port}" "${torrc}" && ! grep -q "ControlSocket" "${torrc}"; then
+        sudo sed -i'' "s/ControlPort .*/ControlPort ${control_port}/" "${torrc}"
+        grep -q "ControlPort ${control_port}" "${torrc}" || printf %s"\nControlPort ${control_port}\n\n" | sudo tee -a "${torrc}" >/dev/null
+      fi
+      ## Authentication methods are Cookie (default: 0) and HashedPassword, to read the "control_auth_cookie". Prefer cookie because else a password is needed. If any method was already configured, use it.
+      if ! grep -q "CookieAuthentication 1" "${torrc}" && ! grep -q "HashedControlPassword" "${torrc}"; then
+        sudo sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${torrc}"
+        grep -q "CookieAuthentication" "${torrc}" || printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${torrc}"  >/dev/null
+      fi
+      ## Edit vanguards service
       cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
-      sed -i'' "s/tor_service/${tor_service}/g" /tmp/vanguards@default.service
+      sed -i'' "s|torrc_root|${torrc_root}|g" /tmp/vanguards@default.service
+      sed -i'' "s|tor_service|${tor_service}|g" /tmp/vanguards@default.service
       sed -i'' "s|data_dir|${data_dir}|g" /tmp/vanguards@default.service
-      sed -i'' "s/control_port/${control_port}/g" /tmp/vanguards@default.service
-      sed -i'' "s/tor_user/${tor_user}/g" /tmp/vanguards@default.service
+      sed -i'' "s|tor_user|${tor_user}|g" /tmp/vanguards@default.service
       sudo cp -v /tmp/vanguards@default.service /etc/systemd/system/
       printf "\n>>>>>>>>>>>>>>>>>>>\n"
       while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/vanguards@default.service"
       #cat /tmp/vanguards@default.service
       printf ">>>>>>>>>>>>>>>>>>>\n\n"
+      restarting_tor
       sudo systemctl daemon-reload
       sudo systemctl enable vanguards@default.service
       sudo systemctl restart vanguards@default.service
@@ -884,14 +894,13 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       install|INSTALL)
         printf "# Installing Vanguards...\n\n"
         sudo -u "${tor_user}" git clone https://github.com/mikeperry-tor/vanguards.git "${data_dir}/vanguards"
-        sudo chown -R "${tor_user}:${tor_user}" "${data_dir}"
         sudo -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
         vanguards_config
       ;;
 
       upgrade|UPGRADE)
         printf "# Upgrading Vanguards...\n\n"
-        sudo -u "${tor_user}" git -C "${data_dir}"/vanguards pull -p
+        sudo -u "${tor_user}" git -C "${data_dir}"/vanguards pull -p --rebase=false
         sudo -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
         sudo -u "${tor_user}" git -C "${data_dir}"/vanguards show
         vanguards_config
