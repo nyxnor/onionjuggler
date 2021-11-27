@@ -147,11 +147,11 @@ Determine the enviromental variable `${ONIONSERVICE_PWD}` and add the directory 
 For this, you have two options:
 * **Easy**: run from inside the cloned repository and it will use the same path as in`${PWD}`:
 ```sh
-./setup/setup.sh
+./install/setup.sh
 ```
 * **Development**:  set the variable manually using the absolute path without trailing "/" at the end. Favorable for integrating into other projects. Run from any directory (need to specify the path)
 ```sh
-./setup/setup.sh -s -p /PATH/TO/ONIONSERVICE/REPO && . ~/."${SHELL##*/}"rc
+./install/setup.sh -s -p /PATH/TO/ONIONSERVICE/REPO && . ~/."${SHELL##*/}"rc
 ```
 
 ### Usage
@@ -229,7 +229,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **tar**
   * **gzip**
 
-The packages are downloaded when setting up the environment with [setup.sh](setup/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
+The packages are downloaded when setting up the environment with [setup.sh](install/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
 The absolute minimum you can go to is `tor grep sed`, and you will be limited to enable, disable and renew services.
 
 ## Credits

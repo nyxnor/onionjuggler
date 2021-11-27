@@ -45,7 +45,7 @@ torrc="${torrc_root}/torrc"
 data_dir="/var/lib/tor"
 data_dir_services="${data_dir}/services"
 data_dir_auth="${data_dir}/onion_auth"
-control_port="9051"
+control_port="9051" ## only the port, not the host
 
 ## [ TODO ] ## expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
 tor_browser_root="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}" ## this is where https://github.com/micahflee/torbrowser-launcher saves it

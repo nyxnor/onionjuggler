@@ -4,15 +4,14 @@
 ## This file lets you manage your hidden services to all its capability
 ##
 ## SYNTAX
-## ./onionservice-cli command [REQUIRED] <OPTIONL>
+## ./onionservice-cli command [REQUIRED] <OPTIONAL>
 ##
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
-: "${ONIONSERVICE_PWD:?}"
-[ -n "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: ./setup.sh -h\n"; exit 1; }
+: "${ONIONSERVICE_PWD:?ERROR: \${ONIONSERVICE_PWD\} needs to be exported! Run: ./install/setup.sh -h}"
+#[ -n "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: ./install/setup.sh -h\n"; exit 1; }
 . "${ONIONSERVICE_PWD}"/.onionrc
-
 
 ###################
 #### VARIABLES ####
@@ -34,7 +33,7 @@
 : "${data_dir_auth:?}"
 : "${torrc_root:?}"
 : "${torrc:?}"
-: "${control_port:?}"
+: "${control_port:=9051}"
 
 : "${vanguards_commit:?}"
 : "${scp_target_full:?}"
@@ -81,10 +80,6 @@ If your services are unreacheable, restart tor.
 \nReport bugs to: https://github.com/nyxnor/onionservice/issues\n"
   exit 1
 }
-
-
-#[ "${USER}" = "root" ]
-[ "$(id -u)" -eq 0 ] && { printf %s"${red}Do not run with the root user!!!\n${nocolor}" && exit 1; }
 
 
 ## display error message with instructions to use the script correctly.
