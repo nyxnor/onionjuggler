@@ -192,7 +192,7 @@ onionservice-cli auth client list
 ```
 
 **web on** [SERV] [FOLDER]
-: Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside website_dir variable defined on .onionrc. If the path starts with forward slash "/", that path will be considered instead. File(s) modified: /etc/${web_server}/sites-enabled/.
+: Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside website_dir variable defined on .onionrc. If the path starts with forward slash "/" or tilde and slash "~/", that path will be considered instead. File(s) modified: /etc/${web_server}/sites-enabled/.
 ```
 onionservice-cli web on nextcloud nextcloud-local-site
 ```
