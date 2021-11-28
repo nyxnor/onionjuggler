@@ -23,7 +23,7 @@ tor_service="tor@default.service" ## [tor@default.service|tor.service]
 pkg_mngr_install="sudo apt install -y" ## always use the 'yes' flag to be non interactive
 web_server="nginx" ## [nginx|apache2]
 dialog_box="dialog" ## [dialog|whiptail]
-requirements="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${dialog_box} ${web_server}" ## search pkg name for your OS
+requirements="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${dialog_box} ${web_server}" ## search pkg name for your OS on docs/COMPATIBILITY.md
 
 ## [ EDIT OPTIONAL ]
 website_dir="/var/www"
