@@ -210,12 +210,13 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * Unix-like system.
   * any POSIX shells: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `zsh` 3.1.9+, `yash` 2.29+, busybox `ash` 1.1.3+ etc.
   * systemd (for tor and vanguards control) - for now, different services managers is a goal
-  * sudo privileges.
+  * sudo privileges. Doas compatibility is to be expected.
   * blank lines between Hidden Services blocks in the torrc.
   * HiddenServiceDir different path than DataDir - `DataDir/services`.
   * Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionservice/`, Correct: `~/onionservice`).
 
 * Packages:
+  * **sudo**
   * **tor** >= 0.3.5
   * **grep** >=2.0
   * **sed** >= 2.0
@@ -230,7 +231,8 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **gzip**
 
 The packages are downloaded when setting up the environment with [setup.sh](install/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
-The absolute minimum you can go to is `tor grep sed`, and you will be limited to enable, disable and renew services.
+The absolute minimum you can go to is `sudo tor grep sed`, and you will be limited to enable, disable and renew services.
+It is expected that you already have your user in the sudoers configuration file.
 
 ## Credits
 
