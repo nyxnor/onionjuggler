@@ -54,7 +54,7 @@ tor_browser_torrc="${tor_browser_data_dir}/torrc"
 tor_browser_data_dir_auth="${tor_browser_data_dir}/onion-auth"
 
 ## [ COLORS ]
-bold="1" ## [0|1]
+bold="" ## [0|1]
 bold="${bold:-0}" ## If bold is empty or unset, don't use bold
 nocolor="\033[0m"
 white="\033[${bold};97m"

@@ -9,16 +9,20 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
-: "${ONIONSERVICE_PWD:?ERROR: \${ONIONSERVICE_PWD\} needs to be exported! Run: ./install/setup.sh -h}"
-#[ -n "${ONIONSERVICE_PWD}" ] || { printf "\033[1;31mERROR: \${ONIONSERVICE_PWD} needs to be exported first!\033[0m\nRun: ./install/setup.sh -h\n"; exit 1; }
-. "${ONIONSERVICE_PWD}"/.onionrc
+
+## display error message with instructions to use the script correctly.
+error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
 
 ###################
 #### VARIABLES ####
+
+## ${VAR:?STRING} -> Display an error if empty or unset.
+
+: "${ONIONSERVICE_PWD:?$(error_msg "Export \${ONIONSERVICE_PWD} by running:\n\t./install/setup.sh -h")}"
+. "${ONIONSERVICE_PWD}"/.onionrc
+
 : "${tor_user:?}"
 : "${tor_service:?}"
-: "${pkg_mngr_install:?}"
-: "${web_server:?}"
 : "${website_dir:?}"
 
 : "${nocolor:?}"
@@ -39,10 +43,54 @@
 : "${scp_target_full:?}"
 : "${local_ip:?}"
 
+while true; do
+  case "${1}" in
+    on|off|list|renew|web|location|backup|restore|vanguards) command="${1}"; shift;;
+
+    auth-server|auth-client) command="${1%-*}"; host="${1#*-}"; : "${host:?$(error_msg "host is missing")}"; shift;;
+
+    --install|--logs|--upgrade|--remove|--nginx|--apache|--html|--create|--integrate|--no-qr) action="${1#--}"; shift;;
+
+    --on|--off|--list) status="${1#--}"; shift;;
+
+    -s|--service) service="${2:?$(error_msg "service is missing")}"; shift 2;;
+    --service=*) service="${1#*=}"; : "${service:?$(error_msg "service is missing")}"; shift;;
+
+    -c|--client) client="${2:?$(error_msg "client is missing")}"; shift 2;;
+    --client=*) client="${1#*=}"; : "${client:?$(error_msg "client is missing")}"; shift;;
+
+    -o|--onion) onion="${2:?$(error_msg "onion is missing")}"; shift 2;;
+    --onion=*) onion="${1#*-}"; : "${onion:?$(error_msg "onion is missing")}"; shift;;
+
+    --purge) purge="${1#--}"; shift;;
+
+    -v|--version) version="${2:-3}"; shift 2;;
+    --version=*) version="${1#*=}"; : "${version:=3}"; shift;;
+
+    -S|--socket) socket="${2:?$(error_msg "socket is missing")}"; shift 2;;
+    --socket=*) socket="${1#*=}"; : "${socket:?$(error_msg "socket is missing")}"; shift;;
+
+    --port) port="${2:?$(error_msg "port is missing")}"; shift 2;;
+    --port=*) port="${1#*=}"; : "${port:?$(error_msg "port is missing")}"; shift;;
+
+    -F|--folder) folder="${2:?$(error_msg "folder is missing")}"; shift 2;;
+    --folder=*) folder="${1#*=}"; : "${folder:?$(error_msg "folder is missing")}"; shift;;
+
+    --client-priv-key) client_priv_key="${2:?$(error_msg "client_priv_key is missing")}"; shift 2;;
+    --client-priv-key=*) client_priv_key="${1#*=}"; : "${client_priv_key:?$(error_msg "client_priv_key is missing")}"; shift;;
+
+    --client-pub-key) client_pub_key="${2:?$(error_msg "client_pub_key is missing")}"; shift 2;;
+    --client-pub-key=*) client_pub_key="${1#*=}"; : "${client_pub_key:?$(error_msg "client_pub_key is missing")}"; shift;;
+
+    --) shift; break;;
+    *) break;;
+  esac
+done
+
+
 ###################
 #### FUNCTIONS ####
 
-## command INFO
 usage(){
   onion_ascii="${ONIONSERVICE_PWD}/images/onion-ascii-closed.txt"
   if [ -f "${onion_ascii}" ]; then
@@ -51,42 +99,43 @@ usage(){
   fi
 
   printf "Configure an Onion Service
-\nUsage: %s${0##*/} command [REQUIRED] <OPTIONAL>
+\nUsage: %s${0##*/} command [required <args>] <optional>
 \nOptions:
-\n  setup torrc                                                                        restore latest torrc
-\n  on [SERV] [VERSION] tcp [VIRTPORT] <TARGET> <VIRTPORT2> <TARGET2>                  enable a service targeting tcp socket
-\n  on [SERV] [VERSION] unix [VIRTPORT] <VIRTPORT2>                                    enable a service targeting unix socket
-\n  off [SERV1,SERV2,...] <purge>                                                      disable a service and optionally purge its directory
-\n  list [all-services|SERV1,SERV2,...] <no-qr>                                        see credentials from indicated services
-\n  renew [all-services|SERV1,SERV2,...]                                               renew indicated|all services addresses
-\n  auth server on [SERV] [CLIENT] <CLIENT_PUB_KEY>                                    when auth content is especified, use the public key given by the client
-\n  auth server on [all-services|SERV1,SERV2,...] [CLIENT1,CLIENT2,...]                add authorization of client access
-\n  auth server off [all-services|SERV1,SERV2,...] [all-clients|CLIENT1,CLIENT2,...]   remove authorization of client access
-\n  auth server list [all-services|SERV1,SERV2,...]                                    list clients for indicated service
-\n  auth client on [ONION] <CLIENT_PRIV_KEY>                                           add your client key, if no key specified, will create one
-\n  auth client off [ONION1,ONION2,...]                                                remote your client key
-\n  auth client list                                                                   list your keys as a client
-\n  web on [SERV] [FOLDER]                                                             start serving a website for certain service and its folder
-\n  web off [SERV]                                                                     stop serving a website for certain service and its folder
-\n  web list                                                                           list enabled websites
-\n  location [nginx|apache|html] [SERV]                                                onion-location guide, no execution
-\n  backup [create|integrate]                                                          create backup or import backup and integrate the files
-\n  restore torrc                                                                      restore latest torrc backup
-\n  vanguards [install|logs|upgrade|remove]                                            install, upgrade, remove or see logs for vanguards addon
-\n  [-h|-help|--help|help]                                                             display this help message
-\n\n'# Done': You should always see it at the end, else something unexpected occured.
+  on [--service <SERVICE>] [--socket <tcp|unix>] [--port=VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>] <--version 3>
+                                                             enable a service (only TCP requires a target)
+  off [--service <@all|SERV1,SERV2,...>] <--purge>           disable a service and optionally purge its directory
+  list [--service <@all|SERV1,SERV2,...>] <--no-qr>          see credentials from indicated services
+  renew [--service <@all|SERV1,SERV2,...>]                   renew indicated services addresses
+  auth-server --on [--service <SERVICE>] [--client <client>] --client-pub-key <CLIENT_PUB_KEY>
+                                                             add client authorization, optionally add client's public key
+  auth-server --on [--service <@all|SERV1,SERV2,...>] [--client <CLIENT1,CLIENT2,...>]
+                                                             add client authorization
+  auth-server --off [--service <@all|SERV1,SERV2,...>] [--client <@all|CLIENT1,CLIENT2,...>]
+                                                             remove client authorization
+  auth-server --list [--service <@all|SERV1,SERV2,...>]      list authorized clients for indicated service
+  auth-client --on [--onion <ONION>] --client-priv-key <CLIENT_PRIV_KEY>
+                                                             add authorization of client access, optionally add client's private key
+  auth-client --off [--onion <ONION>]                        remove authorization of client access
+  auth-client --list                                         list your keys as a client
+  web --on [--service <SERVICE>] [--folder <SITE_PATH>]      start serving a website for certain service and its folder
+  web --off [--service <SERVICE>]                            stop serving a website for certain service and its folder
+  web --list                                                 list enabled websites
+  location [--nginx|--apache|--html] [--service <SERVICE>]   onion-location guide, no execution
+  backup [--create|--integrate]                              restore latest torrc backup
+  vanguards [--install|--logs|--upgrade|--remove]            install, upgrade, remove or see logs for vanguards addon
+  [-h|--help]                                                display this help message
+
+Description:
+  @all                   all services or clients available
+  SERV1,SERV2...         only specified services
+  CLIENT1,CLIENT2,...    only specified services
+
+'# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs.
 If your services are unreacheable, restart tor.
 \nReport bugs to: https://github.com/nyxnor/onionservice/issues\n"
-  exit 1
-}
 
-
-## display error message with instructions to use the script correctly.
-error_msg(){
-  [ -n "${1}" ] && printf %s"${red}ERROR: ${1}${nocolor}\n"
   exit 1
-  #usage
 }
 
 
@@ -151,7 +200,7 @@ create_service_list(){ service_name_list=$(sudo -u "${tor_user}" ls "${data_dir_
 
 ## loops the parameters
 ## $1 must be the function to loop
-## $2 normally is service, but can be any other parameter (accepts list -> serv1,serv2,...)
+## $2 normally is service, but can be any other parameter (accepts list -> SERV1,SERV2,...)
 ## $3 normally is client, but can be any other (accepts list -> client1,client2...)
 loop_list(){
   for item in $(printf %s"${2}" | tr "," " "); do
@@ -169,14 +218,14 @@ loop_list(){
 ###########################
 ########## MAIN ###########
 sudo sed -i'' 's/\/$//' "${torrc}" ## no config should end with '/' to find exact match.
+service="$(printf %s"${service}" | tr "," " " | tr -s " ")"
 
-command="${1}"
 case "${command}" in
 
   ## disabled the service wrongly and don't remember the ports? no worries, will restore the latest torrc.bak
   ## beaware this only works for the torrc, if you deleted your data directory with command "off" and "purge" option, the keys will not be restored, insteadm new ones will be created
   restore|RESTORE)
-    action="${2}"; [ -z "${action}" ] && error_msg "action is missing"
+    : "${action:?$(usage)}"
     case "${action}" in
 
       torrc|TORRC)
@@ -190,7 +239,7 @@ case "${command}" in
       ;;
 
       *)
-        error_msg "Invalid ${command} argument: ${action}"
+        error_msg "Invalid argument: ${action}"
       ;;
     esac
   ;;
@@ -200,15 +249,15 @@ case "${command}" in
   ## it is raw, services variables should be separated by an empty line per service, else you might get other non-related configuration deleted.
   ## purge is optional, it deletes the <HiddenServiceDir>
   ## will not check if folder or configuration exist, this is cleanup mode
-  ## will not use 'all-services'. Purge is dangerous, purging all service is even more dangerous. Always backup.
+  ## will not use '@all'. Purge is dangerous, purging all service is even more dangerous. Always backup.
   off|OFF)
-    service="${2}"; [ -z "${service}" ] && error_msg "service is missing"
-    purge="${3}" ## optional
+    : "${service:?$(error_msg "service is missing")}"
+    : "${purge}" ## optional
     delete_service(){
       service="${1}"
       purge="${2}"
       ## remove service service data
-      if [ "${purge}" = "purge" ] || [ "${purge}" = "purge" ]; then
+      if [ "${purge}" = "PURGE" ] || [ "${purge}" = "purge" ]; then
         printf %s"${red}\n# Deleted Hidden Service data in ${data_dir_services}/${service}\n${nocolor}"
         sudo rm -rfv "${data_dir_services}"/"${service}"
       else
@@ -237,16 +286,18 @@ case "${command}" in
   ##  if target only contains the port number and not the address, will bind to localhost.
   ## virtport2 and target 2 are optional
   on|ON)
-    service="${2}"; [ -z "${service}" ] && error_msg "service is missing"
-    version="${3}"; [ -z "${version}" ] && error_msg "VERSION is missing"
-    socket="${4}"; [ -z "${socket}" ] && error_msg "socket is missing"
-    [ "${version}" != "3" ] && error_msg "VERSION is not available" ## wait for v4 to change this
+    : "${service:?$(error_msg "service is missing")}"
+    : "${socket:?$(error_msg "socket is missing")}"
+    : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version=${version} is not available" ## wait for v4 to change this
+    : "${port:?$(error_msg "port is missing")}"
+    port="$(printf %s"${port}" | tr "," " " | tr -s " ")"
+    virtport="${port%% *}"
+    : "${virtport:?$(error_msg "virtport is missing")}"
 
     finish_service_activation(){
       ## remove double empty lines
       sudo cat -s "${torrc}" | sudo tee "${torrc}".tmp >/dev/null && sudo mv "${torrc}".tmp "${torrc}"
       restarting_tor
-
       ## show the Hidden Service address
       test_service_exists "${service}"
       printf "\n# Hidden Service information:\n"
@@ -254,7 +305,7 @@ case "${command}" in
       printf %s"Service name    = ${service}\n"
       printf %s"Service address = ${onion_hostname}\n"
       printf %s"Virtual port    = ${virtport}\n"
-      [ -n "${virtport2}" ] && printf %s"Virtual port    = ${virtport2}\n"
+      [ -n "${virtport2}" ] && printf %s"Virtual port 2  = ${virtport2}\n"
       printf %s"${green}\n# Done\n${nocolor}"
     }
 
@@ -262,33 +313,37 @@ case "${command}" in
 
       tcp|TCP)
         ## tor-manual: By default, this option maps the virtual port to the same port on 127.0.0.1 over TCP
-        ## Because of that, this project lets the user leave target="" and write target as 127.0.0.1:virtport
-        ## Also, substitutes localhost:port for 127.0.0.1:port
+        ## Because of that, this project lets the user leave target="" and write target as 127.0.0.1:$virtport
+        ## Also, substitutes localhost:port for 127.0.0.1:$port
         ## This measures avoid using the same local port for different services
         ## grep torrc target to see if port is already in use and by which service, reading the file in reverse
-        ## Required
-        virtport="${5}"; [ -z "${virtport}" ] && error_msg "virtport is missing"
-        target="${6}" ## optional, if null then map to 127.0.0.1:virtport
-        target=${target:-127.0.0.1:${virtport}}
-        TARGET_ADDR=${target%%:*}
-        TARGET_PORT=${target##*:}
-        { [ "${TARGET_ADDR}" = "${TARGET_PORT}" ] || [ "${TARGET_ADDR}" = "localhost" ]; } && target="127.0.0.1:${TARGET_PORT}"
-        TARGET_ALREADY_INSERTED_BLOCK=$(sudo tac "${torrc}" | sudo sed -n "/^HiddenServicePort .*${target}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")
-        TARGET_ALREADY_INSERTED_SERVICE=${TARGET_ALREADY_INSERTED_BLOCK##*/}
-        sudo grep -q "^HiddenServicePort .* ${target}$" "${torrc}" && error_msg "target=${target} is being used by the service: ${TARGET_ALREADY_INSERTED_SERVICE}\nINFO: Choose another port or disable the service that is using the wanted port"
+        ## Sanity check
+        port_mid="${port##*"${virtport}" }"
+        target="${port_mid%% *}"
+        port_mid="${port_mid##*"${target}" }"
+        virtport2="${port_mid%% *}"
+        target2="${port##* }"
+        { [ "${virtport}" = "${virtport2}" ] || [ "${target}" = "${virtport2}" ]; } && virtport2=""
+        [ "${target}" = "${target2}" ] && error_msg "target is the same as target2 -> ${target}=${target2}"
+        : "${target:=127.0.0.1:"${virtport}"}"
+        : "${target2:=127.0.0.1:"${virtport2}"}"
+        ## Standard check for used ports
+        target_addr="${target%%:*}"
+        target_port="${target##*:}"
+        { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
+        target_already_inserted_block="$(sudo tac "${torrc}" | sudo sed -n "/^HiddenServicePort .*${target}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")"
+        target_already_inserted_service="${target_already_inserted_block##*/}"
+        sudo grep -q "^HiddenServicePort .* ${target}$" "${torrc}" && error_msg "target=${target} is being used by the service: ${target_already_inserted_service}\nINFO: Choose another port or disable the service that is using the wanted port."
         is_integer "${virtport}"; is_addr_port "${target}"
         ## Optional
-        virtport2="${7}"
-        target2="${8}"
         if [ -n "${virtport2}" ]; then
-          target2=${target2:-127.0.0.1:${virtport2}}
-          TARGET2_ADDR=${target2%%:*}
-          TARGET2_PORT=${target2##*:}
-          { [ "${TARGET2_ADDR}" = "${TARGET2_PORT}" ] || [ "${TARGET2_ADDR}" = "localhost" ]; } && target2="127.0.0.1:${TARGET2_PORT}"
-          [ "${target}" = "${target2}" ] && error_msg "target is the same as target2"
-          TARGET2_ALREADY_INSERTED_BLOCK=$(sudo tac "${torrc}" | sudo sed -n "/^HiddenServicePort .*${target2}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")
-          TARGET2_ALREADY_INSERTED_SERVICE=${TARGET2_ALREADY_INSERTED_BLOCK##*/}
-          sudo grep -q "^HiddenServicePort .* ${target2}$" "${torrc}" && error_msg "target2=${target2} is being used by the service: ${TARGET2_ALREADY_INSERTED_SERVICE}"
+          ## Standard check for used ports
+          target2_addr="${target2%%:*}"
+          target2_port="${target2##*:}"
+          { [ "${target2_addr}" = "${target2_port}" ] || [ "${target2_addr}" = "localhost" ]; } && target2="127.0.0.1:${target2_port}"
+          target2_already_inserted_block="$(sudo tac "${torrc}" | sudo sed -n "/^HiddenServicePort .*${target2}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")"
+          target2_already_inserted_service="${target2_already_inserted_block##*/}"
+          sudo grep -q "^HiddenServicePort .* ${target2}$" "${torrc}" && error_msg "target2=${target2} is being used by the service: ${target2_already_inserted_service}\nINFO: Choose another port or disable the service that is using the wanted port."
           is_integer "${virtport2}"; is_addr_port "${target2}"
         fi
         sudo cp "${torrc}" "${torrc}".bak
@@ -296,43 +351,48 @@ case "${command}" in
         sudo sed -i'' "/HiddenServiceDir .*\/${service}$/,/^\s*$/{d}" "${torrc}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${torrc}\n"
-        [ -n "${virtport2}" ] && printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\nHiddenServicePort ${virtport2} ${target2}\n\n" | sudo tee -a "${torrc}"
-        [ -n "${virtport2}" ] || printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\n\n" | sudo tee -a "${torrc}"
+        if [ -n "${virtport2}" ]; then
+          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\nHiddenServicePort ${virtport2} ${target2}\n\n" | sudo tee -a "${torrc}"
+        else
+          [ -n "${virtport2}" ] || printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\n\n" | sudo tee -a "${torrc}"
+        fi
         finish_service_activation
       ;;
 
       unix|UNIX)
-        virtport="${5}"; [ -z "${virtport}" ] && error_msg "virtport is missing"
-        virtport2="${6}"; [ -n "${virtport2}" ] && is_integer "${virtport2}" ## var not mandatory
         is_integer "${virtport}"
+        virtport2="${port##* }"
+        [ "${virtport}" = "${virtport2}" ] && virtport2=""
+        [ -n "${virtport2}" ] && is_integer "${virtport2}" ## var not mandatory
         sudo cp "${torrc}" "${torrc}".bak
         ## delete any old entry for that servive
         sudo sed -i'' "/HiddenServiceDir .*\/${service}$/,/^\s*$/{d}" "${torrc}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${torrc}\n"
         unix_path="unix:/var/run/${service}-onion"
-        [ -n "${virtport2}" ] && printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}.sock\n\n" | sudo tee -a "${torrc}"
-        [ -n "${virtport2}" ] || printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\n\n" | sudo tee -a "${torrc}"
+        if [ -n "${virtport2}" ]; then
+          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}.sock\n\n" | sudo tee -a "${torrc}"
+        else
+          [ -n "${virtport2}" ] || printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\n\n" | sudo tee -a "${torrc}"
+        fi
         finish_service_activation
       ;;
 
       *)
-        error_msg "Invalid '${command}' argument: socket=${socket}"
+        error_msg "Invalid argument: socket=${socket}"
     esac
   ;;
 
 
   ## manage client authorization server side (HiddenServiceDir/authorized_clients/) or client side (ClientOnionAuthDir)
   auth|AUTH)
-    host="${2}"; [ -z "${host}" ] && error_msg "host is missing"
-    status="${3}"; [ -z "${status}" ] && error_msg "status is missing"
+    : "${host:?$(error_msg "host is missing")}"
+    : "${status:?$(error_msg "status is missing")}"
     case "${host}" in
 
       server|SERVER)
         is_service_dir_empty
-        service="${4}"
-        client="${5}"
-        [ -z "${service}" ] && error_msg "service is missing"
+        : "${service:?$(error_msg "service is missing")}"
         case "${status}" in
 
           ## as the onion service operator, make your onion authenticated by generating a pair or public and private keys,
@@ -340,6 +400,7 @@ case "${command}" in
           ## the client private key is shown in the screen and the key file deleted
           ## the onion service operator should send the private key for the desired client
           on|ON)
+            : "${client:?$(error_msg "client is missing")}"
             #printf "\n# Generating keys to access onion service (Client Authorization) ...\n"
             auth_server_add(){
               service="${1}"
@@ -352,7 +413,7 @@ case "${command}" in
               ## save variables
               client_pub_key=$(cat /tmp/k1.pub.key)
               client_priv_key=$(cat /tmp/k1.prv.key)
-              onion_hostaname_without_onion=${onion_hostname%.onion}
+              onion_hostaname_without_onion="${onion_hostname%.onion}"
               client_priv_key_config="${onion_hostname%.onion}:descriptor:x25519:${client_priv_key}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
               # Server side configuration
@@ -386,10 +447,8 @@ case "${command}" in
               printf " sudo systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             }
-            [ -z "${service}" ] && error_msg "service is missing"
-            [ "${service}" = "all-services" ] && { create_service_list ; service="${service_name_list}" ; }
-            [ "${client}" = "all-clients" ] && error_msg "Client name cannot be equal to: all-clients"
-            client_pub_key="${6}"
+            [ "${service}" = "@all" ] && { create_service_list ; service="${service_name_list}" ; }
+            [ "${client}" = "@all" ] && error_msg "Client name cannot be @all, it is a restricted wildcard for referring to all clients, not a name per se."
             if [ -n "${client_pub_key}" ]; then
               test_service_exists "${service}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
@@ -408,29 +467,29 @@ case "${command}" in
           ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
           ## if no clients are present, the service will be available to anyone that has the onion service address
           off|OFF)
-            { [ "${service}" = "" ] || [ "${client}" = "" ] ; } && error_msg "service name or client name is/are missing"
+            : "${client:?$(error_msg "client is missing")}"
             auth_server_remove_clients(){
               service="${1}"
               client="${2}"
               printf %s"Service  = ${service}\n"
-              if [ "${client}" = "all-clients" ]; then
-                printf "Client   = all-clients\n\n"
-                sudo rm -f "${data_dir_services}"/"${service}"/authorized_clients/*.auth
+              if [ "${client}" = "@all" ]; then
+                printf "Client   = @all\n\n"
+                sudo rm -fv "${data_dir_services}"/"${service}"/authorized_clients/*.auth
               else
                 printf %s"Client   = ${client}\n\n"
-                sudo rm -f "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth
+                sudo rm -fv "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth
               fi
             }
             [ -z "${service}" ] && error_msg "service is missing"
-            if [ "${service}" = "all-services" ]; then
+            if [ "${service}" = "@all" ]; then
               printf "# Removing client authorization for all services.\n"
               create_service_list; service="${service_name_list}"
-              [ "${client}" = "all-clients" ] \
+              [ "${client}" = "@all" ] \
               && printf "# Removing client authorization for all clients.\n# The service is now accessible for anyone with the onion address.\n\n" \
               || printf "# If any client remains, the service will still be authenticated.\n\n"
             else
               printf %s"# Removing client authorization for the services: ${service}\n"
-              [ "${client}" = "all-clients" ] \
+              [ "${client}" = "@all" ] \
               && printf "# Removing client authorization for all clients.\n# The service is now accessible for anyone with the onion address.\n\n" \
               || printf "# If any client remains, the service will still be authenticated.\n\n"
             fi
@@ -457,19 +516,18 @@ case "${command}" in
               fi
             }
             printf "# Authorized clients for Hidden Services\n"
-            [ "${service}" = "all-services" ] && { create_service_list; service="${service_name_list}"; }
+            [ "${service}" = "@all" ] && { create_service_list; service="${service_name_list}"; }
             loop_list auth_server_list "${service}"
             printf %s"${green}\n# Done\n${nocolor}"
           ;;
 
           *)
-            error_msg "Invalid '${command} ${host}' argument: status=${status}"
+            error_msg "Invalid argument: status=${status}"
         esac
       ;;
 
 
       client|CLIENT)
-        onion_hostname="${4}"
         case "${status}" in
 
           ## as the onion service client, add a key given by the onion service operator to authenticate yourself inside ClientOnionAuthDir
@@ -478,17 +536,16 @@ case "${command}" in
           ## use the onion hostname as the file name, this avoid overriding the file by mistake and it indicates outside of the file for which service it refers to (of course it is written inside also)
           ## adding to Tor Browser automatically not supported yet
           on|ON)
-            [ -z "${onion_hostname}" ] && error_msg "onion_hostname is missing"
-            client_priv_key="${5}" ## optional
-            onion_hostaname_without_onion=${onion_hostname%.onion}
-            suffix_onion=${onion_hostname##*.}
+            : "${onion:?$(error_msg "onion is missing")}"
+            onion_hostaname_without_onion=${onion%.onion}
+            suffix_onion=${onion##*.}
             [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
-            [ "${#onion_hostname}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#onion_hostname} is different than 62 characters (<56-char-base32>.onion)"
+            [ "${#onion}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#onion} is different than 62 characters (<56-char-base32>.onion)"
             [ "${suffix_onion}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
             sudo cp "${torrc}" "${torrc}".bak
             grep -q "ClientOnionAuthDir" "${torrc}" && { printf %s"\nClientOnionAuthDir ${data_dir_auth}\n\n" | sudo tee -a "${torrc}"; }
             sudo -u "${tor_user}" mkdir -p "${data_dir_auth}"
-            if [ "${client_priv_key}" = "" ]; then
+            if [ -z "${client_priv_key}" ]; then
               ## Generate pem and derive pub and priv keys
               openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
               grep -v "PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
@@ -496,12 +553,12 @@ case "${command}" in
               ## save variables
               client_pub_key=$(cat /tmp/k1.pub.key)
               client_priv_key=$(cat /tmp/k1.prv.key)
-              client_priv_key_config="${onion_hostname%.onion}:descriptor:x25519:${client_priv_key}"
+              client_priv_key_config="${onion%.onion}:descriptor:x25519:${client_priv_key}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
               ## Delete pem and keys
               sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
               # Client side configuration
-              printf %s"${client_priv_key_config}\n" | sudo tee "${data_dir_auth}"/"${onion_hostname}".auth_private >/dev/null
+              printf %s"${client_priv_key_config}\n" | sudo tee "${data_dir_auth}"/"${onion}".auth_private >/dev/null
               printf "# Client side authorization configured\n"
               printf "# This is your private key, keep it safe, keep it hidden:\n\n"
               printf %s" client_priv_key=${client_priv_key}\n"
@@ -510,19 +567,19 @@ case "${command}" in
               ## Server side configuration
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
               printf "# Send the public key and instructions to the onion service operator\n\n"
-              printf %s" onion_hostname=${onion_hostname}\n"
+              printf %s" onion=${onion}\n"
               printf %s" client_pub_key=${client_pub_key}\n"
               printf %s" client_pub_key_config=descriptor:x25519:${client_pub_key}\n\n"
               printf "# Create a file with the client name (eg. alice) using the suffix '.auth' (eg. alice.auth) inside the folder\n"
-              printf %s"#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${onion_hostname}\n\n"
+              printf %s"#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${onion}\n\n"
               printf %s" printf '${client_pub_key_config}' | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
               printf "# Reload tor\n\n"
               printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
               printf " sudo systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             else
-              client_priv_key_config="${onion_hostname%.onion}:descriptor:x25519:${client_priv_key}"
-              printf %s"${client_priv_key_config}\n" | sudo tee "${data_dir_auth}"/"${onion_hostname}".auth_private >/dev/null
+              client_priv_key_config="${onion%.onion}:descriptor:x25519:${client_priv_key}"
+              printf %s"${client_priv_key_config}\n" | sudo tee "${data_dir_auth}"/"${onion}".auth_private >/dev/null
               printf "\n# Client side authorization configured\n"
               printf %s"\n client_priv_key_config=${client_priv_key_config}\n"
               printf "\n# As you inserted the private key manually, we expect that you have already sent/received the public key to/from the onion service operator\n"
@@ -532,14 +589,14 @@ case "${command}" in
 
           ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
           off|OFF)
+            : "${onion:?$(error_msg "onion is missing")}"
             auth_client_remove  (){
-              onion_hostname="${1}"
-              printf %s"\n# Removing ${data_dir_auth}/${onion_hostname}.auth_private"
-              sudo rm -fv "${data_dir_auth}"/"${onion_hostname}".auth_private
+              onion="${1}"
+              printf %s"\n# Removing ${data_dir_auth}/${onion}.auth_private"
+              sudo rm -fv "${data_dir_auth}"/"${onion}".auth_private
             }
-            [ -z "${onion_hostname}" ] && error_msg "onion_hostname is missing"
             if [ "$(sudo -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
-              loop_list auth_client_remove "${onion_hostname}"
+              loop_list auth_client_remove "${onion}"
               printf "\n# Client side authorization removed\n"
               printf %s"${green}\n# Done\n${nocolor}"
             else
@@ -562,22 +619,23 @@ case "${command}" in
           ;;
 
           *)
-            error_msg "Invalid '${command} ${host}' argument: status=${status}"
+            error_msg "Invalid argument: status=${status}"
         esac
       ;;
 
       *)
-        error_msg "Invalid '${command}' argument: host=${host}"
+        error_msg "Invalid argument: host=${host}"
     esac
   ;;
 
 
   ## change service hostname by deleting its ed25519 pub and priv keys.
   ## <HiddenServiceDir>/authorized_clients/ because the would need to update their '.auth_private' file with the new onion address anyway and for security reasons.
-  ## all-services will read through all services folders and execute the commands.
+  ## @all will read through all services folders and execute the commands.
+  ## TODO -> Loop services, save hostname, reload tor once and show results.
   renew|RENEW)
     is_service_dir_empty
-    service="${2}"; [ -z "${service}" ] && error_msg "service is missing"
+    : "${service:?$(error_msg "service is missing")}"
     renew_service_address(){
       service="${1}"
       test_service_exists "${service}"
@@ -597,58 +655,54 @@ case "${command}" in
         printf %s"\nOld = ${old_hostname}\n"
         printf %s"New = ${onion_hostname}\n"
         printf "\n# Note: Remember to notify your clients about the new hostname and update their '.auth_private' files accordingly.\n"
-        printf "\nService address QR encoded format:\n"
-        qrencode -m 2 -t ANSIUTF8 "${new_hostname}"
       else
         printf %s"${red}# Failed to renew service: ${service}\n${nocolor}"
       fi
       printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
-    [ "${service}" = "all-services" ] && { create_service_list; service="${service_name_list}"; }
+    [ "${service}" = "@all" ] && { create_service_list; service="${service_name_list}"; }
     loop_list renew_service_address "${service}"
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
 
   ## show all the necessary information to access the service such as the hostname and the QR encoded hostname to scan for Tor Browser Mobile
   ## show the clients names and quantity, as well as the service torrc's block
-  ## all-services will read through all services folders and execute the commands
+  ## @all will read through all services folders and execute the commands
   list|LIST)
     is_service_dir_empty
-    service="${2}"; [ -z "${service}" ] && error_msg "service is missing"
+    : "${service:?$(error_msg "service is missing")}"
     get_service_info(){
       service="${1}"
-      no_qr="${2}"
       test_service_exists "${service}"
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
       create_client_list "${service}"
-      [ "${no_qr}" = "no-qr" ] || { printf "\n"; qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"; }
+      [ "${action}" = "no-qr" ] || { printf "\n"; qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"; }
       printf %s"\nAddress  = ${onion_hostname}\n"
       printf %s"Service  = ${service}\n"
       [ -n "${client_name_list}" ] && printf %s"Clients  = ${client_name_list} (${client_count})\n"
-      if sudo grep -qc "^HiddenServiceDir .*/${service}$" "${torrc}"; then
+      if sudo grep -q "^HiddenServiceDir .*/${service}$" "${torrc}"; then
         printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${service}$/,/^\s*$/{p}" "${torrc}" | sed "/^[[:space:]]*$/d"
       else
         printf "Status   = inactive\n"
       fi
       printf "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
-    no_qr="${3}"
-    [ "${service}" = "all-services" ] && { create_service_list; service="${service_name_list}"; }
-    loop_list get_service_info "${service}" "${no_qr}"
+    [ "${service}" = "@all" ] && { create_service_list; service="${service_name_list}"; }
+    loop_list get_service_info "${service}"
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
 
   ## start serving files with a webserver for a specific onion service and specific website folder
   web|WEB)
-    [ -z "${web_server}" ] && error_msg "web_server variable is empty on .onionrc"
-    status="${2}"; [ -z "${status}" ] && error_msg "status is missing"
-    service="${3}"; [ -z "${status}" ] && error_msg "service is missing"
+    : "${web_server:?$(error_msg "web_server is missing")}"
+    : "${status:?$(error_msg "status is missing")}"
     case "${status}" in
 
       on|ON)
         is_service_dir_empty
+        : "${service:?$(error_msg "service is missing")}"
+        : "${folder:?$(error_msg "folder is missing")}"
         test_service_exists "${service}"
-        folder="${4}"; [ -z "${folder}" ] && error_msg "folder is missing"
         port=$(sudo sed -n "/HiddenServiceDir .*\/${service}$/,/^\s*$/{p}" "${torrc}" | grep "HiddenServicePort" | tail -n 1)
         only_ports=${port#* }
         virtport=${only_ports% *}
@@ -678,6 +732,7 @@ case "${command}" in
       ;;
 
       off|OFF)
+        : "${service:?$(error_msg "service is missing")}"
         disable_site(){
           service="${1}"
           printf %s"\n# Stopping website of the service: ${service}\n"
@@ -701,7 +756,7 @@ case "${command}" in
       ;;
 
       *)
-        error_msg "Invalid '${command}' argument: ${status}"
+        error_msg "Invalid argument: ${status}"
     esac
   ;;
 
@@ -710,8 +765,8 @@ case "${command}" in
   ## https://matt.traudt.xyz/posts/website-setup/
   location|LOCATION)
     is_service_dir_empty
-    action="${2}"; [ -z "${action}" ] && error_msg "action is missing"
-    service="${3}"; [ -z "${service}" ] && error_msg "service is missing"
+    : "${action:?$(usage)}"
+    : "${service:?$(error_msg "service is missing")}"
     test_service_exists "${service}"
 
     start_location(){
@@ -757,13 +812,13 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ;;
 
       *)
-        error_msg "Invalid '${command}' argument: ${action}"
+        error_msg "Invalid argument: ${action}"
     esac
   ;;
 
 
   backup|BACKUP)
-    action="${2}"; [ -z "${action}" ] && error_msg "action is missing"
+    : "${action:?$(usage)}"
     case "${action}" in
 
       ## restore backup
@@ -836,7 +891,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ;;
 
       *)
-        error_msg "Invalid '${command}' argument: ${action}"
+        error_msg "Invalid argument: ${action}"
     esac
   ;;
 
@@ -846,7 +901,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
   ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
   ##  TODO: hardening (as in $ sytemctl cat tor@default), but got permission denied: unable to read '/run/tor/control.authcookie'
   vanguards|VANGUARDS)
-    action="${2}"; [ -z "${action}" ] && error_msg "action is missing"
+    : "${action:?$(usage)}"
 
     vanguards_config(){
       sudo cp "${torrc}" "${torrc}".bak
@@ -911,7 +966,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ;;
 
       *)
-        error_msg "Invalid ${command} argument: ${action}"
+        error_msg "Invalid argument: ${action}"
     esac
   ;;
 
