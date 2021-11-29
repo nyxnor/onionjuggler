@@ -191,8 +191,7 @@ case "${choice_main}" in
           --inputbox "${UNIX_PORT_MSG}" 10 60 3>&1 1>&2 2>&3)"
           if [ -n "${service_ports}" ]; then
             clear_posix
-            # shellcheck disable=SC2086
-            "${ONIONJUGGLER_PWD}"/onionjuggler-cli on "${service_name}" 3 unix ${service_ports}
+            "${ONIONJUGGLER_PWD}"/onionjuggler-cli on --service "${service_name}" --socket unix --port "${service_ports}"
             return_to_tui
           fi
         fi
@@ -205,8 +204,7 @@ case "${choice_main}" in
           service_ports="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
           --inputbox "${TCP_PORT_MSG}" 13 80 3>&1 1>&2 2>&3)"
           if [ -n "${service_ports}" ]; then
-            # shellcheck disable=SC2086
-            "${ONIONJUGGLER_PWD}"/onionjuggler-cli on "${service_name}" 3 tcp ${service_ports}
+            "${ONIONJUGGLER_PWD}"/onionjuggler-cli on --service "${service_name}" --socket tcp --port "${service_ports}"
             return_to_tui
           fi
         fi
@@ -230,9 +228,9 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       "PURGE" "Disable and Purge HiddenServiceDir (delete onion keys)" \
       3>&1 1>&2 2>&3)"
       if [ -n "${choice_disable}" ]; then
-        [ "${choice_disable}" = "PURGE" ] && purge="purge"
+        [ "${choice_disable}" = "PURGE" ] && purge="--purge"
         clear_posix
-        "${ONIONJUGGLER_PWD}"/onionjuggler-cli off "${service_name_list}" "${purge}"
+        "${ONIONJUGGLER_PWD}"/onionjuggler-cli off --service "${service_name_list}" "${purge}"
         return_to_tui
       else
         text="\nOperation canceled, nothing was executed."
@@ -246,7 +244,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     service_menu checklist "Renew"
     if [ -n "${service_name_list}" ]; then
       clear_posix
-      "${ONIONJUGGLER_PWD}"/onionjuggler-cli renew "${service_name_list}"
+      "${ONIONJUGGLER_PWD}"/onionjuggler-cli renew --service "${service_name_list}"
       return_to_tui
     fi
   ;;
@@ -297,7 +295,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | sed "s/ /,/g")"
         if [ -n "${service_name_list}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth server list "${service_name_list}"
+          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-server --list --service "${service_name_list}"
           return_to_tui
         fi
       ;;
@@ -333,7 +331,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           client_name_list="$(printf %s"${client_name_list}" | tr -s ' ' ',' | tr -s ',' ',')"
           if { [ -n "${service_name_list}" ] && [ -n "${client_name_list}" ]; }; then
             clear_posix
-            "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth server on "${service_name_list}" "${client_name_list}"
+            "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-server --on --service "${service_name_list}" --client "${client_name_list}"
             return_to_tui
           fi
         fi
@@ -353,7 +351,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
             --inputbox "${menu}" 9 50 3>&1 1>&2 2>&3)"
             if [ -n "${client_pub_key}" ]; then
               clear_posix
-              "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth server on "${service_name_list}" "${client_name_list}" "${client_pub_key}"
+              "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-server --on --service "${service_name_list}" --client "${client_name_list}" --client-pub-key "${client_pub_key}"
               return_to_tui
             fi
           fi
@@ -397,7 +395,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         fi
         if [ -n "${client_name_list}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth server off "${service_name_list}" "${client_name_list}"
+          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-server --off --service "${service_name_list}" --client "${client_name_list}"
           return_to_tui
         fi
       ;;
@@ -435,7 +433,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     case "${auth_type}" in
 
       LIST)
-        "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth client list
+        "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-client --list
         return_to_tui
       ;;
 
@@ -454,7 +452,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         --inputbox "${menu}" 9 80 3>&1 1>&2 2>&3)"
         if [ -n "${onion_hostname}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth client on "${onion_hostname}"
+          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-client --on --onion "${onion_hostname}"
           return_to_tui
         fi
       ;;
@@ -468,7 +466,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         --inputbox "${menu}" 9 80 3>&1 1>&2 2>&3)"
         if { [ -n "${onion_hostname}" ] && [ -n "${client_priv_key}" ]; }; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth client on "${onion_hostname}" "${client_priv_key}"
+          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-client --on --onion "${onion_hostname}" --client-priv-key "${client_priv_key}"
           return_to_tui
         fi
       ;;
@@ -482,7 +480,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_onion_auth}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
         if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth client off "${ONION_AUTH_NAME_LIST}"
+          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-client --off --onion "${ONION_AUTH_NAME_LIST}"
           return_to_tui
         fi
       ;;
@@ -495,7 +493,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     service_menu checklist "Credentials"
     if [ -n "${service_name_list}" ]; then
       clear_posix
-      "${ONIONJUGGLER_PWD}"/onionjuggler-cli list "${service_name_list}"
+      "${ONIONJUGGLER_PWD}"/onionjuggler-cli list --service "${service_name_list}"
       return_to_tui
     fi
   ;;
@@ -513,7 +511,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       3>&1 1>&2 2>&3)"
       if [ -n "${choice_action}" ]; then
         clear_posix
-        "${ONIONJUGGLER_PWD}"/onionjuggler-cli location "${choice_action}" "${service_name_list}"
+        "${ONIONJUGGLER_PWD}"/onionjuggler-cli location "--${choice_action}" --service "${service_name_list}"
         return_to_tui
       fi
     fi
@@ -549,7 +547,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_folder}" ] && folder_name_list="$(printf %s"${choice_folder}" | sed "s/ /,/g")"
         if [ -n "${folder_name_list}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli web "${status}" "${service_name_list}" "${folder_name_list}"
+          "${ONIONJUGGLER_PWD}"/onionjuggler-cli web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}"
           return_to_tui
         fi
       fi
@@ -568,7 +566,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | sed "s/ /,/g")"
       if [ -n "${service_name_list}" ]; then
         clear_posix
-        "${ONIONJUGGLER_PWD}"/onionjuggler-cli web "${status}" "${service_name_list}"
+        "${ONIONJUGGLER_PWD}"/onionjuggler-cli web "--${status}" --service "${service_name_list}"
         return_to_tui
       fi
     fi
@@ -595,20 +593,20 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       sudo tail -f -n 25 /var/log/tor/vanguards.log
     elif [ -n "${choice_action}" ]; then
       clear_posix
-      "${ONIONJUGGLER_PWD}"/onionjuggler-cli vanguards "${choice_action}"
+      "${ONIONJUGGLER_PWD}"/onionjuggler-cli vanguards "--${choice_action}"
       return_to_tui
     fi
   ;;
 
 
   IMPORT)
-    "${ONIONJUGGLER_PWD}"/onionjuggler-cli backup integrate
+    "${ONIONJUGGLER_PWD}"/onionjuggler-cli backup --integrate
     return_to_tui
   ;;
 
 
   EXPORT)
-    "${ONIONJUGGLER_PWD}"/onionjuggler-cli backup create
+    "${ONIONJUGGLER_PWD}"/onionjuggler-cli backup --create
     return_to_tui
   ;;
 
