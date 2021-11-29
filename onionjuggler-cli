@@ -98,7 +98,7 @@ usage(){
     printf %s"${magenta} ${onion_ascii} ${nocolor}\n\n"
   fi
 
-  printf "Configure an Onion Service
+  printf "Juggle with an Onion Service
 \nUsage: %s${0##*/} command [required <args>] <optional>
 \nOptions:
   on [--service <SERVICE>] [--socket <tcp|unix>] [--port=VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>] <--version 3>
