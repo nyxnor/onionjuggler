@@ -1,8 +1,8 @@
 # OnionJuggler
-[![shellcheck](https://github.com/nyxnor/onionservice/actions/workflows/main.yaml/badge.svg)](https://github.com/nyxnor/onionservice/actions/workflows/main.yaml)
-[![CodeFactor](https://www.codefactor.io/repository/github/nyxnor/onionservice/badge/main)](https://www.codefactor.io/repository/github/nyxnor/onionservice/overview/main)
-[![License](https://img.shields.io/github/license/nyxnor/onionservice.svg)](https://github.com/nyxnor/onionservice/blob/main/LICENSE)
-[![GitHub top language](https://img.shields.io/github/languages/top/nyxnor/onionservice.svg)](https://github.com/nyxnor/onionservice/search?l=Shell)
+[![shellcheck](https://github.com/nyxnor/onionjuggler/actions/workflows/main.yaml/badge.svg)](https://github.com/nyxnor/onionjuggler/actions/workflows/main.yaml)
+[![CodeFactor](https://www.codefactor.io/repository/github/nyxnor/onionjuggler/badge/main)](https://www.codefactor.io/repository/github/nyxnor/onionjuggler/overview/main)
+[![License](https://img.shields.io/github/license/nyxnor/onionjuggler.svg)](https://github.com/nyxnor/onionjuggler/blob/main/LICENSE)
+[![GitHub top language](https://img.shields.io/github/languages/top/nyxnor/onionjuggler.svg)](https://github.com/nyxnor/onionjuggler/search?l=Shell)
 [![Just works](https://img.shields.io/badge/works-on_my_machine-darkred.svg?style=flat)](https://en.wikipedia.org/wiki/Typewriter)
 
 

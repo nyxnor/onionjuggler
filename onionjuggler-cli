@@ -133,7 +133,7 @@ Description:
 '# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs.
 If your services are unreacheable, restart tor.
-\nReport bugs to: https://github.com/nyxnor/onionservice/issues\n"
+\nReport bugs to: https://github.com/nyxnor/onionsjuggler/issues\n"
 
   exit 1
 }

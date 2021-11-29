@@ -295,7 +295,7 @@ onionjuggler-cli help
 
 # BUGS
 
-Bugs you may find. First search for related issues on https://github.com/nyxnor/onionservice/issues, if not solved, open a new one.
+Bugs you may find. First search for related issues on https://github.com/nyxnor/onionjuggler/issues, if not solved, open a new one.
 
 
 # SEE ALSO

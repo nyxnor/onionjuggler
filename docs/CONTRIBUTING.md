@@ -4,7 +4,7 @@ This project is not perfect and never will be, contributions are welcome. Don't 
 
 See the open issues and find one to contribute if possible.
 
-First, read the [docs](https://github.com/nyxnor/onionservice/tree/main/docs).
+First, read the [docs](https://github.com/nyxnor/onionjuggler/tree/main/docs).
 
 ## License
 
@@ -134,7 +134,7 @@ Maintainers/Collaborators:
 
 ## Commits
 
-Fork the repository [here](https://github.com/nyxnor/onionservice/fork)
+Fork the repository [here](https://github.com/nyxnor/onionjuggler/fork)
 
 Clone:
 ```sh
@@ -144,7 +144,7 @@ cd onionservice
 
 Create feature or fix branch based on the upstream project development branch as base:
 ```sh
-git remote add upstream https://github.com/nyxnor/onionservice.git
+git remote add upstream https://github.com/nyxnor/onionjuggler.git
 git checkout -b <NEW_BRANCH> upstream/<BASE_BRANCH>
 ```
 
