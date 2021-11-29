@@ -1,6 +1,6 @@
 # TORRC
 
-This list of torrc commands explains only the specific configuration options that are managed by OnionService. Consult the full source on https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt.
+This list of torrc commands explains only the specific configuration options that are managed by OnionJuggler. Consult the full source on https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt.
 
 ## COMMMAND-LINE OPTIONS
 

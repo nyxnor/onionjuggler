@@ -1,11 +1,11 @@
-# OnionService(1) completion                             -*- shell-script -*-
+# OnionJuggler(1) completion                             -*- shell-script -*-
 
 # only bash, https://unix.stackexchange.com/a/158523
 # http://web.archive.org/web/20200507173259/https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2
 # https://github.com/scop/bash-completion
 # https://maskedbyte.com/how-to-create-a-custom-bash-completion-script/
 
-# _onionservice-cli()
+# _onionjuggler-cli()
 # {
 #     local cur prev opts
 #     COMPREPLY=()
@@ -18,7 +18,7 @@
 #         return 0
 #     fi
 # }
-# complete -F _onionservice-cli onionservice-cli
+# complete -F _onionjuggler-cli onionjuggler-cli
 
 
 ## place it in ~/.local/share/bash-completion/ ##
@@ -27,7 +27,7 @@
 
 ## TODO: hierarchy is not working, only the main commands are displayed, the derived are not yet working...
 
-# _onionservice-cli()
+# _onionjuggler-cli()
 # {
 #     local cur prev words cword package
 #     COMPREPLY=()
@@ -82,4 +82,4 @@
 #     esac
 
 # } &&
-# complete -F _onionservice-cli onionservice-cli
+# complete -F _onionjuggler-cli onionjuggler-cli

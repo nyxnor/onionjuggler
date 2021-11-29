@@ -4,7 +4,7 @@
 ## This file lets you manage your hidden services to all its capability
 ##
 ## SYNTAX
-## ./onionservice-cli command [REQUIRED] <OPTIONAL>
+## ./onionjuggler-cli command [REQUIRED] <OPTIONAL>
 ##
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
@@ -18,8 +18,8 @@ error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1;
 
 ## ${VAR:?STRING} -> Display an error if empty or unset.
 
-: "${ONIONSERVICE_PWD:?$(error_msg "Export \${ONIONSERVICE_PWD} by running:\n\t./install/setup.sh -h")}"
-. "${ONIONSERVICE_PWD}"/.onionrc
+: "${ONIONJUGGLER_PWD:?$(error_msg "Export \${ONIONJUGGLER_PWD} by running:\n\t./install/setup.sh -h")}"
+. "${ONIONJUGGLER_PWD}"/.onionrc
 
 : "${tor_user:?}"
 : "${tor_service:?}"
@@ -92,7 +92,7 @@ done
 #### FUNCTIONS ####
 
 usage(){
-  onion_ascii="${ONIONSERVICE_PWD}/images/onion-ascii-closed.txt"
+  onion_ascii="${ONIONJUGGLER_PWD}/images/onion-ascii-closed.txt"
   if [ -f "${onion_ascii}" ]; then
     onion_ascii="$(while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "${onion_ascii}")"
     printf %s"${magenta} ${onion_ascii} ${nocolor}\n\n"
@@ -708,7 +708,7 @@ case "${command}" in
         virtport=${only_ports% *}
         target=${only_ports##* }
         printf %s"# Activating web server for the onion service: ${service}\n\n"
-        cp -v "${ONIONSERVICE_PWD}"/etc/"${web_server}"/sites-available/sample-onion.conf /tmp/"${service}"-onion.conf
+        cp -v "${ONIONJUGGLER_PWD}"/etc/"${web_server}"/sites-available/sample-onion.conf /tmp/"${service}"-onion.conf
         sed -i'' "s|service|${service}|g" /tmp/"${service}"-onion.conf
         sed -i'' "s|target|${target}|g" /tmp/"${service}"-onion.conf
         ## If starts with '~/' or '/', user specified the path, if started with anything else expect a folder inside ${website_dir}
@@ -921,7 +921,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         grep -q "CookieAuthentication" "${torrc}" || printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${torrc}"  >/dev/null
       fi
       ## Edit vanguards service
-      cp -v "${ONIONSERVICE_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
+      cp -v "${ONIONJUGGLER_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
       sed -i'' "s|torrc_root|${torrc_root}|g" /tmp/vanguards@default.service
       sed -i'' "s|tor_service|${tor_service}|g" /tmp/vanguards@default.service
       sed -i'' "s|data_dir|${data_dir}|g" /tmp/vanguards@default.service

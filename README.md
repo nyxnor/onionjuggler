@@ -1,4 +1,4 @@
-# onionservice
+# OnionJuggler
 [![shellcheck](https://github.com/nyxnor/onionservice/actions/workflows/main.yaml/badge.svg)](https://github.com/nyxnor/onionservice/actions/workflows/main.yaml)
 [![CodeFactor](https://www.codefactor.io/repository/github/nyxnor/onionservice/badge/main)](https://www.codefactor.io/repository/github/nyxnor/onionservice/overview/main)
 [![License](https://img.shields.io/github/license/nyxnor/onionservice.svg)](https://github.com/nyxnor/onionservice/blob/main/LICENSE)
@@ -8,7 +8,7 @@
 
 ### Feature-rich Onion Service manager for UNIX-like operating systems written in POSIX conformant shellscript
 
-A collection of Onion Services features implemented for Unix-like systems following the Portable Operating System Interface standard.
+OnionJuggler is a collection of Onion Services features implemented for Unix-like systems following the Portable Operating System Interface standard.
 
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location. This project has not been released and should be considered for development only.**
@@ -108,8 +108,8 @@ Three easy steps to fully this project:
 #### Clone the repository
 
 ```sh
-git clone https://github.com/nyxnor/onionservice.git
-cd onionservice
+git clone https://github.com/nyxnor/onionjuggler.git
+cd onionjuggler
 ```
 
 #### Set custom vars
@@ -141,7 +141,7 @@ sed "s|tor_user=.*|tor_user=\"tor\"|" .onionrc
 
 #### Setup the enviroment
 
-Determine the enviromental variable `${ONIONSERVICE_PWD}` and add the directory to `${PATH}`.
+Determine the enviromental variable `${ONIONJUGGLER_PWD}` and add the directory to `${PATH}`.
 * add the enviromental variable  to find the repo-> exporting this variable possibilitate calling it from inside shell scripts.
 * add directory to path -> call the scripts from any directory as if they were commands (without indicating the path to them or prepending with the shell name).
 
@@ -152,7 +152,7 @@ For this, you have two options:
 ```
 * **Development**:  set the variable manually using the absolute path without trailing "/" at the end. Favorable for integrating into other projects. Run from any directory (need to specify the path)
 ```sh
-./install/setup.sh -s -p /PATH/TO/ONIONSERVICE/REPO && . ~/."${SHELL##*/}"rc
+./install/setup.sh -s -p /PATH/TO/ONIONJUGGLER/REPO && . ~/."${SHELL##*/}"rc
 ```
 
 ### Usage
@@ -167,7 +167,7 @@ There are some ways to call the scripts, evaluate the advantages and disadvantag
 |-|-------|----------------|
 |Advantages|follows the shebang, can be used from any directory|can choose the shell|
 |Disadvantages|the scripts must be executable|ignores the shebang, needs to specify path if not in the same directory|
-|Syntax|`onionservice-cli`|`sh onionservice-cli`|
+|Syntax|`onionjuggler-cli`|`sh onionjuggler-cli`|
 
 
 #### Documentation
@@ -177,12 +177,12 @@ Take a loot at the documentation inside `docs` folder. Read:
 * any markdown file formatted on the shell:
 ```sh
 ls docs/*.md
-pandoc "${ONIONSERVICE_PWD}"/docs/CONTRIBUTING.md | lynx -stdin
+pandoc "${ONIONJUGGLER_PWD}"/docs/CONTRIBUTING.md | lynx -stdin
 ```
 
-* the [CLI manual](docs/ONIONSERVICE-CLI.md):
+* the [CLI manual](docs/onionjuggler-cli.md):
 ```sh
-man onionservice-cli
+man onionjuggler-cli
 ```
 
 ## Portability
@@ -194,7 +194,7 @@ Full compatibility with any POSIX compliant shells: dash, bash, ksh, mksh, yash,
 The default POSIX shell of your unix-like operating system may vary depending on your system (FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`, Debian uses `dash`), but it has a symbolic link leading to it on `/usr/bin/sh` and/or `/bin/sh`.
 
 Tweak to be compatible with non-POSIX compliant shells::
-* Z SHell (zsh) -> `zsh --emulate sh -c onionservice-tui`
+* Z SHell (zsh) -> `zsh --emulate sh -c onionjuggler-tui`
 
 ### Operating systems
 
@@ -214,7 +214,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * sudo privileges. Doas compatibility is to be expected.
   * blank lines between Hidden Services blocks in the torrc.
   * HiddenServiceDir different path than DataDir - `DataDir/services`.
-  * Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionservice/`, Correct: `~/onionservice`).
+  * Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionjuggler/`, Correct: `~/onionjuggler`).
 
 * Packages:
   * **sudo**
@@ -239,14 +239,14 @@ It is expected that you already have your user in the sudoers configuration file
 
 ### Inspirations
 
-These are projects that inspires OnionService development, each with their own unique characteristic.
+These are projects that inspires OnionJuggler development, each with their own unique characteristic.
 
-* [OnionShare CLI](https://github.com/onionshare/onionshare/tree/develop/cli) possibilitates ephemeral onion services that never touch the disk and can be run on Tails or Whonix easily. It provides onion authentication, focusing on running servers to send and receive files, chat and host a static website. OnionService evolved by watching the sharing capabilities of OnionShare and converting them to shellscript.
+* [OnionShare CLI](https://github.com/onionshare/onionshare/tree/develop/cli) possibilitates ephemeral onion services that never touch the disk and can be run on Tails or Whonix easily. It provides onion authentication, focusing on running servers to send and receive files, chat and host a static website. OnionJuggler evolved by watching the sharing capabilities of OnionShare and converting them to shellscript.
 
-* [RaspiBlitz](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh) provides a ton of bitcoin related services that can be run over tor, so onion services is the choice to access your node from outside LAN. OnionService started by forking Blitz script to remove hardcoded paths.
+* [RaspiBlitz](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh) provides a ton of bitcoin related services that can be run over tor, so onion services is the choice to access your node from outside LAN. OnionJuggler started by forking Blitz script to remove hardcoded paths.
 
-* [TorBox](https://github.com/radio24/TorBox) is an easy to use, anonymizing router that creates a separate WiFi that routes the encrypted network data over the Tor network. It also helps configuring bridges and other countermeasures to bypass censorship. OnionService aims to help people on surveillance countries to communicate privately.
+* [TorBox](https://github.com/radio24/TorBox) is an easy to use, anonymizing router that creates a separate WiFi that routes the encrypted network data over the Tor network. It also helps configuring bridges and other countermeasures to bypass censorship. OnionJuggler aims to help people on surveillance countries to communicate privately.
 
 ### Contributors
 
-[![Contributors graph](https://contrib.rocks/image?repo=nyxnor/onionservice)](https://github.com/nyxnor/onionservice/graphs/contributors)
+[![Contributors graph](https://contrib.rocks/image?repo=nyxnor/onionjuggler)](https://github.com/nyxnor/onionjuggler/graphs/contributors)

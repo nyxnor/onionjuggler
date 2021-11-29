@@ -30,7 +30,7 @@ website_dir="/var/www"
 ## Vanguards - https://github.com/mikeperry-tor/vanguards/commits/master
 vanguards_commit="10942de"
 ## Dialog
-DIALOGRC="${ONIONSERVICE_PWD}/.dialogrc" ## ~/.dialogrc
+DIALOGRC="${ONIONJUGGLER_PWD}/.dialogrc" ## ~/.dialogrc
 ## Backup
 scp_target_user="remoteUser"
 scp_target_ip="remoteIp"
@@ -98,14 +98,14 @@ restarting_tor()
     printf "\n# Restarting tor, please be patient.\n"
     printf "# Getting stuck after several minutes? Press Ctrl-C\n"
     printf "# and to restore the lastest torrc backup run:\n"
-    printf "$ onionservice-cli setup torrc\n"
+    printf "$ onionjuggler-cli setup torrc\n"
     sudo systemctl restart "${tor_service}"
     printf %s"${green}# Restarted tor succesfully!\n${nocolor}"
   elif [ -z "${1}" ]; then
     printf "\n# Reloading tor if active else will restart tor, please be patient.\n"
     printf "# Getting stuck after several minutes? Press Ctrl-C\n"
     printf "# and to restore the lastest torrc backup run:\n"
-    printf "$ onionservice-cli setup torrc\n"
+    printf "$ onionjuggler-cli setup torrc\n"
     sudo systemctl reload-or-restart "${tor_service}"
     printf %s"${green}# Reloaded tor succesfully!\n${nocolor}"
   fi

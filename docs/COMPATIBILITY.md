@@ -1,6 +1,6 @@
 # Tor packages compatibility list
 
-The required programs to
+The required programs to OnionJuggler listed compatibility for different operating systems.
 
 # tor
 
