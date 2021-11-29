@@ -41,7 +41,8 @@ Quick link to this repository: https://git.io/onionservice
 
 ### Images
 
-![tui](images/tui.png)
+![tui-dialog](images/tui-dialog.png)
+![tui-whiptail](images/tui-whiptail.png)
 ![cli](images/cli.png)
 
 ### Echosystem
