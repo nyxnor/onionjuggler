@@ -19,7 +19,7 @@ Quick link to this repository: https://git.io/onionservice
 
 * [Introduction](#introduction)
   * [Images](#images)
-  * [Echosystem](#echosystem)
+  * [Ecosystem](#ecosystem)
   * [Goal](#goal)
   * [Features](#features)
 * [Instructions](#instructions)
@@ -45,7 +45,7 @@ Quick link to this repository: https://git.io/onionservice
 ![tui-whiptail](images/tui-whiptail.png)
 ![cli](images/cli.png)
 
-### Echosystem
+### Ecosystem
 
 Onion Services are the Hidden Services of Tor which use onion routing as its base for stablishing private connections. [They offer](https://community.torproject.org/onion-services/overview/):
 * Location hiding - IP address aren't used, so your location is protected.
@@ -57,7 +57,7 @@ For a deeper understanding, read the [Rendezvous Specification](https://gitweb.t
 
 Onion Routing tries to solve most of these problems but it is still centralized by the [Directory Authorities](https://metrics.torproject.org/rs.html#search/flag:authority), and referencing [Matt Traudt's blog post](https://matt.traudt.xyz/posts/Debunking:_OSINT_Analysis_of_the_TOR_Foundation/#index4h2): replacing it for something more distributed is [not a trivial task](https://www.freehaven.net/anonbib/#wpes09-dht-attack).
 
-On the Tor echosystem, from [TPO metrics](https://metrics.torproject.org/), comparing only Free and Open Source Operating Systems, `Linux` dominates on [relays by platform](https://metrics.torproject.org/platforms.html) and [Tor Browser downloads by platform](https://metrics.torproject.org/webstats-tb-platform.html) over BSD. Data regarding which operating system the onion service operator can not be easily acquired for obvious reasons. That was on the network level, but know on the user system, even if one chooses a Free and Open Source Operating System, GNU/Linux dominates a big share over *BSD, having a huge impact on the main software used for the kernel (Linux), shell (bash), service manager (systemd).
+On the Tor ecosystem, from [TPO metrics](https://metrics.torproject.org/), comparing only Free and Open Source Operating Systems, `Linux` dominates on [relays by platform](https://metrics.torproject.org/platforms.html) and [Tor Browser downloads by platform](https://metrics.torproject.org/webstats-tb-platform.html) over BSD. Data regarding which operating system the onion service operator can not be easily acquired for obvious reasons. That was on the network level, but know on the user system, even if one chooses a Free and Open Source Operating System, GNU/Linux dominates a big share over *BSD, having a huge impact on the main software used for the kernel (Linux), shell (bash), service manager (systemd).
 
 ### Goal
 
