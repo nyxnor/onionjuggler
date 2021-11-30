@@ -231,6 +231,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **lynx**
   * **tar**
   * **gzip**
+  * **nginx/apache**
 
 The packages are downloaded when setting up the environment with [setup.sh](install/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
 The absolute minimum you can go to is `"doas tor grep sed`, and you will be limited to enable, disable and renew services.
