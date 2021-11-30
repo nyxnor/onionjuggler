@@ -220,7 +220,7 @@ loop_list(){
 ########## MAIN ###########
 "${privilege_command}" sed -i'' 's/\/$//' "${torrc}" ## no config should end with '/' to find exact match.
 service="$(printf %s"${service}" | tr "," " " | tr -s " ")"
-set -x
+
 case "${command}" in
 
   ## disabled the service wrongly and don't remember the ports? no worries, will restore the latest torrc.bak

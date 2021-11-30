@@ -63,7 +63,6 @@ usage(){
 }
 
 ## MAIN
-: "${privilege_command:?}"
 action=${1:--s}
 argument=${2}
 definition=${3}
@@ -99,6 +98,7 @@ case "${action}" in
         fi
     esac
     . "${ONIONJUGGLER_PWD}"/.onionrc
+    : "${privilege_command:?}"
     : "${tor_user:?}"
     : "${tor_service:?}"
     : "${requirements:?}"
@@ -128,6 +128,7 @@ case "${action}" in
   -r|--release|release)
     [ -f .onionrc ] && ONIONJUGGLER_PWD="${PWD}"
     . "${ONIONJUGGLER_PWD}"/.onionrc
+    : "${privilege_command:?}"
     : "${nocolor:?}"
     : "${blue:?}"
     : "${green:?}"
