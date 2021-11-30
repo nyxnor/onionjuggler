@@ -17,10 +17,11 @@
 ###########################
 ######## VARIABLES ########
 
-## [ EDIT REQUIRED ] (IF NOT DEBIAN)
+## [ EDIT REQUIRED ]
+privilege_command="sudo" ## [sudo|doas]
 tor_user="debian-tor" ## [debian-tor|tor]
 tor_service="tor@default.service" ## [tor@default.service|tor.service]
-pkg_mngr_install="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+pkg_mngr_install="${privilege_command} apt install -y" ## always use the 'yes' flag to be non interactive
 web_server="nginx" ## [nginx|apache2]
 dialog_box="dialog" ## [dialog|whiptail]
 requirements="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${dialog_box} ${web_server}" ## search pkg name for your OS on docs/COMPATIBILITY.md
@@ -81,12 +82,12 @@ install_package(){
 
 ## set correct permissions for tor directories and files
 set_owner_permission(){
-  sudo chown -R "${tor_user}:${tor_user}" "${data_dir}"
-  sudo chmod 700 "${data_dir}"
+  "${privilege_command}" chown -R "${tor_user}:${tor_user}" "${data_dir}"
+  "${privilege_command}" chmod 700 "${data_dir}"
 
-  sudo chown -R root:root "${torrc_root}"
-  sudo chmod 755 "${torrc_root}"
-  sudo chmod 644 "${torrc}"
+  "${privilege_command}" chown -R root:root "${torrc_root}"
+  "${privilege_command}" chmod 755 "${torrc_root}"
+  "${privilege_command}" chmod 644 "${torrc}"
 }
 
 
@@ -99,14 +100,14 @@ restarting_tor()
     printf "# Getting stuck after several minutes? Press Ctrl-C\n"
     printf "# and to restore the lastest torrc backup run:\n"
     printf "$ onionjuggler-cli setup torrc\n"
-    sudo systemctl restart "${tor_service}"
+    "${privilege_command}" systemctl restart "${tor_service}"
     printf %s"${green}# Restarted tor succesfully!\n${nocolor}"
   elif [ -z "${1}" ]; then
     printf "\n# Reloading tor if active else will restart tor, please be patient.\n"
     printf "# Getting stuck after several minutes? Press Ctrl-C\n"
     printf "# and to restore the lastest torrc backup run:\n"
     printf "$ onionjuggler-cli setup torrc\n"
-    sudo systemctl reload-or-restart "${tor_service}"
+    "${privilege_command}" systemctl reload-or-restart "${tor_service}"
     printf %s"${green}# Reloaded tor succesfully!\n${nocolor}"
   fi
 }

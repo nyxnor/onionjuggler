@@ -21,6 +21,7 @@ error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1;
 : "${ONIONJUGGLER_PWD:?$(error_msg "Export \${ONIONJUGGLER_PWD} by running:\n\t./install/setup.sh -h")}"
 . "${ONIONJUGGLER_PWD}"/.onionrc
 
+: "${privilege_command:?}"
 : "${tor_user:?}"
 : "${tor_service:?}"
 : "${website_dir:?}"
@@ -171,7 +172,7 @@ is_addr_port(){
 
 
 is_service_dir_empty(){
-  [ "$(sudo -u "${tor_user}" ls "${data_dir_services}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
+  [ "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
 }
 
 
@@ -179,7 +180,7 @@ is_service_dir_empty(){
 ## if the service exists, will save the hostname for when requested.
 test_service_exists(){
   service="${1}"
-  onion_hostname=$(sudo -u "${tor_user}" grep -s ".onion" "${data_dir_services}"/"${service}"/hostname)
+  onion_hostname=$("${privilege_command}" -u "${tor_user}" grep -s ".onion" "${data_dir_services}"/"${service}"/hostname)
   [ -z "${onion_hostname}" ] && { printf %s"${red}ERROR: Service does not exist: ${service}\n${nocolor}"; exit 1; }
 }
 
@@ -187,7 +188,7 @@ test_service_exists(){
 ## save the clients names that are inside the <HiddenServiceDir>/authorized_clients/ in list format (CLIENT1,CLIENT2,...)
 create_client_list(){
   service="${1}"
-  client_name_list="$(printf %s"$(sudo -u "${tor_user}" ls "${data_dir_services}"/"${service}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" ",")"
+  client_name_list="$(printf %s"$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"/"${service}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" ",")"
   client_count=""
   # shellcheck disable=SC2086
   [ -n "${client_name_list}" ] && client_count="$(IFS=','; set -f -- ${client_name_list}; printf %s"${#}")"
@@ -195,7 +196,7 @@ create_client_list(){
 
 
 ## save the service names that have a <HiddenServiceDir> in list format (SERV1,SERV2,...)
-create_service_list(){ service_name_list=$(sudo -u "${tor_user}" ls "${data_dir_services}"/ | tr " " ","); }
+create_service_list(){ service_name_list=$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"/ | tr " " ","); }
 
 
 ## loops the parameters
@@ -217,9 +218,9 @@ loop_list(){
 
 ###########################
 ########## MAIN ###########
-sudo sed -i'' 's/\/$//' "${torrc}" ## no config should end with '/' to find exact match.
+"${privilege_command}" sed -i'' 's/\/$//' "${torrc}" ## no config should end with '/' to find exact match.
 service="$(printf %s"${service}" | tr "," " " | tr -s " ")"
-
+set -x
 case "${command}" in
 
   ## disabled the service wrongly and don't remember the ports? no worries, will restore the latest torrc.bak
@@ -230,9 +231,9 @@ case "${command}" in
 
       torrc|TORRC)
         ## separate HiddenService liens to the end of the torrc
-        printf '\n%s\n\n' "$(sudo sed -n "/HiddenServiceDir/,/^\s*$/{p}" "${torrc}".bak)" | sudo tee "${torrc}".tmp >/dev/null
-        sudo sed "/HiddenServiceDir/,/^\s*$/{d}" "${torrc}" | sudo tee "${torrc}".mod >/dev/null
-        sudo cat -s "${torrc}".mod "${torrc}".tmp | sudo tee "${torrc}" >/dev/null
+        printf '\n%s\n\n' "$("${privilege_command}" sed -n "/HiddenServiceDir/,/^\s*$/{p}" "${torrc}".bak)" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
+        "${privilege_command}" sed "/HiddenServiceDir/,/^\s*$/{d}" "${torrc}" | "${privilege_command}" tee "${torrc}".mod >/dev/null
+        "${privilege_command}" cat -s "${torrc}".mod "${torrc}".tmp | "${privilege_command}" tee "${torrc}" >/dev/null
         printf "# Restored torrc with its latest backup\n"
         restarting_tor
         printf %s"${green}\n# Done\n${nocolor}"
@@ -257,18 +258,18 @@ case "${command}" in
       service="${1}"
       purge="${2}"
       ## remove service service data
-      if [ "${purge}" = "PURGE" ] || [ "${purge}" = "purge" ]; then
+      if [ "${purge}" = "purge" ]; then
         printf %s"${red}\n# Deleted Hidden Service data in ${data_dir_services}/${service}\n${nocolor}"
-        sudo rm -rfv "${data_dir_services}"/"${service}"
+        "${privilege_command}" rm -rfv "${data_dir_services}"/"${service}"
       else
         printf "\n# HiddenServiceDiretory was kept\n"
       fi
-      sudo cp "${torrc}" "${torrc}".bak
+      "${privilege_command}" cp "${torrc}" "${torrc}".bak
       ## remove service paragraph in torrc
       printf %s"# Deleted Hidden Service configuration in ${torrc}\n"
-      sudo sed -i'' "/HiddenServiceDir .*\/${service}$/,/^\s*$/{d}" "${torrc}"
+      "${privilege_command}" sed -i'' "/HiddenServiceDir .*\/${service}$/,/^\s*$/{d}" "${torrc}"
       ## substitute multiple sequential empty lines to a single one per sequence
-      sudo cat -s "${torrc}" | sudo tee "${torrc}".tmp >/dev/null && sudo mv "${torrc}".tmp "${torrc}"
+      "${privilege_command}" cat -s "${torrc}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null && "${privilege_command}" mv "${torrc}".tmp "${torrc}"
       printf %s"# Disabled service: ${service}\n\n"
     }
     loop_list delete_service "${service}" "${purge}"
@@ -296,7 +297,7 @@ case "${command}" in
 
     finish_service_activation(){
       ## remove double empty lines
-      sudo cat -s "${torrc}" | sudo tee "${torrc}".tmp >/dev/null && sudo mv "${torrc}".tmp "${torrc}"
+      "${privilege_command}" cat -s "${torrc}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null && "${privilege_command}" mv "${torrc}".tmp "${torrc}"
       restarting_tor
       ## show the Hidden Service address
       test_service_exists "${service}"
@@ -331,9 +332,9 @@ case "${command}" in
         target_addr="${target%%:*}"
         target_port="${target##*:}"
         { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
-        target_already_inserted_block="$(sudo tac "${torrc}" | sudo sed -n "/^HiddenServicePort .*${target}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")"
+        target_already_inserted_block="$("${privilege_command}" tac "${torrc}" | "${privilege_command}" sed -n "/^HiddenServicePort .*${target}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")"
         target_already_inserted_service="${target_already_inserted_block##*/}"
-        sudo grep -q "^HiddenServicePort .* ${target}$" "${torrc}" && error_msg "target=${target} is being used by the service: ${target_already_inserted_service}\nINFO: Choose another port or disable the service that is using the wanted port."
+        "${privilege_command}" grep -q "^HiddenServicePort .* ${target}$" "${torrc}" && error_msg "target=${target} is being used by the service: ${target_already_inserted_service}\nINFO: Choose another port or disable the service that is using the wanted port."
         is_integer "${virtport}"; is_addr_port "${target}"
         ## Optional
         if [ -n "${virtport2}" ]; then
@@ -341,20 +342,20 @@ case "${command}" in
           target2_addr="${target2%%:*}"
           target2_port="${target2##*:}"
           { [ "${target2_addr}" = "${target2_port}" ] || [ "${target2_addr}" = "localhost" ]; } && target2="127.0.0.1:${target2_port}"
-          target2_already_inserted_block="$(sudo tac "${torrc}" | sudo sed -n "/^HiddenServicePort .*${target2}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")"
+          target2_already_inserted_block="$("${privilege_command}" tac "${torrc}" | "${privilege_command}" sed -n "/^HiddenServicePort .*${target2}$/,/^\s*$/{p}" | grep "^HiddenServiceDir")"
           target2_already_inserted_service="${target2_already_inserted_block##*/}"
-          sudo grep -q "^HiddenServicePort .* ${target2}$" "${torrc}" && error_msg "target2=${target2} is being used by the service: ${target2_already_inserted_service}\nINFO: Choose another port or disable the service that is using the wanted port."
+          "${privilege_command}" grep -q "^HiddenServicePort .* ${target2}$" "${torrc}" && error_msg "target2=${target2} is being used by the service: ${target2_already_inserted_service}\nINFO: Choose another port or disable the service that is using the wanted port."
           is_integer "${virtport2}"; is_addr_port "${target2}"
         fi
-        sudo cp "${torrc}" "${torrc}".bak
+        "${privilege_command}" cp "${torrc}" "${torrc}".bak
         ## delete any old entry for that servive
-        sudo sed -i'' "/HiddenServiceDir .*\/${service}$/,/^\s*$/{d}" "${torrc}"
+        "${privilege_command}" sed -i'' "/HiddenServiceDir .*\/${service}$/,/^\s*$/{d}" "${torrc}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${torrc}\n"
         if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\nHiddenServicePort ${virtport2} ${target2}\n\n" | sudo tee -a "${torrc}"
+          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\nHiddenServicePort ${virtport2} ${target2}\n\n" | "${privilege_command}" tee -a "${torrc}"
         else
-          [ -n "${virtport2}" ] || printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\n\n" | sudo tee -a "${torrc}"
+          [ -n "${virtport2}" ] || printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\n\n" | "${privilege_command}" tee -a "${torrc}"
         fi
         finish_service_activation
       ;;
@@ -364,16 +365,16 @@ case "${command}" in
         virtport2="${port##* }"
         [ "${virtport}" = "${virtport2}" ] && virtport2=""
         [ -n "${virtport2}" ] && is_integer "${virtport2}" ## var not mandatory
-        sudo cp "${torrc}" "${torrc}".bak
+        "${privilege_command}" cp "${torrc}" "${torrc}".bak
         ## delete any old entry for that servive
-        sudo sed -i'' "/HiddenServiceDir .*\/${service}$/,/^\s*$/{d}" "${torrc}"
+        "${privilege_command}" sed -i'' "/HiddenServiceDir .*\/${service}$/,/^\s*$/{d}" "${torrc}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${torrc}\n"
         unix_path="unix:/var/run/${service}-onion"
         if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}.sock\n\n" | sudo tee -a "${torrc}"
+          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}.sock\n\n" | "${privilege_command}" tee -a "${torrc}"
         else
-          [ -n "${virtport2}" ] || printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\n\n" | sudo tee -a "${torrc}"
+          [ -n "${virtport2}" ] || printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\n\n" | "${privilege_command}" tee -a "${torrc}"
         fi
         finish_service_activation
       ;;
@@ -417,7 +418,7 @@ case "${command}" in
               client_priv_key_config="${onion_hostname%.onion}:descriptor:x25519:${client_priv_key}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
               # Server side configuration
-              printf %s"${client_pub_key_config}\n" | sudo tee "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
+              printf %s"${client_pub_key_config}\n" | "${privilege_command}" tee "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
               ## Client side configuration
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
               printf "# Declare the variables\n"
@@ -430,21 +431,21 @@ case "${command}" in
               printf %s"client_priv_key_config=${client_priv_key_config}\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n"
               ## Delete pem and keys
-              sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
+              "${privilege_command}" rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
             }
             instructions_auth(){
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
               printf "# Send these instructions to the client:\n"
               printf "\n"
               printf "# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, insert it: ClientOnionAuthDir /var/lib/tor/onion_auth\n"
-              printf " [ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf 'ClientOnionAuthDir /var/lib/tor/onion_auth' | sudo tee -a /etc/tor/torrc ; }\n"
+              printf %s" [ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf 'ClientOnionAuthDir /var/lib/tor/onion_auth' | ${privilege_command} tee -a /etc/tor/torrc ; }\n"
               printf "\n"
               printf "# Create a file with the suffix '.auth_private' inside <ClientOnionAuthDir>\n"
-              printf " printf '\${client_priv_key_config}' | sudo tee /var/lib/tor/onion_auth/\${service}-\${onion_hostname}.auth_private\n"
+              printf %s" printf '\${client_priv_key_config}' | ${privilege_command} tee /var/lib/tor/onion_auth/\${service}-\${onion_hostname}.auth_private\n"
               printf "\n"
               printf "# Reload tor\n"
-              printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
-              printf " sudo systemctl reload-or-restart tor\n"
+              printf %s" ${privilege_command} chown -R debian-tor:debian-tor /var/lib/tor\n"
+              printf %s" ${privilege_command} systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             }
             [ "${service}" = "@all" ] && { create_service_list ; service="${service_name_list}" ; }
@@ -452,7 +453,7 @@ case "${command}" in
             if [ -n "${client_pub_key}" ]; then
               test_service_exists "${service}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
-              printf %s"${client_pub_key_config}" | sudo tee "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
+              printf %s"${client_pub_key_config}" | "${privilege_command}" tee "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
               printf "\n# Server side authorization configured\n\n"
               printf %s" client_pub_key_config=${client_pub_key_config}\n"
               printf "\n# As you inserted the public key manually, we expect that the client already has the private key\n"
@@ -474,10 +475,10 @@ case "${command}" in
               printf %s"Service  = ${service}\n"
               if [ "${client}" = "@all" ]; then
                 printf "Client   = @all\n\n"
-                sudo rm -fv "${data_dir_services}"/"${service}"/authorized_clients/*.auth
+                "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/authorized_clients/*.auth
               else
                 printf %s"Client   = ${client}\n\n"
-                sudo rm -fv "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth
+                "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth
               fi
             }
             [ -z "${service}" ] && error_msg "service is missing"
@@ -506,9 +507,9 @@ case "${command}" in
               if [ -n "${client_count}" ]; then
                 printf %s"\nService  = ${service}\n"
                 [ -n "${client_name_list}" ] && printf %s"Clients  = ${client_name_list} (${client_count})\n"
-                for AUTH in $(sudo -u "${tor_user}" ls "${data_dir_services}/${service}/authorized_clients/"); do
+                for AUTH in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}/${service}/authorized_clients/"); do
                   printf %s"\n# File name: ${AUTH}\n"
-                  printf %s"# Content:   $(sudo -u "${tor_user}" grep "descriptor:x25519:" "${data_dir_services}"/"${service}"/authorized_clients/"${AUTH}")\n"
+                  printf %s"# Content:   $("${privilege_command}" -u "${tor_user}" grep "descriptor:x25519:" "${data_dir_services}"/"${service}"/authorized_clients/"${AUTH}")\n"
                 done
                 printf "\n"
               else
@@ -542,9 +543,9 @@ case "${command}" in
             [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#onion}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#onion} is different than 62 characters (<56-char-base32>.onion)"
             [ "${suffix_onion}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
-            sudo cp "${torrc}" "${torrc}".bak
-            grep -q "ClientOnionAuthDir" "${torrc}" && { printf %s"\nClientOnionAuthDir ${data_dir_auth}\n\n" | sudo tee -a "${torrc}"; }
-            sudo -u "${tor_user}" mkdir -p "${data_dir_auth}"
+            "${privilege_command}" cp "${torrc}" "${torrc}".bak
+            grep -q "ClientOnionAuthDir" "${torrc}" && { printf %s"\nClientOnionAuthDir ${data_dir_auth}\n\n" | "${privilege_command}" tee -a "${torrc}"; }
+            "${privilege_command}" -u "${tor_user}" mkdir -p "${data_dir_auth}"
             if [ -z "${client_priv_key}" ]; then
               ## Generate pem and derive pub and priv keys
               openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
@@ -556,9 +557,9 @@ case "${command}" in
               client_priv_key_config="${onion%.onion}:descriptor:x25519:${client_priv_key}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
               ## Delete pem and keys
-              sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
+              "${privilege_command}" rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
               # Client side configuration
-              printf %s"${client_priv_key_config}\n" | sudo tee "${data_dir_auth}"/"${onion}".auth_private >/dev/null
+              printf %s"${client_priv_key_config}\n" | "${privilege_command}" tee "${data_dir_auth}"/"${onion}".auth_private >/dev/null
               printf "# Client side authorization configured\n"
               printf "# This is your private key, keep it safe, keep it hidden:\n\n"
               printf %s" client_priv_key=${client_priv_key}\n"
@@ -572,14 +573,14 @@ case "${command}" in
               printf %s" client_pub_key_config=descriptor:x25519:${client_pub_key}\n\n"
               printf "# Create a file with the client name (eg. alice) using the suffix '.auth' (eg. alice.auth) inside the folder\n"
               printf %s"#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${onion}\n\n"
-              printf %s" printf '${client_pub_key_config}' | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
+              printf %s" printf '${client_pub_key_config}' | ${privilege_command} tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
               printf "# Reload tor\n\n"
-              printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
-              printf " sudo systemctl reload-or-restart tor\n"
+              printf %s" ${privilege_command} chown -R debian-tor:debian-tor /var/lib/tor\n"
+              printf %s" ${privilege_command} systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             else
               client_priv_key_config="${onion%.onion}:descriptor:x25519:${client_priv_key}"
-              printf %s"${client_priv_key_config}\n" | sudo tee "${data_dir_auth}"/"${onion}".auth_private >/dev/null
+              printf %s"${client_priv_key_config}\n" | "${privilege_command}" tee "${data_dir_auth}"/"${onion}".auth_private >/dev/null
               printf "\n# Client side authorization configured\n"
               printf %s"\n client_priv_key_config=${client_priv_key_config}\n"
               printf "\n# As you inserted the private key manually, we expect that you have already sent/received the public key to/from the onion service operator\n"
@@ -593,9 +594,9 @@ case "${command}" in
             auth_client_remove  (){
               onion="${1}"
               printf %s"\n# Removing ${data_dir_auth}/${onion}.auth_private"
-              sudo rm -fv "${data_dir_auth}"/"${onion}".auth_private
+              "${privilege_command}" rm -fv "${data_dir_auth}"/"${onion}".auth_private
             }
-            if [ "$(sudo -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
+            if [ "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
               loop_list auth_client_remove "${onion}"
               printf "\n# Client side authorization removed\n"
               printf %s"${green}\n# Done\n${nocolor}"
@@ -605,11 +606,11 @@ case "${command}" in
           ;;
 
           list|LIST)
-            if [ "$(sudo -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
+            if [ "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
               printf %s"# ClientOnionAuthDir ${data_dir_auth}\n"
-              for AUTH in $(sudo -u "${tor_user}" ls "${data_dir_auth}"); do
+              for AUTH in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}"); do
                 printf %s"\n# File name: ${AUTH}\n"
-                printf %s"# Content:   $(sudo -u "${tor_user}" grep "descriptor:x25519:" "${data_dir_auth}"/"${AUTH}")"
+                printf %s"# Content:   $("${privilege_command}" -u "${tor_user}" grep "descriptor:x25519:" "${data_dir_auth}"/"${AUTH}")"
               done
               printf "\n"
               printf %s"${green}\n# Done\n${nocolor}"
@@ -643,9 +644,9 @@ case "${command}" in
       printf %s"\n# Renewing hostname (address) of the service: ${service}\n"
       old_hostname="${onion_hostname}"
       ## delete service public and secret keys
-      sudo rm -fv "${data_dir_services}"/"${service}"/hs_ed25519_secret_key
-      sudo rm -fv "${data_dir_services}"/"${service}"/hs_ed25519_public_key
-      sudo rm -fv "${data_dir_services}"/"${service}"/hostname
+      "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/hs_ed25519_secret_key
+      "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/hs_ed25519_public_key
+      "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/hostname
       ## reload tor now so auth option can get the new hostname
       restarting_tor
       test_service_exists "${service}"
@@ -680,8 +681,8 @@ case "${command}" in
       printf %s"\nAddress  = ${onion_hostname}\n"
       printf %s"Service  = ${service}\n"
       [ -n "${client_name_list}" ] && printf %s"Clients  = ${client_name_list} (${client_count})\n"
-      if sudo grep -q "^HiddenServiceDir .*/${service}$" "${torrc}"; then
-        printf "Status   = active\n" && sudo sed -n "/HiddenServiceDir .*\/${service}$/,/^\s*$/{p}" "${torrc}" | sed "/^[[:space:]]*$/d"
+      if "${privilege_command}" grep -q "^HiddenServiceDir .*/${service}$" "${torrc}"; then
+        printf "Status   = active\n" && "${privilege_command}" sed -n "/HiddenServiceDir .*\/${service}$/,/^\s*$/{p}" "${torrc}" | sed "/^[[:space:]]*$/d"
       else
         printf "Status   = inactive\n"
       fi
@@ -703,7 +704,7 @@ case "${command}" in
         : "${service:?$(error_msg "service is missing")}"
         : "${folder:?$(error_msg "folder is missing")}"
         test_service_exists "${service}"
-        port=$(sudo sed -n "/HiddenServiceDir .*\/${service}$/,/^\s*$/{p}" "${torrc}" | grep "HiddenServicePort" | tail -n 1)
+        port=$("${privilege_command}" sed -n "/HiddenServiceDir .*\/${service}$/,/^\s*$/{p}" "${torrc}" | grep "HiddenServicePort" | tail -n 1)
         only_ports=${port#* }
         virtport=${only_ports% *}
         target=${only_ports##* }
@@ -716,17 +717,17 @@ case "${command}" in
           ~/*|/*) sed -i'' "s|folder|${folder}|" /tmp/"${service}"-onion.conf;;
           *) sed -i'' "s|folder|${website_dir}/${folder}|" /tmp/"${service}"-onion.conf
         esac
-        sudo cp -v /tmp/"${service}"-onion.conf /etc/"${web_server}"/sites-available/
-        sudo ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
+        "${privilege_command}" cp -v /tmp/"${service}"-onion.conf /etc/"${web_server}"/sites-available/
+        "${privilege_command}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
         printf "\n# Web server configuration:\n\n"
-        #sudo cat /tmp/"${service}"-onion.conf
+        #"${privilege_command}" cat /tmp/"${service}"-onion.conf
         while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${service}-onion.conf"
         printf "\n# Reloading web server to apply new configuration\n"
         case "${web_server}" in
-          nginx) sudo nginx -t && sudo nginx -s reload;;
-          apache2) sudo apache2 -t && sudo apache -k graceful;;
+          nginx) "${privilege_command}" nginx -t && "${privilege_command}" nginx -s reload;;
+          apache2) "${privilege_command}" apache2 -t && "${privilege_command}" apache -k graceful;;
         esac
-        #sudo rm -f /tmp/"${service}"-onion.conf
+        #"${privilege_command}" rm -f /tmp/"${service}"-onion.conf
         printf %s"\n# Address: http://${onion_hostname}:${virtport}\n"
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
@@ -736,14 +737,14 @@ case "${command}" in
         disable_site(){
           service="${1}"
           printf %s"\n# Stopping website of the service: ${service}\n"
-          sudo rm -fv /etc/"${web_server}"/sites-available/"${service}"-onion.conf ## for cleanliness
-          sudo rm -fv /etc/"${web_server}"/sites-enabled/"${service}"-onion.conf
+          "${privilege_command}" rm -fv /etc/"${web_server}"/sites-available/"${service}"-onion.conf ## for cleanliness
+          "${privilege_command}" rm -fv /etc/"${web_server}"/sites-enabled/"${service}"-onion.conf
         }
         loop_list disable_site "${service}" 0
         printf "\n# Reloading web server to apply new configuration\n"
         case "${web_server}" in
-          nginx) sudo nginx -t && sudo nginx -s reload;;
-          apache2) sudo apache2 -t && sudo apache2 -k graceful;;
+          nginx) "${privilege_command}" nginx -t && "${privilege_command}" nginx -s reload;;
+          apache2) "${privilege_command}" apache2 -t && "${privilege_command}" apache2 -k graceful;;
         esac
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
@@ -751,7 +752,7 @@ case "${command}" in
       list|LIST)
         printf %s"# Web server = ${web_server}\n\n"
         printf "# Enabled websites:"
-        sites_enabled=$(sudo ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g")
+        sites_enabled=$("${privilege_command}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g")
         [ -n "${sites_enabled}" ] && printf %s"\n${sites_enabled}\n" || printf " No website enabled\n"
       ;;
 
@@ -790,7 +791,7 @@ case "${command}" in
         start_location
         printf "
 server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onion_hostname}""\$request_uri;\n}
-\n# Reload web server:\n\n\tsudo nginx -t && sudo nginx -s reload\n"
+\n# Reload web server:\n\n\t${privilege_command} nginx -t && ${privilege_command} nginx -s reload\n"
         finish_location
       ;;
 
@@ -798,8 +799,8 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         start_location
         printf "
 <VirtualHost *:443>\n\tHeader set Onion-Location \"http://%s${onion_hostname}%%{REQUEST_URI}s\"\n</Virtualhost>
-\n# Enable headers and rewrite modules:\n\n\tsudo a2enmod headers rewrite
-\n# Reload web server:\n\n\tsudo apache2 -t && sudo apache2 -k graceful\n"
+\n# Enable headers and rewrite modules:\n\n\t${privilege_command} a2enmod headers rewrite
+\n# Reload web server:\n\n\t${privilege_command} apache2 -t && ${privilege_command} apache2 -k graceful\n"
         finish_location
       ;;
 
@@ -807,7 +808,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         start_location
         printf "
 <meta http-equiv=\"onion-location\" content=\"http://%s${onion_hostname}\"/>
-\n# Reload web server that you use:\n\n\tsudo nginx -t && sudo nginx -s reload\n\t# or\n\tsudo apache2 -t && sudo apache2 -k graceful\n"
+\n# Reload web server that you use:\n\n\t${privilege_command} nginx -t && ${privilege_command} nginx -s reload\n\t# or\n\t${privilege_command} apache2 -t && ${privilege_command} apache2 -k graceful\n"
         finish_location
       ;;
 
@@ -826,42 +827,42 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ## scp instructions to import backup from remote host
       integrate|INTEGRATE)
         # shellcheck disable=SC2153,SC2154
-        sudo -u "${USER}" mkdir -p "${hs_bk_dir}"/integrate
-        HS_BK_TAR=$(sudo -u "${USER}" ls "${hs_bk_dir}" | grep ".tar.gz" | tail -n -1)
+        "${privilege_command}" -u "${USER}" mkdir -p "${hs_bk_dir}"/integrate
+        HS_BK_TAR=$("${privilege_command}" -u "${USER}" ls "${hs_bk_dir}" | grep ".tar.gz" | tail -n -1)
         printf %s"# Integrating backup from file: ${HS_BK_TAR}\n\n"
         printf "# Extracting the archive\n\n"
-        sudo tar -xpzvf "${hs_bk_dir}"/"${HS_BK_TAR}" -C "${hs_bk_dir}"/integrate
-        sudo chown -R "${USER}:${USER}" "${hs_bk_dir}"
-        sudo cp -rf "${hs_bk_dir}"/integrate"${data_dir_services}"/* "${data_dir_services}"/
-        sudo cp -rf "${hs_bk_dir}"/integrate"${data_dir_auth}"/* "${data_dir_auth}"/
-        data_dir_auth_BK="$(sudo grep "ClientOnionAuthDir" "${hs_bk_dir}"/integrate"${torrc}")"
+        "${privilege_command}" tar -xpzvf "${hs_bk_dir}"/"${HS_BK_TAR}" -C "${hs_bk_dir}"/integrate
+        "${privilege_command}" chown -R "${USER}:${USER}" "${hs_bk_dir}"
+        "${privilege_command}" cp -rf "${hs_bk_dir}"/integrate"${data_dir_services}"/* "${data_dir_services}"/
+        "${privilege_command}" cp -rf "${hs_bk_dir}"/integrate"${data_dir_auth}"/* "${data_dir_auth}"/
+        data_dir_auth_BK="$("${privilege_command}" grep "ClientOnionAuthDir" "${hs_bk_dir}"/integrate"${torrc}")"
         if [ -n "${data_dir_auth_BK}" ]; then
-          sudo sed -i'' "/ClientOnionAuthDir .*/d" "${torrc}"
-          printf '\n%s\n\n' "${data_dir_auth_BK}" | sudo tee -a "${torrc}" >/dev/null
-          sudo sed -i'' "/ClientOnionAuthDir .*/d" "${hs_bk_dir}"/integrate"${torrc}"
+          "${privilege_command}" sed -i'' "/ClientOnionAuthDir .*/d" "${torrc}"
+          printf '\n%s\n\n' "${data_dir_auth_BK}" | "${privilege_command}" tee -a "${torrc}" >/dev/null
+          "${privilege_command}" sed -i'' "/ClientOnionAuthDir .*/d" "${hs_bk_dir}"/integrate"${torrc}"
         fi
-        sudo cat -s "${torrc}" "${hs_bk_dir}"/integrate"${torrc}" | sudo tee "${torrc}".tmp >/dev/null
-        sudo mv "${torrc}".tmp "${torrc}"
+        "${privilege_command}" cat -s "${torrc}" "${hs_bk_dir}"/integrate"${torrc}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
+        "${privilege_command}" mv "${torrc}".tmp "${torrc}"
         ## avoid duplication of services, it will keep the current machine config lines for safety
-        # for service in $(sudo grep "HiddenServiceDir" "${torrc}" | cut -d " " -f2); do
+        # for service in $("${privilege_command}" grep "HiddenServiceDir" "${torrc}" | cut -d " " -f2); do
         #   service_name=$(printf %s"${service##*/}")
-        #   sudo sed -n "/HiddenServiceDir .*\/${service_name}$/,/^\s*$/{p}" "${torrc}" > "${torrc}".tmp
-        #   sudo sed -i'' "/HiddenServiceDir .*\/${service_name}$/,/^\s*$/{d}" "${torrc}"
-        #   sudo sed '/^\s*$/Q' "${torrc}".tmp > "${torrc}".mod
-        #   sudo sed -i'' '1 i \ ' "${torrc}".mod; sudo sed -i'' "\$a\ " "${torrc}".mod
-        #   sudo cat "${torrc}".mod | sudo tee -a "${torrc}" >/dev/null
+        #   "${privilege_command}" sed -n "/HiddenServiceDir .*\/${service_name}$/,/^\s*$/{p}" "${torrc}" > "${torrc}".tmp
+        #   "${privilege_command}" sed -i'' "/HiddenServiceDir .*\/${service_name}$/,/^\s*$/{d}" "${torrc}"
+        #   "${privilege_command}" sed '/^\s*$/Q' "${torrc}".tmp > "${torrc}".mod
+        #   "${privilege_command}" sed -i'' '1 i \ ' "${torrc}".mod; "${privilege_command}" sed -i'' "\$a\ " "${torrc}".mod
+        #   "${privilege_command}" cat "${torrc}".mod | "${privilege_command}" tee -a "${torrc}" >/dev/null
         # done
-        # sudo rm -f "${torrc}".tmp "${torrc}".mod
-        #sudo cat -s "${torrc}" | sudo tee "${torrc}".tmp >/dev/null && sudo mv "${torrc}".tmp "${torrc}"
-        sudo rm -rf "${hs_bk_dir}"/integrate
+        # "${privilege_command}" rm -f "${torrc}".tmp "${torrc}".mod
+        #"${privilege_command}" cat -s "${torrc}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null && "${privilege_command}" mv "${torrc}".tmp "${torrc}"
+        "${privilege_command}" rm -rf "${hs_bk_dir}"/integrate
         ## RESTORE BACKUP FROM REMOTE
         printf "\n# Restore your configuration importing from a remote machine.\n\n"
         ## upload from remote to this instane
         printf "# Import backup file uploading to remote. On the remote terminal, run:\n"
-        printf %s"\tsudo scp -r ${HS_BK_TAR} ${USER}@${local_ip}:${hs_bk_dir}/\n\n" #### remove HS_BK_TAR
+        printf %s"\t${privilege_command} scp -r ${HS_BK_TAR} ${USER}@${local_ip}:${hs_bk_dir}/\n\n" #### remove HS_BK_TAR
         ## download from this instance
         printf "# Import backup file downloading from remote. On this terminal instance, run:\n"
-        printf %s"\tsudo scp -r ${scp_target_full} ${hs_bk_dir}/${HS_BK_TAR}\n" #### remove HS_BK_TAR
+        printf %s"\t${privilege_command} scp -r ${scp_target_full} ${hs_bk_dir}/${HS_BK_TAR}\n" #### remove HS_BK_TAR
         #restarting_tor
       ;;
 
@@ -873,21 +874,21 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         printf "# Backing up the services dir, onion_auth dir and the torrc\n\n"
         mkdir -p "${hs_bk_dir}"
         ## these lines are necessary to copy the full path when creating the compressed archive
-        sudo cp "${torrc}" "${torrc}".rest
-        printf '\n%s\n\n' "$(sudo grep "ClientOnionAuthDir" "${torrc}")" | sudo tee "${torrc}".tmp >/dev/null
-        printf '\n%s\n\n' "$(sudo sed -n "/HiddenServiceDir/,/^\s*$/{p}" "${torrc}")" | sudo tee -a "${torrc}".tmp >/dev/null
-        sudo mv "${torrc}".tmp "${torrc}"
-        sudo tar -cpzvf "${hs_bk_dir}"/"${HS_BK_TAR}" "${data_dir_services}" "${data_dir_auth}" "${torrc}" 2>/dev/null
-        sudo mv "${torrc}".rest "${torrc}"
-        sudo chown -R "${USER}:${USER}" "${hs_bk_dir}"
+        "${privilege_command}" cp "${torrc}" "${torrc}".rest
+        printf '\n%s\n\n' "$("${privilege_command}" grep "ClientOnionAuthDir" "${torrc}")" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
+        printf '\n%s\n\n' "$("${privilege_command}" sed -n "/HiddenServiceDir/,/^\s*$/{p}" "${torrc}")" | "${privilege_command}" tee -a "${torrc}".tmp >/dev/null
+        "${privilege_command}" mv "${torrc}".tmp "${torrc}"
+        "${privilege_command}" tar -cpzvf "${hs_bk_dir}"/"${HS_BK_TAR}" "${data_dir_services}" "${data_dir_auth}" "${torrc}" 2>/dev/null
+        "${privilege_command}" mv "${torrc}".rest "${torrc}"
+        "${privilege_command}" chown -R "${USER}:${USER}" "${hs_bk_dir}"
         set_owner_permission
         printf %s"\nsha256sum=$(sha256sum "${hs_bk_dir}"/"${HS_BK_TAR}")\n\n"
         ## upload to remote
         printf "# Export backup file uploading to remote. On this terminal instance, run:\n"
-        printf %s"\tsudo scp -r ${hs_bk_dir}/${HS_BK_TAR} ${scp_target_full}\n\n"
+        printf %s"\t${privilege_command} scp -r ${hs_bk_dir}/${HS_BK_TAR} ${scp_target_full}\n\n"
         ## download from this instance on remote
         printf "# Export backup file downloading from remote. On the remote terminal, run:\n"
-        printf %s"\tsudo scp -r ${USER}@${local_ip}:${hs_bk_dir}/${HS_BK_TAR} .\n"
+        printf %s"\t${privilege_command} scp -r ${USER}@${local_ip}:${hs_bk_dir}/${HS_BK_TAR} .\n"
       ;;
 
       *)
@@ -904,21 +905,21 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     : "${action:?$(usage)}"
 
     vanguards_config(){
-      sudo cp "${torrc}" "${torrc}".bak
+      "${privilege_command}" cp "${torrc}" "${torrc}".bak
       ## Keep config with the torrc and torsocks.conf
-      sudo cp -v "${data_dir}"/vanguards/vanguards-example.conf "${torrc_root}"/vanguards.conf
-      sudo sed -i'' "s|control_port =.*|control_port = ${control_port}|g" "${torrc_root}"/vanguards.conf
-      sudo sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${torrc_root}"/vanguards.conf
+      "${privilege_command}" cp -v "${data_dir}"/vanguards/vanguards-example.conf "${torrc_root}"/vanguards.conf
+      "${privilege_command}" sed -i'' "s|control_port =.*|control_port = ${control_port}|g" "${torrc_root}"/vanguards.conf
+      "${privilege_command}" sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${torrc_root}"/vanguards.conf
       ## Control and Authentication methods are needed. Use the easiest to configure if the manual ones are not present, else do nothing.
       ## Control methods are Port (default: 9051) and Socket (default: /run/tor/control). Prefer port because socket path may differ on different systems https://github.com/mikeperry-tor/vanguards/pull/54#issuecomment-812185302.
       if ! grep -q "ControlPort ${control_port}" "${torrc}" && ! grep -q "ControlSocket" "${torrc}"; then
-        sudo sed -i'' "s/ControlPort .*/ControlPort ${control_port}/" "${torrc}"
-        grep -q "ControlPort ${control_port}" "${torrc}" || printf %s"\nControlPort ${control_port}\n\n" | sudo tee -a "${torrc}" >/dev/null
+        "${privilege_command}" sed -i'' "s/ControlPort .*/ControlPort ${control_port}/" "${torrc}"
+        grep -q "ControlPort ${control_port}" "${torrc}" || printf %s"\nControlPort ${control_port}\n\n" | "${privilege_command}" tee -a "${torrc}" >/dev/null
       fi
       ## Authentication methods are Cookie (default: 0) and HashedPassword, to read the "control_auth_cookie". Prefer cookie because else a password is needed. If any method was already configured, use it.
       if ! grep -q "CookieAuthentication 1" "${torrc}" && ! grep -q "HashedControlPassword" "${torrc}"; then
-        sudo sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${torrc}"
-        grep -q "CookieAuthentication" "${torrc}" || printf "\nCookieAuthentication 1\n\n" | sudo tee -a "${torrc}"  >/dev/null
+        "${privilege_command}" sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${torrc}"
+        grep -q "CookieAuthentication" "${torrc}" || printf "\nCookieAuthentication 1\n\n" | "${privilege_command}" tee -a "${torrc}"  >/dev/null
       fi
       ## Edit vanguards service
       cp -v "${ONIONJUGGLER_PWD}"/etc/systemd/system/vanguards@default.service /tmp/vanguards@default.service
@@ -926,43 +927,43 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       sed -i'' "s|tor_service|${tor_service}|g" /tmp/vanguards@default.service
       sed -i'' "s|data_dir|${data_dir}|g" /tmp/vanguards@default.service
       sed -i'' "s|tor_user|${tor_user}|g" /tmp/vanguards@default.service
-      sudo cp -v /tmp/vanguards@default.service /etc/systemd/system/
+      "${privilege_command}" cp -v /tmp/vanguards@default.service /etc/systemd/system/
       printf "\n>>>>>>>>>>>>>>>>>>>\n"
       while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/vanguards@default.service"
       #cat /tmp/vanguards@default.service
       printf ">>>>>>>>>>>>>>>>>>>\n\n"
       restarting_tor
-      sudo systemctl daemon-reload
-      sudo systemctl enable vanguards@default.service
-      sudo systemctl restart vanguards@default.service
-      sudo systemctl status vanguards@default.service --no-pager
+      "${privilege_command}" systemctl daemon-reload
+      "${privilege_command}" systemctl enable vanguards@default.service
+      "${privilege_command}" systemctl restart vanguards@default.service
+      "${privilege_command}" systemctl status vanguards@default.service --no-pager
       printf %s"${green}\n# Done\n${nocolor}"
     }
 
     case "${action}" in
       install|INSTALL)
         printf "# Installing Vanguards...\n\n"
-        sudo -u "${tor_user}" git clone https://github.com/mikeperry-tor/vanguards.git "${data_dir}/vanguards"
-        sudo -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
+        "${privilege_command}" -u "${tor_user}" git clone https://github.com/mikeperry-tor/vanguards.git "${data_dir}/vanguards"
+        "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
         vanguards_config
       ;;
 
       upgrade|UPGRADE)
         printf "# Upgrading Vanguards...\n\n"
-        sudo -u "${tor_user}" git -C "${data_dir}"/vanguards pull -p --rebase=false
-        sudo -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
-        sudo -u "${tor_user}" git -C "${data_dir}"/vanguards show
+        "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards pull -p --rebase=false
+        "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
+        "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards show
         vanguards_config
       ;;
 
       remove|REMOVE)
         printf "# Removing Vanguards...\n\n"
-        sudo rm -rfv "${data_dir}"/vanguards
+        "${privilege_command}" rm -rfv "${data_dir}"/vanguards
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
       logs|LOGS)
-        sudo tail -f -n 25 /var/log/tor/vanguards.log
+        "${privilege_command}" tail -f -n 25 /var/log/tor/vanguards.log
       ;;
 
       *)

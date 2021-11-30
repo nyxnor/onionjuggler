@@ -126,13 +126,14 @@ Open the mentioned configuration file:
 "${EDITOR:-vi}" .onionrc
 ```
 ```sh
-## [ EDIT REQUIRED ] (IF NOT DEBIAN)
+## [ EDIT REQUIRED ]
+privilege_command="sudo" ## [sudo|doas]
 tor_user="debian-tor" ## [debian-tor|tor]
 tor_service="tor@default.service" ## [tor@default.service|tor.service]
-pkg_mngr_install="sudo apt install -y" ## always use the 'yes' flag to be non interactive
+pkg_mngr_install="${privilege_command} apt install -y" ## always use the 'yes' flag to be non interactive
 web_server="nginx" ## [nginx|apache2]
 dialog_box="dialog" ## [dialog|whiptail]
-requirements="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${dialog_box} ${web_server}" ## search pkg name for your OS
+requirements="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${dialog_box} ${web_server}" ## search pkg name for your OS on docs/COMPATIBILITY.md
 ```
 Edit with sed (use insert option -> `sed -i''`):
 ```sh
@@ -211,13 +212,13 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * Unix-like system.
   * any POSIX shells: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `zsh` 3.1.9+, `yash` 2.29+, busybox `ash` 1.1.3+ etc.
   * systemd (for tor and vanguards control) - for now, different services managers is a goal
-  * sudo privileges. Doas compatibility is to be expected.
+  * superuser privileges to call some commands as root and the tor user, with `doas` or `sudo`.
   * blank lines between Hidden Services blocks in the torrc.
   * HiddenServiceDir different path than DataDir - `DataDir/services`.
   * Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionjuggler/`, Correct: `~/onionjuggler`).
 
 * Packages:
-  * **sudo**
+  * **doas/sudo** (must be already configured)
   * **tor** >= 0.3.5
   * **grep** >=2.0
   * **sed** >= 2.0
@@ -232,8 +233,8 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **gzip**
 
 The packages are downloaded when setting up the environment with [setup.sh](install/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
-The absolute minimum you can go to is `sudo tor grep sed`, and you will be limited to enable, disable and renew services.
-It is expected that you already have your user in the sudoers configuration file.
+The absolute minimum you can go to is `"doas tor grep sed`, and you will be limited to enable, disable and renew services.
+It is expected that you already have your user in the "${privilege_command}"ers configuration file.
 
 ## Credits
 

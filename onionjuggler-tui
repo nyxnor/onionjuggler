@@ -19,6 +19,7 @@ error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1;
 : "${ONIONJUGGLER_PWD:?$(error_msg "Export \${ONIONJUGGLER_PWD} by running:\n\t./install/setup.sh -h")}"
 . "${ONIONJUGGLER_PWD}"/.onionrc
 
+: "${privilege_command:?}"
 : "${tor_user:?}"
 : "${web_server:?}"
 : "${dialog_box:?}"
@@ -78,9 +79,9 @@ service_menu(){
   dialog_type="${1}"
   compl_title="${2}"
   i=0
-  for service in $(sudo -u "${tor_user}" ls "${data_dir_services}"); do
+  for service in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"); do
     i=$((i+1))
-    onion_hostname="$(sudo -u "${tor_user}" grep -s ".onion" "${data_dir_services}"/"${service}"/hostname)"
+    onion_hostname="$("${privilege_command}" -u "${tor_user}" grep -s ".onion" "${data_dir_services}"/"${service}"/hostname)"
     case "${dialog_type}" in
       checklist) service_list="$(printf "%s\n%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}" 0)";;
       menu) service_list="$(printf "%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}")";;
@@ -114,7 +115,7 @@ service_menu(){
 title="Onion Services - Main Menu"
 menu="\nUse enter/spacebar to select:"
 backtitle="Onion Services Manager"
-if [ -z "$(sudo -u "${tor_user}" ls "${data_dir_services}")" ]; then
+if [ -z "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}")" ]; then
   choice_main="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
   "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((15+whiptail_height))" 80 7 \
   "QUIT" "Exit menu and clear the screen" \
@@ -253,12 +254,12 @@ PURGE: Service will be permanently disabled, all the directory data, including h
   AUTH_SERVER)
     i=0
     service_list=""
-    for service in $(sudo -u "${tor_user}" ls "${data_dir_services}"); do
+    for service in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"); do
       ## only include services that have at least one client
-      client_exist="$(sudo -u "${tor_user}" ls "${data_dir_services}"/"${service}"/authorized_clients/ | sed "s/\.auth//g")"
+      client_exist="$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"/"${service}"/authorized_clients/ | sed "s/\.auth//g")"
       if [ -n "${client_exist}" ]; then
         i=$((i+1))
-        onion_hostname="$(sudo -u "${tor_user}" grep -s ".onion" "${data_dir_services}"/"${service}"/hostname)"
+        onion_hostname="$("${privilege_command}" -u "${tor_user}" grep -s ".onion" "${data_dir_services}"/"${service}"/hostname)"
         service_list_menu="$(printf "%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}")"
         service_list_checklist="$(printf "%s\n%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}" 0)"
       fi
@@ -310,14 +311,14 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         if [ -n "${choice_service}" ]; then
           service="${choice_service}"
           i=0
-          for client in $(sudo -u "${tor_user}" ls "${data_dir_services}"/"${service}"/authorized_clients/ | sed "s/\.auth//g"); do
+          for client in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"/"${service}"/authorized_clients/ | sed "s/\.auth//g"); do
             i=$((i+1))
             client_list="$(printf "%s\n%s\n%s\n" "${client_list}" "${client}" ".")"
           done
           # shellcheck disable=SC2086
           choice_client="$("${dialog_box}" --backtitle "${backtitle}" --title "${title}" --menu "${menu}" \
           "$((i+8+whiptail_height))" 50 "${i}" ${client_list} 3>&1 1>&2 2>&3)"
-          [ -n "${choice_client}" ] && sudo "${EDITOR:-vi}" "${data_dir_services}"/"${service}"/authorized_clients/"${choice_client}".auth
+          [ -n "${choice_client}" ] && "${privilege_command}" "${EDITOR:-vi}" "${data_dir_services}"/"${service}"/authorized_clients/"${choice_client}".auth
         fi
       ;;
 
@@ -369,7 +370,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           # shellcheck disable=SC2086
           service_total=$(IFS=' '; set -f -- ${choice_service}; printf %s"${#}")
           for service in $(printf %s"${choice_service}"); do
-            client="$(sudo -u "${tor_user}" ls "${data_dir_services}"/"${service}"/authorized_clients/ | sed "s/\.auth//g")"
+            client="$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"/"${service}"/authorized_clients/ | sed "s/\.auth//g")"
             client_list="$(printf "%s\n%s\n" "${client_list}" "${client}")"
           done
           i=0
@@ -406,7 +407,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
   AUTH_CLIENT)
     i=0
-    for onion_auth in $(sudo -u "${tor_user}" ls "${data_dir_auth}"/); do
+    for onion_auth in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}"/); do
       onion_auth_name=${onion_auth%.auth_private}
       i=$((i+1))
       onion_auth_list="$(printf "%s\n%s\n%s\n" "${onion_auth_list}" "${onion_auth_name}" ".")"
@@ -443,7 +444,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         # shellcheck disable=SC2086
         choice_onion_auth="$("${dialog_box}" --title "${title}" --menu "${menu}" \
         "$((i+8+whiptail_height))" 80 "${i}" ${onion_auth_list} 3>&1 1>&2 2>&3)"
-        [ -n "${choice_onion_auth}" ] && sudo "${EDITOR:-vi}" "${data_dir_auth}"/"${choice_onion_auth}".auth_private
+        [ -n "${choice_onion_auth}" ] && "${privilege_command}" "${EDITOR:-vi}" "${data_dir_auth}"/"${choice_onion_auth}".auth_private
       ;;
 
       GEN)
@@ -534,7 +535,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       service_menu menu "Web server "
       if [ -n "${service_name_list}" ]; then
         i=0
-        for folder in $(sudo ls "${website_dir}"); do
+        for folder in $("${privilege_command}" ls "${website_dir}"); do
           i=$((i+1))
           folder_list="$(printf "%s\n%s\n%s\n" "${folder_list}" "${folder}" ".")"
         done
@@ -553,7 +554,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       fi
     elif [ "${status}" = "OFF" ]; then
       i=0
-      for service in $(sudo ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g"); do
+      for service in $("${privilege_command}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g"); do
         i=$((i+1))
         service_list="$(printf "%s\n%s\n" "${service_list}" "${service}" "." 0)"
       done
@@ -575,7 +576,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
   VANGUARDS)
     title="Vanguards"
-    if [ -z "$(sudo -u "${tor_user}" ls "${data_dir}"/vanguards)" ]; then
+    if [ -z "$("${privilege_command}" -u "${tor_user}" ls "${data_dir}"/vanguards)" ]; then
       choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
       "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((9+whiptail_height))" 50 1 \
       "INSTALL" "Use Vanguards protections" 3>&1 1>&2 2>&3)"
@@ -590,7 +591,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     if [ "${choice_action}" = "LOGS" ]; then
       clear_posix
       trap '"${ONIONJUGGLER_PWD}"/onionjuggler-tui; exit 0' INT
-      sudo tail -f -n 25 /var/log/tor/vanguards.log
+      "${privilege_command}" tail -f -n 25 /var/log/tor/vanguards.log
     elif [ -n "${choice_action}" ]; then
       clear_posix
       "${ONIONJUGGLER_PWD}"/onionjuggler-cli vanguards "--${choice_action}"

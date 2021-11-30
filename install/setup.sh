@@ -63,6 +63,7 @@ usage(){
 }
 
 ## MAIN
+: "${privilege_command:?}"
 action=${1:--s}
 argument=${2}
 definition=${3}
@@ -109,17 +110,17 @@ case "${action}" in
     ## configure
     # shellcheck disable=SC2086
     install_package ${requirements}
-    sudo usermod -aG "${tor_user}" "${USER}"
-    sudo -u "${tor_user}" mkdir -p "${data_dir_services}"
-    sudo -u "${tor_user}" mkdir -p "${data_dir_auth}"
+    "${privilege_command}" usermod -aG "${tor_user}" "${USER}"
+    "${privilege_command}" -u "${tor_user}" mkdir -p "${data_dir_services}"
+    "${privilege_command}" -u "${tor_user}" mkdir -p "${data_dir_auth}"
     restarting_tor
     printf "# Creating man pages\n"
-    sudo mkdir -p /usr/local/man/man1
+    "${privilege_command}" mkdir -p /usr/local/man/man1
     pandoc "${ONIONJUGGLER_PWD}"/docs/ONIONJUGGLER-CLI.md -s -t man -o /tmp/onionjuggler-cli.1
     gzip -f /tmp/onionjuggler-cli.1
     #tar -czvf --no-xattrs /tmp/onionjuggler-cli.1.gz /tmp/onionjuggler-cli.1 ## TODO: tar prints file bits information inside the file
-    sudo mv /tmp/onionjuggler-cli.1.gz /usr/local/man/man1/
-    sudo mandb -q -f /usr/local/man/man1/onionjuggler-cli.1.gz
+    "${privilege_command}" mv /tmp/onionjuggler-cli.1.gz /usr/local/man/man1/
+    "${privilege_command}" mandb -q -f /usr/local/man/man1/onionjuggler-cli.1.gz
     ## finish
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
   ;;

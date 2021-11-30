@@ -145,8 +145,8 @@ pip3 install -r requirements.txt
 ## Python Indexed Packages and for MacOSX
 
 ```sh
-sudo easy_install pip
-sudo pip install stem
+"${privilege_command}" easy_install pip
+"${privilege_command}" pip install stem
 ```
 
 ## Linux
@@ -154,19 +154,19 @@ sudo pip install stem
 ### Debian
 
 ```sh
-sudo apt-get install python3-stem
+"${privilege_command}" apt-get install python3-stem
 ```
 
 ### Fedora
 
 ```sh
-sudo dnf install python3-stem
+"${privilege_command}" dnf install python3-stem
 ```
 
 ### Gentoo
 
 ```sh
-sudo emerge stem
+"${privilege_command}" emerge stem
 ```
 
 ### Arch Linux

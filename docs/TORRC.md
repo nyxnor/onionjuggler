@@ -6,12 +6,12 @@ This list of torrc commands explains only the specific configuration options tha
 
 List all onion services options:
 ```
-sudo -u "${tor_user}" tor --list-torrc-options | grep "HS\|HiddenService"
+"${privilege_command}" -u "${tor_user}" tor --list-torrc-options | grep "HS\|HiddenService"
 ```
 
 Verify the configuration file is valid:
 ```
-sudo -u "${tor_user}" tor --verify-config
+"${privilege_command}" -u "${tor_user}" tor --verify-config
 ```
 
 ## THE CONFIGURATION FILE FORMAT
