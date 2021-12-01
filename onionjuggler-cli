@@ -50,9 +50,9 @@ while true; do
 
     auth-server|auth-client) command="${1%-*}"; host="${1#*-}"; : "${host:?$(error_msg "host is missing")}"; shift;;
 
-    --install|--logs|--upgrade|--remove|--nginx|--apache|--html|--create|--integrate|--no-qr) action="${1#--}"; shift;;
+    -i|--install|-L|--logs|-u|--upgrade|-r|--remove|--nginx|--apache|--html|-q|--no-qr|-C|--create|-I|--integrate) action="${1#--}"; shift;;
 
-    --on|--off|--list) status="${1#--}"; shift;;
+    -n|--on|-f|--off|-l|--list) status="${1#--}"; shift;;
 
     -s|--service) service="${2:?$(error_msg "service is missing")}"; shift 2;;
     --service=*) service="${1#*=}"; : "${service:?$(error_msg "service is missing")}"; shift;;
@@ -63,24 +63,24 @@ while true; do
     -o|--onion) onion="${2:?$(error_msg "onion is missing")}"; shift 2;;
     --onion=*) onion="${1#*-}"; : "${onion:?$(error_msg "onion is missing")}"; shift;;
 
-    --purge) purge="${1#--}"; shift;;
+    -P| --purge) purge="${1#--}"; shift;;
 
-    -v|--version) version="${2:-3}"; shift 2;;
-    --version=*) version="${1#*=}"; : "${version:=3}"; shift;;
+    -v|--version) version="${2:?$(error_msg "version is missing")}"; shift 2;;
+    --version=*) version="${1#*=}"; : "${version:?$(error_msg "version is missing")}"; shift;;
 
     -S|--socket) socket="${2:?$(error_msg "socket is missing")}"; shift 2;;
     --socket=*) socket="${1#*=}"; : "${socket:?$(error_msg "socket is missing")}"; shift;;
 
-    --port) port="${2:?$(error_msg "port is missing")}"; shift 2;;
+    -p| --port) port="${2:?$(error_msg "port is missing")}"; shift 2;;
     --port=*) port="${1#*=}"; : "${port:?$(error_msg "port is missing")}"; shift;;
 
     -F|--folder) folder="${2:?$(error_msg "folder is missing")}"; shift 2;;
     --folder=*) folder="${1#*=}"; : "${folder:?$(error_msg "folder is missing")}"; shift;;
 
-    --client-priv-key) client_priv_key="${2:?$(error_msg "client_priv_key is missing")}"; shift 2;;
+    -k|--client-priv-key) client_priv_key="${2:?$(error_msg "client_priv_key is missing")}"; shift 2;;
     --client-priv-key=*) client_priv_key="${1#*=}"; : "${client_priv_key:?$(error_msg "client_priv_key is missing")}"; shift;;
 
-    --client-pub-key) client_pub_key="${2:?$(error_msg "client_pub_key is missing")}"; shift 2;;
+    -K|--client-pub-key) client_pub_key="${2:?$(error_msg "client_pub_key is missing")}"; shift 2;;
     --client-pub-key=*) client_pub_key="${1#*=}"; : "${client_pub_key:?$(error_msg "client_pub_key is missing")}"; shift;;
 
     --) shift; break;;
@@ -101,8 +101,8 @@ usage(){
 
   printf "Juggle with an Onion Service
 \nUsage: %s${0##*/} command [required <args>] <optional>
-\nOptions:
-  on [--service <SERVICE>] [--socket <tcp|unix>] [--port=VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>] <--version 3>
+\nComplete options:
+  on [--service <SERVICE>] [--socket <tcp|unix>] [--port <VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>] <--version 3>
                                                              enable a service (only TCP requires a target)
   off [--service <@all|SERV1,SERV2,...>] <--purge>           disable a service and optionally purge its directory
   list [--service <@all|SERV1,SERV2,...>] <--no-qr>          see credentials from indicated services
@@ -123,13 +123,53 @@ usage(){
   web --list                                                 list enabled websites
   location [--nginx|--apache|--html] [--service <SERVICE>]   onion-location guide, no execution
   backup [--create|--integrate]                              restore latest torrc backup
-  vanguards [--install|--logs|--upgrade|--remove]            install, upgrade, remove or see logs for vanguards addon
-  [-h|--help]                                                display this help message
+  vanguards [--on|--list|--upgrade|--off]                    install, upgrade, remove or see logs for vanguards addon
+  -h|--help                                                  display this help message
 
-Description:
-  @all                   all services or clients available
-  SERV1,SERV2...         only specified services
-  CLIENT1,CLIENT2,...    only specified services
+Options:
+  -s, --service <SERVICE>                                    required option: on, off, list, renew, auth-server, auth-client, web
+  on                                                         activate an onion service
+    -S, --socket <tcp|unix>                                  define a socket for the new onion service
+    -v, --version 3                                          define a version for the new onion service
+    -p, --port <VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>       define ports for the new onion service
+  off                                                        deactivate an onion service configuration
+    -P, --purge                                              purge an onion service data
+  list                                                       list existing services and their configuration, clients
+    -q, --no-qr                                              don't QR encode the hostname
+  auth-server                                                manage authorized_clients
+    -n, --on                                                 authorized aclient
+    -f, --off                                                remove authorization from a client
+    -l, --list                                               list authorized clients
+    -c, --client <CLIENT>                                    choose client
+    -K, --client-pub-key <CLIENT_PUB_KEY>                    specify client pub key to authorize
+  auth-client                                                manage your authorizations to an onion
+    -n, --on                                                 add authorization
+    -f, --off                                                remove authorization
+    -l, --list                                               list current authorizations
+    -o, --onion <ONION>                                      specify onion to authenticate
+    -k, --client-priv-key <CLIENT_PRIV_KEY>                  specify your client private key
+  web                                                        manage web server configuration
+    -n, --on                                                 activate website to an onion service
+    -f, --off                                                deactivate website to an onion service
+    -l, --list                                               list active websites
+    -F, --folder <SITE_PATH>                                 specify website files
+  location                                                   guide to add onion-location to redirect users to your onion domain
+    --nginx                                                  Nginx webserver header for onion-location
+    --apache                                                 Apache2 webserver header for onion-location
+    --html                                                   HTML header for onion-location
+  backup                                                     complete backup of onion services
+    -C, --create                                             create backup
+    -I, --integrate                                          integrate backup to your system
+  vanguards                                                  manage Vanguards protection
+    -n, --on                                                 install Vanguards addon
+    -l, --list                                               see Vanguards logs
+    -u, --upgrade                                            upgrade configuration and repository
+    -f, --off                                                remove Vanguards
+
+Positional arguments:
+  @all                                                       all services or clients available
+  SERV1,SERV2...                                             specify services
+  CLIENT1,CLIENT2,...                                        specify clients
 
 '# Done': You should always see it at the end, else something unexpected occured.
 It does not imply the code worked, you should always pay attention for errors in the logs.
@@ -251,7 +291,7 @@ case "${command}" in
   ## purge is optional, it deletes the <HiddenServiceDir>
   ## will not check if folder or configuration exist, this is cleanup mode
   ## will not use '@all'. Purge is dangerous, purging all service is even more dangerous. Always backup.
-  off|OFF)
+  -f|off|OFF)
     : "${service:?$(error_msg "service is missing")}"
     : "${purge}" ## optional
     delete_service(){
@@ -282,15 +322,18 @@ case "${command}" in
   ## tcp-socket uses addr:port, which can be remote or localhost. It leaks onion address to the local network
   ## unix-socket uses unix:path, which is create a unique name for it. It does not leak onion address to the local network.
   ## virtport is the port to be used by the client when visiting the service.
+  ## empty socket will default to unix
+  ## empty version will default to 3
+  ## empty port will default to 80
   ## target is where the incoming traffic from virtport gets redirected. This option is abscent on unix-socket because the script completes it.
   ##  if target is not specified, will use the same port from virtport and bind to localhost.
   ##  if target only contains the port number and not the address, will bind to localhost.
   ## virtport2 and target 2 are optional
-  on|ON)
+  -n|on|ON)
     : "${service:?$(error_msg "service is missing")}"
-    : "${socket:?$(error_msg "socket is missing")}"
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version=${version} is not available" ## wait for v4 to change this
-    : "${port:?$(error_msg "port is missing")}"
+    : "${socket:=unix}"
+    : "${port:=80}"
     port="$(printf %s"${port}" | tr "," " " | tr -s " ")"
     virtport="${port%% *}"
     : "${virtport:?$(error_msg "virtport is missing")}"
@@ -400,7 +443,7 @@ case "${command}" in
           ## the client pub key is automatically saved inside <HiddenServiceDir>/authorized_clients/alice.auth
           ## the client private key is shown in the screen and the key file deleted
           ## the onion service operator should send the private key for the desired client
-          on|ON)
+          -n|on|ON)
             : "${client:?$(error_msg "client is missing")}"
             #printf "\n# Generating keys to access onion service (Client Authorization) ...\n"
             auth_server_add(){
@@ -467,7 +510,7 @@ case "${command}" in
 
           ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
           ## if no clients are present, the service will be available to anyone that has the onion service address
-          off|OFF)
+          -f|off|OFF)
             : "${client:?$(error_msg "client is missing")}"
             auth_server_remove_clients(){
               service="${1}"
@@ -499,7 +542,7 @@ case "${command}" in
             printf %s"${green}\n# Done\n${nocolor}"
           ;;
 
-          list|LIST)
+          -l|list|LIST)
             auth_server_list(){
               service="${1}"
               test_service_exists "${service}"
@@ -536,7 +579,7 @@ case "${command}" in
           ## private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>
           ## use the onion hostname as the file name, this avoid overriding the file by mistake and it indicates outside of the file for which service it refers to (of course it is written inside also)
           ## adding to Tor Browser automatically not supported yet
-          on|ON)
+          -n|on|ON)
             : "${onion:?$(error_msg "onion is missing")}"
             onion_hostaname_without_onion=${onion%.onion}
             suffix_onion=${onion##*.}
@@ -589,7 +632,7 @@ case "${command}" in
           ;;
 
           ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
-          off|OFF)
+          -f|off|OFF)
             : "${onion:?$(error_msg "onion is missing")}"
             auth_client_remove  (){
               onion="${1}"
@@ -605,7 +648,7 @@ case "${command}" in
             fi
           ;;
 
-          list|LIST)
+          -l|list|LIST)
             if [ "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
               printf %s"# ClientOnionAuthDir ${data_dir_auth}\n"
               for AUTH in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}"); do
@@ -669,7 +712,7 @@ case "${command}" in
   ## show all the necessary information to access the service such as the hostname and the QR encoded hostname to scan for Tor Browser Mobile
   ## show the clients names and quantity, as well as the service torrc's block
   ## @all will read through all services folders and execute the commands
-  list|LIST)
+  -l|list|LIST)
     is_service_dir_empty
     : "${service:?$(error_msg "service is missing")}"
     get_service_info(){
@@ -699,7 +742,7 @@ case "${command}" in
     : "${status:?$(error_msg "status is missing")}"
     case "${status}" in
 
-      on|ON)
+      -n|on|ON)
         is_service_dir_empty
         : "${service:?$(error_msg "service is missing")}"
         : "${folder:?$(error_msg "folder is missing")}"
@@ -732,7 +775,7 @@ case "${command}" in
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
-      off|OFF)
+      -f|off|OFF)
         : "${service:?$(error_msg "service is missing")}"
         disable_site(){
           service="${1}"
@@ -749,7 +792,7 @@ case "${command}" in
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
-      list|LIST)
+      -l|list|LIST)
         printf %s"# Web server = ${web_server}\n\n"
         printf "# Enabled websites:"
         sites_enabled=$("${privilege_command}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g")
@@ -825,7 +868,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ## restore backup
       ## backup tar file will be extracted and integrated into their respective tor folders
       ## scp instructions to import backup from remote host
-      integrate|INTEGRATE)
+      -I|integrate|INTEGRATE)
         # shellcheck disable=SC2153,SC2154
         "${privilege_command}" -u "${USER}" mkdir -p "${hs_bk_dir}"/integrate
         HS_BK_TAR=$("${privilege_command}" -u "${USER}" ls "${hs_bk_dir}" | grep ".tar.gz" | tail -n -1)
@@ -869,7 +912,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ## full backup needede to restore all of your hidden services and client keys
       ## folders/files included: <torrc>, <DataDir>/services/, <DataDir>/onion_auth/
       ## scp instructions to export backup to remote host
-      create|CREATE)
+      -C|create|CREATE)
         HS_BK_TAR="tor-hs-$(date +%Y-%m-%d-%H'h'-%M'm').tar.gz"
         printf "# Backing up the services dir, onion_auth dir and the torrc\n\n"
         mkdir -p "${hs_bk_dir}"
@@ -941,14 +984,14 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     }
 
     case "${action}" in
-      install|INSTALL)
+      -n|on|ON)
         printf "# Installing Vanguards...\n\n"
         "${privilege_command}" -u "${tor_user}" git clone https://github.com/mikeperry-tor/vanguards.git "${data_dir}/vanguards"
         "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
         vanguards_config
       ;;
 
-      upgrade|UPGRADE)
+      -u|upgrade|UPGRADE)
         printf "# Upgrading Vanguards...\n\n"
         "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards pull -p --rebase=false
         "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
@@ -956,13 +999,13 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         vanguards_config
       ;;
 
-      remove|REMOVE)
+      -f|off|OFF)
         printf "# Removing Vanguards...\n\n"
         "${privilege_command}" rm -rfv "${data_dir}"/vanguards
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
-      logs|LOGS)
+      -l|list|LIST)
         "${privilege_command}" tail -f -n 25 /var/log/tor/vanguards.log
       ;;
 

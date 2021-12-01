@@ -54,11 +54,11 @@ usage(){
   printf "Configure the environment for OnionJuggler
 \nUsage: %s${0##*/} command [REQUIRED] <OPTIONAL>
 \nOptions:
-  -s, --setup             setup environment
-  -r, --release           prepare for commiting
-  -h, --help              show this help message
+  -s, --setup         setup environment
+  -r, --release       prepare for commiting
+  -h, --help          show this help message
 \nAdvanced usage:
-  -s <-p /path/to/repo>   specify the \$ONIONJUGGLER_PWD, it will overwrite the current configuration
+  -s [-p <path>]      specify the \$ONIONJUGGLER_PWD, it will overwrite the current configuration
 "
 }
 

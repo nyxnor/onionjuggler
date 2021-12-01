@@ -579,13 +579,13 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     if [ -z "$("${privilege_command}" -u "${tor_user}" ls "${data_dir}"/vanguards)" ]; then
       choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
       "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((9+whiptail_height))" 50 1 \
-      "INSTALL" "Use Vanguards protections" 3>&1 1>&2 2>&3)"
+      "ON" "Use Vanguards protections" 3>&1 1>&2 2>&3)"
     else
       choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
       "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 3 \
-      "LOGS" "Follow vanguards logs" \
+      "LIST" "Follow vanguards logs" \
       "UPGRADE" "Set new config and upgrade" \
-      "REMOVE" "Delete the Vanguards directory" \
+      "OFF" "Delete the Vanguards directory" \
       3>&1 1>&2 2>&3)"
     fi
     if [ "${choice_action}" = "LOGS" ]; then

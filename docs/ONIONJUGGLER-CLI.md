@@ -28,7 +28,7 @@ onionjuggler-cli - dinamically manage your onion services with a POSIX compliant
 **onionjuggler-cli web list**\
 **onionjuggler-cli location** --service [SERV] [--nginx|--apache|--html]\
 **onionjuggler-cli backup** [--create|--integrate]\
-**onionjuggler-cli vanguards** [--install|--logs|--upgrade|--remove]\
+**onionjuggler-cli vanguards** [--on|--list|--upgrade|--off]\
 **onionjuggler-cli** <*-h|-help|--help|help*>
 
 
@@ -230,15 +230,15 @@ onionjuggler-cli backup --integrate
 **restore** *torrc*
 : Before every change to the torrc state, a backup is saved on the same folder named torrc.bak. This option restore the latest torrc change to revert the last change to the configuration.
 
-**vanguards** [--install|--logs|--upgrade|--remove]
+**vanguards** [--on|--list|--upgrade|--off]
 : Manage Vanguards addon using the repository https://github.com/mikeperry-tor/vanguards. This addon protects against guard discovery and related traffic analysis attacks.
 A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
 Installation (git clone) and Upgrade (git pull) are bound to a commit hash set on the .onionrc (git reset --hard vanguards_commit). Remove will delete the vanguards directory. Logs follow the service logs. When installing, it create a service called vanguards@default, which you can stop and start. File(s) modified: DataDir/vanguards/vanguards.conf.
 ```
-onionjuggler-cli vanguards --install
-onionjuggler-cli vanguards --logs
+onionjuggler-cli vanguards --on
+onionjuggler-cli vanguards --list
 onionjuggler-cli vanguards --upgrade
-onionjuggler-cli vanguards --remove
+onionjuggler-cli vanguards --off
 ```
 
 <*-h|-help|--help|help*>

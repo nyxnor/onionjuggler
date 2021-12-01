@@ -160,6 +160,15 @@ For this, you have two options:
 
 The repo is now in your `$PATH`, if you have setup the environment as described above. This means you can call the scripts as if they were any other command.
 
+To create on service, it is as easy as possible:
+```sh
+onionjuggler-cli on -s terminator
+```
+But can be as advanced as specifying all the parameters:
+```sh
+onionjuggler-cli on --service terminator --socket unix --version 3 --port 80
+```
+
 #### Scripts
 
 There are some ways to call the scripts, evaluate the advantages and disadvantages:
@@ -169,7 +178,6 @@ There are some ways to call the scripts, evaluate the advantages and disadvantag
 |Advantages|follows the shebang, can be used from any directory|can choose the shell|
 |Disadvantages|the scripts must be executable|ignores the shebang, needs to specify path if not in the same directory|
 |Syntax|`onionjuggler-cli`|`sh onionjuggler-cli`|
-
 
 #### Documentation
 
@@ -181,7 +189,7 @@ ls docs/*.md
 pandoc "${ONIONJUGGLER_PWD}"/docs/CONTRIBUTING.md | lynx -stdin
 ```
 
-* the [CLI manual](docs/onionjuggler-cli.md):
+* the [manual](docs/ONIONJUGGLER-CLI.md) for advanced usage:
 ```sh
 man onionjuggler-cli
 ```
@@ -234,7 +242,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **nginx/apache**
 
 The packages are downloaded when setting up the environment with [setup.sh](install/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
-The absolute minimum you can go to is `"doas tor grep sed`, and you will be limited to enable, disable and renew services.
+The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
 It is expected that you already have your user in the "${privilege_command}"ers configuration file.
 
 ## Credits
