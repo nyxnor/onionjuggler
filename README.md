@@ -243,7 +243,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 
 The packages are downloaded when setting up the environment with [setup.sh](install/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
-It is expected that you already have your user in the "${privilege_command}"ers configuration file.
+It is expected that you already have your user in the sudoers or doas configuration file.
 
 ## Credits
 
