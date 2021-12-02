@@ -114,46 +114,26 @@ cd onionjuggler
 
 #### Set custom vars
 
-Edit the required variables to fit your system inside `.onionrc` following the same format from the already defined variables. Note that no variable that refers to a folder end with a trailing "/". Keep it that way, else it will break. The packages can have different names depending on the operating system, modify accordingly.
-
-Set the default editor of your choice, else it will always fallback to [Vi](https://en.wikipedia.org/wiki/Vi). This is an example using `nano`, but could be any other editor:
-```sh
-printf "\nexport EDITOR=\"nano\"\n" >> ~/."${SHELL##*/}"rc && . ~/."${SHELL##*/}"rc
-```
+Edit the required variables to fit your system inside `/etc/onionjuggler.conf` following the same format from the already defined variables. Note that no variable that refers to a folder end with a trailing "/". Keep it that way, else it will break. The require packages can have different names depending on the operating system, modify accordingly.
 
 Open the mentioned configuration file:
 ```sh
-"${EDITOR:-vi}" .onionrc
+"${EDITOR:-vi}" /etc/onionjuggler.conf
 ```
 ```sh
-## [ EDIT REQUIRED ]
 privilege_command="sudo" ## [sudo|doas]
 tor_user="debian-tor" ## [debian-tor|tor]
-tor_service="tor@default.service" ## [tor@default.service|tor.service]
-pkg_mngr_install="${privilege_command} apt install -y" ## always use the 'yes' flag to be non interactive
-web_server="nginx" ## [nginx|apache2]
-dialog_box="dialog" ## [dialog|whiptail]
-requirements="tor grep sed openssl basez git qrencode pandoc lynx gzip tar python3-stem ${dialog_box} ${web_server}" ## search pkg name for your OS on docs/COMPATIBILITY.md
 ```
 Edit with sed (use insert option -> `sed -i''`):
 ```sh
-sed "s|tor_user=.*|tor_user=\"tor\"|" .onionrc
+sed "s|privilege_command=.*|tor_usprivilege_commander=\"doas\"|" /etc/onionjuggler.conf
 ```
 
 #### Setup the enviroment
 
-Determine the enviromental variable `${ONIONJUGGLER_PWD}` and add the directory to `${PATH}`.
-* add the enviromental variable  to find the repo-> exporting this variable possibilitate calling it from inside shell scripts.
-* add directory to path -> call the scripts from any directory as if they were commands (without indicating the path to them or prepending with the shell name).
-
-For this, you have two options:
-* **Easy**: run from inside the cloned repository and it will use the same path as in`${PWD}`:
+Run from inside the cloned repository and it will use the same path as in`${PWD}`:
 ```sh
-./install/setup.sh
-```
-* **Development**:  set the variable manually using the absolute path without trailing "/" at the end. Favorable for integrating into other projects. Run from any directory (need to specify the path)
-```sh
-./install/setup.sh -s -p /PATH/TO/ONIONJUGGLER/REPO && . ~/."${SHELL##*/}"rc
+./setup.sh
 ```
 
 ### Usage
@@ -186,10 +166,10 @@ Take a loot at the documentation inside `docs` folder. Read:
 * any markdown file formatted on the shell:
 ```sh
 ls docs/*.md
-pandoc "${ONIONJUGGLER_PWD}"/docs/CONTRIBUTING.md | lynx -stdin
+pandoc "${ONIONJUGGLER_PWD}"/docs/contributing.md | lynx -stdin
 ```
 
-* the [manual](docs/ONIONJUGGLER-CLI.md) for advanced usage:
+* the [manual](docs/onionjuggler-cli.md) for advanced usage:
 ```sh
 man onionjuggler-cli
 ```
@@ -238,10 +218,9 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **pandoc**
   * **lynx**
   * **tar**
-  * **gzip**
   * **nginx/apache**
 
-The packages are downloaded when setting up the environment with [setup.sh](install/setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
+The packages are downloaded when setting up the environment with [setup.sh](setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
 It is expected that you already have your user in the sudoers or doas configuration file.
 
