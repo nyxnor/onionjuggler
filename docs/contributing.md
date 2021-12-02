@@ -63,7 +63,6 @@ Commands used by this project:
     * TUI - [dialog](https://www.freebsd.org/cgi/man.cgi?dialog), [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
   * Optional (not using them will break minimal functionalities)
     * Reading markdown - [lynx](https://linux.die.net/man/1/lynx), [pandoc](https://pandoc.org/MANUAL.html) (also creates the manual)
-    * Compressing the manual - [gzip](https://www.gnu.org/software/gzip/manual/gzip.html)
     * QR encoding - [qrencode](https://github.com/fukuchi/libqrencode/)
 
 ### Builtins
@@ -106,7 +105,7 @@ Run [shellcheck](https://github.com/koalaman/shellcheck) before commiting your c
 Some checks are not needed for certain files and are cherry picked to be disabled. It is recommended to check before every commit:
 
 ```sh
-./install/setup.sh -r
+./setup.sh -r
 ```
 
 **Shellcheck Codes**:
@@ -153,7 +152,7 @@ If it does and is valuable to the upstream project, first open an issue to be th
 
 Before commiting, shellcheck with:
 ```sh
-./install/setup.sh -r
+./setup.sh -r
 ```
 
 Commit to your branch:
