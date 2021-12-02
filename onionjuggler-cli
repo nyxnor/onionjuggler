@@ -4,45 +4,73 @@
 ## This file lets you manage your hidden services to all its capability
 ##
 ## SYNTAX
-## ./onionjuggler-cli command [REQUIRED] <OPTIONAL>
+## onionjuggler-cli command [REQUIRED] <OPTIONAL>
 ##
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
+###################
+#### VARIABLES ####
+
+## check if user configuration is readable and if yes, source it
+[ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
+## if any of the configurations are empty, use default ones
+
+## system
+: "${privilege_command:="sudo"}"
+: "${tor_user:="debian-tor"}"
+: "${tor_service:="tor@default.service"}"
+: "${pkg_mngr_install:="apt install -y"}"
+: "${dialog_box:="dialog"}"
+: "${web_server:="nginx"}"
+: "${requirements:="tor grep sed openssl basez git qrencode pandoc lynx tar python3-stem ${dialog_box} ${web_server}"}"
+
+## tor defaults
+: "${data_dir:="/var/lib/tor"}"
+: "${data_dir_services:="${data_dir}/services"}"
+: "${data_dir_auth:="${data_dir}/onion_auth"}"
+: "${torrc_root:="/etc/tor"}"
+: "${torrc:="${torrc_root}/torrc"}"
+: "${control_port:="9051"}" ## only the port, not the host
+
+## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
+: "${tor_browser_root:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"
+: "${tor_browser_data_dir:="${tor_browser_root}/Browser/TorBrowser/Data/Tor"}"
+: "${tor_browser_torrc:="${tor_browser_data_dir}/torrc"}"
+: "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"
+
+## general
+: "${website_dir:="/var/www"}"
+: "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}" ## https://github.com/mikeperry-tor/vanguards/commits/master
+: "${DIALOGRC:="${HOME}/.dialogrc-onionjuggler"}"
+
+## backup
+: "${scp_target_user:="remoteUser"}"
+: "${scp_target_ip:="remoteIp"}"
+: "${scp_target_path:="/home/${scp_target_user}/remote/path"}"
+: "${scp_target_full:="${scp_target_user}@${scp_target_ip}:${scp_target_path}"}"
+: "${hs_bk_dir:="${HOME}/tor-hs-backup"}"
+: "${local_ip:="$(hostname -I | cut -d " " -f1)"}" ## There is no posix way of handling network interfaces
+
+## colors
+: "${bold:=0}"
+nocolor="\033[0m"
+#white="\033[${bold};97m"
+#black="\033[${bold};30m"
+red="\033[${bold};31m"
+green="\033[${bold};32m"
+#yellow="\033[${bold};33m"
+blue="\033[${bold};34m"
+#magenta="\033[${bold};35m"
+#cyan="\033[${bold};36m"
+
+
+###################
+#### FUNCTIONS ####
 
 ## display error message with instructions to use the script correctly.
 error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
 
-###################
-#### VARIABLES ####
-
-## ${VAR:?STRING} -> Display an error if empty or unset.
-
-: "${ONIONJUGGLER_PWD:?$(error_msg "Export \${ONIONJUGGLER_PWD} by running:\n\t./install/setup.sh -h")}"
-. "${ONIONJUGGLER_PWD}"/.onionrc
-
-: "${privilege_command:?}"
-: "${tor_user:?}"
-: "${tor_service:?}"
-: "${website_dir:?}"
-
-: "${nocolor:?}"
-: "${red:?}"
-: "${green:?}"
-: "${yellow:?}"
-: "${blue:?}"
-: "${magenta:?}"
-
-: "${data_dir:?}"
-: "${data_dir_services:?}"
-: "${data_dir_auth:?}"
-: "${torrc_root:?}"
-: "${torrc:?}"
-: "${control_port:=9051}"
-
-: "${vanguards_commit:?}"
-: "${scp_target_full:?}"
-: "${local_ip:?}"
 
 while true; do
   case "${1}" in
@@ -52,7 +80,8 @@ while true; do
 
     -i|--install|-L|--logs|-u|--upgrade|-r|--remove|--nginx|--apache|--html|-q|--no-qr|-C|--create|-I|--integrate) action="${1#--}"; shift;;
 
-    -n|--on|-f|--off|-l|--list) status="${1#--}"; shift;;
+    --on|--off|--list) status="${1#--}"; shift;;
+    -n|-f|-l) status="${1#-}"; shift;;
 
     -s|--service) service="${2:?$(error_msg "service is missing")}"; shift 2;;
     --service=*) service="${1#*=}"; : "${service:?$(error_msg "service is missing")}"; shift;;
@@ -63,7 +92,7 @@ while true; do
     -o|--onion) onion="${2:?$(error_msg "onion is missing")}"; shift 2;;
     --onion=*) onion="${1#*-}"; : "${onion:?$(error_msg "onion is missing")}"; shift;;
 
-    -P| --purge) purge="${1#--}"; shift;;
+    -P|--purge) purge="purge"; shift;;
 
     -v|--version) version="${2:?$(error_msg "version is missing")}"; shift 2;;
     --version=*) version="${1#*=}"; : "${version:?$(error_msg "version is missing")}"; shift;;
@@ -89,15 +118,12 @@ while true; do
 done
 
 
-###################
-#### FUNCTIONS ####
-
 usage(){
-  onion_ascii="${ONIONJUGGLER_PWD}/images/onion-ascii-closed.txt"
-  if [ -f "${onion_ascii}" ]; then
-    onion_ascii="$(while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "${onion_ascii}")"
-    printf %s"${magenta} ${onion_ascii} ${nocolor}\n\n"
-  fi
+  # onion_ascii="images/onion-ascii-50-30.txt"
+  # if [ -f "${onion_ascii}" ]; then
+  #   onion_ascii="$(while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "${onion_ascii}")"
+  #   printf %s"${magenta} ${onion_ascii} ${nocolor}\n\n"
+  # fi
 
   printf "Juggle with an Onion Service
 \nUsage: %s${0##*/} command [required <args>] <optional>
@@ -177,6 +203,39 @@ If your services are unreacheable, restart tor.
 \nReport bugs to: https://github.com/nyxnor/onionsjuggler/issues\n"
 
   exit 1
+}
+
+
+## set correct permissions for tor directories and files
+set_owner_permission(){
+  "${privilege_command}" chown -R "${tor_user}:${tor_user}" "${data_dir}"
+  "${privilege_command}" chmod 700 "${data_dir}"
+
+  "${privilege_command}" chown -R root:root "${torrc_root}"
+  "${privilege_command}" chmod 755 "${torrc_root}"
+  "${privilege_command}" chmod 644 "${torrc}"
+}
+
+
+# This function reload tor by default or forces to restart
+# shellcheck disable=SC2120
+restarting_tor(){
+  set_owner_permission
+  if [ -n "${1}" ]; then
+    printf "\n# Restarting tor, please be patient.\n"
+    printf "# Getting stuck after several minutes? Press Ctrl-C\n"
+    printf "# and to restore the lastest torrc backup run:\n"
+    printf "$ onionjuggler-cli setup torrc\n"
+    "${privilege_command}" systemctl restart "${tor_service}"
+    printf %s"${green}# Restarted tor succesfully!\n${nocolor}"
+  else
+    printf "\n# Reloading tor if active else will restart tor, please be patient.\n"
+    printf "# Getting stuck after several minutes? Press Ctrl-C\n"
+    printf "# and to restore the lastest torrc backup run:\n"
+    printf "$ onionjuggler-cli setup torrc\n"
+    "${privilege_command}" systemctl reload-or-restart "${tor_service}"
+    printf %s"${green}# Reloaded tor succesfully!\n${nocolor}"
+  fi
 }
 
 
@@ -291,7 +350,7 @@ case "${command}" in
   ## purge is optional, it deletes the <HiddenServiceDir>
   ## will not check if folder or configuration exist, this is cleanup mode
   ## will not use '@all'. Purge is dangerous, purging all service is even more dangerous. Always backup.
-  -f|off|OFF)
+  f|off|OFF)
     : "${service:?$(error_msg "service is missing")}"
     : "${purge}" ## optional
     delete_service(){
@@ -329,7 +388,7 @@ case "${command}" in
   ##  if target is not specified, will use the same port from virtport and bind to localhost.
   ##  if target only contains the port number and not the address, will bind to localhost.
   ## virtport2 and target 2 are optional
-  -n|on|ON)
+  n|on|ON)
     : "${service:?$(error_msg "service is missing")}"
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version=${version} is not available" ## wait for v4 to change this
     : "${socket:=unix}"
@@ -443,7 +502,7 @@ case "${command}" in
           ## the client pub key is automatically saved inside <HiddenServiceDir>/authorized_clients/alice.auth
           ## the client private key is shown in the screen and the key file deleted
           ## the onion service operator should send the private key for the desired client
-          -n|on|ON)
+          n|on|ON)
             : "${client:?$(error_msg "client is missing")}"
             #printf "\n# Generating keys to access onion service (Client Authorization) ...\n"
             auth_server_add(){
@@ -510,7 +569,7 @@ case "${command}" in
 
           ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
           ## if no clients are present, the service will be available to anyone that has the onion service address
-          -f|off|OFF)
+          f|off|OFF)
             : "${client:?$(error_msg "client is missing")}"
             auth_server_remove_clients(){
               service="${1}"
@@ -542,7 +601,7 @@ case "${command}" in
             printf %s"${green}\n# Done\n${nocolor}"
           ;;
 
-          -l|list|LIST)
+          l|list|LIST)
             auth_server_list(){
               service="${1}"
               test_service_exists "${service}"
@@ -579,7 +638,7 @@ case "${command}" in
           ## private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>
           ## use the onion hostname as the file name, this avoid overriding the file by mistake and it indicates outside of the file for which service it refers to (of course it is written inside also)
           ## adding to Tor Browser automatically not supported yet
-          -n|on|ON)
+          n|on|ON)
             : "${onion:?$(error_msg "onion is missing")}"
             onion_hostaname_without_onion=${onion%.onion}
             suffix_onion=${onion##*.}
@@ -632,7 +691,7 @@ case "${command}" in
           ;;
 
           ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
-          -f|off|OFF)
+          f|off|OFF)
             : "${onion:?$(error_msg "onion is missing")}"
             auth_client_remove  (){
               onion="${1}"
@@ -648,7 +707,7 @@ case "${command}" in
             fi
           ;;
 
-          -l|list|LIST)
+          l|list|LIST)
             if [ "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
               printf %s"# ClientOnionAuthDir ${data_dir_auth}\n"
               for AUTH in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}"); do
@@ -712,7 +771,7 @@ case "${command}" in
   ## show all the necessary information to access the service such as the hostname and the QR encoded hostname to scan for Tor Browser Mobile
   ## show the clients names and quantity, as well as the service torrc's block
   ## @all will read through all services folders and execute the commands
-  -l|list|LIST)
+  l|list|LIST)
     is_service_dir_empty
     : "${service:?$(error_msg "service is missing")}"
     get_service_info(){
@@ -742,7 +801,7 @@ case "${command}" in
     : "${status:?$(error_msg "status is missing")}"
     case "${status}" in
 
-      -n|on|ON)
+      n|on|ON)
         is_service_dir_empty
         : "${service:?$(error_msg "service is missing")}"
         : "${folder:?$(error_msg "folder is missing")}"
@@ -775,7 +834,7 @@ case "${command}" in
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
-      -f|off|OFF)
+      f|off|OFF)
         : "${service:?$(error_msg "service is missing")}"
         disable_site(){
           service="${1}"
@@ -792,7 +851,7 @@ case "${command}" in
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
-      -l|list|LIST)
+      l|list|LIST)
         printf %s"# Web server = ${web_server}\n\n"
         printf "# Enabled websites:"
         sites_enabled=$("${privilege_command}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g")
@@ -913,7 +972,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ## folders/files included: <torrc>, <DataDir>/services/, <DataDir>/onion_auth/
       ## scp instructions to export backup to remote host
       -C|create|CREATE)
-        HS_BK_TAR="tor-hs-$(date +%Y-%m-%d-%H'h'-%M'm').tar.gz"
+        HS_BK_TAR="tor-onion-services-backup-$(date +%Y-%m-%d-%H'h'-%M'm').tar.gz"
         printf "# Backing up the services dir, onion_auth dir and the torrc\n\n"
         mkdir -p "${hs_bk_dir}"
         ## these lines are necessary to copy the full path when creating the compressed archive
@@ -984,7 +1043,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     }
 
     case "${action}" in
-      -n|on|ON)
+      n|on|ON)
         printf "# Installing Vanguards...\n\n"
         "${privilege_command}" -u "${tor_user}" git clone https://github.com/mikeperry-tor/vanguards.git "${data_dir}/vanguards"
         "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
@@ -999,13 +1058,13 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         vanguards_config
       ;;
 
-      -f|off|OFF)
+      f|off|OFF)
         printf "# Removing Vanguards...\n\n"
         "${privilege_command}" rm -rfv "${data_dir}"/vanguards
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
-      -l|list|LIST)
+      l|list|LIST)
         "${privilege_command}" tail -f -n 25 /var/log/tor/vanguards.log
       ;;
 

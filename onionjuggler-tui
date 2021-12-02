@@ -5,7 +5,7 @@
 ## It is a TUI for the onionjuggler-cli with everything integrated in this menu
 ##
 ## SYNTAX
-## ./onionjuggler-tui
+## onionjuggler-tui
 ##
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
@@ -16,28 +16,57 @@ error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1;
 ###################
 #### VARIABLES ####
 
-: "${ONIONJUGGLER_PWD:?$(error_msg "Export \${ONIONJUGGLER_PWD} by running:\n\t./install/setup.sh -h")}"
-. "${ONIONJUGGLER_PWD}"/.onionrc
+## check if user configuration is readable and if yes, source it
+[ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
+## if any of the configurations are empty, use default ones
 
-: "${privilege_command:?}"
-: "${tor_user:?}"
-: "${web_server:?}"
-: "${dialog_box:?}"
+## system
+: "${privilege_command:="sudo"}"
+: "${tor_user:="debian-tor"}"
+: "${tor_service:="tor@default.service"}"
+: "${pkg_mngr_install:="apt install -y"}"
+: "${dialog_box:="dialog"}"
+: "${web_server:="nginx"}"
+: "${requirements:="tor grep sed openssl basez git qrencode pandoc lynx tar python3-stem ${dialog_box} ${web_server}"}"
 
-: "${website_dir:?}"
+## tor defaults
+: "${data_dir:="/var/lib/tor"}"
+: "${data_dir_services:="${data_dir}/services"}"
+: "${data_dir_auth:="${data_dir}/onion_auth"}"
+: "${torrc_root:="/etc/tor"}"
+: "${torrc:="${torrc_root}/torrc"}"
+: "${control_port:="9051"}" ## only the port, not the host
 
-: "${nocolor:?}"
-: "${red:?}"
-: "${green:?}"
-: "${yellow:?}"
-: "${blue:?}"
-: "${magenta:?}"
+## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
+: "${tor_browser_root:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"
+: "${tor_browser_data_dir:="${tor_browser_root}/Browser/TorBrowser/Data/Tor"}"
+: "${tor_browser_torrc:="${tor_browser_data_dir}/torrc"}"
+: "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"
 
-: "${data_dir:?}"
-: "${data_dir_services:?}"
-: "${data_dir_auth:?}"
-: "${torrc:?}"
-: "${control_port:?}"
+## general
+: "${website_dir:="/var/www"}"
+: "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}" ## https://github.com/mikeperry-tor/vanguards/commits/master
+: "${DIALOGRC:="${HOME}/.dialogrc-onionjuggler"}"
+
+## backup
+: "${scp_target_user:="remoteUser"}"
+: "${scp_target_ip:="remoteIp"}"
+: "${scp_target_path:="/home/${scp_target_user}/remote/path"}"
+: "${scp_target_full:="${scp_target_user}@${scp_target_ip}:${scp_target_path}"}"
+: "${hs_bk_dir:="${HOME}/tor-hs-backup"}"
+: "${local_ip:="$(hostname -I | cut -d " " -f1)"}" ## There is no posix way of handling network interfaces
+
+## colors
+: "${bold:=0}"
+nocolor="\033[0m"
+#white="\033[${bold};97m"
+#black="\033[${bold};30m"
+#red="\033[${bold};31m"
+#green="\033[${bold};32m"
+yellow="\033[${bold};33m"
+#blue="\033[${bold};34m"
+#magenta="\033[${bold};35m"
+#cyan="\033[${bold};36m"
 
 i=0
 
