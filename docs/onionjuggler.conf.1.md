@@ -1,4 +1,4 @@
-% onionjuggler-cli(1) Configuration file for OnionJuggler
+% onionjuggler.conf(1) Configuration file for OnionJuggler
 % Written by nyxnor (nyxnor@protonmail.com)
 % September 2069
 
@@ -9,14 +9,13 @@ onionjuggler.conf - Configuration file for OnionJuggler
 
 # DESCRIPTION
 
-**onionjuggler.conf** is the configuration for for OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The user variables must be inside on $ONIONJUGGLER_CONF, which can be defined as path, but if empty, will read /etc/onionjuggler.conf, where it sources the global variables to be used in the other scripts, such as where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used.
+**onionjuggler.conf** is the configuration for for OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The user variables are defined inside the file of the environment variable *ONIONJUGGLER_CONF*, but if the variable is empty, will read /etc/onionjuggler.conf. The configuration file is then sourced be used by the program. It defines where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used.
 
-The configuration file is parsed by the shell and interpreted as variables.
-
+The configuration file is parsed by the shell and interpreted as variables. When assigning a value to a variable, use double quotes to avoid word splitting: **variable**=*"value"*.
 
 # OPTIONS
 
-## SYSTEM VARIABLES
+## SYSTEM
 
 **privilege_command**
 
@@ -47,7 +46,7 @@ The configuration file is parsed by the shell and interpreted as variables.
 : Necessary packages to fully control OnionJuggler. They will be checked first if installed already, if not, will install via using the *$pkg_mngr_install*. (Default: tor grep sed openssl basez git qrencode pandoc lynx tar python3-stem dialog nginx")
 
 
-## TOR DAEMON VARIABLES
+## TOR DAEMON
 
 **torrc_root**
 
@@ -74,7 +73,7 @@ The configuration file is parsed by the shell and interpreted as variables.
 : Specify the ControlPort to use with Vanguards. (Default: 9051).
 
 
-## TOR BROWSER VARIABLES
+## TOR BROWSER
 
 **tor_browser_root**
 
@@ -93,7 +92,7 @@ The configuration file is parsed by the shell and interpreted as variables.
 : Specify the Tor Browser ClientOnionAuthDir. (Default: Browser/TorBrowser/Data/Tor/onion-auth).
 
 
-## GENERAL VARIABLES
+## GENERAL
 
 **website_dir**
 
@@ -139,14 +138,14 @@ The configuration file is parsed by the shell and interpreted as variables.
 
 **/etc/onionjuggler.conf**
 
-: Default user configuration file
+: Default user configuration file.
 
 
 # ENVIRONMENT
 
 **ONIONJUGGLER_CONF**
 
-: Alternative user configuration file. If empty, will use /etc/onionjuggler.conf.
+: Alternative user configuration file. If variables is empty, will use /etc/onionjuggler.conf.
 
 
 # EXAMPLES

@@ -137,8 +137,8 @@ Fork the repository [here](https://github.com/nyxnor/onionjuggler/fork)
 
 Clone:
 ```sh
-git clone https://github.com/<YOUR_USERNAME>/onionservice.git
-cd onionservice
+git clone https://github.com/<YOUR_USERNAME>/onionjuggler.git
+cd onionjuggler
 ```
 
 Create feature or fix branch based on the upstream project development branch as base:

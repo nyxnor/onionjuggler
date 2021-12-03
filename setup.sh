@@ -2,31 +2,27 @@
 
 ## DESCRIPTION
 ## This file should be run from inside the cloned repository
-## It setup tor directories, user, packages need for OnionJuggler.
+## Setup tor directories, user, packages needed for OnionJuggler.
 ##
 ## SYNTAX
-## ./setup.sh [--setup|--release]
-##
-## Lines that begin with "## " try to explain what's going on. Lines
-## that begin with just "#" are disabled commands.
+## ./setup.sh [-s|-r]
 
 ###################
 #### VARIABLES ####
-
+set -x
 ## check if user configuration is readable and if yes, source it
 [ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
 ## if any of the configurations are empty, use default ones
 
-## system
 : "${privilege_command:="sudo"}"
 : "${tor_user:="debian-tor"}"
-: "${data_dir:="/var/lib/tor"}"
-: "${data_dir_services:="${data_dir}/services"}"
-: "${data_dir_auth:="${data_dir}/onion_auth"}"
 : "${pkg_mngr_install:="apt install -y"}"
 : "${dialog_box:="dialog"}"
 : "${web_server:="nginx"}"
-: "${requirements:="tor grep sed openssl basez git qrencode pandoc lynx tar python3-stem ${dialog_box} ${web_server}"}"
+: "${requirements:="tor grep sed openssl basez git qrencode pandoc tar python3-stem ${dialog_box} ${web_server}"}"
+: "${data_dir:="/var/lib/tor"}"
+: "${data_dir_services:="${data_dir}/services"}"
+: "${data_dir_auth:="${data_dir}/onion_auth"}"
 
 ## colors
 : "${bold:=0}"
@@ -45,7 +41,7 @@ cyan="\033[${bold};36m"
 
 usage(){
   printf "Configure the environment for OnionJuggler
-\nUsage: %s${0##*/} command [REQUIRED] <OPTIONAL>
+\nUsage: %s${0##*/} command [required] <optional>
 \nOptions:
   -s, --setup       setup environment
   -r, --release     prepare for commiting
@@ -67,7 +63,7 @@ install_package(){
 }
 
 
-if [ ! -f onionjuggler-cli ] && [ ! -f onionjuggler-tui ] && [ ! -f etc/onionjuggler.conf ] && [ ! -f docs/onionjuggler-cli.md ]; then
+if [ ! -f onionjuggler-cli ] || [ ! -f onionjuggler-tui ] || [ ! -f etc/onionjuggler.conf ] || [ ! -f docs/onionjuggler-cli.1.md ] || [ ! -f docs/onionjuggler.conf.1.md ]; then
   printf %s"${red}ERROR: OnionJuggler files not found\n"
   printf %s"${yellow}INFO: Run this script from inside the onionjuggler repository!\n"
   printf %s"${nocolor}See usage:\n"
@@ -86,11 +82,12 @@ case "${action}" in
   -s|--setup|setup)
     ## configure
     printf %s"${nocolor}# Installing requirements\n"
-    ## python3-stem and nginx will be checked again because python3-stem is a librarym not a command and nginx is only acessible by root
+    ## python3-stem and nginx will be checked again because python3-stem is a library (not a command) and nginx is only acessible by root
     # shellcheck disable=SC2086
     install_package ${requirements}
     printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
-    "${privilege_command}" usermod -aG "${tor_user}" "${USER}"
+    ## see https://github.com/nyxnor/onionjuggler/issues/15
+    "${privilege_command}" /usr/sbin/usermod -aG "${tor_user}" "${USER}"
     printf %s"${yellow}# Creating tor directories\n${nocolor}"
     "${privilege_command}" -u "${tor_user}" mkdir -pv "${data_dir_services}"
     "${privilege_command}" -u "${tor_user}" mkdir -pv "${data_dir_auth}"
@@ -101,10 +98,10 @@ case "${action}" in
     cp -v .dialogrc "${HOME}/.dialogrc-onionjuggler"
     printf %s"${magenta}# Creating man pages\n${nocolor}"
     "${privilege_command}" mkdir -p /usr/local/man/man1
-    pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.md -o /tmp/onionjuggler-cli.1
-    pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.md -o /tmp/onionjuggler.conf.1
+    pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o /tmp/onionjuggler-cli.1
+    pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o /tmp/onionjuggler.conf.1
     "${privilege_command}" mv /tmp/onionjuggler-cli.1 /tmp/onionjuggler.conf.1 /usr/local/man/man1/
-    #"${privilege_command}" mandb -q -f /usr/local/man/man1/onionjuggler-cli.1.gz
+    #"${privilege_command}" mandb -q -f /usr/local/man/man1/onionjuggler-cli.1 /usr/local/man/man1/onionjuggler.conf.1
     ## finish
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
   ;;

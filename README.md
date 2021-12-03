@@ -13,7 +13,7 @@ OnionJuggler is a collection of Onion Services features implemented for Unix-lik
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location. This project has not been released and should be considered for development only.**
 
-Quick link to this repository: https://git.io/onionservice
+Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler)
 
 ## Table of Contents
 
@@ -114,27 +114,38 @@ cd onionjuggler
 
 #### Set custom vars
 
-Edit the required variables to fit your system inside `/etc/onionjuggler.conf` following the same format from the already defined variables. Note that no variable that refers to a folder end with a trailing "/". Keep it that way, else it will break. The require packages can have different names depending on the operating system, modify accordingly.
+Edit the required variables to fit your system inside `/etc/onionjuggler.conf` following the same format from the already defined variables. Note that no variable that refers to a folder end with a trailing "/". Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
+
+Check [etc/onionjuggler.conf](etc/onionjuggler.conf) for a configuration sample. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file (empty variables will be assigned to default values).
 
 Open the mentioned configuration file:
 ```sh
 "${EDITOR:-vi}" /etc/onionjuggler.conf
 ```
+
+Edit the variable you want to change, for example changing the value of `$privilege_command` from sudo to doas.
 ```sh
-privilege_command="sudo" ## [sudo|doas]
-tor_user="debian-tor" ## [debian-tor|tor]
+privilege_command="sudo"
 ```
-Edit with sed (use insert option -> `sed -i''`):
+
+Insert an option to the end of the file with tee:
 ```sh
-sed "s|privilege_command=.*|tor_usprivilege_commander=\"doas\"|" /etc/onionjuggler.conf
+printf "privilege_command=\"sudo\"\n" | tee -a "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
+```
+
+Edit with sed:
+```sh
+sed -i'' "s|privilege_command=.*|tor_usprivilege_commander=\"doas\"|" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
 ```
 
 #### Setup the enviroment
 
-Run from inside the cloned repository and it will use the same path as in`${PWD}`:
+Run from inside the cloned repository to create the tor directories, setup ownership, create manual pages:
 ```sh
 ./setup.sh
 ```
+
+If the /etc/onionjuggler.conf does not exist, it will be created.
 
 ### Usage
 
@@ -166,12 +177,13 @@ Take a loot at the documentation inside `docs` folder. Read:
 * any markdown file formatted on the shell:
 ```sh
 ls docs/*.md
-pandoc "${ONIONJUGGLER_PWD}"/docs/contributing.md | lynx -stdin
+pandoc docs/contributing.md | lynx -stdin
 ```
 
-* the [manual](docs/onionjuggler-cli.md) for advanced usage:
+* the [CLI manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
 ```sh
 man onionjuggler-cli
+man onionjuggler.conf
 ```
 
 ## Portability
@@ -203,7 +215,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * superuser privileges to call some commands as root and the tor user, with `doas` or `sudo`.
   * blank lines between Hidden Services blocks in the torrc.
   * HiddenServiceDir different path than DataDir - `DataDir/services`.
-  * Path for folders variables must not contain trainling "/" at the end of the variables on `.onionrc` (Incorrect: `~/onionjuggler/`, Correct: `~/onionjuggler`).
+  * Path for folders variables must not contain trainling "/" at the end of the variables on `/etc/onionjuggler..conf` (Incorrect: `/var/lib/tor/`, Correct: `/var/lib/tor`).
 
 * Packages:
   * **doas/sudo** (must be already configured)
@@ -216,11 +228,10 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **git** >= 2.0
   * **qrencode** >= 4.1.1
   * **pandoc**
-  * **lynx**
   * **tar**
   * **nginx/apache**
 
-The packages are downloaded when setting up the environment with [setup.sh](setup.sh), the packages that are requirements are specified on [.onionrc](.onionrc).
+The packages are downloaded when setting up the environment with [setup.sh](setup.sh).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
 It is expected that you already have your user in the sudoers or doas configuration file.
 

@@ -10,9 +10,6 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
-## display error message with instructions to use the script correctly.
-error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
-
 ###################
 #### VARIABLES ####
 
@@ -23,38 +20,16 @@ error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1;
 ## system
 : "${privilege_command:="sudo"}"
 : "${tor_user:="debian-tor"}"
-: "${tor_service:="tor@default.service"}"
-: "${pkg_mngr_install:="apt install -y"}"
 : "${dialog_box:="dialog"}"
 : "${web_server:="nginx"}"
-: "${requirements:="tor grep sed openssl basez git qrencode pandoc lynx tar python3-stem ${dialog_box} ${web_server}"}"
 
 ## tor defaults
 : "${data_dir:="/var/lib/tor"}"
 : "${data_dir_services:="${data_dir}/services"}"
 : "${data_dir_auth:="${data_dir}/onion_auth"}"
-: "${torrc_root:="/etc/tor"}"
-: "${torrc:="${torrc_root}/torrc"}"
-: "${control_port:="9051"}" ## only the port, not the host
-
-## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
-: "${tor_browser_root:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"
-: "${tor_browser_data_dir:="${tor_browser_root}/Browser/TorBrowser/Data/Tor"}"
-: "${tor_browser_torrc:="${tor_browser_data_dir}/torrc"}"
-: "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"
 
 ## general
 : "${website_dir:="/var/www"}"
-: "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}" ## https://github.com/mikeperry-tor/vanguards/commits/master
-: "${DIALOGRC:="${HOME}/.dialogrc-onionjuggler"}"
-
-## backup
-: "${scp_target_user:="remoteUser"}"
-: "${scp_target_ip:="remoteIp"}"
-: "${scp_target_path:="/home/${scp_target_user}/remote/path"}"
-: "${scp_target_full:="${scp_target_user}@${scp_target_ip}:${scp_target_path}"}"
-: "${hs_bk_dir:="${HOME}/tor-hs-backup"}"
-: "${local_ip:="$(hostname -I | cut -d " " -f1)"}" ## There is no posix way of handling network interfaces
 
 ## colors
 : "${bold:=0}"
@@ -70,16 +45,9 @@ yellow="\033[${bold};33m"
 
 i=0
 
-###########################
-######## FUNCTIONS ########
-
-## clear is not a posix command
-clear_posix(){ printf \\033[2J\\033[H\\033[m ; }
-trap 'clear_posix' EXIT
-
-
 case "${dialog_box}" in
   dialog)
+    : "${DIALOGRC:="${HOME}/.dialogrc-onionjuggler"}"
     #yes_flag="--yes-label"
     #no_flag="--no-label"
     ok_flag="--ok-label"
@@ -95,6 +63,19 @@ case "${dialog_box}" in
     no_cancel_flag="--nocancel"
   ;;
 esac
+
+###########################
+######## FUNCTIONS ########
+
+## display error message with instructions to use the script correctly.
+error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
+
+{ ! command -v onionjuggler-cli >/dev/null && [ ! -f onionjuggler-cli ]; } && error_msg "onionjuggler-cli not found on PATH!"
+
+## clear is not a posix command
+clear_posix(){ printf "\\033[2J\\033[H\\033[m"; }
+trap 'clear_posix' EXIT
+
 
 return_to_tui(){
   printf %s"${yellow}\nPress ENTER to return to the TUI: ${nocolor}" >&2
@@ -146,10 +127,8 @@ menu="\nUse enter/spacebar to select:"
 backtitle="Onion Services Manager"
 if [ -z "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}")" ]; then
   choice_main="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-  "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((15+whiptail_height))" 80 7 \
+  "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 80 5 \
   "QUIT" "Exit menu and clear the screen" \
-  "MAN" "Manual pages for the onionjuggler-cli" \
-  "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
   "ENABLE" "Enable a onion service" \
   "AUTH_CLIENT" "Manage your client keys of remote service" \
   "VANGUARDS" "Add to protect against traffic analysis" \
@@ -157,11 +136,9 @@ if [ -z "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}")" ]
   3>&1 1>&2 2>&3)"
 else
   choice_main="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-  "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((22+whiptail_height))" 80 14 \
+  "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((20+whiptail_height))" 80 12 \
   "QUIT" "Exit menu and clear the screen" \
-  "MAN" "Manual pages for the onionjuggler-cli" \
-  "GUIDES" "Markdown guides by Tor Project Organization and Riseup" \
-  "ENABLE" "Enable a onion service" \
+  "ENABLE" "Enable an onion service" \
   "DISABLE" "Disable chosen onion service" \
   "RENEW" "Renew onion service address" \
   "AUTH_SERVER" "Add or Remove client authorization from your service" \
@@ -177,24 +154,6 @@ fi
 
 
 case "${choice_main}" in
-
-  MAN) man onionjuggler-cli;;
-
-
-  GUIDES)
-    i=0
-    for md in "${ONIONJUGGLER_PWD}"/docs/*.md; do
-      i=$((i+1))
-      md_list="$(printf "%s\n%s\n%s\n" "${md_list}" "${md##*/}" ".")"
-    done
-    title="Markdown guides"
-    menu="Select a guide:"
-    # shellcheck disable=SC2086
-    choice_md="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-    --menu "${menu}" "$((i+7+whiptail_height))" 45 10 ${md_list} 3>&1 1>&2 2>&3)"
-    [ -n "${choice_md}" ] && { pandoc "${ONIONJUGGLER_PWD}"/docs/"${choice_md}" | lynx -stdin ; }
-  ;;
-
 
   ENABLE)
 
@@ -221,7 +180,7 @@ case "${choice_main}" in
           --inputbox "${UNIX_PORT_MSG}" 10 60 3>&1 1>&2 2>&3)"
           if [ -n "${service_ports}" ]; then
             clear_posix
-            "${ONIONJUGGLER_PWD}"/onionjuggler-cli on --service "${service_name}" --socket unix --port "${service_ports}"
+            onionjuggler-cli on --service "${service_name}" --socket unix --port "${service_ports}"
             return_to_tui
           fi
         fi
@@ -234,7 +193,7 @@ case "${choice_main}" in
           service_ports="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
           --inputbox "${TCP_PORT_MSG}" 13 80 3>&1 1>&2 2>&3)"
           if [ -n "${service_ports}" ]; then
-            "${ONIONJUGGLER_PWD}"/onionjuggler-cli on --service "${service_name}" --socket tcp --port "${service_ports}"
+            onionjuggler-cli on --service "${service_name}" --socket tcp --port "${service_ports}"
             return_to_tui
           fi
         fi
@@ -260,7 +219,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       if [ -n "${choice_disable}" ]; then
         [ "${choice_disable}" = "PURGE" ] && purge="--purge"
         clear_posix
-        "${ONIONJUGGLER_PWD}"/onionjuggler-cli off --service "${service_name_list}" "${purge}"
+        onionjuggler-cli off --service "${service_name_list}" "${purge}"
         return_to_tui
       else
         text="\nOperation canceled, nothing was executed."
@@ -274,7 +233,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     service_menu checklist "Renew"
     if [ -n "${service_name_list}" ]; then
       clear_posix
-      "${ONIONJUGGLER_PWD}"/onionjuggler-cli renew --service "${service_name_list}"
+      onionjuggler-cli renew --service "${service_name_list}"
       return_to_tui
     fi
   ;;
@@ -325,7 +284,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | sed "s/ /,/g")"
         if [ -n "${service_name_list}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-server --list --service "${service_name_list}"
+          onionjuggler-cli auth-server --list --service "${service_name_list}"
           return_to_tui
         fi
       ;;
@@ -361,7 +320,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           client_name_list="$(printf %s"${client_name_list}" | tr -s ' ' ',' | tr -s ',' ',')"
           if { [ -n "${service_name_list}" ] && [ -n "${client_name_list}" ]; }; then
             clear_posix
-            "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-server --on --service "${service_name_list}" --client "${client_name_list}"
+            onionjuggler-cli auth-server --on --service "${service_name_list}" --client "${client_name_list}"
             return_to_tui
           fi
         fi
@@ -381,7 +340,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
             --inputbox "${menu}" 9 50 3>&1 1>&2 2>&3)"
             if [ -n "${client_pub_key}" ]; then
               clear_posix
-              "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-server --on --service "${service_name_list}" --client "${client_name_list}" --client-pub-key "${client_pub_key}"
+              onionjuggler-cli auth-server --on --service "${service_name_list}" --client "${client_name_list}" --client-pub-key "${client_pub_key}"
               return_to_tui
             fi
           fi
@@ -425,7 +384,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         fi
         if [ -n "${client_name_list}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-server --off --service "${service_name_list}" --client "${client_name_list}"
+          onionjuggler-cli auth-server --off --service "${service_name_list}" --client "${client_name_list}"
           return_to_tui
         fi
       ;;
@@ -463,7 +422,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     case "${auth_type}" in
 
       LIST)
-        "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-client --list
+        onionjuggler-cli auth-client --list
         return_to_tui
       ;;
 
@@ -482,7 +441,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         --inputbox "${menu}" 9 80 3>&1 1>&2 2>&3)"
         if [ -n "${onion_hostname}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-client --on --onion "${onion_hostname}"
+          onionjuggler-cli auth-client --on --onion "${onion_hostname}"
           return_to_tui
         fi
       ;;
@@ -496,7 +455,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         --inputbox "${menu}" 9 80 3>&1 1>&2 2>&3)"
         if { [ -n "${onion_hostname}" ] && [ -n "${client_priv_key}" ]; }; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-client --on --onion "${onion_hostname}" --client-priv-key "${client_priv_key}"
+          onionjuggler-cli auth-client --on --onion "${onion_hostname}" --client-priv-key "${client_priv_key}"
           return_to_tui
         fi
       ;;
@@ -510,7 +469,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_onion_auth}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
         if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli auth-client --off --onion "${ONION_AUTH_NAME_LIST}"
+          onionjuggler-cli auth-client --off --onion "${ONION_AUTH_NAME_LIST}"
           return_to_tui
         fi
       ;;
@@ -523,7 +482,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     service_menu checklist "Credentials"
     if [ -n "${service_name_list}" ]; then
       clear_posix
-      "${ONIONJUGGLER_PWD}"/onionjuggler-cli list --service "${service_name_list}"
+      onionjuggler-cli list --service "${service_name_list}"
       return_to_tui
     fi
   ;;
@@ -541,7 +500,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       3>&1 1>&2 2>&3)"
       if [ -n "${choice_action}" ]; then
         clear_posix
-        "${ONIONJUGGLER_PWD}"/onionjuggler-cli location "--${choice_action}" --service "${service_name_list}"
+        onionjuggler-cli location "--${choice_action}" --service "${service_name_list}"
         return_to_tui
       fi
     fi
@@ -558,7 +517,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     3>&1 1>&2 2>&3)"
     if [ "${status}" = "LIST" ]; then
       clear_posix
-      "${ONIONJUGGLER_PWD}"/onionjuggler-cli "${web_server}" "${status}"
+      onionjuggler-cli "${web_server}" "${status}"
       return_to_tui
     elif [ "${status}" = "ON" ]; then
       service_menu menu "Web server "
@@ -577,7 +536,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_folder}" ] && folder_name_list="$(printf %s"${choice_folder}" | sed "s/ /,/g")"
         if [ -n "${folder_name_list}" ]; then
           clear_posix
-          "${ONIONJUGGLER_PWD}"/onionjuggler-cli web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}"
+          onionjuggler-cli web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}"
           return_to_tui
         fi
       fi
@@ -596,7 +555,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | sed "s/ /,/g")"
       if [ -n "${service_name_list}" ]; then
         clear_posix
-        "${ONIONJUGGLER_PWD}"/onionjuggler-cli web "--${status}" --service "${service_name_list}"
+        onionjuggler-cli web "--${status}" --service "${service_name_list}"
         return_to_tui
       fi
     fi
@@ -619,24 +578,24 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     fi
     if [ "${choice_action}" = "LOGS" ]; then
       clear_posix
-      trap '"${ONIONJUGGLER_PWD}"/onionjuggler-tui; exit 0' INT
+      trap 'onionjuggler-tui; exit 0' INT
       "${privilege_command}" tail -f -n 25 /var/log/tor/vanguards.log
     elif [ -n "${choice_action}" ]; then
       clear_posix
-      "${ONIONJUGGLER_PWD}"/onionjuggler-cli vanguards "--${choice_action}"
+      onionjuggler-cli vanguards "--${choice_action}"
       return_to_tui
     fi
   ;;
 
 
   IMPORT)
-    "${ONIONJUGGLER_PWD}"/onionjuggler-cli backup --integrate
+    onionjuggler-cli backup --integrate
     return_to_tui
   ;;
 
 
   EXPORT)
-    "${ONIONJUGGLER_PWD}"/onionjuggler-cli backup --create
+    onionjuggler-cli backup --create
     return_to_tui
   ;;
 
@@ -646,4 +605,4 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 esac
 
 clear_posix
-"${ONIONJUGGLER_PWD}"/onionjuggler-tui
+onionjuggler-tui
