@@ -219,7 +219,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 
 * Packages:
   * **doas/sudo** (must be already configured)
-  * **tor** >= 0.3.5
+  * **tor** >= 0.3.5.7
   * **grep** >=2.0
   * **sed** >= 2.0
   * **python3-stem** >=1.8.0
