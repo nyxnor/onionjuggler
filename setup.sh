@@ -9,7 +9,7 @@
 
 ###################
 #### VARIABLES ####
-set -x
+
 ## check if user configuration is readable and if yes, source it
 [ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
 ## if any of the configurations are empty, use default ones
