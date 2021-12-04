@@ -55,36 +55,34 @@ install_package(){
     install_pkg=0
     case "${package}" in
       python-stem|python3-stem|security/py-stem|py-stem|py37-stem|stem)
+        ## https://stem.torproject.org/download.html
         if ! command -v python3 >/dev/null; then
           if ! command -v python >/dev/null; then
-            printf %s"${red}Python is not installed and it is needed for Stem (Vanguards requirement), skipping...\n"
+            printf %s"${red}Python is not installed and it is needed for Vanguards (Stem), skipping...\n${nocolor}"
           else
             py_command="python"
-            py_installed=1
           fi
         else
           py_command="python3"
-          py_installed=1
         fi
-        if [ "${py_installed}" = 1 ]; then
+        if [ -n "${py_command}" ]; then
           if ! "${py_command}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)"; then
             install_pkg=1
           fi
         fi
       ;;
-      nginx) ! ${privilege_command} /usr/sbin/"${package}" -v 2>/dev/null && install_pkg=1;;
-      apache2) ! ${privilege_command} /usr/sbin/"${package}" -v >/dev/null && install_pkg=1;;
-      *)
+      libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
+      nginx|apache2)
         if ! command -v "${package}" >/dev/null; then
-          if ! ${privilege_command} "${package}" -v >/dev/null; then
-            install_pkg=1
-          fi
+          ! ${privilege_command} "${package}" -v >/dev/null 2>&1 && install_pkg=1
         fi
+      ;;
+      *) ! command -v qrencode >/dev/null && install_pkg=1;;
     esac
 
-    # shellcheck disable=SC2086
     if [ "${install_pkg}" = 1 ]; then
       printf %s"${nocolor}# Installing ${package}\n"
+      # shellcheck disable=SC2086
       ${privilege_command} ${pkg_mngr_install} "${package}"
     fi
   done
@@ -115,13 +113,13 @@ case "${action}" in
     install_package ${requirements}
     printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
     ## see https://github.com/nyxnor/onionjuggler/issues/15
-    "${privilege_command}" /usr/sbin/usermod -aG "${tor_user}" "${USER}"
+    "${privilege_command}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
     printf %s"${yellow}# Creating tor directories\n${nocolor}"
-    "${privilege_command}" mkdir -pv "${data_dir_services}"
-    "${privilege_command}" mkdir -pv "${data_dir_auth}"
+    "${privilege_command}" mkdir -p "${data_dir_services}"
+    "${privilege_command}" mkdir -p "${data_dir_auth}"
     "${privilege_command}" chown -R "${tor_user}":"${tor_user}" "${data_dir}"
     printf %s"${green}# Copying files default path\n${nocolor}"
-    "${privilege_command}" mkdir -pv /usr/local/bin ## just in case
+    "${privilege_command}" mkdir -p /usr/local/bin ## just in case
     "${privilege_command}" cp -v onionjuggler-cli onionjuggler-tui /usr/local/bin/
     [ ! -f "${ONIONJUGGLER_CONF}" ] && "${privilege_command}" cp -v etc/onionjuggler.conf /etc/onionjuggler.conf
     cp -v .dialogrc "${HOME}/.dialogrc-onionjuggler"

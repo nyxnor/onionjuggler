@@ -1,3 +1,15 @@
+# Packages for OnionJuggler per system
+
+Debian:
+```sh
+tor grep sed openssl basez git qrencode pandoc tar python3-stem dialog nginx
+```
+
+OpenBSD (TODO: basez does not exist on OpenBSD, fix this):
+```sh
+tor grep sed openssl basez git libqrencode pandoc tar py-stem dialog nginx
+```
+
 # Tor packages compatibility list
 
 The required programs to OnionJuggler listed compatibility for different operating systems.

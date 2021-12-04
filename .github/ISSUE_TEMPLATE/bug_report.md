@@ -29,8 +29,8 @@ assignees: ''
 
 **Please complete the following specifications:**
 <!--
- - Operating system and Distribution: - $ uname -vno
- - Shell and its Version - $ echo $SHELL]
+ - Operating system and Distribution: - $ uname -a
+ - Shell and its Version - $ printf "$SHELL\n"]
  - Last git commit - $ git log -1
 -->
 

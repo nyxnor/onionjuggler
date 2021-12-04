@@ -62,7 +62,7 @@ Commands used by this project:
     * Web - [nginx](https://docs.nginx.com/nginx/admin-guide/), [apache](https://httpd.apache.org/docs/current/)
     * TUI - [dialog](https://www.freebsd.org/cgi/man.cgi?dialog), [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
   * Optional (not using them will break minimal functionalities)
-    * Reading markdown - [lynx](https://linux.die.net/man/1/lynx), [pandoc](https://pandoc.org/MANUAL.html) (also creates the manual)
+    * Creating the manual [pandoc](https://pandoc.org/MANUAL.html) (also creates the manual)
     * QR encoding - [qrencode](https://github.com/fukuchi/libqrencode/)
 
 ### Builtins

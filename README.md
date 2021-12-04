@@ -69,7 +69,7 @@ The goal of this project is:
 Descentralization from a single point of failure:
 * **Kernel** from predominant `Linux` to also `BSD`.
 * **Shell** from predominant `bash` to also any POSIX shell such as `ksh`, `(y,d)ash` and `zsh` (emulating sh).
-* **Service manager** from predominant `systemd` to also `OpenRC`.
+* **Service manager** from predominant `systemd` to also `OpenRC` (not implemented yet).
 
 Editing the tor configuration file (torrc) is not difficult, but automation solves problem of misconfiguration and having:
 * less time spent
@@ -220,9 +220,12 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **tar**
   * **nginx/apache2**
 
+The `$privilege_command` to run a command as another user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the configuration file and and your user to the privileged group.
+
+It is recommended to have tor already pre installed, because as it is a service, it has to be enabled to start on boot and the service managers may vary depending on your operating system. Check [docs/compatibility.md](docs/compatibility.md) for how to build tor from source code or install via package manager and enable the service to start on boot.
+
 The packages are downloaded when setting up the environment with [setup.sh](setup.sh).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
-It is expected that you already have your user in the sudoers or doas configuration file.
 
 ## Credits
 

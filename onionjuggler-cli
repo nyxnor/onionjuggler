@@ -1014,7 +1014,18 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         "${privilege_command}" mv "${torrc}".rest "${torrc}"
         "${privilege_command}" chown -R "${USER}:${USER}" "${hs_bk_dir}"
         set_owner_permission
-        printf %s"\nsha256sum=$(sha256sum "${hs_bk_dir}"/"${HS_BK_TAR}")\n\n"
+        if ! command -v sha256sum >/dev/null; then
+          if ! command -v shasum >/dev/null; then
+            if command -v sha256 >/dev/null; then
+              sha256_command="sha256"
+            fi
+          else
+            sha256_command="shasum -a 256"
+          fi
+        else
+          sha256_command="sha256sum"
+        fi
+        [ -n "${sha256_command}" ] && printf %s"\nsha256=$(${sha256_command} "${hs_bk_dir}"/"${HS_BK_TAR}")\n\n"
         ## upload to remote
         printf "# Export backup file uploading to remote. On this terminal instance, run:\n"
         printf %s"\t${privilege_command} scp -r ${hs_bk_dir}/${HS_BK_TAR} ${scp_target_full}\n\n"
