@@ -54,7 +54,7 @@ install_package(){
   for package in "${@}"; do
     install_pkg=0
     case "${package}" in
-      python-stem|python3-stem|py-stem|py37-stem|stem)
+      python-stem|python3-stem|security/py-stem|py-stem|py37-stem|stem)
         if ! command -v python3 >/dev/null; then
           if ! command -v python >/dev/null; then
             printf %s"${red}Python is not installed and it is needed for Stem (Vanguards requirement), skipping...\n"
@@ -120,7 +120,7 @@ case "${action}" in
     "${privilege_command}" mkdir -pv "${data_dir_services}"
     "${privilege_command}" mkdir -pv "${data_dir_auth}"
     "${privilege_command}" chown -R "${tor_user}":"${tor_user}" "${data_dir}"
-    printf %s"${green}# Copying script to /usr/local/bin\n${nocolor}"
+    printf %s"${green}# Copying files default path\n${nocolor}"
     "${privilege_command}" mkdir -pv /usr/local/bin ## just in case
     "${privilege_command}" cp -v onionjuggler-cli onionjuggler-tui /usr/local/bin/
     [ ! -f "${ONIONJUGGLER_CONF}" ] && "${privilege_command}" cp -v etc/onionjuggler.conf /etc/onionjuggler.conf
