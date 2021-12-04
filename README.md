@@ -114,13 +114,13 @@ cd onionjuggler
 
 #### Set custom vars
 
-Edit the required variables to fit your system inside `/etc/onionjuggler.conf` following the same format from the already defined variables. Note that no variable that refers to a folder end with a trailing "/". Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
+Edit the required variables to fit your system on the configuration file, which can be assigned to the environment variable `$ONIONJUGGLER_CONF`, but if it the variable is unset or empty, will search for the default path in `/etc/onionjuggler.conf`. Note that no variable that refers to a folder do NOT end with a trailing `/`. Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
 
-Check [etc/onionjuggler.conf](etc/onionjuggler.conf) for a configuration sample. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file (empty variables will be assigned to default values).
+Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
 
 Open the mentioned configuration file:
 ```sh
-"${EDITOR:-vi}" /etc/onionjuggler.conf
+"${EDITOR:-vi}" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
 ```
 
 Edit the variable you want to change, for example changing the value of `$privilege_command` from sudo to doas.
@@ -160,27 +160,17 @@ But can be as advanced as specifying all the parameters:
 onionjuggler-cli on --service terminator --socket unix --version 3 --port 80
 ```
 
-#### Scripts
-
-There are some ways to call the scripts, evaluate the advantages and disadvantages:
-
-||Command|Specifying shell|
-|-|-------|----------------|
-|Advantages|follows the shebang, can be used from any directory|can choose the shell|
-|Disadvantages|the scripts must be executable|ignores the shebang, needs to specify path if not in the same directory|
-|Syntax|`onionjuggler-cli`|`sh onionjuggler-cli`|
-
 #### Documentation
 
 Take a loot at the documentation inside `docs` folder. Read:
 
-* any markdown file formatted on the shell:
+* any markdown file formatted on the shell with `pandoc` and `lynx`:
 ```sh
 ls docs/*.md
 pandoc docs/contributing.md | lynx -stdin
 ```
 
-* the [CLI manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
+* the [cli manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
 ```sh
 man onionjuggler-cli
 man onionjuggler.conf
@@ -229,7 +219,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **qrencode** >= 4.1.1
   * **pandoc**
   * **tar**
-  * **nginx/apache**
+  * **nginx/apache2**
 
 The packages are downloaded when setting up the environment with [setup.sh](setup.sh).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
@@ -245,7 +235,7 @@ These are projects that inspires OnionJuggler development, each with their own u
 
 * [RaspiBlitz](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh) provides a ton of bitcoin related services that can be run over tor, so onion services is the choice to access your node from outside LAN. OnionJuggler started by forking Blitz script to remove hardcoded paths.
 
-* [TorBox](https://github.com/radio24/TorBox) is an easy to use, anonymizing router that creates a separate WiFi that routes the encrypted network data over the Tor network. It also helps configuring bridges and other countermeasures to bypass censorship. OnionJuggler aims to help people on surveillance countries to communicate privately.
+* [TorBox](https://github.com/radio24/TorBox) is an easy to use, anonymizing router that creates a separate WiFi that routes the encrypted network data over the Tor network. It also helps configuring bridges and other countermeasures to bypass censorship. OnionJuggler aims to help people on surveillance countries to communicate privately. OnionJuggler was integrated to TorBox.
 
 ### Contributors
 

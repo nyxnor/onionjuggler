@@ -26,7 +26,7 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 **onionjuggler-cli web on** **--service** [*SERV*] **--folder** [*FOLDER*]\
 **onionjuggler-cli web off** **--service** [*SERV*]\
 **onionjuggler-cli web list**\
-**onionjuggler-cli location** **--service** [*SERV*] [*--nginx*|*--apache*|*--html*]\
+**onionjuggler-cli location** **--service** [*SERV*] [*--nginx*|*--apache2*|*--html*]\
 **onionjuggler-cli backup** [*--create*|*--integrate*]\
 **onionjuggler-cli vanguards** [*--on*|*--list*|*--upgrade*|*--off*]\
 **onionjuggler-cli** <*-h*|*-help*|*--help*|*help*>
@@ -244,12 +244,12 @@ onionjuggler-cli web off nextcloud
 onionjuggler-cli web list
 ```
 
-**location**  **--service** [*SERV*] [*--nginx*|*--apache*|*--html*]
+**location**  **--service** [*SERV*] [*--nginx*|*--apache2*|*--html*]
 
 : Guide to add onion location to your plainnet website when using the webserver Nginx or Apache2 or an HTML header. It does not modify any configuration by itself, the instructions to do so are send to stdout. File(s) modified: none.
 ```
 onionjuggler-cli location --service nextcloud --nginx
-onionjuggler-cli location --service nextcloud --apache
+onionjuggler-cli location --service nextcloud --apache2
 onionjuggler-cli location --service nextcloud --html
 ```
 
@@ -292,9 +292,11 @@ onionjuggler-cli help
 
 **/etc/onionjuggler.conf**
 
-: Default user configuration file
+: Default system configuration file.
 
 **$HOME/.dialogrc-onionjuggler**
+
+: Default dialog run commands file.
 
 **onionjuggler-cli**
 
@@ -309,7 +311,7 @@ onionjuggler-cli help
 
 **ONIONJUGGLER_CONF**
 
-: OnionJuggler user configuration file. If empty, will use /etc/onionjuggler.conf.
+: OnionJuggler system configuration file. If empty, will use /etc/onionjuggler.conf.
 
 **DIALOGRC**
 

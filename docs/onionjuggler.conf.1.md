@@ -9,7 +9,7 @@ onionjuggler.conf - Configuration file for OnionJuggler
 
 # DESCRIPTION
 
-**onionjuggler.conf** is the configuration for for OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The user variables are defined inside the file of the environment variable *ONIONJUGGLER_CONF*, but if the variable is empty, will read /etc/onionjuggler.conf. The configuration file is then sourced be used by the program. It defines where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used.
+**onionjuggler.conf** is the configuration for for OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The system variables are defined inside the file of the environment variable *ONIONJUGGLER_CONF*, but if the variable is empty, will read /etc/onionjuggler.conf. The configuration file is then sourced be used by the program. It defines where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used.
 
 The configuration file is parsed by the shell and interpreted as variables. When assigning a value to a variable, use double quotes to avoid word splitting: **variable**=*"value"*.
 
@@ -138,14 +138,14 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 **/etc/onionjuggler.conf**
 
-: Default user configuration file.
+: Default system configuration file.
 
 
 # ENVIRONMENT
 
 **ONIONJUGGLER_CONF**
 
-: Alternative user configuration file. If variables is empty, will use /etc/onionjuggler.conf.
+: Alternative system configuration file. If variables is empty, will use /etc/onionjuggler.conf.
 
 
 # EXAMPLES
