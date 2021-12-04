@@ -49,14 +49,42 @@ usage(){
 "
 }
 
-## install space separated list of packages (e.g.: install_package tor openssl git)
-#command -v "${package}"
-#type "${package}"
 
 install_package(){
   for package in "${@}"; do
-    if ! command -v "${package}" >/dev/null; then
-        # shellcheck disable=SC2086
+    install_pkg=0
+    case "${package}" in
+      python-stem|python3-stem|py-stem|py37-stem|stem)
+        if ! command -v python3 >/dev/null; then
+          if ! command -v python >/dev/null; then
+            printf %s"${red}Python is not installed and it is needed for Stem (Vanguards requirement), skipping...\n"
+          else
+            py_command="python"
+            py_installed=1
+          fi
+        else
+          py_command="python3"
+          py_installed=1
+        fi
+        if [ "${py_installed}" = 1 ]; then
+          if ! "${py_command}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)"; then
+            install_pkg=1
+          fi
+        fi
+      ;;
+      nginx) ! ${privilege_command} /usr/sbin/"${package}" -v 2>/dev/null && install_pkg=1;;
+      apache2) ! ${privilege_command} /usr/sbin/"${package}" -v >/dev/null && install_pkg=1;;
+      *)
+        if ! command -v "${package}" >/dev/null; then
+          if ! ${privilege_command} "${package}" -v >/dev/null; then
+            install_pkg=1
+          fi
+        fi
+    esac
+
+    # shellcheck disable=SC2086
+    if [ "${install_pkg}" = 1 ]; then
+      printf %s"${nocolor}# Installing ${package}\n"
       ${privilege_command} ${pkg_mngr_install} "${package}"
     fi
   done
@@ -81,7 +109,7 @@ case "${action}" in
 
   -s|--setup|setup)
     ## configure
-    printf %s"${nocolor}# Installing requirements\n"
+    printf %s"${nocolor}# Checking requirements\n"
     ## python3-stem and nginx will be checked again because python3-stem is a library (not a command) and nginx is only acessible by root
     # shellcheck disable=SC2086
     install_package ${requirements}
@@ -89,8 +117,9 @@ case "${action}" in
     ## see https://github.com/nyxnor/onionjuggler/issues/15
     "${privilege_command}" /usr/sbin/usermod -aG "${tor_user}" "${USER}"
     printf %s"${yellow}# Creating tor directories\n${nocolor}"
-    "${privilege_command}" -u "${tor_user}" mkdir -pv "${data_dir_services}"
-    "${privilege_command}" -u "${tor_user}" mkdir -pv "${data_dir_auth}"
+    "${privilege_command}" mkdir -pv "${data_dir_services}"
+    "${privilege_command}" mkdir -pv "${data_dir_auth}"
+    "${privilege_command}" chown -R "${tor_user}":"${tor_user}" "${data_dir}"
     printf %s"${green}# Copying script to /usr/local/bin\n${nocolor}"
     "${privilege_command}" mkdir -pv /usr/local/bin ## just in case
     "${privilege_command}" cp -v onionjuggler-cli onionjuggler-tui /usr/local/bin/

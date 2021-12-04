@@ -64,6 +64,10 @@ blue="\033[${bold};34m"
 #magenta="\033[${bold};35m"
 #cyan="\033[${bold};36m"
 
+## sanity check
+{ [ "${privilege_command}" != "sudo" ] && [ "${privilege_command}" != "doas" ]; } && error_msg "privilege_command can be either 'sudo' or 'doas', not '${privilege_command}'"
+{ [ "${web_server}" != "nginx" ] && [ "${web_server}" != "apache2" ]; } && error_msg "dialog_box can be either 'nginx' or 'apache2', not '${web_server}'"
+printf %d "${control_port}" >/dev/null 2>&1 || error_msg "control_port must be an integer, not ${control_port}"
 
 ###################
 #### FUNCTIONS ####
@@ -77,7 +81,7 @@ while true; do
 
     auth-server|auth-client) command="${1%-*}"; host="${1#*-}"; : "${host:?$(error_msg "host is missing")}"; shift;;
 
-    -i|--install|-L|--logs|-u|--upgrade|-r|--remove|--nginx|--apache|--html|-q|--no-qr|-C|--create|-I|--integrate) action="${1#--}"; shift;;
+    -i|--install|-L|--logs|-u|--upgrade|-r|--remove|--nginx|--apache2|--html|-q|--no-qr|-C|--create|-I|--integrate) action="${1#--}"; shift;;
 
     --on|--off|--list) status="${1#--}"; shift;;
     -n|-f|-l) status="${1#-}"; shift;;
@@ -146,7 +150,7 @@ usage(){
   web --on [--service <SERVICE>] [--folder <SITE_PATH>]      start serving a website for certain service and its folder
   web --off [--service <SERVICE>]                            stop serving a website for certain service and its folder
   web --list                                                 list enabled websites
-  location [--nginx|--apache|--html] [--service <SERVICE>]   onion-location guide, no execution
+  location [--nginx|--apache2|--html] [--service <SERVICE>]   onion-location guide, no execution
   backup [--create|--integrate]                              restore latest torrc backup
   vanguards [--on|--list|--upgrade|--off]                    install, upgrade, remove or see logs for vanguards addon
   -h|--help                                                  display this help message
@@ -180,7 +184,7 @@ Options:
     -F, --folder <SITE_PATH>                                 specify website files
   location                                                   guide to add onion-location to redirect users to your onion domain
     --nginx                                                  Nginx webserver header for onion-location
-    --apache                                                 Apache2 webserver header for onion-location
+    --apache2                                                Apache2 webserver header for onion-location
     --html                                                   HTML header for onion-location
   backup                                                     complete backup of onion services
     -C, --create                                             create backup
@@ -923,7 +927,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         finish_location
       ;;
 
-      apache|APACHE)
+      apache2|APACHE2)
         start_location
         printf "
 <VirtualHost *:443>\n\tHeader set Onion-Location \"http://%s${onion_hostname}%%{REQUEST_URI}s\"\n</Virtualhost>

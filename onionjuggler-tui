@@ -45,6 +45,13 @@ yellow="\033[${bold};33m"
 
 i=0
 
+
+###########################
+######## FUNCTIONS ########
+
+## display error message with instructions to use the script correctly.
+error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
+
 case "${dialog_box}" in
   dialog)
     : "${DIALOGRC:="${HOME}/.dialogrc-onionjuggler"}"
@@ -62,14 +69,12 @@ case "${dialog_box}" in
     cancel_flag="--cancel-button"
     no_cancel_flag="--nocancel"
   ;;
+  *) error_msg "dialog_box can be either 'dialog' or 'whiptail', not '${dialog_box}'"
 esac
 
-###########################
-######## FUNCTIONS ########
-
-## display error message with instructions to use the script correctly.
-error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
-
+## sanity check
+{ [ "${privilege_command}" != "sudo" ] && [ "${privilege_command}" != "doas" ]; } && error_msg "privilege_command can be either 'sudo' or 'doas', not '${privilege_command}'"
+{ [ "${web_server}" != "nginx" ] && [ "${web_server}" != "apache2" ]; } && error_msg "dialog_box can be either 'nginx' or 'apache2', not '${web_server}'"
 { ! command -v onionjuggler-cli >/dev/null && [ ! -f onionjuggler-cli ]; } && error_msg "onionjuggler-cli not found on PATH!"
 
 ## clear is not a posix command
@@ -99,7 +104,7 @@ service_menu(){
   done
 
   if [ -n "${service_list}" ]; then
-    title="Onion Services - ${compl_title}"
+    title="OnionJuggler - ${compl_title}"
     menu="\nUse spacebar to select:"
     [ "${i}" -gt 11 ] && i="11"
     case "${dialog_type}" in
@@ -122,9 +127,9 @@ service_menu(){
 
 ###########################
 
-title="Onion Services - Main Menu"
+title="OnionJuggler - Main Menu"
 menu="\nUse enter/spacebar to select:"
-backtitle="Onion Services Manager"
+backtitle="OnionJuggler - Onion Services Manager"
 if [ -z "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}")" ]; then
   choice_main="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
   "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 80 5 \
@@ -495,7 +500,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
       "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 3 \
       "NGINX" "Nginx web server header" \
-      "APACHE" "Apache web server header" \
+      "APACHE2" "Apache2 web server header" \
       "HTML" "Html <meta> http-equiv attribute" \
       3>&1 1>&2 2>&3)"
       if [ -n "${choice_action}" ]; then
