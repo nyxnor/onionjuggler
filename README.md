@@ -114,26 +114,25 @@ cd onionjuggler
 
 #### Set custom vars
 
-Edit the required variables to fit your system on the configuration file, which can be assigned to the environment variable `$ONIONJUGGLER_CONF`, but if it the variable is unset or empty, will search for the default path in `/etc/onionjuggler.conf`. Note that no variable that refers to a folder do NOT end with a trailing `/`. Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
+Edit the required variables to fit your system on the configuration file, which can be assigned to the environment variable `$ONIONJUGGLER_CONF`, but if it the variable is unset or empty, will search for the default path in `/etc/onionjuggler.conf`.
+
+Note that no variable that refers to a folder do NOT end with a trailing `/`. Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
 
 Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
 
-Open the mentioned configuration file:
+To assign values to the variables, you can either:
+
+* Open the mentioned configuration file:
 ```sh
 "${EDITOR:-vi}" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
 ```
 
-Edit the variable you want to change, for example changing the value of `$privilege_command` from sudo to doas.
-```sh
-privilege_command="sudo"
-```
-
-Insert an option to the end of the file with tee:
+* or insert configuration to the end of the file with tee:
 ```sh
 printf "privilege_command=\"sudo\"\n" | tee -a "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
 ```
 
-Edit with sed:
+* or edit with sed:
 ```sh
 sed -i'' "s|privilege_command=.*|tor_usprivilege_commander=\"doas\"|" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
 ```
@@ -145,7 +144,7 @@ Run from inside the cloned repository to create the tor directories, setup owner
 ./setup.sh
 ```
 
-If the /etc/onionjuggler.conf does not exist, it will be created.
+If the /etc/onionjuggler.conf does not exist, it will be created with default values and configuration description.
 
 ### Usage
 

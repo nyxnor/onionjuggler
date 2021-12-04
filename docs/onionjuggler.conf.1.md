@@ -35,7 +35,7 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 **web_server**
 
-: Web server to serve a website. Compatible with *nginx* and *apache*. (Default: nginx).
+: Web server to serve a website. Compatible with *nginx* and *apache2*. (Default: nginx).
 
 **dialog_box**
 
