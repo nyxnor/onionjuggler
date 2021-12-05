@@ -10,7 +10,7 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 # SYNOPSIS
 
 **onionjuggler-cli** **command** [*REQUIRED*] <*OPTION*>\
-**onionjuggler-cli setup torrc**\
+**onionjuggler-cli restore-torrc**\
 **onionjuggler-cli on**\ **--service** [*SERV*] **--version** [*VERSION*] **--socket** *tcp* **--port** [*VIRTPORT*,<*TARGET*>,<*VIRTPORT2*>,<*TARGET2*>]\
 **onionjuggler-cli on**  **--service** [*SERV*] **--version** [*VERSION*] **--socket** *unix* **--port** [*VIRTPORT*,<*VIRTPORT2*>]\
 **onionjuggler-cli off** **--service** [*SERV1*,*SERV2*,*...*] <*--purge*>\
@@ -105,7 +105,7 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 
 ## ARGUMENTS
 
-**setup torrc**
+**restore-torrc**
 
 : Restore the latest torrc backup and reload tor. Every time onionjuggler-cli is ran, it creates a torrc.bak, with this option, it will copy the backup file to the torrc named file. File(s) modified: torrc.
 
