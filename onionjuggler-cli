@@ -20,6 +20,8 @@
 : "${privilege_command:="sudo"}"
 : "${tor_user:="debian-tor"}"
 : "${tor_service:="tor@default.service"}"
+: "${service_manager:="systemctl"}"
+: "${etc_group_owner:="root"}"
 : "${pkg_mngr_install:="apt install -y"}"
 : "${dialog_box:="dialog"}"
 : "${web_server:="nginx"}"
@@ -42,7 +44,7 @@
 ## general
 : "${website_dir:="/var/www"}"
 : "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}" ## https://github.com/mikeperry-tor/vanguards/commits/master
-: "${DIALOGRC:="${HOME}/.dialogrc-onionjuggler"}"
+export DIALOGRC="${HOME}/.dialogrc-onionjuggler"
 
 ## backup
 : "${scp_target_user:="remoteUser"}"
@@ -50,7 +52,7 @@
 : "${scp_target_path:="/home/${scp_target_user}/remote/path"}"
 : "${scp_target_full:="${scp_target_user}@${scp_target_ip}:${scp_target_path}"}"
 : "${hs_bk_dir:="${HOME}/tor-hs-backup"}"
-: "${local_ip:="$(hostname -I | cut -d " " -f1)"}" ## There is no posix way of handling network interfaces
+: "${local_ip:=""}" ## There is no posix way of handling network interfaces
 
 ## colors
 : "${bold:=0}"
@@ -214,7 +216,7 @@ set_owner_permission(){
   "${privilege_command}" chown -R "${tor_user}:${tor_user}" "${data_dir}"
   "${privilege_command}" chmod 700 "${data_dir}"
 
-  "${privilege_command}" chown -R root:root "${torrc_root}"
+  "${privilege_command}" chown -R root:"${etc_group_owner}" "${torrc_root}"
   "${privilege_command}" chmod 755 "${torrc_root}"
   "${privilege_command}" chmod 644 "${torrc}"
 }
@@ -229,14 +231,14 @@ restarting_tor(){
     printf "# Getting stuck after several minutes? Press Ctrl-C\n"
     printf "# and to restore the lastest torrc backup run:\n"
     printf "$ onionjuggler-cli setup torrc\n"
-    "${privilege_command}" systemctl restart "${tor_service}"
+    "${privilege_command}" ${service_manager} restart "${tor_service}"
     printf %s"${green}# Restarted tor succesfully!\n${nocolor}"
   else
-    printf "\n# Reloading tor if active else will restart tor, please be patient.\n"
+    printf "\n# Reloading tor, please be patient.\n"
     printf "# Getting stuck after several minutes? Press Ctrl-C\n"
     printf "# and to restore the lastest torrc backup run:\n"
     printf "$ onionjuggler-cli setup torrc\n"
-    "${privilege_command}" systemctl reload-or-restart "${tor_service}"
+    "${privilege_command}" ${service_manager} reload "${tor_service}"
     printf %s"${green}# Reloaded tor succesfully!\n${nocolor}"
   fi
 }

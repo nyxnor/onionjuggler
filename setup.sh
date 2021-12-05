@@ -112,8 +112,9 @@ case "${action}" in
     # shellcheck disable=SC2086
     install_package ${requirements}
     printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
-    ## see https://github.com/nyxnor/onionjuggler/issues/15
-    "${privilege_command}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
+    ## see https://github.com/nyxnor/onionjuggler/issues/15 about using complete path to binary
+    ## see https://github.com/nyxnor/onionjuggler/issues/29 about usermod not appending with -a
+    #"${privilege_command}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
     printf %s"${yellow}# Creating tor directories\n${nocolor}"
     "${privilege_command}" mkdir -p "${data_dir_services}"
     "${privilege_command}" mkdir -p "${data_dir_auth}"
@@ -122,7 +123,7 @@ case "${action}" in
     "${privilege_command}" mkdir -p /usr/local/bin ## just in case
     "${privilege_command}" cp -v onionjuggler-cli onionjuggler-tui /usr/local/bin/
     [ ! -f "${ONIONJUGGLER_CONF}" ] && "${privilege_command}" cp -v etc/onionjuggler.conf /etc/onionjuggler.conf
-    cp -v .dialogrc "${HOME}/.dialogrc-onionjuggler"
+    cp -v .dialogrc-onionjuggler "${HOME}/.dialogrc-onionjuggler"
     printf %s"${magenta}# Creating man pages\n${nocolor}"
     "${privilege_command}" mkdir -p /usr/local/man/man1
     pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o /tmp/onionjuggler-cli.1

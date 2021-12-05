@@ -30,6 +30,7 @@
 
 ## general
 : "${website_dir:="/var/www"}"
+export DIALOGRC="${HOME}/.dialogrc-onionjuggler"
 
 ## colors
 : "${bold:=0}"
@@ -54,7 +55,6 @@ error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1;
 
 case "${dialog_box}" in
   dialog)
-    : "${DIALOGRC:="${HOME}/.dialogrc-onionjuggler"}"
     #yes_flag="--yes-label"
     #no_flag="--no-label"
     ok_flag="--ok-label"

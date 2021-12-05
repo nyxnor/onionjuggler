@@ -29,6 +29,14 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 : The tor service name. (Default: tor@default.service)
 
+**service_manager**
+
+: The service manager command. Compatible with systemctl and rcctl. (Default: systemctl).
+
+**etc_group_owner**
+
+: The /etc directory group owner. (Default: root)
+
 **pkg_mngr_install**
 
 : Install the required packages via package manager. (Default: apt install -y).
