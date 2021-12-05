@@ -46,13 +46,14 @@ The code is not complete on OpenBSD because of missing packages, will be shortly
 ### tor
 
 ```sh
-apt install -y apt-transport-https wget gpg
+sudo apt install -y apt-transport-https wget gpg
 printf "deb     [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -sc) main
 #deb-src [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -sc) main
-" | tee /etc/apt/sources.list.d/tor.list
+" | sudo tee /etc/apt/sources.list.d/tor.list
 wget -O- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null
-apt update -y
-apt install tor deb.torproject.org-keyring
+sudo apt update -y
+sudo apt install tor deb.torproject.org-keyring
+sudo /usr/sbin/usermod -aG debian-tor "${USER}
 ```
 
 ### onionjuggler.conf
