@@ -89,7 +89,7 @@ data_dir="/var/tor"
 ```
 
 
-### Fedora, CentOS, RHEL
+## Fedora, CentOS, RHEL
 
 ```sh
 dnf install epel-release -y
@@ -136,7 +136,7 @@ Untested.
 pacman -S python-stem
 ```
 
-### Void Linux
+## Void Linux
 
 ```sh
 xbps-install -S tor
@@ -227,7 +227,7 @@ pkg_mngr_install="pkg install"
 requirements="tor grep sed openssl base64 git libqrencode pandoc tar security/py-stem ${dialog} ${web_server}"
 ```
 
-### DragonflyBSD
+## DragonflyBSD
 
 ```sh
 cd /usr
