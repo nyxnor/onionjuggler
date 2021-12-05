@@ -1,25 +1,14 @@
-# Packages for OnionJuggler per system
-
-Debian:
-```sh
-tor grep sed openssl basez git qrencode pandoc tar python3-stem dialog nginx
-```
-
-OpenBSD (TODO: basez does not exist on OpenBSD, fix this):
-```sh
-tor grep sed openssl basez git libqrencode pandoc tar py-stem dialog nginx
-```
-
-# Tor packages compatibility list
+# Compatibility
 
 The required programs to OnionJuggler listed compatibility for different operating systems.
 
-# tor
+Information to install `tor` acquired on [community.torproject.org/relay/setup/bridge](https://community.torproject.org/relay/setup/bridge/) and and to install `stem` acquired on [stem.torproject.org](https://stem.torproject.org/download.html).
 
-Source [TPO bridge setup](https://community.torproject.org/relay/setup/bridge/).
+# packages from source
 
-## Source
+## tor
 
+Build tor from source and install it:
 ```sh
 git clone https://git.torproject.org/tor.git
 sh autogen.sh
@@ -28,18 +17,77 @@ make
 make install
 ```
 
-## Linux
+## Stem
 
-### Debian
+Build Stem from source:
+```sh
+git clone https://git.torproject.org/stem.git
+cd stem/
+pip3 install -r requirements.txt
+```
+
+or install via pip:
+```sh
+easy_install pip
+pip install stem
+```
+
+# OnionJuggler setup per operating system
+
+The code is being tested on Debian and OpenBSD, but because of time and contributors limitation, it is not possible to test on every Unix-like system. Therefore, the rest of documentation is not complete.
+
+Although the code is POSIX, it does not mean that the maintainer can indicate the correc `onionjuggler.conf` for every operating system, it is up to the user to test and we, the developers, are exempt of any liability that results of your failure.
+
+The code works 100% on Debian.
+The code is not complete on OpenBSD because of missing packages, will be shortly as it is resolved. (missing basez and service configuration file for vanguards).
+
+## Debian
+
+### tor
 
 ```sh
 apt install -y apt-transport-https wget gpg
-echo "deb     [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -sc) main
-#deb-src [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/tor.list
+printf "deb     [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -sc) main
+#deb-src [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -sc) main
+" | tee /etc/apt/sources.list.d/tor.list
 wget -O- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null
 apt update -y
 apt install tor deb.torproject.org-keyring
 ```
+
+### onionjuggler.conf
+
+Use the default configuration file.
+
+```sh
+requirements="tor grep sed openssl basez git qrencode pandoc tar python3-stem dialog nginx"
+```
+
+## OpenBSD
+
+### tor
+
+```sh
+printf "https://cdn.openbsd.org/pub/OpenBSD\n" > /etc/installurl
+pkg_add tor
+rcctl enable tor
+rcctl start tor
+```
+
+### onionjuggler.conf
+
+TODO: basez does not exist on OpenBSD, base64 is a part but missing base32 package, fix this).
+```sh
+privilege_command="doas"
+tor_user="_tor"
+tor_service="tor"
+service_manager_control="rcctl"
+etc_group_owner="wheel"
+pkg_mngr_install="pkg_add"
+requirements="tor grep sed openssl base64 git libqrencode pandoc tar py-stem ${dialog} ${web_server}"
+data_dir="/var/tor"
+```
+
 
 ### Fedora, CentOS, RHEL
 
@@ -55,14 +103,37 @@ gpgcheck=1
 gpgkey=https://rpm.torproject.org/${osys}/public_gpg.key
 cost=100 " | tee /etc/yum.repos.d/tor.repo
 dnf install tor -y
+echo "
+RunAsDaemon 1
+" | tee -a /etc/tor/torrc
 ```
 
-### Arch Linux
+### onionjuggler.conf
+
+Untested.
+
+```sh
+dnf install python3-stem
+```
+
+## Arch Linux
 
 ```sh
 pacman -Syu tor
+echo "
+DataDirectory /var/lib/tor
+User tor
+" | tee -a /ec/tor/torrc
 systemctl enable --now tor
 systemctl restart tor
+```
+
+### onionjuggler.conf
+
+Untested.
+
+```sh
+pacman -S python-stem
 ```
 
 ### Void Linux
@@ -73,25 +144,28 @@ ln -s /etc/sv/tor /var/service/.
 sv restart tor
 ```
 
-### OpenSUSE
+### onionjuggler.conf
+
+Untested.
+
+## OpenSUSE
 
 ```sh
 zypper install tor
+echo "
+RunAsDaemon 1
+" | tee -a /etc/tor/torrc
 systemctl enable --now tor
 ```
 
-## BSD
+### onionjuggler.conf
 
-### OpenBSD
+Untested.
 
-```sh
-echo "https://cdn.openbsd.org/pub/OpenBSD" > /etc/installurl
-pkg_add tor
-rcctl enable tor
-rcctl start tor
-```
 
-### NetBSD
+## NetBSD
+
+### tor
 
 ```sh
 echo "PKG_PATH=http://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/$(uname -m)/$(uname -r)/All" > /etc/pkg_install.conf
@@ -101,8 +175,23 @@ echo "tor=YES" >> /etc/rc.conf
 /etc/rc.d/tor start
 ```
 
-### FreeBSD
+### onionjuggler.conf
 
+Untested.
+
+```sh
+privilege_command="doas"
+tor_user="_tor"
+tor_service="tor"
+service_manager_control="/etc/rc.d/tor"
+etc_group_owner="wheel"
+pkg_mngr_install="pkg_add"
+requirements="tor grep sed openssl base64 git libqrencode pandoc tar py37-stem ${dialog} ${web_server}"
+```
+
+## FreeBSD
+
+### tor
 ```sh
 pkg bootstrap
 pkg update -f
@@ -114,11 +203,28 @@ echo "FreeBSD: {
 pkg update -f
 pkg upgrade -y -f
 pkg install tor
+echo "
+RunAsDaemon 1
+" | tee -a /usr/local/etc/tor/torrc
 echo "net.inet.ip.random_id=1" >> /etc/sysctl.conf
 sysctl net.inet.ip.random_id=1
 sysrc tor_setuid=YES
 sysrc tor_enable=YES
 service tor start
+```
+
+### onionjuggler.conf
+
+Untested.
+
+```sh
+privilege_command="doas"
+tor_user="_tor"
+tor_service="tor"
+service_manager_control="/etc/rc.d/tor"
+etc_group_owner="wheel"
+pkg_mngr_install="pkg install"
+requirements="tor grep sed openssl base64 git libqrencode pandoc tar security/py-stem ${dialog} ${web_server}"
 ```
 
 ### DragonflyBSD
@@ -141,68 +247,6 @@ echo "tor_enable=YES" >> /etc/rc.conf
 service tor start
 ```
 
+### onionjuggler.conf
 
-# Stem
-
-Source: [Stem TPO](https://stem.torproject.org/download.html)
-
-## Source
-
-```sh
-git clone https://git.torproject.org/stem.git
-cd stem/
-pip3 install -r requirements.txt
-```
-
-## Python Indexed Packages and for MacOSX
-
-```sh
-easy_install pip
-pip install stem
-```
-
-## Linux
-
-### Debian
-
-```sh
-apt-get install python3-stem
-```
-
-### Fedora
-
-```sh
-dnf install python3-stem
-```
-
-### Gentoo
-
-```sh
-emerge stem
-```
-
-### Arch Linux
-
-```sh
-pacman -S python-stem
-```
-
-## BSD
-
-### FreeBSD
-
-```sh
-pkg install security/py-stem
-```
-
-### OpenBSD
-
-```sh
-pkg_add py-stem
-```
-
-### NetBSD
-
-```sh
-pkg_add py37-stem
-```
+Untested.
