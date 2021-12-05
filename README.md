@@ -139,6 +139,10 @@ sed -i'' "s|privilege_command=.*|tor_usprivilege_commander=\"doas\"|" "${ONIONJU
 
 #### Setup the enviroment
 
+The `$privilege_command` to run a command as another user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the configuration file and and your user to the privileged group.
+
+It is recommended to have `tor` already installed, because as it is a service, it has to be enabled to start on boot and the service managers may vary depending on your operating system. Check [docs/compatibility.md](docs/compatibility.md) for how to build tor from source code or install via package manager and enable the service to start on boot.
+
 Run from inside the cloned repository to create the tor directories, setup ownership, create manual pages:
 ```sh
 ./setup.sh
@@ -220,9 +224,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **tar**
   * **nginx/apache2**
 
-The `$privilege_command` to run a command as another user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the configuration file and and your user to the privileged group.
-
-It is recommended to have tor already pre installed, because as it is a service, it has to be enabled to start on boot and the service managers may vary depending on your operating system. Check [docs/compatibility.md](docs/compatibility.md) for how to build tor from source code or install via package manager and enable the service to start on boot.
+If using Vanguards, `python` is needed.
 
 The packages are downloaded when setting up the environment with [setup.sh](setup.sh).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.

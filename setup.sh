@@ -58,7 +58,7 @@ install_package(){
         ## https://stem.torproject.org/download.html
         if ! command -v python3 >/dev/null; then
           if ! command -v python >/dev/null; then
-            printf %s"${red}Python is not installed and it is needed for Vanguards (Stem), skipping...\n${nocolor}"
+            printf %s"${red}Python is not installed and it is needed for Vanguards, skipping...\n${nocolor}"
           else
             py_command="python"
           fi

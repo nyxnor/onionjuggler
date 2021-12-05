@@ -29,9 +29,9 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 : The tor service name. (Default: tor@default.service)
 
-**service_manager**
+**service_manager_control**
 
-: The service manager command. Compatible with systemctl and rcctl. (Default: systemctl).
+: The service manager control command. Compatible with *systemctl* (Systemd), *service* (SysV init), *rcctl* (OpenRC), *sv* (Runit). (Default: systemctl).
 
 **etc_group_owner**
 
