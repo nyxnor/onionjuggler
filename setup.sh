@@ -152,6 +152,7 @@ case "${action}" in
     ## cleanup
     find . -type f -exec sed -i'' "s/set \-\x//g" {} \; ## should not delete, could destroy lines, just leave empty lines
     printf %s"${green}# Done!\n${nocolor}"
+    git status -s
   ;;
 
   *) usage;;
