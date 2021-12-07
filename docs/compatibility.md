@@ -61,7 +61,7 @@ sudo /usr/sbin/usermod -aG debian-tor "${USER}
 Use the default configuration file.
 
 ```sh
-requirements="tor grep sed openssl basez git qrencode pandoc tar python3-stem dialog nginx"
+requirements="tor grep sed openssl basez git qrencode tar python3-stem dialog nginx"
 ```
 
 ## OpenBSD
@@ -85,7 +85,7 @@ tor_service="tor"
 service_manager_control="rcctl"
 etc_group_owner="wheel"
 pkg_mngr_install="pkg_add"
-requirements="tor grep sed openssl base64 git libqrencode pandoc tar py-stem ${dialog} ${web_server}"
+requirements="tor grep sed openssl base64 git libqrencode tar py-stem ${dialog} ${web_server}"
 data_dir="/var/tor"
 ```
 
@@ -187,7 +187,7 @@ tor_service="tor"
 service_manager_control="/etc/rc.d/tor"
 etc_group_owner="wheel"
 pkg_mngr_install="pkg_add"
-requirements="tor grep sed openssl base64 git libqrencode pandoc tar py37-stem ${dialog} ${web_server}"
+requirements="tor grep sed openssl base64 git libqrencode tar py37-stem ${dialog} ${web_server}"
 ```
 
 ## FreeBSD
@@ -225,7 +225,7 @@ tor_service="tor"
 service_manager_control="/etc/rc.d/tor"
 etc_group_owner="wheel"
 pkg_mngr_install="pkg install"
-requirements="tor grep sed openssl base64 git libqrencode pandoc tar security/py-stem ${dialog} ${web_server}"
+requirements="tor grep sed openssl base64 git libqrencode tar security/py-stem ${dialog} ${web_server}"
 ```
 
 ## DragonflyBSD

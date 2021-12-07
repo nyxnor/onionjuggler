@@ -51,7 +51,7 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 **requirements**
 
-: Necessary packages to fully control OnionJuggler. They will be checked first if installed already, if not, will install via using the *$pkg_mngr_install*. (Default: tor grep sed openssl basez git qrencode pandoc tar python3-stem dialog nginx")
+: Necessary packages to fully control OnionJuggler. They will be checked first if installed already, if not, will install via using the *$pkg_mngr_install*. (Default: tor grep sed openssl basez git qrencode tar python3-stem dialog nginx")
 
 
 ## TOR DAEMON
