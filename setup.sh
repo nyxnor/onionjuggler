@@ -146,13 +146,13 @@ case "${action}" in
     pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/onionjuggler-cli.1
     pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o man/onionjuggler.conf.1
     printf %s"${blue}# Preparing Release\n"
-    printf "# Checking syntax\n" ## quits to warn workflow test failed
+    printf %s"${yellow}# Checking syntax\n"
     ## Customize severity with -S [error|warning|info|style]
-    shellcheck setup.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui || exit 1
+    shellcheck setup.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui || { printf %s"${red}# Please fix the shellcheck warnings above!\n${nocolor}"; exit 1; }
     ## cleanup
     find . -type f -exec sed -i'' "s/set \-\x//g" {} \; ## should not delete, could destroy lines, just leave empty lines
+    git status -s && { printf %s"${red}# Please commit the changes above before making a release!\n${nocolor}"; exit 1; }
     printf %s"${green}# Done!\n${nocolor}"
-    git status -s
   ;;
 
   *) usage;;
