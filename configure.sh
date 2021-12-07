@@ -5,7 +5,7 @@
 ## Setup tor directories, user, packages needed for OnionJuggler.
 ##
 ## SYNTAX
-## ./setup.sh [-s|-r]
+## ./configure.sh [-s|-r]
 
 ###################
 #### VARIABLES ####
@@ -17,9 +17,9 @@
 : "${privilege_command:="sudo"}"
 : "${tor_user:="debian-tor"}"
 : "${pkg_mngr_install:="apt install -y"}"
-: "${dialog_box:="dialog"}"
-: "${web_server:=""}"
-: "${requirements:="tor grep sed openssl basez git qrencode tar python3-stem ${dialog_box} ${web_server}"}"
+: "${dialog_box:-}"
+: "${web_server:-}"
+: "${requirements:="tor grep sed openssl basez git qrencode tar python3-stem ${dialog_box:-} ${web_server:-}"}"
 : "${data_dir:="/var/lib/tor"}"
 : "${data_dir_services:="${data_dir}/services"}"
 : "${data_dir_auth:="${data_dir}/onion_auth"}"
@@ -37,9 +37,27 @@ magenta="\033[${bold};35m"
 cyan="\033[${bold};36m"
 
 ## sanity check
-{ [ "${privilege_command}" != "sudo" ] && [ "${privilege_command}" != "doas" ]; } && error_msg "privilege_command can be either 'sudo' or 'doas', not '${privilege_command}'"
-{ [ "${dialog_box}" != "dialog" ] && [ "${dialog_box}" != "whiptail" ]; } && error_msg "dialog_box can be either 'dialog' or 'whiptail', not '${dialog_box}'"
+error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
+
 printf %d "${control_port:=9050}" >/dev/null 2>&1 || error_msg "control_port must be an integer, not ${control_port}"
+
+range_variable(){
+  name="${1}"
+  eval var='$'"${1}"
+  shift
+  if [ -n "${var:-}" ]; then
+    success=0
+    for tests in "${@}"; do
+      [ "${var}" = "${tests}" ] && success=1
+    done
+    [ ${success} -ne 1 ] && error_msg "${name} has an incorrect value!"
+  fi
+}
+
+range_variable privilege_command sudo doas
+range_variable web_server nginx apache2
+range_variable dialog_box dialog whiptail
+
 
 ###################
 #### FUNCTIONS ####
@@ -48,9 +66,13 @@ usage(){
   printf "Configure the environment for OnionJuggler
 \nUsage: %s${0##*/} command [required] <optional>
 \nOptions:
-  -s, --setup       setup environment
-  -r, --release     prepare for commiting
-  -h, --help        show this help message
+  -s, --setup          setup environment
+  -b, --bin-dir DIR    script directory that is on path (Default: /usr/local/bin)
+  -c, --conf-dir DIR   configuration directory (Default: /etc)
+  -m, --man-dir DIR    manual directory (Default: /usr/local/man/man1)
+  -r, --release        prepare for commiting
+  -h, --help           show this help message
+\nAdvanced setup (use together with *--setup*):
 "
 }
 
@@ -102,6 +124,47 @@ if [ ! -f onionjuggler-cli ] || [ ! -f onionjuggler-tui ] || [ ! -f etc/onionjug
   exit 1
 fi
 
+get_arg(){
+  case "${2}" in
+    "-"|"--") return;;
+    ""|-*) error_msg "Option '${1}' requires an argument.";;
+  esac
+}
+
+## binaries
+#/usr/bin
+#/usr/local/bin
+
+## configuration
+#/etc
+#/usr/local/etc
+
+# while true; do
+#   case "${1}" in
+#     *=*) arg="${1#*=}"; shift_n=1;;
+#     *) arg="${2}"; shift_n=2;;
+#   esac
+#   case "${1}" in
+#     -s|--setup|-r|--release) action="${1}"; shift;;
+#     -b|--bin-dir|-b=*|--bin-dir=*) bin_dir="${2##*/}"; shift "${shift_n}";;
+#     -c|--conf-dir|-c=*|--confi-dir=*) conf_dir="${2##*/}"; shift "${shift_n}";;
+#     -m|--man-dir|-m=*|--man-dir=*) man_dir="${2##*/}"; shift "${shift_n}";;
+#
+#     "") break;;
+#     *) error_msg "Invalid option: ${1}";;
+#   esac
+# done
+
+[ ! -d "${bin_dir:="/usr/local/bin"}" ] && error_msg "Your system does not seems to support bin_dir=${bin_dir}"
+[ ! -d "${conf_dir:="/etc"}" ] && error_msg "Your system does not seems to support conf_dir=${conf_dir}"
+[ ! -d "${man_dir:="/usr/local/man/man1"}" ] && error_msg "Your system does not seems to support man_dir=${man_dir}"
+
+
+# bin_dir=${bin_dir##*/}
+# conf_dir=${conf_dir##*/}
+# man_dir=${man_dir##*/}
+# exit
+
 
 ###################
 ###### MAIN #######
@@ -112,8 +175,7 @@ case "${action}" in
 
   -s|--setup|setup)
     ## configure
-    printf %s"${nocolor}# Checking requirements\n"
-    ## python3-stem and nginx will be checked again because python3-stem is a library (not a command) and nginx is only acessible by root
+    printf %s"${magenta}# Checking requirements\n${nocolor}"
     # shellcheck disable=SC2086
     install_package ${requirements}
     printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
@@ -124,35 +186,35 @@ case "${action}" in
     "${privilege_command}" mkdir -p "${data_dir_services}"
     "${privilege_command}" mkdir -p "${data_dir_auth}"
     "${privilege_command}" chown -R "${tor_user}":"${tor_user}" "${data_dir}"
-    printf %s"${green}# Copying files default path\n${nocolor}"
-    "${privilege_command}" mkdir -p /usr/local/bin ## just in case
-    "${privilege_command}" cp -v onionjuggler-cli onionjuggler-tui /usr/local/bin/
-    [ ! -f "${ONIONJUGGLER_CONF}" ] && "${privilege_command}" cp -v etc/onionjuggler.conf /etc/onionjuggler.conf
+    printf %s"${green}# Copying files to the system\n${nocolor}"
+    "${privilege_command}" cp -v onionjuggler-cli onionjuggler-tui "${bin_dir}"
+    [ ! -f "${ONIONJUGGLER_CONF}" ] && "${privilege_command}" cp -v "${conf_dir}"/onionjuggler.conf "${conf_dir}"/onionjuggler.conf
+    "${privilege_command}" cp -v man/onionjuggler-cli.1 man/onionjuggler.conf.1 "${man_dir}"/
     cp -v .dialogrc-onionjuggler "${HOME}/.dialogrc-onionjuggler"
-    printf %s"${magenta}# Creating man pages\n${nocolor}"
-    "${privilege_command}" mkdir -p /usr/local/man/man1
-    "${privilege_command}" mv man/onionjuggler-cli.1 man/onionjuggler.conf.1 /usr/local/man/man1/
-    #"${privilege_command}" mandb -q -f /usr/local/man/man1/onionjuggler-cli.1 /usr/local/man/man1/onionjuggler.conf.1
     ## finish
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
   ;;
 
   -r|--release|release)
+    printf %s"${blue}# Preparing release\n${nocolor}"
     ## ShellCheck is needed
     ## install https://github.com/koalaman/shellcheck#installing
     ## compile from source https://github.com/koalaman/shellcheck#compiling-from-source
-    install_package shellcheck pandoc
-    printf %s"${magenta}# Creating Manual pages\n${nocolor}"
+    install_package shellcheck pandoc git
+    printf %s"${magenta}# Creating manual pages\n${nocolor}"
     pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/onionjuggler-cli.1
     pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o man/onionjuggler.conf.1
-    printf %s"${blue}# Preparing Release\n${nocolor}"
-    printf %s"${yellow}# Checking syntax\n${nocolor}"
+    printf %s"${yellow}# Checking shell syntax\n${nocolor}"
     ## Customize severity with -S [error|warning|info|style]
-    shellcheck setup.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui || { printf %s"${red}# Please fix the shellcheck warnings above before pushing!\n${nocolor}"; exit 1; }
+    if ! shellcheck configure.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui; then
+      printf %s"${red}# Please fix the shellcheck warnings above before pushing!\n${nocolor}"
+      exit 1
+    fi
     ## cleanup
-    find . -type f -exec sed -i'' "s/set \-\x//g" {} \; ## should not delete, could destroy lines, just leave empty lines
+    printf %s"${cyan}# Checking git status\n${nocolor}"
+    find . -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \; ## should not delete, could destroy lines, just leave empty lines
     if [ -n "$(git status -s)" ]; then
-      git status -v
+      git status
       printf %s"${red}# Please record the changes to the file(s) above with a commit before pushing!\n${nocolor}"
       exit 1
     fi

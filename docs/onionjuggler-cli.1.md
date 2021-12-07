@@ -9,27 +9,29 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 
 # SYNOPSIS
 
-**onionjuggler-cli** **command** [*REQUIRED*] <*OPTION*>\
+**onionjuggler-cli** **command** [**--option**<=*ARGUMENT*>]\
+
+
 **onionjuggler-cli restore-torrc**\
-**onionjuggler-cli on**\ **--service** [*SERV*] **--version** [*VERSION*] **--socket** *tcp* **--port** [*VIRTPORT*,<*TARGET*>,<*VIRTPORT2*>,<*TARGET2*>]\
-**onionjuggler-cli on**  **--service** [*SERV*] **--version** [*VERSION*] **--socket** *unix* **--port** [*VIRTPORT*,<*VIRTPORT2*>]\
-**onionjuggler-cli off** **--service** [*SERV1*,*SERV2*,*...*] <*--purge*>\
-**onionjuggler-cli list** **--service** [*@all*|*SERV1*,*SERV2*,*...*] <*--no-qr*>\
-**onionjuggler-cli renew** **--service** [*@all*|*SERV1*,*SERV2*,*...*]\
-**onionjuggler-cli auth-server on** **--service** [*SERV*] **--client** [*CLIENT*] **--client-pub-key** <*CLIENT_PUB_KEY*>\
-**onionjuggler-cli auth-server on** **--service** [*@all*|*SERV1*,*SERV2*,*...*] **--client** [*CLIENT1*,*CLIENT2*,*...*]\
-**onionjuggler-cli auth-server off** **--service** [*@all*|*SERV1*,*SERV2*,*...*] **--client** [*@all*|*CLIENT1*,*CLIENT2*,*...*]\
-**onionjuggler-cli auth-server list** **--service** [*@all*|*SERV1*,*SERV2*,*...*]\
-**onionjuggler-cli auth-client on** **--onion** [*ONION*] **--client-priv-key** <*CLIENT_PRIV_KEY*>\
-**onionjuggler-cli auth-client off** **--onion** [*ONION1*,*ONION2*,*...*]\
-**onionjuggler-cli auth-client list**\
-**onionjuggler-cli web on** **--service** [*SERV*] **--folder** [*FOLDER*]\
-**onionjuggler-cli web off** **--service** [*SERV*]\
-**onionjuggler-cli web list**\
-**onionjuggler-cli location** **--service** [*SERV*] [*--nginx*|*--apache2*|*--html*]\
-**onionjuggler-cli backup** [*--create*|*--integrate*]\
-**onionjuggler-cli vanguards** [*--on*|*--list*|*--upgrade*|*--off*]\
-**onionjuggler-cli** <*-h*|*-help*|*--help*|*help*>
+**onionjuggler-cli on** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT*[,*TARGET*][,*VIRTPORT2*][,*TARGET2*]>]\
+**onionjuggler-cli on**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*> [**--port** [*VIRTPORT*[,*VIRTPORT2*]>]\
+**onionjuggler-cli off** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
+**onionjuggler-cli list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
+**onionjuggler-cli renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
+**onionjuggler-cli auth-server** [**--on**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*CLIENT1*,*CLIENT2*,*...*>]\
+**onionjuggler-cli auth-server** [**--off**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
+**onionjuggler-cli auth-server** [**--list**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli auth-client** [**--on**] [**--onion** <*ONION*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>]\
+**onionjuggler-cli auth-client** [**--off**] [**--onion** <*ONION1*,*ONION2*,*...*>]\
+**onionjuggler-cli auth-client** [**--list**]\
+**onionjuggler-cli web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>]\
+**onionjuggler-cli web** [**--off**] [**--service** <*SERVICE*>]\
+**onionjuggler-cli web** [**--list**]\
+**onionjuggler-cli location** [**--service** <*SERVICE*>] [**--nginx**|**--apache2**|**--html**]\
+**onionjuggler-cli backup** [**--create**|**--integrate**]\
+**onionjuggler-cli vanguards** [**--on**|**--list**|**--upgrade**|**--off**]\
+**onionjuggler-cli** [**-h**|**-help**|**--help**|**help**]
 
 
 # DESCRIPTION
@@ -95,7 +97,7 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 
 : Onion address of the authenticated service for the client to connect to. Only accepted format is for onion v3 addresses, which contains 56 characters using the base32 format with the range *a-z2-7* and ending with (dot)onion. String format.
 
-**COMMAND** [*REQUIRED*] <*OPTIONAL*>
+**command** [**--option**<=*ARGUMENT*>]
 
 : Commands that accept arguments can be specified as follow: --service ssh OR --service "ssh nextcloud" OR --service=ssh,nextcloud
 
@@ -140,14 +142,14 @@ onionjuggler-cli off --service ssh,xmpp
 onionjuggler-cli off --service ssh,xmpp --purge
 ```
 
-**list** **--service** [*@all*|*SERV1*,*SERV2*,*...*] <*--no-qr*>
+**list** **--service** [*@all*|*SERV1*,*SERV2*,*...*] <*--quiet*>
 
 : List onion service information: hostname (address) and in QR encoded format, clients names and quantity, status if service is active or inactive regarding the torrc lines (un)present and the HiddenServiceDir presence, the torrc block. File(s) modified: none.
 ```
 onionjuggler-cli list --service ssh
 onionjuggler-cli list --service ssh,xmpp
 onionjuggler-cli list --service @all
-onionjuggler-cli list --service @all no-qr
+onionjuggler-cli list --service @all --quiet
 ```
 
 **renew** **--service** [*@all*|*SERV1*,*SERV2*,*...*]

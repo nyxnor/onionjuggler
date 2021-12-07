@@ -105,7 +105,7 @@ Run [shellcheck](https://github.com/koalaman/shellcheck) before commiting your c
 Some checks are not needed for certain files and are cherry picked to be disabled. It is recommended to check before every commit:
 
 ```sh
-./setup.sh -r
+./configure.sh -r
 ```
 
 **Shellcheck Codes**:
@@ -152,7 +152,7 @@ If it does and is valuable to the upstream project, first open an issue to be th
 
 Before commiting, shellcheck with:
 ```sh
-./setup.sh -r
+./configure.sh -r
 ```
 
 Commit to your branch:

@@ -145,7 +145,7 @@ It is recommended to have `tor` already installed, because as it is a service, i
 
 Run from inside the cloned repository to create the tor directories, setup ownership, create manual pages:
 ```sh
-./setup.sh
+./configure.sh
 ```
 
 If the /etc/onionjuggler.conf does not exist, it will be created with default values and configuration description.
@@ -229,7 +229,7 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
 
 If using Vanguards, `python` is needed.
 
-The packages are downloaded when setting up the environment with [setup.sh](setup.sh).
+The packages are downloaded when setting up the environment with [configure.sh](configure.sh).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
 
 ## Credits

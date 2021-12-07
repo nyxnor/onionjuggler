@@ -17,48 +17,53 @@ usage(){
   # fi
 
   printf "Juggle with an Onion Service
-\nUsage: %s${0##*/} command [required <args>] <optional>
+\nUsage: onionjuggler-cli command [--option<=ARGUMENT>]
 \nComplete options:
-  on [--service <SERVICE>] [--socket <tcp|unix>] [--port <VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>] <--version 3>
-                                                             enable a service (only TCP requires a target)
-  off [--service <@all|SERV1,SERV2,...>] <--purge>           disable a service and optionally purge its directory
-  list [--service <@all|SERV1,SERV2,...>] <--no-qr>          see credentials from indicated services
+  on [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT[,VIRTPORT2]>]
+                                                             enable a service listening with tcp sockets
+  on [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[,TARGET][,VIRTPORT2][,TARGET2]>]
+                                                             enable a service listening on unix sockets
+  off [--purge] [--service <@all|SERV1,SERV2,...>            disable a service and optionally purge its directory
+  list [--quiet] [--service <@all|SERV1,SERV2,...>]          see credentials from indicated services
   renew [--service <@all|SERV1,SERV2,...>]                   renew indicated services addresses
-  auth-server --on [--service <SERVICE>] [--client <client>] --client-pub-key <CLIENT_PUB_KEY>
+  auth-server --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-key <CLIENT_PUB_KEY>]
                                                              add client authorization, optionally add client's public key
   auth-server --on [--service <@all|SERV1,SERV2,...>] [--client <CLIENT1,CLIENT2,...>]
                                                              add client authorization
   auth-server --off [--service <@all|SERV1,SERV2,...>] [--client <@all|CLIENT1,CLIENT2,...>]
                                                              remove client authorization
   auth-server --list [--service <@all|SERV1,SERV2,...>]      list authorized clients for indicated service
-  auth-client --on [--onion <ONION>] --client-priv-key <CLIENT_PRIV_KEY>
+  auth-client --on [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>]
                                                              add authorization of client access, optionally add client's private key
   auth-client --off [--onion <ONION>]                        remove authorization of client access
   auth-client --list                                         list your keys as a client
   web --on [--service <SERVICE>] [--folder <SITE_PATH>]      start serving a website for certain service and its folder
   web --off [--service <SERVICE>]                            stop serving a website for certain service and its folder
   web --list                                                 list enabled websites
-  location [--nginx|--apache2|--html] [--service <SERVICE>]   onion-location guide, no execution
+  location [--nginx|--apache2|--html] [--service <SERVICE>]  onion-location guide, no execution
   backup [--create|--integrate]                              restore latest torrc backup
   vanguards [--on|--list|--upgrade|--off]                    install, upgrade, remove or see logs for vanguards addon
   -h|--help                                                  display this help message
 
 Options:
-  -s, --service <SERVICE>                                    required option: on, off, list, renew, auth-server, auth-client, web
   on                                                         activate an onion service
+    -s, --service <SERVICE>                                  service to activate
     -S, --socket <tcp|unix>                                  define a socket for the new onion service
     -v, --version 3                                          define a version for the new onion service
     -p, --port <VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>       define ports for the new onion service
   off                                                        deactivate an onion service configuration
-    -P, --purge                                              purge an onion service data
+    -s, --service <SERV1,SERV2,...>                          service to deactivate
+    -P, --purge                                              purge the onion service data
   list                                                       list existing services and their configuration, clients
-    -q, --no-qr                                              don't QR encode the hostname
+    -s, --service <@all|SERV1,SERV2,...>                     list all services or a indicate them comma separated
+    -q, --quiet                                              don't QR encode the hostname
   auth-server                                                manage authorized_clients
+    -s, --service <@all|SERV1,SERV2,...>                     authorize or remove authorization to indicated services
     -n, --on                                                 authorized aclient
     -f, --off                                                remove authorization from a client
     -l, --list                                               list authorized clients
     -c, --client <CLIENT>                                    choose client
-    -K, --client-pub-key <CLIENT_PUB_KEY>                    specify client pub key to authorize
+    -K, --client-pub-key <CLIENT_PUB_KEY>                    specify client pub key to authorize to one service
   auth-client                                                manage your authorizations to an onion
     -n, --on                                                 add authorization
     -f, --off                                                remove authorization
@@ -66,11 +71,13 @@ Options:
     -o, --onion <ONION>                                      specify onion to authenticate
     -k, --client-priv-key <CLIENT_PRIV_KEY>                  specify your client private key
   web                                                        manage web server configuration
+    -s, --service <SERVICE>                                  service to enable or disable website
     -n, --on                                                 activate website to an onion service
     -f, --off                                                deactivate website to an onion service
     -l, --list                                               list active websites
     -F, --folder <SITE_PATH>                                 specify website files
   location                                                   guide to add onion-location to redirect users to your onion domain
+    -s, --service <SERVICE>                                  indicate service to see onion-location string
     --nginx                                                  Nginx webserver header for onion-location
     --apache2                                                Apache2 webserver header for onion-location
     --html                                                   HTML header for onion-location
@@ -96,57 +103,63 @@ If your services are unreacheable, restart tor.
   exit 1
 }
 
-
 ###################
 #### VARIABLES ####
 
 ## display error message with instructions to use the script correctly.
-error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
+error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
+
+get_arg(){
+  case "${2}" in
+    "-"|"--") return;;
+    ""|-*) error_msg "Option '${1}' requires an argument.";;
+  esac
+}
 
 while true; do
   case "${1}" in
-    on|off|list|renew|web|location|backup|restore|vanguards|restore-torrc) command="${1}"; shift;;
+    *=*) arg="${1#*=}"; shift_n=1;;
+    *) arg="${2}"; shift_n=2;;
+  esac
+  case "${1}" in
+    on|off|list|renew|web|location|backup|restore|vanguards|restore-torrc)
+      [ -n "${command}" ] && error_msg "Command cannot be defined two times: \"${command}\" and \"${1}\""
+      command="${1}"; shift;;
 
-    auth-server|auth-client) command="${1%-*}"; host="${1#*-}"; : "${host:?$(error_msg "host is missing")}"; shift;;
+    auth-server|auth-client)
+      [ -n "${command}" ] && error_msg "Command cannot be defined two times: \"${command}\" and \"${1}\""
+      command="${1%-*}"; host="${1#*-}"; shift;;
 
-    -i|--install|-L|--logs|-u|--upgrade|-r|--remove|--nginx|--apache2|--html|-q|--no-qr|-C|--create|-I|--integrate) action="${1#--}"; shift;;
+    -i|--install|-L|--logs|-u|--upgrade|-r|--remove|--nginx|--apache2|--html|-q|--quiet|-C|--create|-I|--integrate) action="${1#--}"; shift;;
 
     --on|--off|--list) status="${1#--}"; shift;;
     -n|-f|-l) status="${1#-}"; shift;;
 
-    -s|--service) service="${2:?$(error_msg "service is missing")}"; shift 2;;
-    --service=*) service="${1#*=}"; : "${service:?$(error_msg "service is missing")}"; shift;;
+    -s|--service|-s=*|--service=*) service="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
 
-    -c|--client) client="${2:?$(error_msg "client is missing")}"; shift 2;;
-    --client=*) client="${1#*=}"; : "${client:?$(error_msg "client is missing")}"; shift;;
+    -c|--client|-c=*|--client=*) client="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
 
-    -o|--onion) onion="${2:?$(error_msg "onion is missing")}"; shift 2;;
-    --onion=*) onion="${1#*-}"; : "${onion:?$(error_msg "onion is missing")}"; shift;;
+    -o|--onion|-o=*|--onion=*) onion="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
 
     -P|--purge) purge="purge"; shift;;
 
-    -v|--version) version="${2:?$(error_msg "version is missing")}"; shift 2;;
-    --version=*) version="${1#*=}"; : "${version:?$(error_msg "version is missing")}"; shift;;
+    -v|--version|-v=*|--version=*) version="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
 
-    -S|--socket) socket="${2:?$(error_msg "socket is missing")}"; shift 2;;
-    --socket=*) socket="${1#*=}"; : "${socket:?$(error_msg "socket is missing")}"; shift;;
+    -S|--socket|-S=*|--socket=*) socket="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
 
-    -p| --port) port="${2:?$(error_msg "port is missing")}"; shift 2;;
-    --port=*) port="${1#*=}"; : "${port:?$(error_msg "port is missing")}"; shift;;
+    -p|--port|-p=*|--port=*) port="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
 
-    -F|--folder) folder="${2:?$(error_msg "folder is missing")}"; shift 2;;
-    --folder=*) folder="${1#*=}"; : "${folder:?$(error_msg "folder is missing")}"; shift;;
+    -F|--folder|-F=*|--folder=*) folder="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
 
-    -k|--client-priv-key) client_priv_key="${2:?$(error_msg "client_priv_key is missing")}"; shift 2;;
-    --client-priv-key=*) client_priv_key="${1#*=}"; : "${client_priv_key:?$(error_msg "client_priv_key is missing")}"; shift;;
+    -k|--client-priv-key|-k=*|--client-priv-key=*) client_priv_key="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
 
-    -K|--client-pub-key) client_pub_key="${2:?$(error_msg "client_pub_key is missing")}"; shift 2;;
-    --client-pub-key=*) client_pub_key="${1#*=}"; : "${client_pub_key:?$(error_msg "client_pub_key is missing")}"; shift;;
+    -K|--client-pub-key|-K=*|--client-pub-key=*) client_pub_key="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
 
-    --) shift; break;;
-    *) break;;
+    "") break;;
+    *) error_msg "Invalid option: ${1}";;
   esac
 done
+
 
 ## check if user configuration is readable and if yes, source it
 [ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
@@ -317,7 +330,7 @@ service_block(){
   service="${2}"
   file="${3:-${torrc}}"
   i=0
-  grep -A 7 "HiddenServiceDir .*/${service}$" "${file}" | while IFS= read -r line; do
+  grep -A 7 "HiddenServiceDir ${data_dir_services}/${service}$" "${file}" | while IFS= read -r line; do
     i=$((i+1))
     ## break check
     [ ${i} -gt 1 ] && [ "${line%% *}" = "HiddenServiceDir" ] && break ## break on next HiddenService configuration
@@ -333,8 +346,7 @@ service_block(){
 
 ###########################
 ########## MAIN ###########
-"${privilege_command}" sed -i'' 's/\/$//' "${torrc}" ## no config should end with '/' to find exact match.
-service="$(printf %s"${service}" | tr "," " " | tr -s " ")"
+#"${privilege_command}" sed -i'' 's/\/$//' "${torrc}" ## no config should end with '/' to find exact match.
 
 case "${command}" in
 
@@ -345,7 +357,7 @@ case "${command}" in
     # for service in $(printf %s"${service_name_list}"); do
     #   block="$(service_block print "${service}" "${torrc}.bak")"
     #   printf '\n%s\n\n' "${block}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
-    #   #printf '\n%s\n\n' "$("${privilege_command}" sed -n "/^HiddenServiceDir .*\/${service}$/p" "${torrc}".bak)" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
+    #   #printf '\n%s\n\n' "$("${privilege_command}" sed -n "/^HiddenServiceDir ${data_dir_services}\/${service}$/p" "${torrc}".bak)" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
     # done
     ## TODO -> this prints all the HiddenService lines and let them together, it 'works' but I like blocks for organization
     ## try to print blocks separated by empty lines
@@ -368,14 +380,14 @@ case "${command}" in
     : "${purge}" ## optional
     delete_service(){
       service="${1}"
-      purge="${2}"
       ## remove service service data
-      if [ "${purge}" = "purge" ]; then
-        printf %s"${red}\n# Deleting Hidden Service data in ${data_dir_services}/${service}\n${nocolor}"
-        "${privilege_command}" rm -rfv "${data_dir_services}"/"${service}"
-      else
-        printf "\n# HiddenServiceDiretory was kept\n"
-      fi
+      case "${purge}" in
+        purge)
+          printf %s"${red}\n# Deleting Hidden Service data in ${data_dir_services}/${service}\n${nocolor}"
+          "${privilege_command}" rm -rfv "${data_dir_services}"/"${service}"
+        ;;
+        *) printf "\n# HiddenServiceDiretory was kept\n";;
+      esac
       "${privilege_command}" cp "${torrc}" "${torrc}".bak
       ## remove service paragraph in torrc
       printf %s"# Deleting Hidden Service configuration in ${torrc}\n"
@@ -384,7 +396,7 @@ case "${command}" in
       "${privilege_command}" sed '1s/^$//p;/./,/^$/!d' "${torrc}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null && "${privilege_command}" mv "${torrc}".tmp "${torrc}"
       printf %s"# Disabled service: ${service}\n\n"
     }
-    loop_list delete_service "${service}" "${purge}"
+    loop_list delete_service "${service}"
     restarting_tor
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
@@ -788,11 +800,11 @@ case "${command}" in
       test_service_exists "${service}"
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
       create_client_list "${service}"
-      [ "${action}" = "no-qr" ] || { printf "\n"; qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"; }
+      { [ "${action}" = "-q" ] || [ "${action}" = "quiet" ]; } || { printf "\n"; qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"; }
       printf %s"\nAddress  = ${onion_hostname}\n"
       printf %s"Service  = ${service}\n"
       [ -n "${client_name_list}" ] && printf %s"Clients  = ${client_name_list} (${client_count})\n"
-      if "${privilege_command}" grep -q "^HiddenServiceDir .*/${service}$" "${torrc}"; then
+      if "${privilege_command}" grep -q "^HiddenServiceDir ${data_dir_services}/${service}$" "${torrc}"; then
         printf "Status   = active\n" && service_block print "${service}"
       else
         printf "Status   = inactive\n"
@@ -898,7 +910,7 @@ server {
       ;;
 
       *)
-        error_msg "Invalid argument: ${status}"
+        error_msg "Invalid argument: status=${status}"
     esac
   ;;
 
@@ -954,7 +966,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ;;
 
       *)
-        error_msg "Invalid argument: ${action}"
+        error_msg "Invalid argument: action=${action}"
     esac
   ;;
 
@@ -1033,7 +1045,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ;;
 
       *)
-        error_msg "Invalid argument: ${action}"
+        error_msg "Invalid argument: action=${action}"
     esac
   ;;
 
@@ -1134,7 +1146,7 @@ WantedBy=multi-user.target
       ;;
 
       *)
-        error_msg "Invalid argument: ${action}"
+        error_msg "Invalid argument: action=${action}"
     esac
   ;;
 

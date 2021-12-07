@@ -35,7 +35,7 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 **etc_group_owner**
 
-: The /etc directory group owner. (Default: root)
+: The /etc directory group owner. Normally *root* or *wheel*. (Default: root)
 
 **pkg_mngr_install**
 

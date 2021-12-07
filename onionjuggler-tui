@@ -51,7 +51,7 @@ i=0
 ######## FUNCTIONS ########
 
 ## display error message with instructions to use the script correctly.
-error_msg(){ [ -n "${1}" ] && printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
+error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
 
 case "${dialog_box}" in
   dialog)
