@@ -73,8 +73,6 @@ case "${dialog_box}" in
 esac
 
 ## sanity check
-{ [ "${privilege_command}" != "sudo" ] && [ "${privilege_command}" != "doas" ]; } && error_msg "privilege_command can be either 'sudo' or 'doas', not '${privilege_command}'"
-{ [ "${web_server}" != "nginx" ] && [ "${web_server}" != "apache2" ]; } && error_msg "dialog_box can be either 'nginx' or 'apache2', not '${web_server}'"
 { ! command -v onionjuggler-cli >/dev/null && [ ! -f onionjuggler-cli ]; } && error_msg "onionjuggler-cli not found on PATH!"
 
 ## clear is not a posix command
@@ -513,6 +511,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
 
   WEB_SERVER)
+    { [ "${web_server}" != "nginx" ] && [ "${web_server}" != "apache2" ]; } && error_msg "web_server can be either 'nginx' or 'apache2', not '${web_server}'"
     title="Web server - Status"
     menu="\nWould you like to enable or disable serving a website?"
     status="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" --menu "${menu}" "$((12+whiptail_height))" 50 3 \

@@ -215,14 +215,17 @@ Currently only systemd is available, planning on implementing SysV, Runit, OpenR
   * **tor** >= 0.3.5.7
   * **grep** >=2.0
   * **sed** >= 2.0
-  * **python3-stem** >=1.8.0
-  * **openssl** >= 1.1
-  * **basez** >= 1.6.2
-  * **git** >= 2.0
-  * **qrencode** >= 4.1.1
-  * **pandoc**
-  * **tar**
-  * **nginx/apache2**
+  * **libqrencode/qrencode** >= 4.1.1
+  * **openssl** >= 1.1 (Auth)
+  * **basez** >= 1.6.2 (Auth)
+  * **git** >= 2.0 (Vanguards)
+  * **python3-stem** >=1.8.0 (Vanguards)
+  * **tar** (Backup)
+  * **nginx/apache2** (Web server)
+
+* Development programs:
+  * **pandoc** (Manual)
+  * **shellcheck** (Review)
 
 If using Vanguards, `python` is needed.
 

@@ -158,10 +158,6 @@ done
 : "${tor_service:="tor@default.service"}"
 : "${service_manager_control:="systemctl"}"
 : "${etc_group_owner:="root"}"
-: "${pkg_mngr_install:="apt install -y"}"
-: "${dialog_box:="dialog"}"
-: "${web_server:="nginx"}"
-: "${requirements:="tor grep sed openssl basez git qrencode pandoc tar python3-stem ${dialog_box} ${web_server}"}"
 
 ## tor defaults
 : "${data_dir:="/var/lib/tor"}"
@@ -202,10 +198,6 @@ blue="\033[${bold};34m"
 #magenta="\033[${bold};35m"
 #cyan="\033[${bold};36m"
 
-## sanity check
-{ [ "${privilege_command}" != "sudo" ] && [ "${privilege_command}" != "doas" ]; } && error_msg "privilege_command can be either 'sudo' or 'doas', not '${privilege_command}'"
-{ [ "${web_server}" != "nginx" ] && [ "${web_server}" != "apache2" ]; } && error_msg "dialog_box can be either 'nginx' or 'apache2', not '${web_server}'"
-printf %d "${control_port}" >/dev/null 2>&1 || error_msg "control_port must be an integer, not ${control_port}"
 
 ###################
 #### FUNCTIONS ####
@@ -816,6 +808,9 @@ case "${command}" in
   web|WEB)
     : "${web_server:?$(error_msg "web_server is missing")}"
     : "${status:?$(error_msg "status is missing")}"
+
+    { [ "${web_server}" != "nginx" ] && [ "${web_server}" != "apache2" ]; } && error_msg "web_server can be either 'nginx' or 'apache2', not '${web_server}'"
+
     case "${status}" in
 
       n|on|ON)
@@ -1051,7 +1046,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     : "${action:?$(usage)}"
 
     ## TODO -> Vanguards sample service configuration for other service managers
-    [ "${service_manager_control}" != "systemctl" ] && error_msg "Unfortunately, OnionJuggler has only implemented Vanguards with Systemd (systemctl)."
+    [ "${service_manager_control}" != "systemctl" ] && error_msg "Unfortunately, OnionJuggler has only implemented Vanguards with Systemd (systemctl).\n Help improve this by submitting a merge request."
 
     ## Check if python is installed
     if ! command -v python3 >/dev/null; then

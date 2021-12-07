@@ -18,8 +18,8 @@
 : "${tor_user:="debian-tor"}"
 : "${pkg_mngr_install:="apt install -y"}"
 : "${dialog_box:="dialog"}"
-: "${web_server:="nginx"}"
-: "${requirements:="tor grep sed openssl basez git qrencode pandoc tar python3-stem ${dialog_box} ${web_server}"}"
+: "${web_server:=""}"
+: "${requirements:="tor grep sed openssl basez git qrencode tar python3-stem ${dialog_box} ${web_server}"}"
 : "${data_dir:="/var/lib/tor"}"
 : "${data_dir_services:="${data_dir}/services"}"
 : "${data_dir_auth:="${data_dir}/onion_auth"}"
@@ -35,6 +35,11 @@ yellow="\033[${bold};33m"
 blue="\033[${bold};34m"
 magenta="\033[${bold};35m"
 cyan="\033[${bold};36m"
+
+## sanity check
+{ [ "${privilege_command}" != "sudo" ] && [ "${privilege_command}" != "doas" ]; } && error_msg "privilege_command can be either 'sudo' or 'doas', not '${privilege_command}'"
+{ [ "${dialog_box}" != "dialog" ] && [ "${dialog_box}" != "whiptail" ]; } && error_msg "dialog_box can be either 'dialog' or 'whiptail', not '${dialog_box}'"
+printf %d "${control_port:=9050}" >/dev/null 2>&1 || error_msg "control_port must be an integer, not ${control_port}"
 
 ###################
 #### FUNCTIONS ####
@@ -126,9 +131,7 @@ case "${action}" in
     cp -v .dialogrc-onionjuggler "${HOME}/.dialogrc-onionjuggler"
     printf %s"${magenta}# Creating man pages\n${nocolor}"
     "${privilege_command}" mkdir -p /usr/local/man/man1
-    pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o /tmp/onionjuggler-cli.1
-    pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o /tmp/onionjuggler.conf.1
-    "${privilege_command}" mv /tmp/onionjuggler-cli.1 /tmp/onionjuggler.conf.1 /usr/local/man/man1/
+    "${privilege_command}" mv man/onionjuggler-cli.1 man/onionjuggler.conf.1 /usr/local/man/man1/
     #"${privilege_command}" mandb -q -f /usr/local/man/man1/onionjuggler-cli.1 /usr/local/man/man1/onionjuggler.conf.1
     ## finish
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
@@ -138,7 +141,10 @@ case "${action}" in
     ## ShellCheck is needed
     ## install https://github.com/koalaman/shellcheck#installing
     ## compile from source https://github.com/koalaman/shellcheck#compiling-from-source
-    install_package shellcheck
+    install_package shellcheck pandoc
+    printf %s"${magenta}# Creating Manual pages\n"
+    pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/onionjuggler-cli.1
+    pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o man/onionjuggler.conf.1
     printf %s"${blue}# Preparing Release\n"
     printf "# Checking syntax\n" ## quits to warn workflow test failed
     ## Customize severity with -S [error|warning|info|style]
