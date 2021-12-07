@@ -148,10 +148,14 @@ case "${action}" in
     printf %s"${blue}# Preparing Release\n"
     printf %s"${yellow}# Checking syntax\n"
     ## Customize severity with -S [error|warning|info|style]
-    shellcheck setup.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui || { printf %s"${red}# Please fix the shellcheck warnings above!\n${nocolor}"; exit 1; }
+    shellcheck setup.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui || { printf %s"${red}# Please fix the shellcheck warnings above before pushing!\n${nocolor}"; exit 1; }
     ## cleanup
     find . -type f -exec sed -i'' "s/set \-\x//g" {} \; ## should not delete, could destroy lines, just leave empty lines
-    git status -s && { printf %s"${red}# Please commit the changes above before making a release!\n${nocolor}"; exit 1; }
+    if [ -n "$(git status -s)" ]; then
+      git status -s
+      printf %s"${red}# Please record the changes with a commit before pushing!\n${nocolor}"
+      exit 1
+    fi
     printf %s"${green}# Done!\n${nocolor}"
   ;;
 
