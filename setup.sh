@@ -142,18 +142,18 @@ case "${action}" in
     ## install https://github.com/koalaman/shellcheck#installing
     ## compile from source https://github.com/koalaman/shellcheck#compiling-from-source
     install_package shellcheck pandoc
-    printf %s"${magenta}# Creating Manual pages\n"
+    printf %s"${magenta}# Creating Manual pages\n${nocolor}"
     pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/onionjuggler-cli.1
     pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o man/onionjuggler.conf.1
-    printf %s"${blue}# Preparing Release\n"
-    printf %s"${yellow}# Checking syntax\n"
+    printf %s"${blue}# Preparing Release\n${nocolor}"
+    printf %s"${yellow}# Checking syntax\n${nocolor}"
     ## Customize severity with -S [error|warning|info|style]
     shellcheck setup.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui || { printf %s"${red}# Please fix the shellcheck warnings above before pushing!\n${nocolor}"; exit 1; }
     ## cleanup
     find . -type f -exec sed -i'' "s/set \-\x//g" {} \; ## should not delete, could destroy lines, just leave empty lines
     if [ -n "$(git status -s)" ]; then
-      git status -s
-      printf %s"${red}# Please record the changes with a commit before pushing!\n${nocolor}"
+      git status -v
+      printf %s"${red}# Please record the changes to the file(s) above with a commit before pushing!\n${nocolor}"
       exit 1
     fi
     printf %s"${green}# Done!\n${nocolor}"
