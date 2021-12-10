@@ -70,6 +70,7 @@ usage(){
   -b, --bin-dir <DIR>                         script directory that is on path (Default: /usr/local/bin)
   -c, --conf-dir <DIR>                        configuration directory (Default: /etc)
   -m, --man-dir <DIR>                         manual directory (Default: /usr/local/man/man1)
+  -k, --check                                 run pre-defined shellcheck
   -r, --release                               prepare for commiting
 "
 }
@@ -139,7 +140,7 @@ while true; do
     *) arg="${2}"; shift_n=2;;
   esac
   case "${1}" in
-    -s|--setup|-r|--release) action="${1}"; shift;;
+    -s|--setup|-r|--release|-k|--check) action="${1}"; shift;;
     -b|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
     -c|--conf-dir|-c=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
     -m|--man-dir|-m=*|--man-dir=*) man_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
@@ -203,7 +204,7 @@ case "${action}" in
     printf %s"${green}# Done!\n${nocolor}"
   ;;
 
-  -c|--check) custom_shellcheck;;
+  -k|--check) custom_shellcheck;;
 
 
   *) usage;;
