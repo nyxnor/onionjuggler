@@ -109,6 +109,13 @@ install_package(){
 }
 
 
+custom_shellcheck(){
+  if ! shellcheck configure.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui; then
+    printf %s"${red}# Please fix the shellcheck warnings above before pushing!\n${nocolor}"
+    exit 1
+  fi
+}
+
 if test ! -f onionjuggler-cli || test ! -f onionjuggler-tui || test ! -f etc/onionjuggler.conf || \
 test ! -f docs/onionjuggler-cli.1.md || test ! -f docs/onionjuggler.conf.1.md || \
 test ! -f man/onionjuggler-cli.1 || test ! -f man/onionjuggler.conf.1; then
@@ -184,10 +191,7 @@ case "${action}" in
     pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o man/onionjuggler.conf.1
     printf %s"${yellow}# Checking shell syntax\n${nocolor}"
     ## Customize severity with -S [error|warning|info|style]
-    if ! shellcheck configure.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui; then
-      printf %s"${red}# Please fix the shellcheck warnings above before pushing!\n${nocolor}"
-      exit 1
-    fi
+    custom_shellcheck
     ## cleanup
     printf %s"${cyan}# Checking git status\n${nocolor}"
     find . -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \; ## should not delete, could destroy lines, just leave empty lines
@@ -198,6 +202,9 @@ case "${action}" in
     fi
     printf %s"${green}# Done!\n${nocolor}"
   ;;
+
+  -c|--check) custom_shellcheck;;
+
 
   *) usage;;
 
