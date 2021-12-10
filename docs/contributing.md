@@ -50,6 +50,7 @@ Commands used by this project:
     * [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html#tag_20_125)
     * [tee](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tee.html#tag_20_127)
     * [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html#tag_20_132)
+    * [tput](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tput.html#tag_20_131)
     * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
     * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
 
