@@ -41,6 +41,10 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 : Install the required packages via package manager. (Default: apt install -y).
 
+**openssl_command**
+
+: The OpenSSL command to create the certificate and private keys for Client Authorization using the x25519 algorithm. It must be the orignal OpenSSL v1.1 or later, not LibreSSL, as the latter does not support the aforementioned algorithm. (Default: openssl).
+
 **web_server**
 
 : Web server to serve a website. Compatible with *nginx* and *apache2*. (Default: nginx).

@@ -53,6 +53,13 @@ Normally \f[I]root\f[R] or \f[I]wheel\f[R].
 Install the required packages via package manager.
 (Default: apt install -y).
 .TP
+\f[B]openssl_command\f[R]
+The OpenSSL command to create the certificate and private keys for
+Client Authorization using the x25519 algorithm.
+It must be the orignal OpenSSL v1.1 or later, not LibreSSL, as the
+latter does not support the aforementioned algorithm.
+(Default: openssl).
+.TP
 \f[B]web_server\f[R]
 Web server to serve a website.
 Compatible with \f[I]nginx\f[R] and \f[I]apache2\f[R].

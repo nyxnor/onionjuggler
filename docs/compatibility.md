@@ -60,10 +60,6 @@ sudo /usr/sbin/usermod -aG debian-tor "${USER}
 
 Use the default configuration file.
 
-```sh
-requirements="tor grep sed openssl basez git qrencode tar python3-stem dialog nginx"
-```
-
 ## OpenBSD
 
 ### tor
@@ -85,6 +81,9 @@ tor_service="tor"
 service_manager_control="rcctl"
 etc_group_owner="wheel"
 pkg_mngr_install="pkg_add"
+openssl_command="eopenssl30"
+dialog_box="dialog"
+web_server="nginx" ## [nginx|apache-httpd]
 requirements="tor grep sed openssl base64 git libqrencode tar py-stem ${dialog} ${web_server}"
 data_dir="/var/tor"
 ```
