@@ -1,13 +1,63 @@
 #!/usr/bin/env sh
 
-## DESCRIPTION
-## This file lets you manage your hidden services to all its capability
-##
-## SYNTAX
-## onionjuggler-cli command [REQUIRED] <OPTIONAL>
+## This script lets you manage your hidden services to all its capability
 ##
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
+
+## check if user configuration is readable and if yes, source it
+test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CONF}"
+## if any of the configurations are empty, use default ones
+
+## system
+: "${privilege_command:="sudo"}"
+: "${tor_user:="debian-tor"}"
+: "${tor_service:="tor@default.service"}"
+: "${service_manager_control:="systemctl"}"
+: "${etc_group_owner:="root"}"
+: "${openssl_command:="openssl"}"
+
+## tor defaults
+: "${data_dir:="/var/lib/tor"}"
+: "${data_dir_services:="${data_dir}/services"}"
+: "${data_dir_auth:="${data_dir}/onion_auth"}"
+: "${torrc_root:="/etc/tor"}"
+: "${torrc:="${torrc_root}/torrc"}"
+: "${control_port:="9051"}" ## only the port, not the host
+
+## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
+: "${tor_browser_root:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"
+: "${tor_browser_data_dir:="${tor_browser_root}/Browser/TorBrowser/Data/Tor"}"
+: "${tor_browser_torrc:="${tor_browser_data_dir}/torrc"}"
+: "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"
+
+## general
+: "${website_dir:="/var/www"}"
+: "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}" ## https://github.com/mikeperry-tor/vanguards/commits/master
+export DIALOGRC="${HOME}/.dialogrc-onionjuggler"
+
+## backup
+: "${scp_target_user:="remoteUser"}"
+: "${scp_target_ip:="remoteIp"}"
+: "${scp_target_path:="/home/${scp_target_user}/remote/path"}"
+: "${scp_target_full:="${scp_target_user}@${scp_target_ip}:${scp_target_path}"}"
+: "${hs_bk_dir:="${HOME}/tor-hs-backup"}"
+: "${local_ip:=""}" ## There is no posix way of handling network interfaces
+
+## colors
+nocolor="\033[0m"
+#nobold="\033[21m"
+#nounderline="\033[24m"
+#bold="\033[1m"
+#underline="\033[4m"
+#white="\033[97m"
+#black="\033[30m"
+red="\033[31m"
+green="\033[32m"
+#yellow="\033[33m"
+blue="\033[34m"
+#magenta="\033[35m"
+#cyan="\033[36m"
 
 usage(){
   # onion_ascii="images/onion-ascii-50-30.txt"
@@ -16,7 +66,7 @@ usage(){
   #   printf %s"${magenta} ${onion_ascii} ${nocolor}\n\n"
   # fi
 
-  printf "Juggle with an Onion Service
+  printf "%s${nocolor}Juggle with an Onion Service
 \nUsage: onionjuggler-cli command [--option<=ARGUMENT>]
 \nComplete options:
   on [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT[,VIRTPORT2]>]
@@ -41,8 +91,8 @@ usage(){
   web --off [--service <SERVICE>]                            stop serving a website for certain service and its folder
   web --list                                                 list enabled websites
   location [--nginx|--apache2|--html] [--service <SERVICE>]  onion-location guide, no execution
-  backup [--create|--integrate]                              restore latest torrc backup
-  vanguards [--on|--list|--upgrade|--off]                    install, upgrade, remove or see logs for vanguards addon
+  backup [--create|--integrate]                              backup onion services or integrate the backup
+  vanguards [--on|--list|--off]                              install or upgrade, remove or see logs for vanguards addon
   -h|--help                                                  display this help message
 
 Options:
@@ -85,10 +135,14 @@ Options:
     -C, --create                                             create backup
     -I, --integrate                                          integrate backup to your system
   vanguards                                                  manage Vanguards protection
-    -n, --on                                                 install Vanguards addon
-    -l, --list                                               see Vanguards logs
-    -u, --upgrade                                            upgrade configuration and repository
+    -n, --on                                                 install Vanguards addon, if already installed, upgrade.
     -f, --off                                                remove Vanguards
+    -l, --list                                               see Vanguards logs
+
+Option names:
+  command                                                    on, off, list, renew, auth-server, auth-client, web, location, vanguards
+  status                                                     --on, --off, --list
+  action                                                     --purge, --quiet, --nginx, --apache2, --html, --create, --integrate
 
 Positional arguments:
   @all                                                       all services or clients available
@@ -109,108 +163,66 @@ If your services are unreacheable, restart tor.
 ## display error message with instructions to use the script correctly.
 error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
 
-get_arg(){
+## assign_value variable_name "${opt}"
+## it strips the dashes and assign the clean value to the variable
+## assign_value status --on IS status=on
+## variable_name is the name you want it to have
+## $opt being options with single or double dashes that don't require arguments
+assign_value(){
   case "${2}" in
-    "-"|"--") return;;
-    ""|-*) error_msg "Option '${1}' requires an argument.";;
+    --*) value="${2#--}";;
+    -*) value="${2#-}";;
+    *) value="${2}"
   esac
+  eval "${1}"="${value}"
 }
 
+## get_arg variable_name "${opt}" "${arg}"
+## get_arg service --service ssh
+## variable_name is the name you want it to have
+## $opt being options with single or double dashes
+## $arg is requiring and argument, else it fails
+## assign_value "${1}" "${3}" means it is assining the argument ($3) to the variable_name ($1)
+get_arg(){
+  case "${3}" in
+    ""|-*) error_msg "Option '${2}' requires an argument.";;
+  esac
+  assign_value "${1}" "${3}"
+}
+
+## hacky getopts
+## 1. if the option requires argument, and the option is preceeded by single or double dash and it
+##    can be it can be specified with '-s=ssh' or '-s ssh' or '--service=ssh' or '--service ssh'
+##    use: get_arg variable_name "${opt}" "${arg}"
+## 2. if a bunch of options that does different things are to be assigned to the same variable
+##    and the option is preceeded by single or double dash use: assign_value variable_name "${opt}"
+##    as this option does not require argument, specifu $shift_n=1
+## 3. if the option does not start with dash and does not require argument, assign to command manually.
 while true; do
   case "${1}" in
-    *=*) arg="${1#*=}"; shift_n=1;;
-    *) arg="${2}"; shift_n=2;;
+    -*=*) opt="${1%=*}"; arg="${1#*=}"; shift_n=1;;
+    -*) opt="${1}"; arg="${2}"; shift_n=2;;
+    *) opt="${1}"; arg="${2}"; shift_n=1;;
   esac
-  case "${1}" in
-    on|off|list|renew|web|location|backup|restore|vanguards|restore-torrc)
-      [ -n "${command}" ] && error_msg "Command cannot be defined two times: \"${command}\" and \"${1}\""
-      command="${1}"; shift;;
-
-    auth-server|auth-client)
-      [ -n "${command}" ] && error_msg "Command cannot be defined two times: \"${command}\" and \"${1}\""
-      command="${1%-*}"; host="${1#*-}"; shift;;
-
-    -i|--install|-L|--logs|-u|--upgrade|-r|--remove|--nginx|--apache2|--html|-q|--quiet|-C|--create|-I|--integrate) action="${1#--}"; shift;;
-
-    --on|--off|--list) status="${1#--}"; shift;;
-    -n|-f|-l) status="${1#-}"; shift;;
-
-    -s|--service|-s=*|--service=*) service="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-
-    -c|--client|-c=*|--client=*) client="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-
-    -o|--onion|-o=*|--onion=*) onion="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-
-    -P|--purge) purge="purge"; shift;;
-
-    -v|--version|-v=*|--version=*) version="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-
-    -S|--socket|-S=*|--socket=*) socket="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-
-    -p|--port|-p=*|--port=*) port="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-
-    -F|--folder|-F=*|--folder=*) folder="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-
-    -k|--client-priv-key|-k=*|--client-priv-key=*) client_priv_key="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-
-    -K|--client-pub-key|-K=*|--client-pub-key=*) client_pub_key="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-
+  case "${opt}" in
+    on|off|list|renew|web|location|backup|restore|vanguards|restore-torrc) command="${opt}";;
+    auth-server|auth-client) command="${opt%-*}"; host="${opt#*-}";;
+    --on|--off|--list|-n|-f|-l) assign_value status "${opt}"; shift_n=1;;
+    -P|--purge|--nginx|--apache2|--html|-q|--quiet|-C|--create|-I|--integrate) assign_value action "${opt}"; shift_n=1;;
+    -s|--service|-s=*|--service=*) get_arg service "${opt}" "${arg}";;
+    -c|--client|-c=*|--client=*) get_arg client "${opt}" "${arg}";;
+    -o|--onion|-o=*|--onion=*) get_arg onion "${opt}" "${arg}";;
+    -v|--version|-v=*|--version=*) get_arg version "${opt}" "${arg}";;
+    -S|--socket|-S=*|--socket=*) get_arg socket "${opt}" "${arg}";;
+    -p|--port|-p=*|--port=*) get_arg port "${opt}" "${arg}";;
+    -F|--folder|-F=*|--folder=*) get_arg folder "${opt}" "${arg}";;
+    -k|--client-priv-key|-k=*|--client-priv-key=*) get_arg client_priv_key "${opt}" "${arg}";;
+    -K|--client-pub-key|-K=*|--client-pub-key=*) get_arg client_pub_key "${opt}" "${arg}";;
     "") break;;
-    *) error_msg "Invalid option: ${1}";;
+    *) error_msg "Invalid option: ${opt}";;
   esac
+  shift "${shift_n}"
 done
-
-
-## check if user configuration is readable and if yes, source it
-[ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
-## if any of the configurations are empty, use default ones
-
-## system
-: "${privilege_command:="sudo"}"
-: "${tor_user:="debian-tor"}"
-: "${tor_service:="tor@default.service"}"
-: "${service_manager_control:="systemctl"}"
-: "${etc_group_owner:="root"}"
-
-## tor defaults
-: "${data_dir:="/var/lib/tor"}"
-: "${data_dir_services:="${data_dir}/services"}"
-: "${data_dir_auth:="${data_dir}/onion_auth"}"
-: "${torrc_root:="/etc/tor"}"
-: "${torrc:="${torrc_root}/torrc"}"
-: "${control_port:="9051"}" ## only the port, not the host
-
-## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
-: "${tor_browser_root:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"
-: "${tor_browser_data_dir:="${tor_browser_root}/Browser/TorBrowser/Data/Tor"}"
-: "${tor_browser_torrc:="${tor_browser_data_dir}/torrc"}"
-: "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"
-
-## general
-: "${website_dir:="/var/www"}"
-: "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}" ## https://github.com/mikeperry-tor/vanguards/commits/master
-export DIALOGRC="${HOME}/.dialogrc-onionjuggler"
-
-## backup
-: "${scp_target_user:="remoteUser"}"
-: "${scp_target_ip:="remoteIp"}"
-: "${scp_target_path:="/home/${scp_target_user}/remote/path"}"
-: "${scp_target_full:="${scp_target_user}@${scp_target_ip}:${scp_target_path}"}"
-: "${hs_bk_dir:="${HOME}/tor-hs-backup"}"
-: "${local_ip:=""}" ## There is no posix way of handling network interfaces
-
-## colors
-: "${bold:=0}"
-nocolor="\033[0m"
-#white="\033[${bold};97m"
-#black="\033[${bold};30m"
-red="\033[${bold};31m"
-green="\033[${bold};32m"
-#yellow="\033[${bold};33m"
-blue="\033[${bold};34m"
-#magenta="\033[${bold};35m"
-#cyan="\033[${bold};36m"
-
 
 ###################
 #### FUNCTIONS ####
@@ -288,7 +300,7 @@ is_service_dir_empty(){
 ## if the service exists, will save the hostname for when requested.
 test_service_exists(){
   service="${1}"
-  onion_hostname=$("${privilege_command}" -u "${tor_user}" grep -s ".onion" "${data_dir_services}"/"${service}"/hostname)
+  onion_hostname=$("${privilege_command}" -u "${tor_user}" grep ".onion" "${data_dir_services}"/"${service}"/hostname 2>/dev/null)
   [ -z "${onion_hostname}" ] && { printf %s"${red}ERROR: Service does not exist: ${service}\n${nocolor}"; exit 1; }
 }
 
@@ -375,14 +387,13 @@ case "${command}" in
   ## purge is optional, it deletes the <HiddenServiceDir>
   ## will not check if folder or configuration exist, this is cleanup mode
   ## will not use '@all'. Purge is dangerous, purging all service is even more dangerous. Always backup.
-  f|off|OFF)
+  f|off)
     : "${service:?$(error_msg "service is missing")}"
-    : "${purge}" ## optional
     delete_service(){
       service="${1}"
       ## remove service service data
-      case "${purge}" in
-        purge)
+      case "${action:-}" in
+        purge|P)
           printf %s"${red}\n# Deleting Hidden Service data in ${data_dir_services}/${service}\n${nocolor}"
           "${privilege_command}" rm -rfv "${data_dir_services}"/"${service}"
         ;;
@@ -413,7 +424,7 @@ case "${command}" in
   ##  if target is not specified, will use the same port from virtport and bind to localhost.
   ##  if target only contains the port number and not the address, will bind to localhost.
   ## virtport2 and target 2 are optional
-  n|on|ON)
+  n|on)
     : "${service:?$(error_msg "service is missing")}"
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version=${version} is not available" ## wait for v4 to change this
     : "${socket:=unix}"
@@ -429,7 +440,7 @@ case "${command}" in
       ## show the Hidden Service address
       test_service_exists "${service}"
       printf "\n# Hidden Service information:\n"
-      qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"
+      command -v qrencode >/dev/null && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"
       printf %s"Service name    = ${service}\n"
       printf %s"Service address = ${onion_hostname}\n"
       printf %s"Virtual port    = ${virtport}\n"
@@ -439,7 +450,7 @@ case "${command}" in
 
     case "${socket}" in
 
-      tcp|TCP)
+      tcp)
         ## tor-manual: By default, this option maps the virtual port to the same port on 127.0.0.1 over TCP
         ## Because of that, this project lets the user leave target="" and write target as 127.0.0.1:$virtport
         ## Also, substitutes localhost:port for 127.0.0.1:$port
@@ -483,7 +494,7 @@ case "${command}" in
         finish_service_activation
       ;;
 
-      unix|UNIX)
+      unix)
         is_integer "${virtport}"
         virtport2="${port##* }"
         [ "${virtport}" = "${virtport2}" ] && virtport2=""
@@ -509,12 +520,12 @@ case "${command}" in
 
 
   ## manage client authorization server side (HiddenServiceDir/authorized_clients/) or client side (ClientOnionAuthDir)
-  auth|AUTH)
+  auth)
     : "${host:?$(error_msg "host is missing")}"
     : "${status:?$(error_msg "status is missing")}"
     case "${host}" in
 
-      server|SERVER)
+      server)
         is_service_dir_empty
         : "${service:?$(error_msg "service is missing")}"
         case "${status}" in
@@ -523,7 +534,7 @@ case "${command}" in
           ## the client pub key is automatically saved inside <HiddenServiceDir>/authorized_clients/alice.auth
           ## the client private key is shown in the screen and the key file deleted
           ## the onion service operator should send the private key for the desired client
-          n|on|ON)
+          n|on)
             : "${client:?$(error_msg "client is missing")}"
             #printf "\n# Generating keys to access onion service (Client Authorization) ...\n"
             auth_server_add(){
@@ -531,9 +542,9 @@ case "${command}" in
               client="${2}"
               test_service_exists "${service}"
               ## Generate pem and derive pub and priv keys
-              openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
+              "${openssl_command}" genpkey -algorithm x25519 -out /tmp/k1.prv.pem
               grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
-              openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
+              "${openssl_command}" pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
               ## save variables
               client_pub_key=$(cat /tmp/k1.pub.key)
               client_priv_key=$(cat /tmp/k1.prv.key)
@@ -590,7 +601,7 @@ case "${command}" in
 
           ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
           ## if no clients are present, the service will be available to anyone that has the onion service address
-          f|off|OFF)
+          f|off)
             : "${client:?$(error_msg "client is missing")}"
             auth_server_remove_clients(){
               service="${1}"
@@ -622,7 +633,7 @@ case "${command}" in
             printf %s"${green}\n# Done\n${nocolor}"
           ;;
 
-          l|list|LIST)
+          l|list)
             auth_server_list(){
               service="${1}"
               test_service_exists "${service}"
@@ -651,7 +662,7 @@ case "${command}" in
       ;;
 
 
-      client|CLIENT)
+      client)
         case "${status}" in
 
           ## as the onion service client, add a key given by the onion service operator to authenticate yourself inside ClientOnionAuthDir
@@ -659,7 +670,7 @@ case "${command}" in
           ## private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>
           ## use the onion hostname as the file name, this avoid overriding the file by mistake and it indicates outside of the file for which service it refers to (of course it is written inside also)
           ## adding to Tor Browser automatically not supported yet
-          n|on|ON)
+          n|on)
             : "${onion:?$(error_msg "onion is missing")}"
             onion_hostaname_without_onion=${onion%.onion}
             suffix_onion=${onion##*.}
@@ -712,7 +723,7 @@ case "${command}" in
           ;;
 
           ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
-          f|off|OFF)
+          f|off)
             : "${onion:?$(error_msg "onion is missing")}"
             auth_client_remove  (){
               onion="${1}"
@@ -728,7 +739,7 @@ case "${command}" in
             fi
           ;;
 
-          l|list|LIST)
+          l|list)
             if [ "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
               printf %s"# ClientOnionAuthDir ${data_dir_auth}\n"
               for AUTH in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}"); do
@@ -757,7 +768,7 @@ case "${command}" in
   ## <HiddenServiceDir>/authorized_clients/ because the would need to update their '.auth_private' file with the new onion address anyway and for security reasons.
   ## @all will read through all services folders and execute the commands.
   ## TODO -> Loop services, save hostname, reload tor once and show results.
-  renew|RENEW)
+  renew)
     is_service_dir_empty
     : "${service:?$(error_msg "service is missing")}"
     renew_service_address(){
@@ -792,7 +803,7 @@ case "${command}" in
   ## show all the necessary information to access the service such as the hostname and the QR encoded hostname to scan for Tor Browser Mobile
   ## show the clients names and quantity, as well as the service torrc's block
   ## @all will read through all services folders and execute the commands
-  l|list|LIST)
+  l|list)
     is_service_dir_empty
     : "${service:?$(error_msg "service is missing")}"
     get_service_info(){
@@ -800,8 +811,10 @@ case "${command}" in
       test_service_exists "${service}"
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
       create_client_list "${service}"
-      { [ "${action}" = "-q" ] || [ "${action}" = "quiet" ]; } || { printf "\n"; qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"; }
-      printf %s"\nAddress  = ${onion_hostname}\n"
+      if [ "${action}" != "-q" ] && [ "${action}" != "quiet" ]; then
+        command -v qrencode >/dev/null && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"
+      fi
+      printf %s"Address  = ${onion_hostname}\n"
       printf %s"Service  = ${service}\n"
       [ -n "${client_name_list}" ] && printf %s"Clients  = ${client_name_list} (${client_count})\n"
       if "${privilege_command}" grep -q "^HiddenServiceDir ${data_dir_services}/${service}$" "${torrc}"; then
@@ -809,7 +822,7 @@ case "${command}" in
       else
         printf "Status   = inactive\n"
       fi
-      printf "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+      printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
     [ "${service}" = "@all" ] && { create_service_list; service="${service_name_list}"; }
     loop_list get_service_info "${service}"
@@ -817,7 +830,7 @@ case "${command}" in
   ;;
 
   ## start serving files with a webserver for a specific onion service and specific website folder
-  web|WEB)
+  web)
     : "${web_server:?$(error_msg "web_server is missing")}"
     : "${status:?$(error_msg "status is missing")}"
 
@@ -825,7 +838,7 @@ case "${command}" in
 
     case "${status}" in
 
-      n|on|ON)
+      n|on)
         is_service_dir_empty
         : "${service:?$(error_msg "service is missing")}"
         : "${folder:?$(error_msg "folder is missing")}"
@@ -885,7 +898,7 @@ server {
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
-      f|off|OFF)
+      f|off)
         : "${service:?$(error_msg "service is missing")}"
         disable_site(){
           service="${1}"
@@ -902,7 +915,7 @@ server {
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
-      l|list|LIST)
+      l|list)
         printf %s"# Web server = ${web_server}\n\n"
         printf "# Enabled websites:"
         sites_enabled=$("${privilege_command}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g")
@@ -917,7 +930,7 @@ server {
 
   ## guide to add onion-location to redirect tor users when using your plainnet site to the onion service address
   ## https://matt.traudt.xyz/posts/website-setup/
-  location|LOCATION)
+  location)
     is_service_dir_empty
     : "${action:?$(usage)}"
     : "${service:?$(error_msg "service is missing")}"
@@ -940,7 +953,7 @@ server {
 
     case "${action}" in
 
-      nginx|NGINX)
+      nginx)
         start_location
         printf "
 server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onion_hostname}""\$request_uri;\n}
@@ -948,7 +961,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         finish_location
       ;;
 
-      apache2|APACHE2)
+      apache2)
         start_location
         printf "
 <VirtualHost *:443>\n\tHeader set Onion-Location \"http://%s${onion_hostname}%%{REQUEST_URI}s\"\n</Virtualhost>
@@ -971,14 +984,14 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
   ;;
 
 
-  backup|BACKUP)
+  backup)
     : "${action:?$(usage)}"
     case "${action}" in
 
       ## restore backup
       ## backup tar file will be extracted and integrated into their respective tor folders
       ## scp instructions to import backup from remote host
-      -I|integrate|INTEGRATE)
+      I|integrate)
         # shellcheck disable=SC2153,SC2154
         "${privilege_command}" -u "${USER}" mkdir -p "${hs_bk_dir}"/integrate
         hs_bk_tar=$("${privilege_command}" -u "${USER}" ls "${hs_bk_dir}" | grep ".tar.gz" | tail -n -1)
@@ -1011,7 +1024,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ## full backup needede to restore all of your hidden services and client keys
       ## folders/files included: <torrc>, <DataDir>/services/, <DataDir>/onion_auth/
       ## scp instructions to export backup to remote host
-      -C|create|CREATE)
+      C|create)
         hs_bk_tar="tor-onion-services-backup-$(date +%Y-%m-%d-%H'h'-%M'm').tar.gz"
         printf "# Backing up the services dir, onion_auth dir and the torrc\n\n"
         mkdir -p "${hs_bk_dir}"
@@ -1054,7 +1067,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
   ## A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
   ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
   ##  TODO: hardening (as in $ sytemctl cat tor@default), but got permission denied: unable to read '/run/tor/control.authcookie'
-  vanguards|VANGUARDS)
+  vanguards)
     : "${action:?$(usage)}"
 
     ## TODO -> Vanguards sample service configuration for other service managers
@@ -1120,28 +1133,26 @@ WantedBy=multi-user.target
     }
 
     case "${action}" in
-      n|on|ON)
-        printf "# Installing Vanguards...\n\n"
-        "${privilege_command}" -u "${tor_user}" git clone https://github.com/mikeperry-tor/vanguards.git "${data_dir}/vanguards"
-        "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
-        vanguards_config
-      ;;
-
-      -u|upgrade|UPGRADE)
-        printf "# Upgrading Vanguards...\n\n"
-        "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards pull -p --rebase=false
+      n|on)
+        if [ ! -d "${data_dir}/vanguards" ]; then
+          printf "# Installing Vanguards...\n\n"
+          "${privilege_command}" -u "${tor_user}" git clone https://github.com/mikeperry-tor/vanguards.git "${data_dir}/vanguards"
+        else
+          printf "# Upgrading Vanguards...\n\n"
+          "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards pull -p --rebase=false
+        fi
         "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
         "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards show
         vanguards_config
       ;;
 
-      f|off|OFF)
+      f|off)
         printf "# Removing Vanguards...\n\n"
         "${privilege_command}" rm -rfv "${data_dir}"/vanguards
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
-      l|list|LIST)
+      l|list)
         "${privilege_command}" tail -f -n 25 /var/log/tor/vanguards.log
       ;;
 

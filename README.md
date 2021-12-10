@@ -19,8 +19,9 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
 
 * [Introduction](#introduction)
   * [Images](#images)
-  * [Ecosystem](#ecosystem)
   * [Goal](#goal)
+    * [History](#history)
+    * [Future](#future)
   * [Features](#features)
 * [Instructions](#instructions)
   * [Setup](#setup)
@@ -28,14 +29,9 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
   * [Set custom vars](#set-custom-vars)
   * [Setup the environment](#setup-the-environment)
   * [Usage](#usage)
-* [Portability](#portability)
-  * [Shells](#shells)
-  * [Operating systems](#operating-systems)
-  * [Service managers](#service-managers)
-  * [Requirements](#requirements)
-* [Credits](#credits)
-  * [Inspirations](#inspirations)
-  * [Contributors](#contributors)
+* [Requirements](#requirements)
+* [Feature on](#feature-on)
+* [Contributors](#contributors)
 
 ## Introduction
 
@@ -45,24 +41,17 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
 ![tui-whiptail](images/tui-whiptail.png)
 ![cli](images/cli.png)
 
-### Ecosystem
-
-Onion Services are the Hidden Services of Tor which use onion routing as its base for stablishing private connections. [They offer](https://community.torproject.org/onion-services/overview/):
-* Location hiding - IP address aren't used, so your location is protected.
-* End-to-end authentication - Only the owner of the hs secret key can host the same onion, so no impersonation is possible, no man-in-the-middle.
-* End-to-end encryption - Traffic is encrypted from the client to the onion host, no need to trust [CAs](https://en.wikipedia.org/wiki/Certificate_authority) which are a [fallible model](https://www.whonix.org/wiki/Warning#The_Fallible_Certificate_Authority_Model).
-* NAT punching - On a firewalled network, no need to open ports
-
-For a deeper understanding, read the [Rendezvous Specification](https://gitweb.torproject.org/torspec.git/tree/rend-spec-v3.txt) and [Tor design](https://svn-archive.torproject.org/svn/projects/design-paper/tor-design.pdf).
-
-Onion Routing tries to solve most of these problems but it is still centralized by the [Directory Authorities](https://metrics.torproject.org/rs.html#search/flag:authority), and referencing [Matt Traudt's blog post](https://matt.traudt.xyz/posts/Debunking:_OSINT_Analysis_of_the_TOR_Foundation/#index4h2): replacing it for something more distributed is [not a trivial task](https://www.freehaven.net/anonbib/#wpes09-dht-attack).
-
-On the Tor ecosystem, from [TPO metrics](https://metrics.torproject.org/), comparing only Free and Open Source Operating Systems, `Linux` dominates on [relays by platform](https://metrics.torproject.org/platforms.html) and [Tor Browser downloads by platform](https://metrics.torproject.org/webstats-tb-platform.html) over BSD. Data regarding which operating system the onion service operator can not be easily acquired for obvious reasons. That was on the network level, but know on the user system, even if one chooses a Free and Open Source Operating System, GNU/Linux dominates a big share over *BSD, having a huge impact on the main software used for the kernel (Linux), shell (bash), service manager (systemd).
 
 ### Goal
 
+#### History
+
+This project was started after seeing the amazing [OnionShare CLI](https://github.com/onionshare/onionshare/tree/develop/cli), which possibilitates ephemeral onion services that never touch the disk and can be run on Tails or Whonix easily. Then after seeing the [RaspiBlitz onion service bash script for the Raspberry Pi](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh), the idea to port it to any Debian distribution started. As the idea grew, using GNU Bash and Linux was a single point of failure [1](https://metrics.torproject.org/platforms.html) [2](https://metrics.torproject.org/webstats-tb-platform.html), so the making the script POSIX compliant to be compatible with any Unix-like system was a definitive goal.
+
+#### Future
+
 The goal of this project is:
-* facilitates onion service management, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
+* facilitate onion service management, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
 * show the that managing the onion service is much more than just using a webserver with your pages.
 * distribution, from the source code level (FOSS) to the effect it takes when it allows anyone to run the code on any operating system, shell or service manager. Mitigation from a single point of failure
 
@@ -94,8 +83,7 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * [**Unix socket**](https://riseup.net/en/security/network-security/tor/onionservices-best-practices) - Support for enabling an onion service over unix socket to avoid localhost bypasses.
 * **Web server** - Serve files with your hidden service using Nginx or Apache2 web server.
 * **Usability** - There are two dialog boxes compatible with the project, `dialog` and `whiptail`.
-* **Bulk** - Some commands can be bulked with `all-clients`, `all-services`, `[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
-* **Optional** - Some commands are optional so less typing. Also they may behave differently depending on how much information was given to be executed and that is expected. They are specified inside `<>` (e.g. `<VIRTPORT2>`)
+* **Bulk** - Some commands can be bulked with the argument `@all` to include all services or clients depending on the option `--service` or `--client`, list enabled arguments`[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Fool-proof** - The script tries its best to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
 
 
@@ -145,16 +133,14 @@ It is recommended to have `tor` already installed, because as it is a service, i
 
 Run from inside the cloned repository to create the tor directories, setup ownership, create manual pages:
 ```sh
-./configure.sh
+./configure.sh --setup
 ```
 
 If the /etc/onionjuggler.conf does not exist, it will be created with default values and configuration description.
 
 ### Usage
 
-The repo is now in your `$PATH`, if you have setup the environment as described above. This means you can call the scripts as if they were any other command.
-
-To create on service, it is as easy as possible:
+To create a service named `terminator`, it is as easy as possible:
 ```sh
 onionjuggler-cli on -s terminator
 ```
@@ -167,83 +153,61 @@ onionjuggler-cli on --service terminator --socket unix --version 3 --port 80
 
 Take a loot at the documentation inside `docs` folder. Read:
 
-* any markdown file formatted on the shell with `pandoc` and `lynx`:
-```sh
-ls docs/*.md
-pandoc docs/contributing.md | lynx -stdin
-```
-
 * the [cli manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
 ```sh
 man onionjuggler-cli
 man onionjuggler.conf
 ```
 
-## Portability
+* [Portability](docs/portability.md) for the detailed configuration file for your operating system.
 
-### Shells
-
-Full compatibility with any POSIX compliant shells: dash, bash, ksh, mksh, yash, ash
-
-The default POSIX shell of your unix-like operating system may vary depending on your system (FreeBSD and NetBSD uses `ash`, OpenBSD uses `ksh`, Debian uses `dash`), but it has a symbolic link leading to it on `/usr/bin/sh` and/or `/bin/sh`.
-
-Tweak to be compatible with non-POSIX compliant shells::
-* Z SHell (zsh) -> `zsh --emulate sh -c onionjuggler-tui`
-
-### Operating systems
-
-Works unix-like operating systems, tested by the maintainer mostly on GNU/Linux Debian 11.
-Work is being done for *bsd systems, sed is using [this trick](https://unix.stackexchange.com/a/401928).
-
-### Service managers
-
-Currently only systemd is available, planning on implementing SysV, Runit, OpenRC.
+* many other onion services guides...
 
 ### Requirements
 
 * General:
   * Unix-like system.
-  * any POSIX shells: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `zsh` 3.1.9+, `yash` 2.29+, busybox `ash` 1.1.3+ etc.
-  * systemd (for tor and vanguards control) - for now, different services managers is a goal
+  * any POSIX shell: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `zsh` 3.1.9+, `yash` 2.29+, busybox `ash` 1.1.3+ etc.
   * superuser privileges to call some commands as root and the tor user, with `doas` or `sudo`.
-  * blank lines between Hidden Services blocks in the torrc.
-  * HiddenServiceDir different path than DataDir - `DataDir/services`.
   * Path for folders variables must not contain trainling "/" at the end of the variables on `/etc/onionjuggler..conf` (Incorrect: `/var/lib/tor/`, Correct: `/var/lib/tor`).
 
-* Packages:
-  * **doas/sudo** (must be already configured)
-  * **tor** >= 0.3.5.7
-  * **grep** >=2.0
-  * **sed** >= 2.0
-  * **libqrencode/qrencode** >= 4.1.1
-  * **openssl** >= 1.1 (Auth)
-  * **basez** >= 1.6.2 (Auth)
-  * **git** >= 2.0 (Vanguards)
-  * **python3-stem** >=1.8.0 (Vanguards)
-  * **tar** (Backup)
-  * **nginx/apache2** (Web server)
+* Required programs:
+  * Needs manual configuration or pre-configured:
+    * **doas**/**sudo** (must be already configured)
+  * General:
+    * **tor** >= 0.3.5.7
+    * **grep** >=0.9
+    * **sed**
+  * Backup:
+    * **tar**
+  * Client Authorization:
+    * **openssl** >= 1.1
+    * **basez** >= 1.6.2
+  * Web server:
+    * **nginx**/**apache2**
+  * Vanguards:
+    * **git**
+    * **python(3)-stem** >=1.8.0
+  * TUI:
+    * **dialog**/**whiptail**
+
+* Optional programs:
+  * **(lib)qrencode** >= 4.1.1 (List)
+  * **sha256(sum)** (Backup)
 
 * Development programs:
   * **pandoc** (Manual)
   * **shellcheck** (Review)
 
-If using Vanguards, `python` is needed.
+If using Vanguards, `python2.x` is needed, but it is not in the requirements to be installed by default.
 
 The packages are downloaded when setting up the environment with [configure.sh](configure.sh).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
 
-## Credits
+## Featured on
 
-### Inspirations
+* [TorBox](https://github.com/radio24/TorBox) >= v.0.5.0
 
-These are projects that inspires OnionJuggler development, each with their own unique characteristic.
-
-* [OnionShare CLI](https://github.com/onionshare/onionshare/tree/develop/cli) possibilitates ephemeral onion services that never touch the disk and can be run on Tails or Whonix easily. It provides onion authentication, focusing on running servers to send and receive files, chat and host a static website. OnionJuggler evolved by watching the sharing capabilities of OnionShare and converting them to shellscript.
-
-* [RaspiBlitz](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh) provides a ton of bitcoin related services that can be run over tor, so onion services is the choice to access your node from outside LAN. OnionJuggler started by forking Blitz script to remove hardcoded paths.
-
-* [TorBox](https://github.com/radio24/TorBox) is an easy to use, anonymizing router that creates a separate WiFi that routes the encrypted network data over the Tor network. It also helps configuring bridges and other countermeasures to bypass censorship. OnionJuggler aims to help people on surveillance countries to communicate privately. OnionJuggler was integrated to TorBox.
-
-### Contributors
+## Contributors
 
 [![Contributors graph](https://contrib.rocks/image?repo=nyxnor/onionjuggler)](https://github.com/nyxnor/onionjuggler/graphs/contributors)

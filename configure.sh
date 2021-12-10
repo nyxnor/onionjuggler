@@ -1,40 +1,37 @@
 #!/usr/bin/env sh
 
-## DESCRIPTION
 ## This file should be run from inside the cloned repository
 ## Setup tor directories, user, packages needed for OnionJuggler.
-##
-## SYNTAX
-## ./configure.sh [-s|-r]
 
 ###################
 #### VARIABLES ####
 
 ## check if user configuration is readable and if yes, source it
-[ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
+test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CONF}"
 ## if any of the configurations are empty, use default ones
 
 : "${privilege_command:="sudo"}"
 : "${tor_user:="debian-tor"}"
 : "${pkg_mngr_install:="apt install -y"}"
-: "${dialog_box:-}"
-: "${web_server:-}"
-: "${requirements:="tor grep sed openssl basez git qrencode tar python3-stem ${dialog_box:-} ${web_server:-}"}"
+: "${requirements:="tor grep sed openssl basez git qrencode tar python3-stem ${dialog_box:="dialog"} ${web_server:="nginx"}"}"
 : "${data_dir:="/var/lib/tor"}"
 : "${data_dir_services:="${data_dir}/services"}"
 : "${data_dir_auth:="${data_dir}/onion_auth"}"
 
 ## colors
-: "${bold:=0}"
 nocolor="\033[0m"
-#white="\033[${bold};97m"
-#black="\033[${bold};30m"
-red="\033[${bold};31m"
-green="\033[${bold};32m"
-yellow="\033[${bold};33m"
-blue="\033[${bold};34m"
-magenta="\033[${bold};35m"
-cyan="\033[${bold};36m"
+#nobold="\033[21m"
+#nounderline="\033[24m"
+#bold="\033[1m"
+#underline="\033[4m"
+#white="\033[97m"
+#black="\033[30m"
+red="\033[31m"
+green="\033[32m"
+yellow="\033[33m"
+blue="\033[34m"
+magenta="\033[35m"
+cyan="\033[36m"
 
 ## sanity check
 error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
@@ -50,7 +47,7 @@ range_variable(){
     for tests in "${@}"; do
       [ "${var}" = "${tests}" ] && success=1
     done
-    [ ${success} -ne 1 ] && error_msg "${name} has an incorrect value!"
+    [ ${success} -ne 1 ] && error_msg "${name} has an incorrect value! Check onionjuggler.conf for more details."
   fi
 }
 
@@ -64,15 +61,16 @@ range_variable dialog_box dialog whiptail
 
 usage(){
   printf "Configure the environment for OnionJuggler
-\nUsage: %s${0##*/} command [required] <optional>
+\nUsage: configure.sh command [option <ARG>]
 \nOptions:
-  -s, --setup          setup environment
-  -b, --bin-dir DIR    script directory that is on path (Default: /usr/local/bin)
-  -c, --conf-dir DIR   configuration directory (Default: /etc)
-  -m, --man-dir DIR    manual directory (Default: /usr/local/man/man1)
-  -r, --release        prepare for commiting
-  -h, --help           show this help message
-\nAdvanced setup (use together with *--setup*):
+  -s, --setup                                 setup environment
+  -h, --help                                  show this help message
+\nAdvanced options:
+  -s, --setup [-b <DIR>|-c <DIR>|-m <DIR>]    setup environment with specified paths
+  -b, --bin-dir <DIR>                         script directory that is on path (Default: /usr/local/bin)
+  -c, --conf-dir <DIR>                        configuration directory (Default: /etc)
+  -m, --man-dir <DIR>                         manual directory (Default: /usr/local/man/man1)
+  -r, --release                               prepare for commiting
 "
 }
 
@@ -87,24 +85,19 @@ install_package(){
           if ! command -v python >/dev/null; then
             printf %s"${red}Python is not installed and it is needed for Vanguards, skipping...\n${nocolor}"
           else
-            py_command="python"
+            python_path="python"
           fi
         else
-          py_command="python3"
+          python_path="python3"
         fi
-        if [ -n "${py_command}" ]; then
-          if ! "${py_command}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)"; then
-            install_pkg=1
-          fi
+        if [ -n "${python_path}" ]; then
+          ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg=1
         fi
       ;;
+      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${privilege_command} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
+      eopenssl30|eopenssl11|openssl) ! command -v "${package}" >/dev/null && package="openssl" && install_pkg=1;;
       libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
-      nginx|apache2)
-        if ! command -v "${package}" >/dev/null; then
-          ! ${privilege_command} "${package}" -v >/dev/null 2>&1 && install_pkg=1
-        fi
-      ;;
-      *) ! command -v qrencode >/dev/null && install_pkg=1;;
+      *) ! command -v "${package}" >/dev/null && install_pkg=1;;
     esac
 
     if [ "${install_pkg}" = 1 ]; then
@@ -116,7 +109,9 @@ install_package(){
 }
 
 
-if [ ! -f onionjuggler-cli ] || [ ! -f onionjuggler-tui ] || [ ! -f etc/onionjuggler.conf ] || [ ! -f docs/onionjuggler-cli.1.md ] || [ ! -f docs/onionjuggler.conf.1.md ]; then
+if test ! -f onionjuggler-cli || test ! -f onionjuggler-tui || test ! -f etc/onionjuggler.conf || \
+test ! -f docs/onionjuggler-cli.1.md || test ! -f docs/onionjuggler.conf.1.md || \
+test ! -f man/onionjuggler-cli.1 || test ! -f man/onionjuggler.conf.1; then
   printf %s"${red}ERROR: OnionJuggler files not found\n"
   printf %s"${yellow}INFO: Run this script from inside the onionjuggler repository!\n"
   printf %s"${nocolor}See usage:\n"
@@ -124,52 +119,35 @@ if [ ! -f onionjuggler-cli ] || [ ! -f onionjuggler-tui ] || [ ! -f etc/onionjug
   exit 1
 fi
 
+
 get_arg(){
   case "${2}" in
-    "-"|"--") return;;
     ""|-*) error_msg "Option '${1}' requires an argument.";;
   esac
 }
 
-## binaries
-#/usr/bin
-#/usr/local/bin
-
-## configuration
-#/etc
-#/usr/local/etc
-
-# while true; do
-#   case "${1}" in
-#     *=*) arg="${1#*=}"; shift_n=1;;
-#     *) arg="${2}"; shift_n=2;;
-#   esac
-#   case "${1}" in
-#     -s|--setup|-r|--release) action="${1}"; shift;;
-#     -b|--bin-dir|-b=*|--bin-dir=*) bin_dir="${2##*/}"; shift "${shift_n}";;
-#     -c|--conf-dir|-c=*|--confi-dir=*) conf_dir="${2##*/}"; shift "${shift_n}";;
-#     -m|--man-dir|-m=*|--man-dir=*) man_dir="${2##*/}"; shift "${shift_n}";;
-#
-#     "") break;;
-#     *) error_msg "Invalid option: ${1}";;
-#   esac
-# done
+while true; do
+  case "${1}" in
+    -*=*) arg="${1#*=}"; shift_n=1;;
+    *) arg="${2}"; shift_n=2;;
+  esac
+  case "${1}" in
+    -s|--setup|-r|--release) action="${1}"; shift;;
+    -b|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -c|--conf-dir|-c=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -m|--man-dir|-m=*|--man-dir=*) man_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    "") break;;
+    *) error_msg "Invalid option: ${1}";;
+  esac
+done
 
 [ ! -d "${bin_dir:="/usr/local/bin"}" ] && error_msg "Your system does not seems to support bin_dir=${bin_dir}"
 [ ! -d "${conf_dir:="/etc"}" ] && error_msg "Your system does not seems to support conf_dir=${conf_dir}"
 [ ! -d "${man_dir:="/usr/local/man/man1"}" ] && error_msg "Your system does not seems to support man_dir=${man_dir}"
 
 
-# bin_dir=${bin_dir##*/}
-# conf_dir=${conf_dir##*/}
-# man_dir=${man_dir##*/}
-# exit
-
-
 ###################
 ###### MAIN #######
-
-action=${1:--s}
 
 case "${action}" in
 
@@ -188,8 +166,8 @@ case "${action}" in
     "${privilege_command}" chown -R "${tor_user}":"${tor_user}" "${data_dir}"
     printf %s"${green}# Copying files to the system\n${nocolor}"
     "${privilege_command}" cp -v onionjuggler-cli onionjuggler-tui "${bin_dir}"
-    [ ! -f "${ONIONJUGGLER_CONF}" ] && "${privilege_command}" cp -v "${conf_dir}"/onionjuggler.conf "${conf_dir}"/onionjuggler.conf
-    "${privilege_command}" cp -v man/onionjuggler-cli.1 man/onionjuggler.conf.1 "${man_dir}"/
+    [ ! -f "${ONIONJUGGLER_CONF}" ] && "${privilege_command}" cp -v etc/onionjuggler.conf "${conf_dir}"
+    "${privilege_command}" cp -v man/onionjuggler-cli.1 man/onionjuggler.conf.1 "${man_dir}"
     cp -v .dialogrc-onionjuggler "${HOME}/.dialogrc-onionjuggler"
     ## finish
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
