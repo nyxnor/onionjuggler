@@ -10,13 +10,13 @@
 test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CONF}"
 ## if any of the configurations are empty, use default ones
 
-: "${privilege_command:="sudo"}"
+: "${exec_cmd_alt_user:="sudo"}"
 : "${tor_user:="debian-tor"}"
 : "${pkg_mngr_install:="apt install -y"}"
-: "${requirements:="tor grep sed openssl basez git qrencode tar python3-stem ${dialog_box:="dialog"} ${web_server:="nginx"}"}"
-: "${data_dir:="/var/lib/tor"}"
-: "${data_dir_services:="${data_dir}/services"}"
-: "${data_dir_auth:="${data_dir}/onion_auth"}"
+: "${requirements:="tor grep sed tar openssl basez git python3-stem qrencode ${dialog_box:="dialog"} ${web_server:="nginx"}"}"
+: "${tor_data_dir:="/var/lib/tor"}"
+: "${tor_data_dir_services:="${tor_data_dir}/services"}"
+: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"
 
 ## colors
 nocolor="\033[0m"
@@ -36,7 +36,7 @@ cyan="\033[36m"
 ## sanity check
 error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
 
-printf %d "${control_port:=9050}" >/dev/null 2>&1 || error_msg "control_port must be an integer, not ${control_port}"
+printf %d "${tor_control_port:=9050}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
 
 range_variable(){
   name="${1}"
@@ -51,7 +51,7 @@ range_variable(){
   fi
 }
 
-range_variable privilege_command sudo doas
+range_variable exec_cmd_alt_user sudo doas
 range_variable web_server nginx apache2
 range_variable dialog_box dialog whiptail
 
@@ -95,7 +95,7 @@ install_package(){
           ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg=1
         fi
       ;;
-      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${privilege_command} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
+      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${exec_cmd_alt_user} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
       eopenssl30|eopenssl11|openssl) ! command -v "${package}" >/dev/null && package="openssl" && install_pkg=1;;
       libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
       *) ! command -v "${package}" >/dev/null && install_pkg=1;;
@@ -104,13 +104,15 @@ install_package(){
     if [ "${install_pkg}" = 1 ]; then
       printf %s"${nocolor}# Installing ${package}\n"
       # shellcheck disable=SC2086
-      ${privilege_command} ${pkg_mngr_install} "${package}"
+      ${exec_cmd_alt_user} ${pkg_mngr_install} "${package}"
     fi
   done
 }
 
 
 custom_shellcheck(){
+  printf %s"${yellow}# Checking shell syntax\n${nocolor}"
+  ## Customize severity with -S [error|warning|info|style]
   if ! shellcheck configure.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui; then
     printf %s"${red}# Please fix the shellcheck warnings above before pushing!\n${nocolor}"
     exit 1
@@ -167,15 +169,15 @@ case "${action}" in
     printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
     ## see https://github.com/nyxnor/onionjuggler/issues/15 about using complete path to binary
     ## see https://github.com/nyxnor/onionjuggler/issues/29 about usermod not appending with -a
-    #"${privilege_command}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
+    #"${exec_cmd_alt_user}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
     printf %s"${yellow}# Creating tor directories\n${nocolor}"
-    "${privilege_command}" mkdir -p "${data_dir_services}"
-    "${privilege_command}" mkdir -p "${data_dir_auth}"
-    "${privilege_command}" chown -R "${tor_user}":"${tor_user}" "${data_dir}"
+    "${exec_cmd_alt_user}" mkdir -p "${tor_data_dir_services}"
+    "${exec_cmd_alt_user}" mkdir -p "${tor_data_dir_auth}"
+    "${exec_cmd_alt_user}" chown -R "${tor_user}":"${tor_user}" "${tor_data_dir}"
     printf %s"${green}# Copying files to the system\n${nocolor}"
-    "${privilege_command}" cp -v onionjuggler-cli onionjuggler-tui "${bin_dir}"
-    [ ! -f "${ONIONJUGGLER_CONF}" ] && "${privilege_command}" cp -v etc/onionjuggler.conf "${conf_dir}"
-    "${privilege_command}" cp -v man/onionjuggler-cli.1 man/onionjuggler.conf.1 "${man_dir}"
+    "${exec_cmd_alt_user}" cp -v onionjuggler-cli onionjuggler-tui "${bin_dir}"
+    [ ! -f "${ONIONJUGGLER_CONF}" ] && "${exec_cmd_alt_user}" cp -v etc/onionjuggler.conf "${conf_dir}"
+    "${exec_cmd_alt_user}" cp -v man/onionjuggler-cli.1 man/onionjuggler.conf.1 "${man_dir}"
     cp -v .dialogrc-onionjuggler "${HOME}/.dialogrc-onionjuggler"
     ## finish
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
@@ -184,14 +186,12 @@ case "${action}" in
   -r|--release|release)
     printf %s"${blue}# Preparing release\n${nocolor}"
     ## ShellCheck is needed
-    ## install https://github.com/koalaman/shellcheck#installing
-    ## compile from source https://github.com/koalaman/shellcheck#compiling-from-source
+    ## install https://github.com/koalaman/shellcheck#installing or compile from source https://github.com/koalaman/shellcheck#compiling-from-source
     install_package shellcheck pandoc git
     printf %s"${magenta}# Creating manual pages\n${nocolor}"
     pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/onionjuggler-cli.1
     pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o man/onionjuggler.conf.1
-    printf %s"${yellow}# Checking shell syntax\n${nocolor}"
-    ## Customize severity with -S [error|warning|info|style]
+    ## run shellcheck
     custom_shellcheck
     ## cleanup
     printf %s"${cyan}# Checking git status\n${nocolor}"

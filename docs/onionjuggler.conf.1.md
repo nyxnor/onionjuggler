@@ -17,25 +17,9 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 ## SYSTEM
 
-**privilege_command**
+**exec_cmd_alt_user**
 
 : Command to run as another user, use to run as the root and the tor user. Compatible with *doas* and *sudo*. (Default: sudo).
-
-**tor_user**
-
-: The tor user that runs the tor process. (Default: debian-tor).
-
-**tor_service**
-
-: The tor service name. (Default: tor@default.service)
-
-**service_manager_control**
-
-: The service manager control command. Compatible with *systemctl* (Systemd), *service* (SysV init), *rcctl* (OpenRC), *sv* (Runit). (Default: systemctl).
-
-**etc_group_owner**
-
-: The /etc directory group owner. Normally *root* or *wheel*. (Default: root)
 
 **pkg_mngr_install**
 
@@ -60,6 +44,22 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 ## TOR DAEMON
 
+**daemon_control**
+
+: The service manager control command. Compatible with *systemctl* (Systemd), *service* (SysV init), *rcctl* or */etc/rc.d* (OpenRC), *sv* (Runit). (Default: systemctl).
+
+**tor_daemon**
+
+: The tor service name. Common names are *tor@default.service* and *tor*. (Default: tor@default.service)
+
+**tor_user**
+
+: The tor user that runs the tor process. Common usernames are *debian-tor*, *tor*, *_tor* (Default: debian-tor).
+
+**torrc_group_owner**
+
+: The /etc directory group owner. Normally *root* or *wheel*. (Default: root)
+
 **torrc_root**
 
 : Root folder of torrc configuration. (Default: /etc/tor).
@@ -68,19 +68,19 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 : The torrc, tor run commands file. (Default: /etc/tor/torrc).
 
-**data_dir**
+**tor_data_dir**
 
 : Specify the DataDirectory for tor. (Default: /var/lib/tor).
 
-**data_dir_services**
+**tor_data_dir_services**
 
 : Specify the HiddenServiceDir root directory, onion sevices data will be created inside this directory. (Default: /var/lib/tor/services).
 
-**data_dir_auth**
+**tor_data_dir_auth**
 
 : Specify the ClientOnionAuthDir. (Default: /var/lib/tor/onion_auth).
 
-**control_port**
+**tor_control_port**
 
 : Specify the ControlPort to use with Vanguards. (Default: 9051).
 
@@ -162,15 +162,15 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 # EXAMPLES
 
-* **privilege_command**=doas
+* **exec_cmd_alt_user**=doas
 
 * **tor_user**=tor
 
 * **torrc**=/usr/local/etc/tor/torrc
 
-* **data_dir**=/usr/local/var/lib/tor
+* **tor_data_dir**=/usr/local/var/lib/tor
 
-* **data_dir_services**="\$\{data_dir\}/services"
+* **tor_data_dir_services**="\$\{tor_data_dir\}/services"
 
 # BUGS
 

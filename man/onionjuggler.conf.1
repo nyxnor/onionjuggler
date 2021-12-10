@@ -25,29 +25,10 @@ splitting: \f[B]variable\f[R]=\f[I]\[dq]value\[dq]\f[R].
 .SH OPTIONS
 .SS SYSTEM
 .TP
-\f[B]privilege_command\f[R]
+\f[B]exec_cmd_alt_user\f[R]
 Command to run as another user, use to run as the root and the tor user.
 Compatible with \f[I]doas\f[R] and \f[I]sudo\f[R].
 (Default: sudo).
-.TP
-\f[B]tor_user\f[R]
-The tor user that runs the tor process.
-(Default: debian-tor).
-.TP
-\f[B]tor_service\f[R]
-The tor service name.
-(Default: tor\[at]default.service)
-.TP
-\f[B]service_manager_control\f[R]
-The service manager control command.
-Compatible with \f[I]systemctl\f[R] (Systemd), \f[I]service\f[R] (SysV
-init), \f[I]rcctl\f[R] (OpenRC), \f[I]sv\f[R] (Runit).
-(Default: systemctl).
-.TP
-\f[B]etc_group_owner\f[R]
-The /etc directory group owner.
-Normally \f[I]root\f[R] or \f[I]wheel\f[R].
-(Default: root)
 .TP
 \f[B]pkg_mngr_install\f[R]
 Install the required packages via package manager.
@@ -78,6 +59,28 @@ via using the \f[I]$pkg_mngr_install\f[R].
 dialog nginx\[dq])
 .SS TOR DAEMON
 .TP
+\f[B]daemon_control\f[R]
+The service manager control command.
+Compatible with \f[I]systemctl\f[R] (Systemd), \f[I]service\f[R] (SysV
+init), \f[I]rcctl\f[R] or \f[I]/etc/rc.d\f[R] (OpenRC), \f[I]sv\f[R]
+(Runit).
+(Default: systemctl).
+.TP
+\f[B]tor_daemon\f[R]
+The tor service name.
+Common names are \f[I]tor\[at]default.service\f[R] and \f[I]tor\f[R].
+(Default: tor\[at]default.service)
+.TP
+\f[B]tor_user\f[R]
+The tor user that runs the tor process.
+Common usernames are \f[I]debian-tor\f[R], \f[I]tor\f[R], *_tor*
+(Default: debian-tor).
+.TP
+\f[B]torrc_group_owner\f[R]
+The /etc directory group owner.
+Normally \f[I]root\f[R] or \f[I]wheel\f[R].
+(Default: root)
+.TP
 \f[B]torrc_root\f[R]
 Root folder of torrc configuration.
 (Default: /etc/tor).
@@ -86,20 +89,20 @@ Root folder of torrc configuration.
 The torrc, tor run commands file.
 (Default: /etc/tor/torrc).
 .TP
-\f[B]data_dir\f[R]
+\f[B]tor_data_dir\f[R]
 Specify the DataDirectory for tor.
 (Default: /var/lib/tor).
 .TP
-\f[B]data_dir_services\f[R]
+\f[B]tor_data_dir_services\f[R]
 Specify the HiddenServiceDir root directory, onion sevices data will be
 created inside this directory.
 (Default: /var/lib/tor/services).
 .TP
-\f[B]data_dir_auth\f[R]
+\f[B]tor_data_dir_auth\f[R]
 Specify the ClientOnionAuthDir.
 (Default: /var/lib/tor/onion_auth).
 .TP
-\f[B]control_port\f[R]
+\f[B]tor_control_port\f[R]
 Specify the ControlPort to use with Vanguards.
 (Default: 9051).
 .SS TOR BROWSER
@@ -164,15 +167,15 @@ Alternative system configuration file.
 If variables is empty, will use /etc/onionjuggler.conf.
 .SH EXAMPLES
 .IP \[bu] 2
-\f[B]privilege_command\f[R]=doas
+\f[B]exec_cmd_alt_user\f[R]=doas
 .IP \[bu] 2
 \f[B]tor_user\f[R]=tor
 .IP \[bu] 2
 \f[B]torrc\f[R]=/usr/local/etc/tor/torrc
 .IP \[bu] 2
-\f[B]data_dir\f[R]=/usr/local/var/lib/tor
+\f[B]tor_data_dir\f[R]=/usr/local/var/lib/tor
 .IP \[bu] 2
-\f[B]data_dir_services\f[R]=\[dq]${data_dir}/services\[dq]
+\f[B]tor_data_dir_services\f[R]=\[dq]${tor_data_dir}/services\[dq]
 .SH BUGS
 .PP
 Bugs you may find.

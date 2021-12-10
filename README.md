@@ -46,7 +46,7 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
 
 #### History
 
-This project was started after seeing the amazing [OnionShare CLI](https://github.com/onionshare/onionshare/tree/develop/cli), which possibilitates ephemeral onion services that never touch the disk and can be run on Tails or Whonix easily. Then after seeing the [RaspiBlitz onion service bash script for the Raspberry Pi](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh), the idea to port it to any Debian distribution started. As the idea grew, using GNU Bash and Linux was a single point of failure [1](https://metrics.torproject.org/platforms.html) [2](https://metrics.torproject.org/webstats-tb-platform.html), so the making the script POSIX compliant to be compatible with any Unix-like system was a definitive goal.
+This project was started after seeing the amazing [OnionShare CLI python scripts](https://github.com/onionshare/onionshare/tree/develop/cli), which possibilitates ephemeral onion services that never touch the disk and can be run on Tails or Whonix easily. Then after seeing the [RaspiBlitz onion service bash script for the Raspberry Pi](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh), the idea to port it to any Debian distribution started. As the idea grew, using GNU Bash and Linux was a single point of failure [1](https://metrics.torproject.org/platforms.html) [2](https://metrics.torproject.org/webstats-tb-platform.html), so the making the script POSIX compliant to be compatible with any Unix-like system was a definitive goal.
 
 #### Future
 
@@ -55,10 +55,10 @@ The goal of this project is:
 * show the that managing the onion service is much more than just using a webserver with your pages.
 * distribution, from the source code level (FOSS) to the effect it takes when it allows anyone to run the code on any operating system, shell or service manager. Mitigation from a single point of failure
 
-Descentralization from a single point of failure:
-* **Kernel** from predominant `Linux` to also `BSD`.
-* **Shell** from predominant `bash` to also any POSIX shell such as `ksh`, `(y,d)ash` and `zsh` (emulating sh).
-* **Service manager** from predominant `systemd` to also `OpenRC` (not implemented yet).
+Mitigation from a single point of failure:
+* **Kernel** from predominant `Linux` to also `BSD` and any other Unix-like system.
+* **Shell** from predominant `Bash` to also any POSIX shell such as `ksh`, `(y,d)ash` and `Zsh` (emulating sh).
+* **Service manager** from predominant `Systemd` to also `OpenRC`, `SysVinit`, `Runit`.
 
 Editing the tor configuration file (torrc) is not difficult, but automation solves problem of misconfiguration and having:
 * less time spent
@@ -86,27 +86,62 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 * **Bulk** - Some commands can be bulked with the argument `@all` to include all services or clients depending on the option `--service` or `--client`, list enabled arguments`[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Fool-proof** - The script tries its best to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
 
+### Requirements
+
+* General:
+  * Unix-like system.
+  * superuser privileges to call some commands as root and the tor user, with `doas` or `sudo`.
+  * Path for folders variables must not contain trainling "/" at the end of the variables on `/etc/onionjuggler..conf` (Incorrect: `/var/lib/tor/`, Correct: `/var/lib/tor`).
+
+* Required programs:
+  * **sh** - any POSIX shell: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `yash` 2.29+, busybox `ash` 1.1.3+,  `zsh` 3.1.9+ (`zsh --emulate sh`) etc.
+  * **doas**/**sudo** (must be already configured)
+  * **tor** >= 0.3.5.7
+  * **grep** >=0.9
+  * **sed**
+  * **tar** (Backup)
+  * **openssl** >= 1.1 (Client Authorization)
+  * **basez** >= 1.6.2 (Client Authorization)
+  * **git** (Vanguards)
+  * **python(3)-stem** >=1.8.0 (Vanguards)
+  * **dialog**/**whiptail** (TUI)
+  * **nginx**/**apache2** (Web server)
+
+* Optional programs:
+  * **(lib)qrencode** >= 4.1.1 (List)
+  * **sha256(sum)** (Backup)
+
+* Development programs:
+  * **pandoc** (Manual)
+  * **shellcheck** (Review)
+
+If using Vanguards, `python2.x` is needed, but it is not in the requirements to be installed by default.
+
+The packages are downloaded when setting up the environment with [configure.sh](configure.sh).
+The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
 
 ## Instructions
 
-### Setup
-
-Three easy steps to fully this project:
-
-#### Clone the repository
+### Clone the repository
 
 ```sh
 git clone https://github.com/nyxnor/onionjuggler.git
 cd onionjuggler
 ```
 
-#### Set custom vars
+### Set custom vars
 
 Edit the required variables to fit your system on the configuration file, which can be assigned to the environment variable `$ONIONJUGGLER_CONF`, but if it the variable is unset or empty, will search for the default path in `/etc/onionjuggler.conf`.
 
 Note that no variable that refers to a folder do NOT end with a trailing `/`. Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
 
 Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
+
+The `$exec_cmd_alt_user` to run a command as another user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the configuration file and and your user to the privileged group.
+
+It is recommended to have `tor` already installed, because as it is a service, it has to be enabled to start on boot and the service managers may vary depending on your operating system.
+
+Read [docs/compatibility.md](docs/compatibility.md) for the detailed configuration file for your operating system.
 
 To assign values to the variables, you can either:
 
@@ -117,19 +152,15 @@ To assign values to the variables, you can either:
 
 * or insert configuration to the end of the file with tee:
 ```sh
-printf "privilege_command=\"sudo\"\n" | tee -a "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
+printf "exec_cmd_alt_user=\"sudo\"\n" | tee -a "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
 ```
 
 * or edit with sed:
 ```sh
-sed -i'' "s|privilege_command=.*|tor_usprivilege_commander=\"doas\"|" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
+sed -i'' "s|exec_cmd_alt_user=.*|tor_usprivilege_commander=\"doas\"|" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
 ```
 
-#### Setup the enviroment
-
-The `$privilege_command` to run a command as another user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the configuration file and and your user to the privileged group.
-
-It is recommended to have `tor` already installed, because as it is a service, it has to be enabled to start on boot and the service managers may vary depending on your operating system. Check [docs/compatibility.md](docs/compatibility.md) for how to build tor from source code or install via package manager and enable the service to start on boot.
+### Setup the enviroment
 
 Run from inside the cloned repository to create the tor directories, setup ownership, create manual pages:
 ```sh
@@ -151,58 +182,13 @@ onionjuggler-cli on --service terminator --socket unix --version 3 --port 80
 
 #### Documentation
 
-Take a loot at the documentation inside `docs` folder. Read:
+Take a loot at the documentation inside `docs` folder, there are many other onion services management guides. Read:
 
-* the [cli manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
+Don't forget the [cli manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
 ```sh
 man onionjuggler-cli
 man onionjuggler.conf
 ```
-
-* [Portability](docs/portability.md) for the detailed configuration file for your operating system.
-
-* many other onion services guides...
-
-### Requirements
-
-* General:
-  * Unix-like system.
-  * any POSIX shell: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `zsh` 3.1.9+, `yash` 2.29+, busybox `ash` 1.1.3+ etc.
-  * superuser privileges to call some commands as root and the tor user, with `doas` or `sudo`.
-  * Path for folders variables must not contain trainling "/" at the end of the variables on `/etc/onionjuggler..conf` (Incorrect: `/var/lib/tor/`, Correct: `/var/lib/tor`).
-
-* Required programs:
-  * Needs manual configuration or pre-configured:
-    * **doas**/**sudo** (must be already configured)
-  * General:
-    * **tor** >= 0.3.5.7
-    * **grep** >=0.9
-    * **sed**
-  * Backup:
-    * **tar**
-  * Client Authorization:
-    * **openssl** >= 1.1
-    * **basez** >= 1.6.2
-  * Web server:
-    * **nginx**/**apache2**
-  * Vanguards:
-    * **git**
-    * **python(3)-stem** >=1.8.0
-  * TUI:
-    * **dialog**/**whiptail**
-
-* Optional programs:
-  * **(lib)qrencode** >= 4.1.1 (List)
-  * **sha256(sum)** (Backup)
-
-* Development programs:
-  * **pandoc** (Manual)
-  * **shellcheck** (Review)
-
-If using Vanguards, `python2.x` is needed, but it is not in the requirements to be installed by default.
-
-The packages are downloaded when setting up the environment with [configure.sh](configure.sh).
-The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
 
 ## Featured on
 

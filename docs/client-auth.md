@@ -75,7 +75,7 @@ If you are planning to have more authenticated clients, each file must contain o
 
 5. Reload the tor service:
 ```
-"${privilege_command}" systemctl reload tor
+"${exec_cmd_alt_user}" systemctl reload tor
 ```
 
 If you get an error message, something has gone wrong and you cannot continue until you've figured out why this didn't work.

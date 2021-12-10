@@ -10,20 +10,20 @@ test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CO
 ## if any of the configurations are empty, use default ones
 
 ## system
-: "${privilege_command:="sudo"}"
+: "${exec_cmd_alt_user:="sudo"}"
 : "${tor_user:="debian-tor"}"
-: "${tor_service:="tor@default.service"}"
-: "${service_manager_control:="systemctl"}"
-: "${etc_group_owner:="root"}"
+: "${tor_daemon:="tor@default.service"}"
+: "${daemon_control:="systemctl"}"
+: "${torrc_group_owner:="root"}"
 : "${openssl_command:="openssl"}"
 
 ## tor defaults
-: "${data_dir:="/var/lib/tor"}"
-: "${data_dir_services:="${data_dir}/services"}"
-: "${data_dir_auth:="${data_dir}/onion_auth"}"
+: "${tor_data_dir:="/var/lib/tor"}"
+: "${tor_data_dir_services:="${tor_data_dir}/services"}"
+: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"
 : "${torrc_root:="/etc/tor"}"
 : "${torrc:="${torrc_root}/torrc"}"
-: "${control_port:="9051"}" ## only the port, not the host
+: "${tor_control_port:="9051"}" ## only the port, not the host
 
 ## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
 : "${tor_browser_root:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"
@@ -229,34 +229,33 @@ done
 
 ## set correct permissions for tor directories and files
 set_owner_permission(){
-  "${privilege_command}" chown -R "${tor_user}:${tor_user}" "${data_dir}"
-  "${privilege_command}" chmod 700 "${data_dir}"
+  "${exec_cmd_alt_user}" chown -R "${tor_user}:${tor_user}" "${tor_data_dir}"
+  "${exec_cmd_alt_user}" chmod 700 "${tor_data_dir}"
 
-  "${privilege_command}" chown -R root:"${etc_group_owner}" "${torrc_root}"
-  "${privilege_command}" chmod 755 "${torrc_root}"
-  "${privilege_command}" chmod 644 "${torrc}"
+  "${exec_cmd_alt_user}" chown -R root:"${torrc_group_owner}" "${torrc_root}"
+  "${exec_cmd_alt_user}" chmod 755 "${torrc_root}"
+  "${exec_cmd_alt_user}" chmod 644 "${torrc}"
 }
 
 
-# This function reload tor by default or forces to restart
+# reloads tor by default or forces to restart if $1 is not empty
 # shellcheck disable=SC2120
 restarting_tor(){
   set_owner_permission
-  if [ -n "${1}" ]; then
-    printf "\n# Restarting tor, please be patient.\n"
-    printf "# Getting stuck after several minutes? Press Ctrl-C\n"
-    printf "# and to restore the lastest torrc backup run:\n"
-    printf "$ onionjuggler-cli restore-torrc\n"
-    "${privilege_command}" ${service_manager_control} restart "${tor_service}"
-    printf %s"${green}# Restarted tor succesfully!\n${nocolor}"
-  else
-    printf "\n# Reloading tor, please be patient.\n"
-    printf "# Getting stuck after several minutes? Press Ctrl-C\n"
-    printf "# and to restore the lastest torrc backup run:\n"
-    printf "$ onionjuggler-cli restore-torrc\n"
-    "${privilege_command}" ${service_manager_control} reload "${tor_service}"
-    printf %s"${green}# Reloaded tor succesfully!\n${nocolor}"
-  fi
+  signal="reload"
+  signal="${1:+"restart"}"
+  verb_current_signal="${signal}ing"
+  verb_past_signal="${signal}ed"
+  printf %s"\n# ${verb_current_signal} tor, please be patient.\n"
+  printf "# Getting stuck after several minutes? Press Ctrl-C\n"
+  printf "# and to restore the lastest torrc backup run:\n"
+  printf "$ onionjuggler-cli restore-torrc\n"
+  case "${daemon_control}" in
+    sysmtectl|sv|rcctl) "${exec_cmd_alt_user}" "${daemon_control}" "${signal}" "${tor_daemon}";;
+    service) "${exec_cmd_alt_user}" "${daemon_control}" "${tor_daemon}" "${signal}";;
+    /etc/rc.d) "${exec_cmd_alt_user}" "${daemon_control}"/"${tor_daemon}" "${signal}";;
+  esac
+  printf %s"${green}# ${verb_past_signal} tor succesfully!\n${nocolor}"
 }
 
 
@@ -292,7 +291,7 @@ is_addr_port(){
 
 
 is_service_dir_empty(){
-  [ "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
+  [ "$("${exec_cmd_alt_user}" -u "${tor_user}" ls "${tor_data_dir_services}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
 }
 
 
@@ -300,7 +299,7 @@ is_service_dir_empty(){
 ## if the service exists, will save the hostname for when requested.
 test_service_exists(){
   service="${1}"
-  onion_hostname=$("${privilege_command}" -u "${tor_user}" grep ".onion" "${data_dir_services}"/"${service}"/hostname 2>/dev/null)
+  onion_hostname=$("${exec_cmd_alt_user}" -u "${tor_user}" grep ".onion" "${tor_data_dir_services}"/"${service}"/hostname 2>/dev/null)
   [ -z "${onion_hostname}" ] && { printf %s"${red}ERROR: Service does not exist: ${service}\n${nocolor}"; exit 1; }
 }
 
@@ -308,7 +307,7 @@ test_service_exists(){
 ## save the clients names that are inside the <HiddenServiceDir>/authorized_clients/ in list format (CLIENT1,CLIENT2,...)
 create_client_list(){
   service="${1}"
-  client_name_list="$(printf %s"$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"/"${service}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" ",")"
+  client_name_list="$(printf %s"$("${exec_cmd_alt_user}" -u "${tor_user}" ls "${tor_data_dir_services}"/"${service}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" ",")"
   client_count=""
   # shellcheck disable=SC2086
   [ -n "${client_name_list}" ] && client_count="$(IFS=','; set -f -- ${client_name_list}; printf %s"${#}")"
@@ -316,7 +315,7 @@ create_client_list(){
 
 
 ## save the service names that have a <HiddenServiceDir> in list format (SERV1,SERV2,...)
-create_service_list(){ service_name_list=$("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}"/ | tr " " ","); }
+create_service_list(){ service_name_list=$("${exec_cmd_alt_user}" -u "${tor_user}" ls "${tor_data_dir_services}"/ | tr " " ","); }
 
 
 ## loops the parameters
@@ -342,7 +341,7 @@ service_block(){
   service="${2}"
   file="${3:-${torrc}}"
   i=0
-  grep -A 7 "HiddenServiceDir ${data_dir_services}/${service}$" "${file}" | while IFS= read -r line; do
+  grep -A 7 "HiddenServiceDir ${tor_data_dir_services}/${service}$" "${file}" | while IFS= read -r line; do
     i=$((i+1))
     ## break check
     [ ${i} -gt 1 ] && [ "${line%% *}" = "HiddenServiceDir" ] && break ## break on next HiddenService configuration
@@ -351,14 +350,14 @@ service_block(){
     ## if it passed the checks, just do
     case "${process}" in
       print) printf "%s${line}\n";;
-      delete) "${privilege_command}" sed -i'' "s|${line}||" "${file}";;
+      delete) "${exec_cmd_alt_user}" sed -i'' "s|${line}||" "${file}";;
     esac
   done
 }
 
 ###########################
 ########## MAIN ###########
-#"${privilege_command}" sed -i'' 's/\/$//' "${torrc}" ## no config should end with '/' to find exact match.
+#"${exec_cmd_alt_user}" sed -i'' 's/\/$//' "${torrc}" ## no config should end with '/' to find exact match.
 
 case "${command}" in
 
@@ -368,14 +367,14 @@ case "${command}" in
     # create_service_list
     # for service in $(printf %s"${service_name_list}"); do
     #   block="$(service_block print "${service}" "${torrc}.bak")"
-    #   printf '\n%s\n\n' "${block}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
-    #   #printf '\n%s\n\n' "$("${privilege_command}" sed -n "/^HiddenServiceDir ${data_dir_services}\/${service}$/p" "${torrc}".bak)" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
+    #   printf '\n%s\n\n' "${block}" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null
+    #   #printf '\n%s\n\n' "$("${exec_cmd_alt_user}" sed -n "/^HiddenServiceDir ${tor_data_dir_services}\/${service}$/p" "${torrc}".bak)" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null
     # done
     ## TODO -> this prints all the HiddenService lines and let them together, it 'works' but I like blocks for organization
     ## try to print blocks separated by empty lines
-    printf '\n%s\n\n' "$("${privilege_command}" sed -n "/^HiddenService/p" "${torrc}".bak)" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
-    "${privilege_command}" sed "/^HiddenService/d" "${torrc}" | "${privilege_command}" tee "${torrc}".mod >/dev/null
-    "${privilege_command}" sed '1s/^$//p;/./,/^$/!d' "${torrc}".mod "${torrc}".tmp | "${privilege_command}" tee "${torrc}" >/dev/null
+    printf '\n%s\n\n' "$("${exec_cmd_alt_user}" sed -n "/^HiddenService/p" "${torrc}".bak)" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null
+    "${exec_cmd_alt_user}" sed "/^HiddenService/d" "${torrc}" | "${exec_cmd_alt_user}" tee "${torrc}".mod >/dev/null
+    "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' "${torrc}".mod "${torrc}".tmp | "${exec_cmd_alt_user}" tee "${torrc}" >/dev/null
     printf "# Restored torrc with its latest backup\n"
     restarting_tor
     printf %s"${green}\n# Done\n${nocolor}"
@@ -394,17 +393,17 @@ case "${command}" in
       ## remove service service data
       case "${action:-}" in
         purge|P)
-          printf %s"${red}\n# Deleting Hidden Service data in ${data_dir_services}/${service}\n${nocolor}"
-          "${privilege_command}" rm -rfv "${data_dir_services}"/"${service}"
+          printf %s"${red}\n# Deleting Hidden Service data in ${tor_data_dir_services}/${service}\n${nocolor}"
+          "${exec_cmd_alt_user}" rm -rfv "${tor_data_dir_services}"/"${service}"
         ;;
         *) printf "\n# HiddenServiceDiretory was kept\n";;
       esac
-      "${privilege_command}" cp "${torrc}" "${torrc}".bak
+      "${exec_cmd_alt_user}" cp "${torrc}" "${torrc}".bak
       ## remove service paragraph in torrc
       printf %s"# Deleting Hidden Service configuration in ${torrc}\n"
       service_block delete "${service}"
       ## substitute multiple sequential empty lines to a single one per sequence
-      "${privilege_command}" sed '1s/^$//p;/./,/^$/!d' "${torrc}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null && "${privilege_command}" mv "${torrc}".tmp "${torrc}"
+      "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' "${torrc}" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${torrc}".tmp "${torrc}"
       printf %s"# Disabled service: ${service}\n\n"
     }
     loop_list delete_service "${service}"
@@ -435,7 +434,7 @@ case "${command}" in
 
     finish_service_activation(){
       ## remove double empty lines
-      "${privilege_command}" sed '1s/^$//p;/./,/^$/!d' "${torrc}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null && "${privilege_command}" mv "${torrc}".tmp "${torrc}"
+      "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' "${torrc}" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${torrc}".tmp "${torrc}"
       restarting_tor
       ## show the Hidden Service address
       test_service_exists "${service}"
@@ -470,7 +469,7 @@ case "${command}" in
         target_addr="${target%%:*}"
         target_port="${target##*:}"
         { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
-        "${privilege_command}" grep -q "^HiddenServicePort .* ${target}$" "${torrc}" && error_msg "target=${target} is being used.\nINFO: Choose another port or disable the service that is using the wanted port."
+        "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target}$" "${torrc}" && error_msg "target=${target} is being used.\nINFO: Choose another port or disable the service that is using the wanted port."
         is_integer "${virtport}"; is_addr_port "${target}"
         ## Optional
         if [ -n "${virtport2}" ]; then
@@ -478,18 +477,18 @@ case "${command}" in
           target2_addr="${target2%%:*}"
           target2_port="${target2##*:}"
           { [ "${target2_addr}" = "${target2_port}" ] || [ "${target2_addr}" = "localhost" ]; } && target2="127.0.0.1:${target2_port}"
-          "${privilege_command}" grep -q "^HiddenServicePort .* ${target2}$" "${torrc}" && error_msg "target2=${target2} is being used.\nINFO: Choose another port or disable the service that is using the wanted port."
+          "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target2}$" "${torrc}" && error_msg "target2=${target2} is being used.\nINFO: Choose another port or disable the service that is using the wanted port."
           is_integer "${virtport2}"; is_addr_port "${target2}"
         fi
-        "${privilege_command}" cp "${torrc}" "${torrc}".bak
+        "${exec_cmd_alt_user}" cp "${torrc}" "${torrc}".bak
         ## delete any old entry for that servive
         service_block delete "${service}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${torrc}\n"
         if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\nHiddenServicePort ${virtport2} ${target2}\n\n" | "${privilege_command}" tee -a "${torrc}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\nHiddenServicePort ${virtport2} ${target2}\n\n" | "${exec_cmd_alt_user}" tee -a "${torrc}"
         else
-          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\n\n" | "${privilege_command}" tee -a "${torrc}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\n\n" | "${exec_cmd_alt_user}" tee -a "${torrc}"
         fi
         finish_service_activation
       ;;
@@ -499,16 +498,16 @@ case "${command}" in
         virtport2="${port##* }"
         [ "${virtport}" = "${virtport2}" ] && virtport2=""
         [ -n "${virtport2}" ] && is_integer "${virtport2}" ## var not mandatory
-        "${privilege_command}" cp "${torrc}" "${torrc}".bak
+        "${exec_cmd_alt_user}" cp "${torrc}" "${torrc}".bak
         ## delete any old entry for that servive
         service_block delete "${service}"
         ## add configuration block, empty line after and before it
         printf %s"\n# Including Hidden Service configuration in ${torrc}\n"
         unix_path="unix:/var/run/${service}-onion"
         if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}.sock\n\n" | "${privilege_command}" tee -a "${torrc}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${torrc}"
         else
-          printf %s"\nHiddenServiceDir ${data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\n\n" | "${privilege_command}" tee -a "${torrc}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${torrc}"
         fi
         finish_service_activation
       ;;
@@ -552,7 +551,7 @@ case "${command}" in
               client_priv_key_config="${onion_hostname%.onion}:descriptor:x25519:${client_priv_key}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
               # Server side configuration
-              printf %s"${client_pub_key_config}\n" | "${privilege_command}" tee "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
+              printf %s"${client_pub_key_config}\n" | "${exec_cmd_alt_user}" tee "${tor_data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
               ## Client side configuration
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
               printf "# Declare the variables\n"
@@ -565,21 +564,21 @@ case "${command}" in
               printf %s"client_priv_key_config=${client_priv_key_config}\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n"
               ## Delete pem and keys
-              "${privilege_command}" rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
+              "${exec_cmd_alt_user}" rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
             }
             instructions_auth(){
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
               printf "# Send these instructions to the client:\n"
               printf "\n"
               printf "# Check if <ClientOnionAuthDir> was configured in the <torrc>, if it was not, insert it: ClientOnionAuthDir /var/lib/tor/onion_auth\n"
-              printf %s" [ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf 'ClientOnionAuthDir /var/lib/tor/onion_auth' | ${privilege_command} tee -a /etc/tor/torrc ; }\n"
+              printf %s" [ \$(grep -c 'ClientOnionAuthDir' /etc/tor/torrc) -eq 0 ] && { printf 'ClientOnionAuthDir /var/lib/tor/onion_auth' | ${exec_cmd_alt_user} tee -a /etc/tor/torrc ; }\n"
               printf "\n"
               printf "# Create a file with the suffix '.auth_private' inside <ClientOnionAuthDir>\n"
-              printf %s" printf '\${client_priv_key_config}' | ${privilege_command} tee /var/lib/tor/onion_auth/\${service}-\${onion_hostname}.auth_private\n"
+              printf %s" printf '\${client_priv_key_config}' | ${exec_cmd_alt_user} tee /var/lib/tor/onion_auth/\${service}-\${onion_hostname}.auth_private\n"
               printf "\n"
               printf "# Reload tor\n"
-              printf %s" ${privilege_command} chown -R debian-tor:debian-tor /var/lib/tor\n"
-              printf %s" ${privilege_command} systemctl reload-or-restart tor\n"
+              printf %s" ${exec_cmd_alt_user} chown -R debian-tor:debian-tor /var/lib/tor\n"
+              printf %s" ${exec_cmd_alt_user} systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             }
             [ "${service}" = "@all" ] && { create_service_list ; service="${service_name_list}" ; }
@@ -587,7 +586,7 @@ case "${command}" in
             if [ -n "${client_pub_key}" ]; then
               test_service_exists "${service}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
-              printf %s"${client_pub_key_config}" | "${privilege_command}" tee "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
+              printf %s"${client_pub_key_config}" | "${exec_cmd_alt_user}" tee "${tor_data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
               printf "\n# Server side authorization configured\n\n"
               printf %s" client_pub_key_config=${client_pub_key_config}\n"
               printf "\n# As you inserted the public key manually, we expect that the client already has the private key\n"
@@ -609,10 +608,10 @@ case "${command}" in
               printf %s"Service  = ${service}\n"
               if [ "${client}" = "@all" ]; then
                 printf "Client   = @all\n\n"
-                "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/authorized_clients/*.auth
+                "${exec_cmd_alt_user}" rm -fv "${tor_data_dir_services}"/"${service}"/authorized_clients/*.auth
               else
                 printf %s"Client   = ${client}\n\n"
-                "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/authorized_clients/"${client}".auth
+                "${exec_cmd_alt_user}" rm -fv "${tor_data_dir_services}"/"${service}"/authorized_clients/"${client}".auth
               fi
             }
             [ -z "${service}" ] && error_msg "service is missing"
@@ -641,9 +640,9 @@ case "${command}" in
               if [ -n "${client_count}" ]; then
                 printf %s"\nService  = ${service}\n"
                 [ -n "${client_name_list}" ] && printf %s"Clients  = ${client_name_list} (${client_count})\n"
-                for AUTH in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_services}/${service}/authorized_clients/"); do
+                for AUTH in $("${exec_cmd_alt_user}" -u "${tor_user}" ls "${tor_data_dir_services}/${service}/authorized_clients/"); do
                   printf %s"\n# File name: ${AUTH}\n"
-                  printf %s"# Content:   $("${privilege_command}" -u "${tor_user}" grep "descriptor:x25519:" "${data_dir_services}"/"${service}"/authorized_clients/"${AUTH}")\n"
+                  printf %s"# Content:   $("${exec_cmd_alt_user}" -u "${tor_user}" grep "descriptor:x25519:" "${tor_data_dir_services}"/"${service}"/authorized_clients/"${AUTH}")\n"
                 done
                 printf "\n"
               else
@@ -677,9 +676,9 @@ case "${command}" in
             [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#onion}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#onion} is different than 62 characters (<56-char-base32>.onion)"
             [ "${suffix_onion}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
-            "${privilege_command}" cp "${torrc}" "${torrc}".bak
-            grep -q "ClientOnionAuthDir" "${torrc}" && { printf %s"\nClientOnionAuthDir ${data_dir_auth}\n\n" | "${privilege_command}" tee -a "${torrc}"; }
-            "${privilege_command}" -u "${tor_user}" mkdir -p "${data_dir_auth}"
+            "${exec_cmd_alt_user}" cp "${torrc}" "${torrc}".bak
+            grep -q "ClientOnionAuthDir" "${torrc}" && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | "${exec_cmd_alt_user}" tee -a "${torrc}"; }
+            "${exec_cmd_alt_user}" -u "${tor_user}" mkdir -p "${tor_data_dir_auth}"
             if [ -z "${client_priv_key}" ]; then
               ## Generate pem and derive pub and priv keys
               openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
@@ -691,9 +690,9 @@ case "${command}" in
               client_priv_key_config="${onion%.onion}:descriptor:x25519:${client_priv_key}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
               ## Delete pem and keys
-              "${privilege_command}" rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
+              "${exec_cmd_alt_user}" rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
               # Client side configuration
-              printf %s"${client_priv_key_config}\n" | "${privilege_command}" tee "${data_dir_auth}"/"${onion}".auth_private >/dev/null
+              printf %s"${client_priv_key_config}\n" | "${exec_cmd_alt_user}" tee "${tor_data_dir_auth}"/"${onion}".auth_private >/dev/null
               printf "# Client side authorization configured\n"
               printf "# This is your private key, keep it safe, keep it hidden:\n\n"
               printf %s" client_priv_key=${client_priv_key}\n"
@@ -707,14 +706,14 @@ case "${command}" in
               printf %s" client_pub_key_config=descriptor:x25519:${client_pub_key}\n\n"
               printf "# Create a file with the client name (eg. alice) using the suffix '.auth' (eg. alice.auth) inside the folder\n"
               printf %s"#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${onion}\n\n"
-              printf %s" printf '${client_pub_key_config}' | ${privilege_command} tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
+              printf %s" printf '${client_pub_key_config}' | ${exec_cmd_alt_user} tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
               printf "# Reload tor\n\n"
-              printf %s" ${privilege_command} chown -R debian-tor:debian-tor /var/lib/tor\n"
-              printf %s" ${privilege_command} systemctl reload-or-restart tor\n"
+              printf %s" ${exec_cmd_alt_user} chown -R debian-tor:debian-tor /var/lib/tor\n"
+              printf %s" ${exec_cmd_alt_user} systemctl reload-or-restart tor\n"
               printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
             else
               client_priv_key_config="${onion%.onion}:descriptor:x25519:${client_priv_key}"
-              printf %s"${client_priv_key_config}\n" | "${privilege_command}" tee "${data_dir_auth}"/"${onion}".auth_private >/dev/null
+              printf %s"${client_priv_key_config}\n" | "${exec_cmd_alt_user}" tee "${tor_data_dir_auth}"/"${onion}".auth_private >/dev/null
               printf "\n# Client side authorization configured\n"
               printf %s"\n client_priv_key_config=${client_priv_key_config}\n"
               printf "\n# As you inserted the private key manually, we expect that you have already sent/received the public key to/from the onion service operator\n"
@@ -727,10 +726,10 @@ case "${command}" in
             : "${onion:?$(error_msg "onion is missing")}"
             auth_client_remove  (){
               onion="${1}"
-              printf %s"\n# Removing ${data_dir_auth}/${onion}.auth_private"
-              "${privilege_command}" rm -fv "${data_dir_auth}"/"${onion}".auth_private
+              printf %s"\n# Removing ${tor_data_dir_auth}/${onion}.auth_private"
+              "${exec_cmd_alt_user}" rm -fv "${tor_data_dir_auth}"/"${onion}".auth_private
             }
-            if [ "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
+            if [ "$("${exec_cmd_alt_user}" -u "${tor_user}" ls "${tor_data_dir_auth}")" != "" ]; then
               loop_list auth_client_remove "${onion}"
               printf "\n# Client side authorization removed\n"
               printf %s"${green}\n# Done\n${nocolor}"
@@ -740,11 +739,11 @@ case "${command}" in
           ;;
 
           l|list)
-            if [ "$("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}")" != "" ]; then
-              printf %s"# ClientOnionAuthDir ${data_dir_auth}\n"
-              for AUTH in $("${privilege_command}" -u "${tor_user}" ls "${data_dir_auth}"); do
+            if [ "$("${exec_cmd_alt_user}" -u "${tor_user}" ls "${tor_data_dir_auth}")" != "" ]; then
+              printf %s"# ClientOnionAuthDir ${tor_data_dir_auth}\n"
+              for AUTH in $("${exec_cmd_alt_user}" -u "${tor_user}" ls "${tor_data_dir_auth}"); do
                 printf %s"\n# File name: ${AUTH}\n"
-                printf %s"# Content:   $("${privilege_command}" -u "${tor_user}" grep "descriptor:x25519:" "${data_dir_auth}"/"${AUTH}")"
+                printf %s"# Content:   $("${exec_cmd_alt_user}" -u "${tor_user}" grep "descriptor:x25519:" "${tor_data_dir_auth}"/"${AUTH}")"
               done
               printf "\n"
               printf %s"${green}\n# Done\n${nocolor}"
@@ -778,9 +777,9 @@ case "${command}" in
       printf %s"\n# Renewing hostname (address) of the service: ${service}\n"
       old_hostname="${onion_hostname}"
       ## delete service public and secret keys
-      "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/hs_ed25519_secret_key
-      "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/hs_ed25519_public_key
-      "${privilege_command}" rm -fv "${data_dir_services}"/"${service}"/hostname
+      "${exec_cmd_alt_user}" rm -fv "${tor_data_dir_services}"/"${service}"/hs_ed25519_secret_key
+      "${exec_cmd_alt_user}" rm -fv "${tor_data_dir_services}"/"${service}"/hs_ed25519_public_key
+      "${exec_cmd_alt_user}" rm -fv "${tor_data_dir_services}"/"${service}"/hostname
       ## reload tor now so auth option can get the new hostname
       restarting_tor
       test_service_exists "${service}"
@@ -817,7 +816,7 @@ case "${command}" in
       printf %s"Address  = ${onion_hostname}\n"
       printf %s"Service  = ${service}\n"
       [ -n "${client_name_list}" ] && printf %s"Clients  = ${client_name_list} (${client_count})\n"
-      if "${privilege_command}" grep -q "^HiddenServiceDir ${data_dir_services}/${service}$" "${torrc}"; then
+      if "${exec_cmd_alt_user}" grep -q "^HiddenServiceDir ${tor_data_dir_services}/${service}$" "${torrc}"; then
         printf "Status   = active\n" && service_block print "${service}"
       else
         printf "Status   = inactive\n"
@@ -883,17 +882,17 @@ server {
           ;;
         esac
 
-        "${privilege_command}" cp -v /tmp/"${service}"-onion.conf /etc/"${web_server}"/sites-available/
-        "${privilege_command}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
+        "${exec_cmd_alt_user}" cp -v /tmp/"${service}"-onion.conf /etc/"${web_server}"/sites-available/
+        "${exec_cmd_alt_user}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
         printf "\n# Web server configuration:\n\n"
-        #"${privilege_command}" cat /tmp/"${service}"-onion.conf
+        #"${exec_cmd_alt_user}" cat /tmp/"${service}"-onion.conf
         #while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${service}-onion.conf"
         printf "\n# Reloading web server to apply new configuration\n"
         case "${web_server}" in
-          nginx) "${privilege_command}" nginx -t && "${privilege_command}" nginx -s reload;;
-          apache2) "${privilege_command}" apache2 -t && "${privilege_command}" apache -k graceful;;
+          nginx) "${exec_cmd_alt_user}" nginx -t && "${exec_cmd_alt_user}" nginx -s reload;;
+          apache2) "${exec_cmd_alt_user}" apache2 -t && "${exec_cmd_alt_user}" apache -k graceful;;
         esac
-        #"${privilege_command}" rm -f /tmp/"${service}"-onion.conf
+        #"${exec_cmd_alt_user}" rm -f /tmp/"${service}"-onion.conf
         printf %s"\n# Address: http://${onion_hostname}:${virtport}\n"
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
@@ -903,14 +902,14 @@ server {
         disable_site(){
           service="${1}"
           printf %s"\n# Stopping website of the service: ${service}\n"
-          "${privilege_command}" rm -fv /etc/"${web_server}"/sites-available/"${service}"-onion.conf ## for cleanliness
-          "${privilege_command}" rm -fv /etc/"${web_server}"/sites-enabled/"${service}"-onion.conf
+          "${exec_cmd_alt_user}" rm -fv /etc/"${web_server}"/sites-available/"${service}"-onion.conf ## for cleanliness
+          "${exec_cmd_alt_user}" rm -fv /etc/"${web_server}"/sites-enabled/"${service}"-onion.conf
         }
         loop_list disable_site "${service}" 0
         printf "\n# Reloading web server to apply new configuration\n"
         case "${web_server}" in
-          nginx) "${privilege_command}" nginx -t && "${privilege_command}" nginx -s reload;;
-          apache2) "${privilege_command}" apache2 -t && "${privilege_command}" apache2 -k graceful;;
+          nginx) "${exec_cmd_alt_user}" nginx -t && "${exec_cmd_alt_user}" nginx -s reload;;
+          apache2) "${exec_cmd_alt_user}" apache2 -t && "${exec_cmd_alt_user}" apache2 -k graceful;;
         esac
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
@@ -918,7 +917,7 @@ server {
       l|list)
         printf %s"# Web server = ${web_server}\n\n"
         printf "# Enabled websites:"
-        sites_enabled=$("${privilege_command}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g")
+        sites_enabled=$("${exec_cmd_alt_user}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g")
         [ -n "${sites_enabled}" ] && printf %s"\n${sites_enabled}\n" || printf " No website enabled\n"
       ;;
 
@@ -957,7 +956,7 @@ server {
         start_location
         printf "
 server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onion_hostname}""\$request_uri;\n}
-\n# Reload web server:\n\n\t${privilege_command} nginx -t && ${privilege_command} nginx -s reload\n"
+\n# Reload web server:\n\n\t${exec_cmd_alt_user} nginx -t && ${exec_cmd_alt_user} nginx -s reload\n"
         finish_location
       ;;
 
@@ -965,8 +964,8 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         start_location
         printf "
 <VirtualHost *:443>\n\tHeader set Onion-Location \"http://%s${onion_hostname}%%{REQUEST_URI}s\"\n</Virtualhost>
-\n# Enable headers and rewrite modules:\n\n\t${privilege_command} a2enmod headers rewrite
-\n# Reload web server:\n\n\t${privilege_command} apache2 -t && ${privilege_command} apache2 -k graceful\n"
+\n# Enable headers and rewrite modules:\n\n\t${exec_cmd_alt_user} a2enmod headers rewrite
+\n# Reload web server:\n\n\t${exec_cmd_alt_user} apache2 -t && ${exec_cmd_alt_user} apache2 -k graceful\n"
         finish_location
       ;;
 
@@ -974,7 +973,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         start_location
         printf "
 <meta http-equiv=\"onion-location\" content=\"http://%s${onion_hostname}\"/>
-\n# Reload web server that you use:\n\n\t${privilege_command} nginx -t && ${privilege_command} nginx -s reload\n\t# or\n\t${privilege_command} apache2 -t && ${privilege_command} apache2 -k graceful\n"
+\n# Reload web server that you use:\n\n\t${exec_cmd_alt_user} nginx -t && ${exec_cmd_alt_user} nginx -s reload\n\t# or\n\t${exec_cmd_alt_user} apache2 -t && ${exec_cmd_alt_user} apache2 -k graceful\n"
         finish_location
       ;;
 
@@ -993,31 +992,31 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ## scp instructions to import backup from remote host
       I|integrate)
         # shellcheck disable=SC2153,SC2154
-        "${privilege_command}" -u "${USER}" mkdir -p "${hs_bk_dir}"/integrate
-        hs_bk_tar=$("${privilege_command}" -u "${USER}" ls "${hs_bk_dir}" | grep ".tar.gz" | tail -n -1)
+        "${exec_cmd_alt_user}" -u "${USER}" mkdir -p "${hs_bk_dir}"/integrate
+        hs_bk_tar=$("${exec_cmd_alt_user}" -u "${USER}" ls "${hs_bk_dir}" | grep ".tar.gz" | tail -n -1)
         printf %s"# Integrating backup from file: ${hs_bk_tar}\n\n"
         printf "# Extracting the archive\n\n"
-        "${privilege_command}" tar -xpzvf "${hs_bk_dir}"/"${hs_bk_tar}" -C "${hs_bk_dir}"/integrate
-        "${privilege_command}" chown -R "${USER}:${USER}" "${hs_bk_dir}"
-        "${privilege_command}" cp -rf "${hs_bk_dir}"/integrate"${data_dir_services}"/* "${data_dir_services}"/
-        "${privilege_command}" cp -rf "${hs_bk_dir}"/integrate"${data_dir_auth}"/* "${data_dir_auth}"/
-        data_dir_auth_BK="$("${privilege_command}" grep "ClientOnionAuthDir" "${hs_bk_dir}"/integrate"${torrc}")"
+        "${exec_cmd_alt_user}" tar -xpzvf "${hs_bk_dir}"/"${hs_bk_tar}" -C "${hs_bk_dir}"/integrate
+        "${exec_cmd_alt_user}" chown -R "${USER}:${USER}" "${hs_bk_dir}"
+        "${exec_cmd_alt_user}" cp -rf "${hs_bk_dir}"/integrate"${tor_data_dir_services}"/* "${tor_data_dir_services}"/
+        "${exec_cmd_alt_user}" cp -rf "${hs_bk_dir}"/integrate"${tor_data_dir_auth}"/* "${tor_data_dir_auth}"/
+        data_dir_auth_BK="$("${exec_cmd_alt_user}" grep "ClientOnionAuthDir" "${hs_bk_dir}"/integrate"${torrc}")"
         if [ -n "${data_dir_auth_BK}" ]; then
-          "${privilege_command}" sed -i'' "/ClientOnionAuthDir .*/d" "${torrc}"
-          printf '\n%s\n\n' "${data_dir_auth_BK}" | "${privilege_command}" tee -a "${torrc}" >/dev/null
-          "${privilege_command}" sed -i'' "/ClientOnionAuthDir .*/d" "${hs_bk_dir}"/integrate"${torrc}"
+          "${exec_cmd_alt_user}" sed -i'' "/ClientOnionAuthDir .*/d" "${torrc}"
+          printf '\n%s\n\n' "${data_dir_auth_BK}" | "${exec_cmd_alt_user}" tee -a "${torrc}" >/dev/null
+          "${exec_cmd_alt_user}" sed -i'' "/ClientOnionAuthDir .*/d" "${hs_bk_dir}"/integrate"${torrc}"
         fi
-        "${privilege_command}" sed '1s/^$//p;/./,/^$/!d' "${torrc}" "${hs_bk_dir}"/integrate"${torrc}" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
-        "${privilege_command}" mv "${torrc}".tmp "${torrc}"
-        "${privilege_command}" rm -rf "${hs_bk_dir}"/integrate
+        "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' "${torrc}" "${hs_bk_dir}"/integrate"${torrc}" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null
+        "${exec_cmd_alt_user}" mv "${torrc}".tmp "${torrc}"
+        "${exec_cmd_alt_user}" rm -rf "${hs_bk_dir}"/integrate
         ## RESTORE BACKUP FROM REMOTE
         printf "\n# Restore your configuration importing from a remote machine.\n\n"
         ## upload from remote to this instane
         printf "# Import backup file uploading to remote. On the remote terminal, run:\n"
-        printf %s"\t${privilege_command} scp -r ${hs_bk_tar} ${USER}@${local_ip}:${hs_bk_dir}/\n\n" #### remove hs_bk_tar
+        printf %s"\t${exec_cmd_alt_user} scp -r ${hs_bk_tar} ${USER}@${local_ip}:${hs_bk_dir}/\n\n" #### remove hs_bk_tar
         ## download from this instance
         printf "# Import backup file downloading from remote. On this terminal instance, run:\n"
-        printf %s"\t${privilege_command} scp -r ${scp_target_full} ${hs_bk_dir}/${hs_bk_tar}\n" #### remove hs_bk_tar
+        printf %s"\t${exec_cmd_alt_user} scp -r ${scp_target_full} ${hs_bk_dir}/${hs_bk_tar}\n" #### remove hs_bk_tar
         #restarting_tor
       ;;
 
@@ -1029,13 +1028,13 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         printf "# Backing up the services dir, onion_auth dir and the torrc\n\n"
         mkdir -p "${hs_bk_dir}"
         ## these lines are necessary to copy the full path when creating the compressed archive
-        "${privilege_command}" cp "${torrc}" "${torrc}".rest
-        printf '\n%s\n\n' "$("${privilege_command}" grep "ClientOnionAuthDir" "${torrc}")" | "${privilege_command}" tee "${torrc}".tmp >/dev/null
-        printf '\n%s\n\n' "$("${privilege_command}" sed -n "/HiddenService/{p}" "${torrc}")" | "${privilege_command}" tee -a "${torrc}".tmp >/dev/null
-        "${privilege_command}" mv "${torrc}".tmp "${torrc}"
-        "${privilege_command}" tar -cpzvf "${hs_bk_dir}"/"${hs_bk_tar}" "${data_dir_services}" "${data_dir_auth}" "${torrc}" 2>/dev/null
-        "${privilege_command}" mv "${torrc}".rest "${torrc}"
-        "${privilege_command}" chown -R "${USER}:${USER}" "${hs_bk_dir}"
+        "${exec_cmd_alt_user}" cp "${torrc}" "${torrc}".rest
+        printf '\n%s\n\n' "$("${exec_cmd_alt_user}" grep "ClientOnionAuthDir" "${torrc}")" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null
+        printf '\n%s\n\n' "$("${exec_cmd_alt_user}" sed -n "/HiddenService/{p}" "${torrc}")" | "${exec_cmd_alt_user}" tee -a "${torrc}".tmp >/dev/null
+        "${exec_cmd_alt_user}" mv "${torrc}".tmp "${torrc}"
+        "${exec_cmd_alt_user}" tar -cpzvf "${hs_bk_dir}"/"${hs_bk_tar}" "${tor_data_dir_services}" "${tor_data_dir_auth}" "${torrc}" 2>/dev/null
+        "${exec_cmd_alt_user}" mv "${torrc}".rest "${torrc}"
+        "${exec_cmd_alt_user}" chown -R "${USER}:${USER}" "${hs_bk_dir}"
         set_owner_permission
         if ! command -v sha256sum >/dev/null; then
           if ! command -v shasum >/dev/null; then
@@ -1051,10 +1050,10 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         [ -n "${sha256_command}" ] && printf %s"\nsha256=$(${sha256_command} "${hs_bk_dir}"/"${hs_bk_tar}")\n\n"
         ## upload to remote
         printf "# Export backup file uploading to remote. On this terminal instance, run:\n"
-        printf %s"\t${privilege_command} scp -r ${hs_bk_dir}/${hs_bk_tar} ${scp_target_full}\n\n"
+        printf %s"\t${exec_cmd_alt_user} scp -r ${hs_bk_dir}/${hs_bk_tar} ${scp_target_full}\n\n"
         ## download from this instance on remote
         printf "# Export backup file downloading from remote. On the remote terminal, run:\n"
-        printf %s"\t${privilege_command} scp -r ${USER}@${local_ip}:${hs_bk_dir}/${hs_bk_tar} .\n"
+        printf %s"\t${exec_cmd_alt_user} scp -r ${USER}@${local_ip}:${hs_bk_dir}/${hs_bk_tar} .\n"
       ;;
 
       *)
@@ -1071,7 +1070,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     : "${action:?$(usage)}"
 
     ## TODO -> Vanguards sample service configuration for other service managers
-    [ "${service_manager_control}" != "systemctl" ] && error_msg "Unfortunately, OnionJuggler has only implemented Vanguards with Systemd (systemctl).\n Help improve this by submitting a merge request."
+    [ "${daemon_control}" != "systemctl" ] && error_msg "Unfortunately, OnionJuggler has only implemented Vanguards with Systemd (systemctl).\n Help improve this by submitting a merge request."
 
     ## Check if python is installed
     if ! command -v python3 >/dev/null; then
@@ -1085,31 +1084,31 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     fi
 
     vanguards_config(){
-      "${privilege_command}" cp "${torrc}" "${torrc}".bak
+      "${exec_cmd_alt_user}" cp "${torrc}" "${torrc}".bak
       ## Keep config with the torrc and torsocks.conf
-      "${privilege_command}" cp -v "${data_dir}"/vanguards/vanguards-example.conf "${torrc_root}"/vanguards.conf
-      "${privilege_command}" sed -i'' "s|control_port =.*|control_port = ${control_port}|g" "${torrc_root}"/vanguards.conf
-      "${privilege_command}" sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${torrc_root}"/vanguards.conf
+      "${exec_cmd_alt_user}" cp -v "${tor_data_dir}"/vanguards/vanguards-example.conf "${torrc_root}"/vanguards.conf
+      "${exec_cmd_alt_user}" sed -i'' "s|tor_control_port =.*|tor_control_port = ${tor_control_port}|g" "${torrc_root}"/vanguards.conf
+      "${exec_cmd_alt_user}" sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${torrc_root}"/vanguards.conf
       ## Control and Authentication methods are needed. Use the easiest to configure if the manual ones are not present, else do nothing.
       ## Control methods are Port (default: 9051) and Socket (default: /run/tor/control). Prefer port because socket path may differ on different systems https://github.com/mikeperry-tor/vanguards/pull/54#issuecomment-812185302.
-      if ! grep -q "ControlPort ${control_port}" "${torrc}" && ! grep -q "ControlSocket" "${torrc}"; then
-        "${privilege_command}" sed -i'' "s/ControlPort .*/ControlPort ${control_port}/" "${torrc}"
-        grep -q "ControlPort ${control_port}" "${torrc}" || printf %s"\nControlPort ${control_port}\n\n" | "${privilege_command}" tee -a "${torrc}" >/dev/null
+      if ! grep -q "ControlPort ${tor_control_port}" "${torrc}" && ! grep -q "ControlSocket" "${torrc}"; then
+        "${exec_cmd_alt_user}" sed -i'' "s/ControlPort .*/ControlPort ${tor_control_port}/" "${torrc}"
+        grep -q "ControlPort ${tor_control_port}" "${torrc}" || printf %s"\nControlPort ${tor_control_port}\n\n" | "${exec_cmd_alt_user}" tee -a "${torrc}" >/dev/null
       fi
       ## Authentication methods are Cookie (default: 0) and HashedPassword, to read the "control_auth_cookie". Prefer cookie because else a password is needed. If any method was already configured, use it.
       if ! grep -q "CookieAuthentication 1" "${torrc}" && ! grep -q "HashedControlPassword" "${torrc}"; then
-        "${privilege_command}" sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${torrc}"
-        grep -q "CookieAuthentication" "${torrc}" || printf "\nCookieAuthentication 1\n\n" | "${privilege_command}" tee -a "${torrc}"  >/dev/null
+        "${exec_cmd_alt_user}" sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${torrc}"
+        grep -q "CookieAuthentication" "${torrc}" || printf "\nCookieAuthentication 1\n\n" | "${exec_cmd_alt_user}" tee -a "${torrc}"  >/dev/null
       fi
       ## Generate Vanguards service
       printf %s"
 [Unit]
 Description=Additional protections for Tor onion services
-Wants=${tor_service}
+Wants=${tor_daemon}
 After=network.target nss-lookup.target
 
 [Service]
-WorkingDirectory=${data_dir}/vanguards
+WorkingDirectory=${tor_data_dir}/vanguards
 ExecStart=${python_path} src/vanguards.py --config ${torrc_root}/vanguards.conf
 User=${tor_user}
 Group=${tor_user}
@@ -1119,41 +1118,41 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 " | sudo tee /tmp/vanguards@default.service
-      "${privilege_command}" cp /tmp/vanguards@default.service /etc/systemd/system/
+      "${exec_cmd_alt_user}" cp /tmp/vanguards@default.service /etc/systemd/system/
       printf "\n>>>>>>>>>>>>>>>>>>>\n"
       while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/vanguards@default.service"
       #cat /tmp/vanguards@default.service
       printf ">>>>>>>>>>>>>>>>>>>\n\n"
       restarting_tor
-      "${privilege_command}" systemctl daemon-reload
-      "${privilege_command}" systemctl enable vanguards@default.service
-      "${privilege_command}" systemctl restart vanguards@default.service
-      "${privilege_command}" systemctl status vanguards@default.service --no-pager
+      "${exec_cmd_alt_user}" systemctl daemon-reload
+      "${exec_cmd_alt_user}" systemctl enable vanguards@default.service
+      "${exec_cmd_alt_user}" systemctl restart vanguards@default.service
+      "${exec_cmd_alt_user}" systemctl status vanguards@default.service --no-pager
       printf %s"${green}\n# Done\n${nocolor}"
     }
 
     case "${action}" in
       n|on)
-        if [ ! -d "${data_dir}/vanguards" ]; then
+        if [ ! -d "${tor_data_dir}/vanguards" ]; then
           printf "# Installing Vanguards...\n\n"
-          "${privilege_command}" -u "${tor_user}" git clone https://github.com/mikeperry-tor/vanguards.git "${data_dir}/vanguards"
+          "${exec_cmd_alt_user}" -u "${tor_user}" git clone https://github.com/mikeperry-tor/vanguards.git "${tor_data_dir}/vanguards"
         else
           printf "# Upgrading Vanguards...\n\n"
-          "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards pull -p --rebase=false
+          "${exec_cmd_alt_user}" -u "${tor_user}" git -C "${tor_data_dir}"/vanguards pull -p --rebase=false
         fi
-        "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards reset --hard "${vanguards_commit}"
-        "${privilege_command}" -u "${tor_user}" git -C "${data_dir}"/vanguards show
+        "${exec_cmd_alt_user}" -u "${tor_user}" git -C "${tor_data_dir}"/vanguards reset --hard "${vanguards_commit}"
+        "${exec_cmd_alt_user}" -u "${tor_user}" git -C "${tor_data_dir}"/vanguards show
         vanguards_config
       ;;
 
       f|off)
         printf "# Removing Vanguards...\n\n"
-        "${privilege_command}" rm -rfv "${data_dir}"/vanguards
+        "${exec_cmd_alt_user}" rm -rfv "${tor_data_dir}"/vanguards
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
       l|list)
-        "${privilege_command}" tail -f -n 25 /var/log/tor/vanguards.log
+        "${exec_cmd_alt_user}" tail -f -n 25 /var/log/tor/vanguards.log
       ;;
 
       *)

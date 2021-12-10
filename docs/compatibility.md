@@ -4,7 +4,9 @@ The required programs to OnionJuggler listed compatibility for different operati
 
 Information to install `tor` acquired on [community.torproject.org/relay/setup/bridge](https://community.torproject.org/relay/setup/bridge/) and and to install `stem` acquired on [stem.torproject.org](https://stem.torproject.org/download.html).
 
-# packages from source
+The other programs can also be compiled from source and the user should refer to their respective intructions.
+
+# Packages from source
 
 ## tor
 
@@ -74,18 +76,19 @@ rcctl start tor
 ### onionjuggler.conf
 
 TODO: basez does not exist on OpenBSD, base64 is a part but missing base32 package, fix this).
+WebServer is also not working, fix with obsd httpd.
 ```sh
-privilege_command="doas"
+exec_cmd_alt_user="doas"
 tor_user="_tor"
-tor_service="tor"
-service_manager_control="rcctl"
-etc_group_owner="wheel"
+tor_daemon="tor"
+daemon_control="/etc/rc.d" ##
+torrc_group_owner="wheel"
 pkg_mngr_install="pkg_add"
 openssl_command="eopenssl30"
 dialog_box="dialog"
-web_server="nginx" ## [nginx|apache-httpd]
-requirements="tor grep sed openssl base64 git libqrencode tar py-stem ${dialog} ${web_server}"
-data_dir="/var/tor"
+web_server="httpd"
+requirements="tor grep sed tar openssl base64 git py-stem libqrencode ${dialog} ${web_server}"
+tor_data_dir="/var/tor"
 ```
 
 
@@ -138,6 +141,8 @@ pacman -S python-stem
 
 ## Void Linux
 
+### tor
+
 ```sh
 xbps-install -S tor
 ln -s /etc/sv/tor /var/service/.
@@ -180,13 +185,13 @@ echo "tor=YES" >> /etc/rc.conf
 Untested.
 
 ```sh
-privilege_command="doas"
+exec_cmd_alt_user="doas"
 tor_user="_tor"
-tor_service="tor"
-service_manager_control="/etc/rc.d/tor"
-etc_group_owner="wheel"
+tor_daemon="tor"
+daemon_control="/etc/rc.d/tor"
+torrc_group_owner="wheel"
 pkg_mngr_install="pkg_add"
-requirements="tor grep sed openssl base64 git libqrencode tar py37-stem ${dialog} ${web_server}"
+requirements="tor grep sed tar openssl base64 git py37-stem libqrencode ${dialog} ${web_server}"
 ```
 
 ## FreeBSD
@@ -218,16 +223,18 @@ service tor start
 Untested.
 
 ```sh
-privilege_command="doas"
+exec_cmd_alt_user="doas"
 tor_user="_tor"
-tor_service="tor"
-service_manager_control="/etc/rc.d/tor"
-etc_group_owner="wheel"
+tor_daemon="tor"
+daemon_control="/etc/rc.d/tor"
+torrc_group_owner="wheel"
 pkg_mngr_install="pkg install"
-requirements="tor grep sed openssl base64 git libqrencode tar security/py-stem ${dialog} ${web_server}"
+requirements="tor grep sed tar openssl base64 git security/py-stem libqrencode ${dialog} ${web_server}"
 ```
 
 ## DragonflyBSD
+
+### tor
 
 ```sh
 cd /usr
