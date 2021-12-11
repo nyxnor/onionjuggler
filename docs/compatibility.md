@@ -86,7 +86,7 @@ torrc_group_owner="wheel"
 pkg_mngr_install="pkg_add"
 openssl_command="eopenssl30"
 dialog_box="dialog"
-web_server="httpd"
+web_server="nginx"
 requirements="tor grep sed tar openssl base64 git py-stem libqrencode ${dialog} ${web_server}"
 tor_data_dir="/var/tor"
 ```

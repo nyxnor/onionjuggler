@@ -137,7 +137,7 @@ Note that no variable that refers to a folder do NOT end with a trailing `/`. Ke
 
 Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
 
-The `$exec_cmd_alt_user` to run a command as another user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the configuration file and and your user to the privileged group.
+The `$exec_cmd_alt_user` to run a command as another (alternative) user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the configuration file and and your user to the privileged group.
 
 It is recommended to have `tor` already installed, because as it is a service, it has to be enabled to start on boot and the service managers may vary depending on your operating system.
 
@@ -157,7 +157,7 @@ printf "exec_cmd_alt_user=\"sudo\"\n" | tee -a "${ONIONJUGGLER_CONF:-/etc/onionj
 
 * or edit with sed:
 ```sh
-sed -i'' "s|exec_cmd_alt_user=.*|tor_usprivilege_commander=\"doas\"|" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
+sed -i'' "s|^exec_cmd_alt_user=.*|exec_cmd_alt_user=\"doas\"|" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
 ```
 
 ### Setup the enviroment

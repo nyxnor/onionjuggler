@@ -67,7 +67,7 @@ usage(){
   # fi
 
   printf "%s${nocolor}Juggle with an Onion Service
-\nUsage: onionjuggler-cli command [--option<=ARGUMENT>]
+\nUsage: onionjuggler-cli command [--option <ARGUMENT>]
 \nComplete options:
   on [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT[,VIRTPORT2]>]
                                                              enable a service listening with tcp sockets
@@ -243,7 +243,7 @@ set_owner_permission(){
 restarting_tor(){
   set_owner_permission
   signal="reload"
-  signal="${1:+"restart"}"
+  [ -n "${1}" ] && signal="restart"
   verb_current_signal="${signal}ing"
   verb_past_signal="${signal}ed"
   printf %s"\n# ${verb_current_signal} tor, please be patient.\n"
@@ -542,8 +542,8 @@ case "${command}" in
               test_service_exists "${service}"
               ## Generate pem and derive pub and priv keys
               "${openssl_command}" genpkey -algorithm x25519 -out /tmp/k1.prv.pem
-              grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
-              "${openssl_command}" pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
+              grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail -c 32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
+              "${openssl_command}" pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail -c 32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
               ## save variables
               client_pub_key=$(cat /tmp/k1.pub.key)
               client_priv_key=$(cat /tmp/k1.prv.key)
@@ -681,9 +681,9 @@ case "${command}" in
             "${exec_cmd_alt_user}" -u "${tor_user}" mkdir -p "${tor_data_dir_auth}"
             if [ -z "${client_priv_key}" ]; then
               ## Generate pem and derive pub and priv keys
-              openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
-              grep -v "PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
-              openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v "PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
+              "${openssl_command}" genpkey -algorithm x25519 -out /tmp/k1.prv.pem
+              grep -v "PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail -c 32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
+              "${openssl_command}" pkey -in /tmp/k1.prv.pem -pubout | grep -v "PUBLIC KEY" | base64pem -d | tail -c 32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
               ## save variables
               client_pub_key=$(cat /tmp/k1.pub.key)
               client_priv_key=$(cat /tmp/k1.prv.key)
@@ -810,7 +810,7 @@ case "${command}" in
       test_service_exists "${service}"
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
       create_client_list "${service}"
-      if [ "${action}" != "-q" ] && [ "${action}" != "quiet" ]; then
+      if [ "${action}" != "q" ] && [ "${action}" != "quiet" ]; then
         command -v qrencode >/dev/null && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"
       fi
       printf %s"Address  = ${onion_hostname}\n"

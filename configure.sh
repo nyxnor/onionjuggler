@@ -17,6 +17,7 @@ test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CO
 : "${tor_data_dir:="/var/lib/tor"}"
 : "${tor_data_dir_services:="${tor_data_dir}/services"}"
 : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"
+: "${openssl_command:="openssl"}"
 
 ## colors
 nocolor="\033[0m"
@@ -96,7 +97,12 @@ install_package(){
         fi
       ;;
       nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${exec_cmd_alt_user} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
-      eopenssl30|eopenssl11|openssl) ! command -v "${package}" >/dev/null && package="openssl" && install_pkg=1;;
+      openssl)
+        case "${kernel}" in
+          OpenBSD) ! command -v "${openssl_command}" >/dev/null && package="openssl" && install_pkg=1;;
+          *) ! command -v openssl >/dev/null && package="openssl" && install_pkg=1;;
+        esac
+      ;;
       libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
       *) ! command -v "${package}" >/dev/null && install_pkg=1;;
     esac
@@ -158,6 +164,7 @@ done
 
 ###################
 ###### MAIN #######
+kernel="$(uname -s)"
 
 case "${action}" in
 
@@ -166,7 +173,7 @@ case "${action}" in
     printf %s"${magenta}# Checking requirements\n${nocolor}"
     # shellcheck disable=SC2086
     install_package ${requirements}
-    printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
+    #printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
     ## see https://github.com/nyxnor/onionjuggler/issues/15 about using complete path to binary
     ## see https://github.com/nyxnor/onionjuggler/issues/29 about usermod not appending with -a
     #"${exec_cmd_alt_user}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
