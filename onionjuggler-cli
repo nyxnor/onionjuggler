@@ -208,8 +208,7 @@ while true; do
     *) opt="${1}"; arg="${2}"; shift_n=1;;
   esac
   case "${opt}" in
-    on|off|list|renew|web|location|backup|restore|vanguards|restore-torrc) command="${opt}";;
-    auth-server|auth-client) command="${opt%-*}"; host="${opt#*-}";;
+    on|off|list|renew|auth-server|auth-client|web|location|backup|vanguards|restore-torrc) command="${opt}";;
     --on|--off|--list|-n|-f|-l) assign_value status "${opt}"; shift_n=1;;
     -P|--purge|--nginx|--apache2|--html|-q|--quiet|-C|--create|-I|--integrate) assign_value action "${opt}"; shift_n=1;;
     -s|--service|-s=*|--service=*) get_arg service "${opt}" "${arg}";;
@@ -512,8 +511,8 @@ case "${command}" in
 
 
   ## manage client authorization server side (HiddenServiceDir/authorized_clients/) or client side (ClientOnionAuthDir)
-  auth)
-    : "${host:?$(error_msg "host is missing")}"
+  auth-server|auth-client)
+    host="${command#*-}"
     : "${status:?$(error_msg "status is missing")}"
     case "${host}" in
 
