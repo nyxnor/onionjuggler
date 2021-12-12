@@ -5,6 +5,9 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
+###################
+#### VARIABLES ####
+
 ## check if user configuration is readable and if yes, source it
 test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CONF}"
 ## if any of the configurations are empty, use default ones
@@ -14,20 +17,20 @@ test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CO
 : "${tor_user:="debian-tor"}"
 : "${tor_daemon:="tor@default.service"}"
 : "${daemon_control:="systemctl"}"
-: "${torrc_group_owner:="root"}"
+: "${torrc_group_name:="root"}"
 : "${openssl_command:="openssl"}"
 
 ## tor defaults
 : "${tor_data_dir:="/var/lib/tor"}"
 : "${tor_data_dir_services:="${tor_data_dir}/services"}"
 : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"
-: "${torrc_root:="/etc/tor"}"
-: "${torrc:="${torrc_root}/torrc"}"
+: "${torrc_dir:="/etc/tor"}"
+: "${torrc:="${torrc_dir}/torrc"}"
 : "${tor_control_port:="9051"}" ## only the port, not the host
 
 ## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
-: "${tor_browser_root:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"
-: "${tor_browser_data_dir:="${tor_browser_root}/Browser/TorBrowser/Data/Tor"}"
+: "${tor_browser_dir:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"
+: "${tor_browser_data_dir:="${tor_browser_dir}/Browser/TorBrowser/Data/Tor"}"
 : "${tor_browser_torrc:="${tor_browser_data_dir}/torrc"}"
 : "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"
 
@@ -157,8 +160,8 @@ If your services are unreacheable, restart tor.
   exit 1
 }
 
-###################
-#### VARIABLES ####
+########################
+#### OPTION PARSING ####
 
 ## display error message with instructions to use the script correctly.
 error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
@@ -232,8 +235,8 @@ set_owner_permission(){
   "${exec_cmd_alt_user}" chown -R "${tor_user}:${tor_user}" "${tor_data_dir}"
   "${exec_cmd_alt_user}" chmod 700 "${tor_data_dir}"
 
-  "${exec_cmd_alt_user}" chown -R root:"${torrc_group_owner}" "${torrc_root}"
-  "${exec_cmd_alt_user}" chmod 755 "${torrc_root}"
+  "${exec_cmd_alt_user}" chown -R root:"${torrc_group_name}" "${torrc_dir}"
+  "${exec_cmd_alt_user}" chmod 755 "${torrc_dir}"
   "${exec_cmd_alt_user}" chmod 644 "${torrc}"
 }
 
@@ -247,8 +250,8 @@ restarting_tor(){
   verb_current_signal="${signal}ing"
   verb_past_signal="${signal}ed"
   printf %s"\n# ${verb_current_signal} tor, please be patient.\n"
-  printf "# Getting stuck after several minutes? Press Ctrl-C\n"
-  printf "# and to restore the lastest torrc backup run:\n"
+  printf "# Stuck after several minutes?\n"
+  printf "# Press Ctrl-C and restore the lastest torrc backup with:\n"
   printf "$ onionjuggler-cli restore-torrc\n"
   case "${daemon_control}" in
     sysmtectl|sv|rcctl) "${exec_cmd_alt_user}" "${daemon_control}" "${signal}" "${tor_daemon}";;
@@ -362,20 +365,10 @@ service_block(){
 case "${command}" in
 
   ## disabled the service wrongly and don't remember the ports? no worries, will restore the latest torrc.bak
-  ## beaware this only works for the torrc, if you deleted your data directory with command "off" and "purge" option, the keys will not be restored, insteadm new ones will be created
+  ## beaware this only works for the torrc, if you deleted your data directory with command "off" combined with "purge" option, the keys will not be restored, instead new ones will be created
   restore-torrc|RESTORE-TORRC)
-    # create_service_list
-    # for service in $(printf %s"${service_name_list}"); do
-    #   block="$(service_block print "${service}" "${torrc}.bak")"
-    #   printf '\n%s\n\n' "${block}" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null
-    #   #printf '\n%s\n\n' "$("${exec_cmd_alt_user}" sed -n "/^HiddenServiceDir ${tor_data_dir_services}\/${service}$/p" "${torrc}".bak)" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null
-    # done
-    ## TODO -> this prints all the HiddenService lines and let them together, it 'works' but I like blocks for organization
-    ## try to print blocks separated by empty lines
-    printf '\n%s\n\n' "$("${exec_cmd_alt_user}" sed -n "/^HiddenService/p" "${torrc}".bak)" | "${exec_cmd_alt_user}" tee "${torrc}".tmp >/dev/null
-    "${exec_cmd_alt_user}" sed "/^HiddenService/d" "${torrc}" | "${exec_cmd_alt_user}" tee "${torrc}".mod >/dev/null
-    "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' "${torrc}".mod "${torrc}".tmp | "${exec_cmd_alt_user}" tee "${torrc}" >/dev/null
-    printf "# Restored torrc with its latest backup\n"
+    printf "# Restoring torrc with its latest backup\n"
+    sudo cp -v "${torrc}".bak "${torrc}"
     restarting_tor
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
@@ -1086,9 +1079,9 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     vanguards_config(){
       "${exec_cmd_alt_user}" cp "${torrc}" "${torrc}".bak
       ## Keep config with the torrc and torsocks.conf
-      "${exec_cmd_alt_user}" cp -v "${tor_data_dir}"/vanguards/vanguards-example.conf "${torrc_root}"/vanguards.conf
-      "${exec_cmd_alt_user}" sed -i'' "s|tor_control_port =.*|tor_control_port = ${tor_control_port}|g" "${torrc_root}"/vanguards.conf
-      "${exec_cmd_alt_user}" sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${torrc_root}"/vanguards.conf
+      "${exec_cmd_alt_user}" cp -v "${tor_data_dir}"/vanguards/vanguards-example.conf "${torrc_dir}"/vanguards.conf
+      "${exec_cmd_alt_user}" sed -i'' "s|tor_control_port =.*|tor_control_port = ${tor_control_port}|g" "${torrc_dir}"/vanguards.conf
+      "${exec_cmd_alt_user}" sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${torrc_dir}"/vanguards.conf
       ## Control and Authentication methods are needed. Use the easiest to configure if the manual ones are not present, else do nothing.
       ## Control methods are Port (default: 9051) and Socket (default: /run/tor/control). Prefer port because socket path may differ on different systems https://github.com/mikeperry-tor/vanguards/pull/54#issuecomment-812185302.
       if ! grep -q "ControlPort ${tor_control_port}" "${torrc}" && ! grep -q "ControlSocket" "${torrc}"; then
@@ -1109,7 +1102,7 @@ After=network.target nss-lookup.target
 
 [Service]
 WorkingDirectory=${tor_data_dir}/vanguards
-ExecStart=${python_path} src/vanguards.py --config ${torrc_root}/vanguards.conf
+ExecStart=${python_path} src/vanguards.py --config ${torrc_dir}/vanguards.conf
 User=${tor_user}
 Group=${tor_user}
 Type=simple

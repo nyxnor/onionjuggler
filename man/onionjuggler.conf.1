@@ -76,12 +76,12 @@ The tor user that runs the tor process.
 Common usernames are \f[I]debian-tor\f[R], \f[I]tor\f[R], *_tor*
 (Default: debian-tor).
 .TP
-\f[B]torrc_group_owner\f[R]
+\f[B]torrc_group_name\f[R]
 The /etc directory group owner.
 Normally \f[I]root\f[R] or \f[I]wheel\f[R].
 (Default: root)
 .TP
-\f[B]torrc_root\f[R]
+\f[B]torrc_dir\f[R]
 Root folder of torrc configuration.
 (Default: /etc/tor).
 .TP
@@ -107,7 +107,7 @@ Specify the ControlPort to use with Vanguards.
 (Default: 9051).
 .SS TOR BROWSER
 .TP
-\f[B]tor_browser_root\f[R]
+\f[B]tor_browser_dir\f[R]
 Specify the Tor Browser root path.
 (Default: this is where torbrowser-launcher saves it
 ${HOME}/.local/share/torbrowser/tbb/$(uname

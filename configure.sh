@@ -110,7 +110,7 @@ install_package(){
     if [ "${install_pkg}" = 1 ]; then
       printf %s"${nocolor}# Installing ${package}\n"
       # shellcheck disable=SC2086
-      ${exec_cmd_alt_user} ${pkg_mngr_install} "${package}"
+      "${exec_cmd_alt_user}" ${pkg_mngr_install} "${package}"
     fi
   done
 }

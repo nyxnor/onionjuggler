@@ -56,11 +56,11 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 : The tor user that runs the tor process. Common usernames are *debian-tor*, *tor*, *_tor* (Default: debian-tor).
 
-**torrc_group_owner**
+**torrc_group_name**
 
 : The /etc directory group owner. Normally *root* or *wheel*. (Default: root)
 
-**torrc_root**
+**torrc_dir**
 
 : Root folder of torrc configuration. (Default: /etc/tor).
 
@@ -87,7 +87,7 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 ## TOR BROWSER
 
-**tor_browser_root**
+**tor_browser_dir**
 
 : Specify the Tor Browser root path. (Default: this is where torbrowser-launcher saves it \$\{HOME\}/.local/share/torbrowser/tbb/\$(uname -m)/tor-tor_browser_\$\{LANG%.*\}).
 
