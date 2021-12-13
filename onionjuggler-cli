@@ -175,10 +175,11 @@ done
 
 ###################
 #### VARIABLES ####
-
+set -x
 [ -r "${onionjuggler_conf:="/etc/onionjuggler.conf"}" ] && . "${onionjuggler_conf}"
 ## if any of the configurations are empty, use default ones
-
+echo "onionjuggler_conf=$onionjuggler_conf"
+exit 1
 ## system
 : "${exec_cmd_alt_user:="sudo"}"
 : "${tor_user:="debian-tor"}"
@@ -254,6 +255,7 @@ restarting_tor(){
     service) "${exec_cmd_alt_user}" "${daemon_control}" "${tor_daemon}" "${signal}";;
     /etc/rc.d) "${exec_cmd_alt_user}" "${daemon_control}"/"${tor_daemon}" "${signal}";;
   esac
+  [ "${?}" -eq 1 ] && error_msg "Failed to ${signal} tor"
   printf %s"${green}# ${verb_past_signal} tor succesfully!\n${nocolor}"
 }
 
@@ -361,6 +363,7 @@ tac(){
   "${exec_cmd_alt_user}" sed '1!G;h;$!d' "${1}"
 }
 
+## dont cat two files, it breaks if there is a pipe or any other thing that is not a file
 cat_squeeze_blank(){
   "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' "${1}"
 }
