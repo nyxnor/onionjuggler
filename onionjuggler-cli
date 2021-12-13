@@ -1027,7 +1027,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         "${exec_cmd_alt_user}" chown -R "${USER}:${USER}" "${tor_backup_dir}"
         "${exec_cmd_alt_user}" cp -rf "${tor_backup_dir}"/integrate"${tor_data_dir_services}"/* "${tor_data_dir_services}"/
         "${exec_cmd_alt_user}" cp -rf "${tor_backup_dir}"/integrate"${tor_data_dir_auth}"/* "${tor_data_dir_auth}"/
-        client_auth_config="${exec_cmd_alt_user}" grep "ClientOnionAuthDir" "${tor_backup_dir}"/integrate"${tor_conf}"
+        client_auth_config="$("${exec_cmd_alt_user}" grep "ClientOnionAuthDir" "${tor_backup_dir}"/integrate"${tor_conf}")"
         if [ -n "${client_auth_config}" ]; then
           "${exec_cmd_alt_user}" sed -i'' "/ClientOnionAuthDir .*/d" "${tor_conf}"
           printf '\n%s\n\n' "${client_auth_config}" "${tor_conf}"

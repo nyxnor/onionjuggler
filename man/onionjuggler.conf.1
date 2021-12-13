@@ -11,9 +11,7 @@ onionjuggler.conf - Configuration file for OnionJuggler
 combination of POSIX compliant scripts helps the interaction with onion
 service configuration and files to speed up usage and avoid
 misconfiguration.
-The system variables are defined inside the file of the environment
-variable \f[I]ONIONJUGGLER_CONF\f[R], but if the variable is empty, will
-read /etc/onionjuggler.conf.
+The system variables are defined inside /etc/onionjuggler.conf.
 The configuration file is then sourced be used by the program.
 It defines where the hidden services are located, the owner of the
 DataDir folder, the ControlPort to be used.
@@ -68,8 +66,8 @@ init), \f[I]rcctl\f[R] or \f[I]/etc/rc.d\f[R] (OpenRC), \f[I]sv\f[R]
 .TP
 \f[B]tor_daemon\f[R]
 The tor service name.
-Common names are \f[I]tor\[at]default.service\f[R] and \f[I]tor\f[R].
-(Default: tor\[at]default.service)
+Common names are \f[I]tor\[at]default\f[R] and \f[I]tor\f[R].
+(Default: tor\[at]default)
 .TP
 \f[B]tor_user\f[R]
 The tor user that runs the tor process.
@@ -85,7 +83,7 @@ Normally \f[I]root\f[R] or \f[I]wheel\f[R].
 Base folder of torrc configuration.
 (Default: /etc/tor).
 .TP
-\f[B]torrc\f[R]
+\f[B]tor_conf\f[R]
 The torrc, tor run commands file.
 (Default: /etc/tor/torrc).
 .TP
@@ -105,6 +103,10 @@ Specify the ClientOnionAuthDir.
 \f[B]tor_control_port\f[R]
 Specify the ControlPort to use with Vanguards.
 (Default: 9051).
+.TP
+\f[B]tor_backup_dir\f[R]
+Specify the local directory to save your backups.
+(Default: $HOME/.onionjuggler/backup)
 .SS TOR BROWSER
 .TP
 \f[B]tor_browser_dir\f[R]
@@ -133,45 +135,17 @@ Specify the directory to check for website folders.
 \f[B]vanguards_commit\f[R]
 Specify the wanted commit from Vanguards repository.
 (Default: 10942de93f6578f8303f60014f34de2fca345545).
-.TP
-\f[B]DIALOGRC\f[R]
-Specify the dialog configuration file.
-(Default: ${HOME}/.dialogrc-onionjuggler)
-.SS BACKUP VARIABLES
-.TP
-\f[B]scp_target_user\f[R]
-Specify the remote user to scp to your backup.
-.TP
-\f[B]scp_target_ip\f[R]
-Specify the remote ip address to scp you backup.
-.TP
-\f[B]scp_target_path\f[R]
-Specify the remote path to save your backup.
-.TP
-\f[B]scp_target_full\f[R]
-Specify the complete scp remove configuration as in user\[at]ip:/path.
-.TP
-\f[B]tor_backup_dir\f[R]
-Specify the local directory to save your backups.
-.TP
-\f[B]local_ip\f[R]
-Specify the local ip to download your backups from.
 .SH FILES
 .TP
 \f[B]/etc/onionjuggler.conf\f[R]
 Default system configuration file.
-.SH ENVIRONMENT
-.TP
-\f[B]ONIONJUGGLER_CONF\f[R]
-Alternative system configuration file.
-If variables is empty, will use /etc/onionjuggler.conf.
 .SH EXAMPLES
 .IP \[bu] 2
 \f[B]exec_cmd_alt_user\f[R]=doas
 .IP \[bu] 2
 \f[B]tor_user\f[R]=tor
 .IP \[bu] 2
-\f[B]torrc\f[R]=/usr/local/etc/tor/torrc
+\f[B]tor_conf\f[R]=/usr/local/etc/tor/torrc
 .IP \[bu] 2
 \f[B]tor_data_dir\f[R]=/usr/local/var/lib/tor
 .IP \[bu] 2

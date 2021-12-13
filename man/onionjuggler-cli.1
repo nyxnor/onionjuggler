@@ -128,11 +128,7 @@ compliant shell
 \f[B]onionjuggler-cli\f[R] is a part of OnionJuggler, a combination of
 POSIX compliant scripts helps the interaction with onion service
 configuration and files to speed up usage and avoid misconfiguration.
-The user variables must be inside on $ONIONJUGGLER_CONF, which can be
-defined as path, but if empty, will read /etc/onionjuggler.conf, where
-it sources the global variables to be used in the other scripts, such as
-where the hidden services are located, the owner of the DataDir folder,
-the ControlPort to be used.
+The onionjuggler variables must be inside /etc/onionjuggler.conf.
 .PP
 The script tries its best to avoid inserting incorrect lines to torrc,
 that would make tor fail.
@@ -560,14 +556,6 @@ Command Line Interface to interact directly with onion services.
 \f[B]onionjuggler-tui\f[R]
 Terminal User Interface that wraps the CLI in a dialog box.
 .SH ENVIRONMENT
-.TP
-\f[B]ONIONJUGGLER_CONF\f[R]
-OnionJuggler system configuration file.
-If empty, will use /etc/onionjuggler.conf.
-.TP
-\f[B]DIALOGRC\f[R]
-Dialog box run commands file, if empty, source from
-$HOME/.dialogrc-onionjuggler
 .TP
 \f[B]EDITOR\f[R]
 Use the default editor when editing files on the TUI, else will fallback
