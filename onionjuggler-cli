@@ -175,11 +175,10 @@ done
 
 ###################
 #### VARIABLES ####
-set -x
+
 [ -r "${onionjuggler_conf:="/etc/onionjuggler.conf"}" ] && . "${onionjuggler_conf}"
 ## if any of the configurations are empty, use default ones
-echo "onionjuggler_conf=$onionjuggler_conf"
-exit 1
+
 ## system
 : "${exec_cmd_alt_user:="sudo"}"
 : "${tor_user:="debian-tor"}"
