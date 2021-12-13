@@ -76,8 +76,8 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * **Client** - Generate key pair or add public part, list your `<ClientOnionAuthDir>/<SOME_ONION>.auth_private`.
 * [**Onion-Location**](https://community.torproject.org/onion-services/advanced/onion-location/) - For public onion services You can redirect your plainnet users to your onion service with this guide for nginx, apache2 and html header attributes.
 * **Backup** - Better be safe.
-  * **Create** -  Backup of your `torrc` lines containing hidden service configuration, all of your directories of `HiddenServiceDir` and `ClientOnionAuthDir`. Guide to export the backup to a remote host with scp.
-  * **Integrate** - Integrate hidden serivces lines configuration from `torrc` and the directories `HiddenServiceDir` and `ClientOnionAuthDir` to your current system. This option should be used after creating a backup and importing to the current host. Guide to import backup to the current host with scp.
+  * **Create** -  Backup of your `torrc` lines containing hidden service configuration, all of your directories of `HiddenServiceDir` and `ClientOnionAuthDir`.
+  * **Integrate** - Integrate hidden serivces lines configuration from `torrc` and the directories `HiddenServiceDir` and `ClientOnionAuthDir` to your current system. This option should be used after creating a backup and importing to the current host.
 * [**OpSec**](https://community.torproject.org/onion-services/advanced/opsec/) - Operation Security
   * [**Vanguards**](https://github.com/mikeperry-tor/vanguards) - This addon protects against guard discovery and related traffic analysis attacks. A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
   * [**Unix socket**](https://riseup.net/en/security/network-security/tor/onionservices-best-practices) - Support for enabling an onion service over unix socket to avoid localhost bypasses.
@@ -131,11 +131,11 @@ cd onionjuggler
 
 ### Set custom vars
 
-Edit the required variables to fit your system on the configuration file, which can be assigned to the environment variable `$ONIONJUGGLER_CONF`, but if it the variable is unset or empty, will search for the default path in `/etc/onionjuggler.conf`.
-
-Note that no variable that refers to a folder do NOT end with a trailing `/`. Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
+Edit the required variables to fit your system on the configuration file on `/etc/onionjuggler.conf`.
 
 Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
+
+Note that no variable that refers to a folder do NOT end with a trailing `/`. Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
 
 The `$exec_cmd_alt_user` to run a command as another (alternative) user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the configuration file and and your user to the privileged group.
 
@@ -147,27 +147,25 @@ To assign values to the variables, you can either:
 
 * Open the mentioned configuration file:
 ```sh
-"${EDITOR:-vi}" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
+"${EDITOR:-vi}" /etc/onionjuggler.conf
 ```
 
 * or insert configuration to the end of the file with tee:
 ```sh
-printf "exec_cmd_alt_user=\"sudo\"\n" | tee -a "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
+printf "exec_cmd_alt_user=\"sudo\"\n" | tee -a /etc/onionjuggler.conf
 ```
 
 * or edit with sed:
 ```sh
-sed -i'' "s|^exec_cmd_alt_user=.*|exec_cmd_alt_user=\"doas\"|" "${ONIONJUGGLER_CONF:-/etc/onionjuggler.conf}"
+sed -i'' "s|^exec_cmd_alt_user=.*|exec_cmd_alt_user=\"doas\"|" /etc/onionjuggler.conf
 ```
 
 ### Setup the enviroment
 
-Run from inside the cloned repository to create the tor directories, setup ownership, create manual pages:
+Run from inside the cloned repository to create the tor directories, create manual pages and copy scripts to path:
 ```sh
 ./configure.sh --setup
 ```
-
-If the /etc/onionjuggler.conf does not exist, it will be created with default values and configuration description.
 
 ### Usage
 

@@ -36,7 +36,7 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 
 # DESCRIPTION
 
-**onionjuggler-cli** is a part of OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The user variables must be inside on $ONIONJUGGLER_CONF, which can be defined as path, but if empty, will read /etc/onionjuggler.conf, where it sources the global variables to be used in the other scripts, such as where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used.
+**onionjuggler-cli** is a part of OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The onionjuggler variables must be inside /etc/onionjuggler.conf.
 
 The script tries its best to avoid inserting incorrect lines to torrc, that would make tor fail. Because of this, any incorrect command flagged show the error mesage to understand what is the cause of the error and display the commands help option, finally exit the script without modifying the torrc. At least two arguments are required for every command, some could have more than one required argument.
 
@@ -310,14 +310,6 @@ onionjuggler-cli help
 
 
 # ENVIRONMENT
-
-**ONIONJUGGLER_CONF**
-
-: OnionJuggler system configuration file. If empty, will use /etc/onionjuggler.conf.
-
-**DIALOGRC**
-
-: Dialog box run commands file, if empty, source from $HOME/.dialogrc-onionjuggler
 
 **EDITOR**
 

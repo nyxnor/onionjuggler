@@ -9,7 +9,7 @@ onionjuggler.conf - Configuration file for OnionJuggler
 
 # DESCRIPTION
 
-**onionjuggler.conf** is the configuration for for OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The system variables are defined inside the file of the environment variable *ONIONJUGGLER_CONF*, but if the variable is empty, will read /etc/onionjuggler.conf. The configuration file is then sourced be used by the program. It defines where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used.
+**onionjuggler.conf** is the configuration for for OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The system variables are defined inside /etc/onionjuggler.conf. The configuration file is then sourced be used by the program. It defines where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used.
 
 The configuration file is parsed by the shell and interpreted as variables. When assigning a value to a variable, use double quotes to avoid word splitting: **variable**=*"value"*.
 
@@ -25,7 +25,7 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 : Install the required packages via package manager. (Default: apt install -y).
 
-**openssl_command**
+**openssl_cmd**
 
 : The OpenSSL command to create the certificate and private keys for Client Authorization using the x25519 algorithm. It must be the orignal OpenSSL v1.1 or later, not LibreSSL, as the latter does not support the aforementioned algorithm. (Default: openssl).
 
@@ -50,21 +50,21 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 **tor_daemon**
 
-: The tor service name. Common names are *tor@default.service* and *tor*. (Default: tor@default.service)
+: The tor service name. Common names are *tor@default* and *tor*. (Default: tor@default)
 
 **tor_user**
 
 : The tor user that runs the tor process. Common usernames are *debian-tor*, *tor*, *_tor* (Default: debian-tor).
 
-**torrc_group_name**
+**tor_conf_group**
 
 : The /etc directory group owner. Normally *root* or *wheel*. (Default: root)
 
-**torrc_dir**
+**tor_conf_dir**
 
-: Root folder of torrc configuration. (Default: /etc/tor).
+: Base folder of torrc configuration. (Default: /etc/tor).
 
-**torrc**
+**tor_conf**
 
 : The torrc, tor run commands file. (Default: /etc/tor/torrc).
 
@@ -74,7 +74,7 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 **tor_data_dir_services**
 
-: Specify the HiddenServiceDir root directory, onion sevices data will be created inside this directory. (Default: /var/lib/tor/services).
+: Specify the HiddenServiceDir base directory, onion sevices data will be created inside this directory. (Default: /var/lib/tor/services).
 
 **tor_data_dir_auth**
 
@@ -84,6 +84,9 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 : Specify the ControlPort to use with Vanguards. (Default: 9051).
 
+**tor_backup_dir**
+
+: Specify the local directory to save your backups. (Default: $HOME/.onionjuggler/backup)
 
 ## TOR BROWSER
 
@@ -95,7 +98,7 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 : Specify the Tor Browser DataDirectory. (Default: Browser/TorBrowser/Data/Tor).
 
-**tor_browser_torrc**
+**tor_browser_conf**
 
 : Specify the Tor Browser torrc path. (Default: Browser/TorBrowser/Data/Tor/torrc).
 
@@ -114,51 +117,11 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 : Specify the wanted commit from Vanguards repository. (Default: 10942de93f6578f8303f60014f34de2fca345545).
 
-**DIALOGRC**
-
-: Specify the dialog configuration file. (Default: \$\{HOME\}/.dialogrc-onionjuggler)
-
-
-## BACKUP VARIABLES
-
-**scp_target_user**
-
-: Specify the remote user to scp to your backup.
-
-**scp_target_ip**
-
-: Specify the remote ip address to scp you backup.
-
-**scp_target_path**
-
-: Specify the remote path to save your backup.
-
-**scp_target_full**
-
-: Specify the complete scp remove configuration as in user@ip:/path.
-
-**hs_bk_dir**
-
-: Specify the local directory to save your backups.
-
-**local_ip**
-
-: Specify the local ip to download your backups from.
-
-
 # FILES
 
 **/etc/onionjuggler.conf**
 
 : Default system configuration file.
-
-
-# ENVIRONMENT
-
-**ONIONJUGGLER_CONF**
-
-: Alternative system configuration file. If variables is empty, will use /etc/onionjuggler.conf.
-
 
 # EXAMPLES
 
@@ -166,7 +129,7 @@ The configuration file is parsed by the shell and interpreted as variables. When
 
 * **tor_user**=tor
 
-* **torrc**=/usr/local/etc/tor/torrc
+* **tor_conf**=/usr/local/etc/tor/torrc
 
 * **tor_data_dir**=/usr/local/var/lib/tor
 

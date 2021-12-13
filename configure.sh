@@ -6,8 +6,7 @@
 ###################
 #### VARIABLES ####
 
-## check if user configuration is readable and if yes, source it
-test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CONF}"
+[ -r "${onionjuggler_conf:="/etc/onionjuggler.conf"}" ] && . "${onionjuggler_conf}"
 ## if any of the configurations are empty, use default ones
 
 : "${exec_cmd_alt_user:="sudo"}"
@@ -17,7 +16,7 @@ test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CO
 : "${tor_data_dir:="/var/lib/tor"}"
 : "${tor_data_dir_services:="${tor_data_dir}/services"}"
 : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"
-: "${openssl_command:="openssl"}"
+: "${openssl_cmd:="openssl"}"
 
 ## colors
 nocolor="\033[0m"
@@ -83,26 +82,20 @@ install_package(){
     case "${package}" in
       python-stem|python3-stem|security/py-stem|py-stem|py37-stem|stem)
         ## https://stem.torproject.org/download.html
-        if ! command -v python3 >/dev/null; then
-          if ! command -v python >/dev/null; then
-            printf %s"${red}Python is not installed and it is needed for Vanguards, skipping...\n${nocolor}"
-          else
-            python_path="python"
-          fi
-        else
-          python_path="python3"
-        fi
-        if [ -n "${python_path}" ]; then
-          ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg=1
-        fi
+        while true; do
+          command -v python3 >/dev/null && python_path="$(command -v python3)" && break
+          command -v python >/dev/null && python_path="$(command -v python)" && break
+          printf %s"${red}Python is not installed and it is needed for Vanguards, skipping...\n${nocolor}" && break
+        done
+        [ -n "${python_path}" ] && ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg=1
       ;;
-      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${exec_cmd_alt_user} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
       openssl)
         case "${kernel}" in
-          OpenBSD) ! command -v "${openssl_command}" >/dev/null && package="openssl" && install_pkg=1;;
+          OpenBSD) ! command -v "${openssl_cmd}" >/dev/null && package="openssl" && install_pkg=1;;
           *) ! command -v openssl >/dev/null && package="openssl" && install_pkg=1;;
         esac
       ;;
+      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${exec_cmd_alt_user} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
       libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
       *) ! command -v "${package}" >/dev/null && install_pkg=1;;
     esac
@@ -117,17 +110,18 @@ install_package(){
 
 
 custom_shellcheck(){
-  printf %s"${yellow}# Checking shell syntax\n${nocolor}"
+  printf %s"${yellow}# Checking shell syntax"
   ## Customize severity with -S [error|warning|info|style]
   if ! shellcheck configure.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui; then
     printf %s"${red}# Please fix the shellcheck warnings above before pushing!\n${nocolor}"
     exit 1
+  else
+    printf " - 100%%\n${nocolor}"
   fi
 }
 
-if test ! -f onionjuggler-cli || test ! -f onionjuggler-tui || test ! -f etc/onionjuggler.conf || \
-test ! -f docs/onionjuggler-cli.1.md || test ! -f docs/onionjuggler.conf.1.md || \
-test ! -f man/onionjuggler-cli.1 || test ! -f man/onionjuggler.conf.1; then
+if [ ! -f onionjuggler-cli ]||[ ! -f onionjuggler-tui ]||[ ! -f etc/onionjuggler.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
+  ||[ ! -f docs/onionjuggler.conf.1.md ]||[ ! -f man/onionjuggler-cli.1 ]||[ ! -f man/onionjuggler.conf.1 ]; then
   printf %s"${red}ERROR: OnionJuggler files not found\n"
   printf %s"${yellow}INFO: Run this script from inside the onionjuggler repository!\n"
   printf %s"${nocolor}See usage:\n"
@@ -183,7 +177,7 @@ case "${action}" in
     "${exec_cmd_alt_user}" chown -R "${tor_user}":"${tor_user}" "${tor_data_dir}"
     printf %s"${green}# Copying files to the system\n${nocolor}"
     "${exec_cmd_alt_user}" cp -v onionjuggler-cli onionjuggler-tui "${bin_dir}"
-    [ ! -f "${ONIONJUGGLER_CONF}" ] && "${exec_cmd_alt_user}" cp -v etc/onionjuggler.conf "${conf_dir}"
+    [ ! -f "${conf_dir}" ] && "${exec_cmd_alt_user}" cp -v etc/onionjuggler.conf "${conf_dir}"
     "${exec_cmd_alt_user}" cp -v man/onionjuggler-cli.1 man/onionjuggler.conf.1 "${man_dir}"
     cp -v .dialogrc-onionjuggler "${HOME}/.dialogrc-onionjuggler"
     ## finish

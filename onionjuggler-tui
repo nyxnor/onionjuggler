@@ -13,8 +13,11 @@
 ###################
 #### VARIABLES ####
 
-## check if user configuration is readable and if yes, source it
-test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CONF}"
+## cli has to see the config argument, so export it
+case "${1}" in
+  -C|--config|-C=*|--config=*) onionjuggler_conf="${1#*=}"; export onionjuggler_conf;;
+esac
+[ -r "${onionjuggler_conf:="/etc/onionjuggler.conf"}" ] && . "${onionjuggler_conf}"
 ## if any of the configurations are empty, use default ones
 
 ## system
@@ -30,7 +33,6 @@ test -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" && . "${ONIONJUGGLER_CO
 
 ## general
 : "${website_dir:="/var/www"}"
-export DIALOGRC="${HOME}/.dialogrc-onionjuggler"
 
 ## colors
 nocolor="\033[0m"
@@ -56,7 +58,7 @@ i=0
 ## display error message with instructions to use the script correctly.
 error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
 
-if ! command -v onionjuggler-cli >/dev/null && test ! -f onionjuggler-cli; then
+if ! command -v onionjuggler-cli >/dev/null && [ ! -f onionjuggler-cli ]; then
   error_msg "onionjuggler-cli not found on PATH!"
 fi
 
@@ -69,6 +71,7 @@ case "${dialog_box}" in
     ok_flag="--ok-label"
     cancel_flag="--cancel-label"
     no_cancel_flag="--no-cancel"
+    export DIALOGRC="${HOME}/.dialogrc-onionjuggler"
   ;;
   whiptail)
     whiptail_height=1
@@ -139,7 +142,7 @@ if [ -z "$("${exec_cmd_alt_user}" -u "${tor_user}" ls "${tor_data_dir_services}"
   "ENABLE" "Enable a onion service" \
   "AUTH_CLIENT" "Manage your client keys of remote service" \
   "VANGUARDS" "Add to protect against traffic analysis" \
-  "IMPORT" "Import backup from another machine" \
+  "BACKUP" "Create or integrate backup" \
   3>&1 1>&2 2>&3)"
 else
   choice_main="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
@@ -154,8 +157,7 @@ else
   "WEB_SERVER" "Serve a website folder on onion domain" \
   "VANGUARDS" "Add to protect against traffic analysis" \
   "LOCATION" "Guided steps to add onion-location to your plainnet website" \
-  "IMPORT" "Import backup from another machine" \
-  "EXPORT" "Export backup to another machine" \
+  "BACKUP" "Create or integrate backup" \
   3>&1 1>&2 2>&3)"
 fi
 
@@ -602,17 +604,19 @@ PURGE: Service will be permanently disabled, all the directory data, including h
   ;;
 
 
-  IMPORT)
-    tput reset
-    onionjuggler-cli backup --integrate
-    return_to_tui
-  ;;
-
-
-  EXPORT)
-    tput reset
-    onionjuggler-cli backup --create
-    return_to_tui
+  BACKUP)
+    title="Backup"
+    choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+    "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 2 \
+    "INTEGRATE" "Integrate backup to system" \
+    "CREATE" "Create backup" \
+    3>&1 1>&2 2>&3)"
+    if [ -n "${choice_action}" ]; then
+      action="$(echo "${choice_action}" | tr '[:upper:]' '[:lower:]')"
+      tput reset
+      onionjuggler-cli backup --"${action}"
+      return_to_tui
+    fi
   ;;
 
 

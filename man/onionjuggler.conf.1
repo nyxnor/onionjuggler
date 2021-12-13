@@ -34,7 +34,7 @@ Compatible with \f[I]doas\f[R] and \f[I]sudo\f[R].
 Install the required packages via package manager.
 (Default: apt install -y).
 .TP
-\f[B]openssl_command\f[R]
+\f[B]openssl_cmd\f[R]
 The OpenSSL command to create the certificate and private keys for
 Client Authorization using the x25519 algorithm.
 It must be the orignal OpenSSL v1.1 or later, not LibreSSL, as the
@@ -76,13 +76,13 @@ The tor user that runs the tor process.
 Common usernames are \f[I]debian-tor\f[R], \f[I]tor\f[R], *_tor*
 (Default: debian-tor).
 .TP
-\f[B]torrc_group_name\f[R]
+\f[B]tor_conf_group\f[R]
 The /etc directory group owner.
 Normally \f[I]root\f[R] or \f[I]wheel\f[R].
 (Default: root)
 .TP
-\f[B]torrc_dir\f[R]
-Root folder of torrc configuration.
+\f[B]tor_conf_dir\f[R]
+Base folder of torrc configuration.
 (Default: /etc/tor).
 .TP
 \f[B]torrc\f[R]
@@ -94,7 +94,7 @@ Specify the DataDirectory for tor.
 (Default: /var/lib/tor).
 .TP
 \f[B]tor_data_dir_services\f[R]
-Specify the HiddenServiceDir root directory, onion sevices data will be
+Specify the HiddenServiceDir base directory, onion sevices data will be
 created inside this directory.
 (Default: /var/lib/tor/services).
 .TP
@@ -117,7 +117,7 @@ ${HOME}/.local/share/torbrowser/tbb/$(uname
 Specify the Tor Browser DataDirectory.
 (Default: Browser/TorBrowser/Data/Tor).
 .TP
-\f[B]tor_browser_torrc\f[R]
+\f[B]tor_browser_conf\f[R]
 Specify the Tor Browser torrc path.
 (Default: Browser/TorBrowser/Data/Tor/torrc).
 .TP
@@ -151,7 +151,7 @@ Specify the remote path to save your backup.
 \f[B]scp_target_full\f[R]
 Specify the complete scp remove configuration as in user\[at]ip:/path.
 .TP
-\f[B]hs_bk_dir\f[R]
+\f[B]tor_backup_dir\f[R]
 Specify the local directory to save your backups.
 .TP
 \f[B]local_ip\f[R]
