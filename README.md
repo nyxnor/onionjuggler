@@ -129,9 +129,7 @@ Edit the required variables to fit your system on the onionjuggler configuration
 
 Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
 
-The required programs can have different names depending on the operating system, modify accordingly, read [docs/compatibility.md](docs/compatibility.md) for the detailed configuration file for your operating system.
-
-It is recommended to have `tor` already installed, because as it is a daemon, it has to be enabled to start on boot and the daemon manager may vary depending on your operating system.
+The required programs can have different names depending on the operating system and the daemon control will also vary, because of this, read [docs/compatibility.md](docs/compatibility.md) for the detailed configuration file for your operating system.
 
 To assign values to the variables, you can either:
 
