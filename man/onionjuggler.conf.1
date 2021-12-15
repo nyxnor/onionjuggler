@@ -11,7 +11,9 @@ onionjuggler.conf - Configuration file for OnionJuggler
 combination of POSIX compliant scripts helps the interaction with onion
 service configuration and files to speed up usage and avoid
 misconfiguration.
-The system variables are defined inside /etc/onionjuggler.conf.
+The system variables are defined by the environment variable
+\f[I]ONIONJUGGLER_CONF\f[R], but if it is empty, will read
+\f[I]/etc/onionjuggler.conf\f[R].
 The configuration file is then sourced be used by the program.
 It defines where the hidden services are located, the owner of the
 DataDir folder, the ControlPort to be used.
@@ -20,6 +22,9 @@ The configuration file is parsed by the shell and interpreted as
 variables.
 When assigning a value to a variable, use double quotes to avoid word
 splitting: \f[B]variable\f[R]=\f[I]\[dq]value\[dq]\f[R].
+.PP
+Variables set to and empty string, either \f[I]var=\f[R] or
+\f[I]var=\[dq]\[dq]\f[R], they will be assigned to the default values.
 .SH OPTIONS
 .SS SYSTEM
 .TP
@@ -135,6 +140,12 @@ Specify the directory to check for website folders.
 \f[B]vanguards_commit\f[R]
 Specify the wanted commit from Vanguards repository.
 (Default: 10942de93f6578f8303f60014f34de2fca345545).
+.SH ENVIRONMENT
+.TP
+\f[B]ONIONJUGGLER_CONF\f[R]
+Use the environment variable to search for the configuration file, if
+the variable is empty, use the default confiugration on
+\f[I]/etc/onionjuggler.conf\f[R].
 .SH FILES
 .TP
 \f[B]/etc/onionjuggler.conf\f[R]
