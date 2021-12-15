@@ -127,7 +127,7 @@ cd onionjuggler
 
 ### Set custom variables
 
-Edit the required variables to fit your system on the configuration file on `/etc/onionjuggler.conf`.
+Edit the required variables to fit your system on the onionjuggler configuration file, which is defined by the environment variable `ONIONJUGGLER_CONF`, but if the variable is empty, will fallback to the default path on `/etc/onionjuggler.conf`. It is also possible to specify a one time alternative path with the option `-C, --config <PATH_TO_CONF>`.
 
 Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
 

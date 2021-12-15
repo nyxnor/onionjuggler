@@ -6,7 +6,7 @@
 ###################
 #### VARIABLES ####
 
-[ -r "${onionjuggler_conf:="/etc/onionjuggler.conf"}" ] && . "${onionjuggler_conf}"
+[ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
 ## if any of the configurations are empty, use default ones
 
 : "${exec_cmd_alt_user:="sudo"}"

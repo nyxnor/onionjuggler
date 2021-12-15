@@ -166,7 +166,7 @@ while true; do
     -w|--folder|-w=*|--folder=*) get_arg folder "${opt}" "${arg}";;
     -k|--client-priv-key|-k=*|--client-priv-key=*) get_arg client_priv_key "${opt}" "${arg}";;
     -K|--client-pub-key|-K=*|--client-pub-key=*) get_arg client_pub_key "${opt}" "${arg}";;
-    -C|--config|-C=*|--config=*) get_arg onionjuggler_conf "${opt}" "${arg}";;
+    -C|--config|-C=*|--config=*) get_arg ONIONJUGGLER_CONF "${opt}" "${arg}"; export ONIONJUGGLER_CONF;;
     "") break;;
     *) error_msg "Invalid option: ${opt}";;
   esac
@@ -176,7 +176,7 @@ done
 ###################
 #### VARIABLES ####
 
-[ -r "${onionjuggler_conf:="/etc/onionjuggler.conf"}" ] && . "${onionjuggler_conf}"
+[ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
 ## if any of the configurations are empty, use default ones
 
 ## system

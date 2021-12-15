@@ -22,14 +22,14 @@ get_arg(){ case "${3}" in ""|-*) error_msg "Option '${2}' requires an argument."
 while :; do
   case "${1}" in -*=*) opt="${1%=*}"; arg="${1#*=}"; shift_n=1;; -*) opt="${1}"; arg="${2}"; shift_n=2;; esac
   case "${1}" in
-    -C|--config|-C=*|--config=*) get_arg onionjuggler_conf "${opt}" "${arg}"; export onionjuggler_conf;;
+    -C|--config|-C=*|--config=*) get_arg ONIONJUGGLER_CONF "${opt}" "${arg}"; export ONIONJUGGLER_CONF;;
     "") break;;
     *) error_msg "Invalid option: ${opt}";;
   esac
   shift "${shift_n}"
 done
 
-[ -r "${onionjuggler_conf:="/etc/onionjuggler.conf"}" ] && . "${onionjuggler_conf}"
+[ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
 ## if any of the configurations are empty, use default ones
 
 ## system
