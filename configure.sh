@@ -3,6 +3,61 @@
 ## This file should be run from inside the cloned repository
 ## Setup tor directories, user, packages needed for OnionJuggler.
 
+
+if [ ! -f onionjuggler-cli ]||[ ! -f onionjuggler-tui ]||[ ! -f etc/onionjuggler.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
+  ||[ ! -f docs/onionjuggler.conf.1.md ]||[ ! -f man/onionjuggler-cli.1 ]||[ ! -f man/onionjuggler.conf.1 ]; then
+  printf %s"${red}ERROR: OnionJuggler files not found\n"
+  printf %s"${yellow}INFO: Run this script from inside the onionjuggler repository!\n"
+  printf %s"${nocolor}See usage:\n"
+  usage
+  exit 1
+fi
+
+usage(){
+  printf "Configure the environment for OnionJuggler
+\nUsage: configure.sh command [option <ARG>]
+\nOptions:
+  -s, --setup                                 setup environment
+  -h, --help                                  show this help message
+\nAdvanced options:
+  -s, --setup [-b <DIR>|-c <DIR>|-m <DIR>]    setup environment with specified paths
+  -C, --config <ONIONJUGGLER_CONF>            specify alternative onionjuggler configuration file to be read
+  -b, --bin-dir <DIR>                         script directory that is on path (Default: /usr/local/bin)
+  -c, --conf-dir <DIR>                        configuration directory (Default: /etc)
+  -m, --man-dir <DIR>                         manual directory (Default: /usr/local/man/man1)
+  -k, --check                                 run pre-defined shellcheck
+  -r, --release                               prepare for commiting
+"
+  exit 1
+}
+
+get_arg(){
+  case "${2}" in
+    ""|-*) error_msg "Option '${1}' requires an argument.";;
+  esac
+}
+
+while true; do
+  case "${1}" in
+    -*=*) arg="${1#*=}"; shift_n=1;;
+    *) arg="${2}"; shift_n=2;;
+  esac
+  case "${1}" in
+    -s|--setup|-r|--release|-k|--check) action="${1}"; shift;;
+    -C|--config|-C=*|--confg=*) ONIONJUGGLER_CONF="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -b|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -c|--conf-dir|-c=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -m|--man-dir|-m=*|--man-dir=*) man_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -h|--help) usage;;
+    "") break;;
+    *) error_msg "Invalid option: ${1}";;
+  esac
+done
+
+if [ -d "${bin_dir:="/usr/local/bin"}" ]; then bin_dir="${bin_dir%*/}"; else error_msg "Your system does not seems to support bin_dir=${bin_dir}"; fi
+if [ -d "${conf_dir:="/etc"}" ]; then conf_dir="${conf_dir%*/}"; else error_msg "Your system does not seems to support conf_dir=${conf_dir}"; fi
+if [ -d "${man_dir:="/usr/local/man/man1"}" ]; then man_dir="${man_dir%*/}"; else error_msg "Your system does not seems to support man_dir=${man_dir}"; fi
+
 ###################
 #### VARIABLES ####
 
@@ -13,9 +68,9 @@
 : "${tor_user:="debian-tor"}"
 : "${pkg_mngr_install:="apt install -y"}"
 : "${requirements:="tor grep sed tar openssl basez git python3-stem qrencode ${dialog_box:="dialog"} ${web_server:="nginx"}"}"
-: "${tor_data_dir:="/var/lib/tor"}"
-: "${tor_data_dir_services:="${tor_data_dir}/services"}"
-: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"
+: "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
+: "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
+: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
 : "${openssl_cmd:="openssl"}"
 
 ## colors
@@ -58,23 +113,6 @@ range_variable dialog_box dialog whiptail
 
 ###################
 #### FUNCTIONS ####
-
-usage(){
-  printf "Configure the environment for OnionJuggler
-\nUsage: configure.sh command [option <ARG>]
-\nOptions:
-  -s, --setup                                 setup environment
-  -h, --help                                  show this help message
-\nAdvanced options:
-  -s, --setup [-b <DIR>|-c <DIR>|-m <DIR>]    setup environment with specified paths
-  -b, --bin-dir <DIR>                         script directory that is on path (Default: /usr/local/bin)
-  -c, --conf-dir <DIR>                        configuration directory (Default: /etc)
-  -m, --man-dir <DIR>                         manual directory (Default: /usr/local/man/man1)
-  -k, --check                                 run pre-defined shellcheck
-  -r, --release                               prepare for commiting
-"
-}
-
 
 install_package(){
   for package in "${@}"; do
@@ -119,42 +157,6 @@ custom_shellcheck(){
     printf " - 100%%\n${nocolor}"
   fi
 }
-
-if [ ! -f onionjuggler-cli ]||[ ! -f onionjuggler-tui ]||[ ! -f etc/onionjuggler.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
-  ||[ ! -f docs/onionjuggler.conf.1.md ]||[ ! -f man/onionjuggler-cli.1 ]||[ ! -f man/onionjuggler.conf.1 ]; then
-  printf %s"${red}ERROR: OnionJuggler files not found\n"
-  printf %s"${yellow}INFO: Run this script from inside the onionjuggler repository!\n"
-  printf %s"${nocolor}See usage:\n"
-  usage
-  exit 1
-fi
-
-
-get_arg(){
-  case "${2}" in
-    ""|-*) error_msg "Option '${1}' requires an argument.";;
-  esac
-}
-
-while true; do
-  case "${1}" in
-    -*=*) arg="${1#*=}"; shift_n=1;;
-    *) arg="${2}"; shift_n=2;;
-  esac
-  case "${1}" in
-    -s|--setup|-r|--release|-k|--check) action="${1}"; shift;;
-    -b|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -c|--conf-dir|-c=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -m|--man-dir|-m=*|--man-dir=*) man_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    "") break;;
-    *) error_msg "Invalid option: ${1}";;
-  esac
-done
-
-[ ! -d "${bin_dir:="/usr/local/bin"}" ] && error_msg "Your system does not seems to support bin_dir=${bin_dir}"
-[ ! -d "${conf_dir:="/etc"}" ] && error_msg "Your system does not seems to support conf_dir=${conf_dir}"
-[ ! -d "${man_dir:="/usr/local/man/man1"}" ] && error_msg "Your system does not seems to support man_dir=${man_dir}"
-
 
 ###################
 ###### MAIN #######

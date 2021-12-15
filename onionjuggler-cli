@@ -166,7 +166,7 @@ while true; do
     -w|--folder|-w=*|--folder=*) get_arg folder "${opt}" "${arg}";;
     -k|--client-priv-key|-k=*|--client-priv-key=*) get_arg client_priv_key "${opt}" "${arg}";;
     -K|--client-pub-key|-K=*|--client-pub-key=*) get_arg client_pub_key "${opt}" "${arg}";;
-    -C|--config|-C=*|--config=*) get_arg ONIONJUGGLER_CONF "${opt}" "${arg}"; export ONIONJUGGLER_CONF;;
+    -C|--config|-C=*|--config=*) get_arg ONIONJUGGLER_CONF "${opt}" "${arg}";;
     "") break;;
     *) error_msg "Invalid option: ${opt}";;
   esac
@@ -176,37 +176,43 @@ done
 ###################
 #### VARIABLES ####
 
+## The configuration parsing priority is defined as:
+## 1. command line argument `-C, --config <ONIONJUGGLER_CONF>`
+## 2. environment variable ONIONJUGGLER_CONF
+## 3. if environment variable is empty, fallback to default path /etc/onionjuggler.conf
 [ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
-## if any of the configurations are empty, use default ones
+
+## : ${var:=""} -> initialize the variable (SC2154) and if empty or unset, use default values
+## var=${var%*/} -> removes the trailing slash "/" at the end of directories variables
 
 ## system
 : "${exec_cmd_alt_user:="sudo"}"
 : "${tor_user:="debian-tor"}"
 : "${tor_daemon:="tor@default"}"
-: "${daemon_control:="systemctl"}"
+: "${daemon_control:="systemctl"}"; daemon_control="${daemon_control%*/}"
 : "${tor_conf_group:="root"}"
 : "${openssl_cmd:="openssl"}"
 
 ## tor defaults
-: "${tor_data_dir:="/var/lib/tor"}"
-: "${tor_data_dir_services:="${tor_data_dir}/services"}"
-: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"
-: "${tor_conf_dir:="/etc/tor"}"
+: "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
+: "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
+: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
+: "${tor_conf_dir:="/etc/tor"}"; tor_conf_dir="${tor_conf_dir%*/}"
 : "${tor_conf:="${tor_conf_dir}/torrc"}"
 : "${tor_control_port:="9051"}" ## only the port, not the host
 
 ## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
-: "${tor_browser_dir:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"
-: "${tor_browser_data_dir:="${tor_browser_dir}/Browser/TorBrowser/Data/Tor"}"
+: "${tor_browser_dir:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"; tor_browser_dir="${tor_browser_dir%*/}"
+: "${tor_browser_data_dir:="${tor_browser_dir}/Browser/TorBrowser/Data/Tor"}"; tor_browser_data_dir="${tor_browser_data_dir%*/}"
 : "${tor_browser_conf:="${tor_browser_data_dir}/torrc"}"
-: "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"
+: "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"; tor_browser_data_dir_auth="${tor_browser_data_dir_auth%*/}"
 
 ## general
-: "${website_dir:="/var/www"}"
+: "${website_dir:="/var/www"}"; website_dir="${website_dir%*/}"
 : "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}" ## https://github.com/mikeperry-tor/vanguards/commits/master
 
 ## backup
-: "${tor_backup_dir:="${HOME}/.onionjuggler/backup"}"
+: "${tor_backup_dir:="${HOME}/.onionjuggler/backup"}"; tor_backup_dir="${tor_backup_dir%*/}"
 
 ## colors
 nocolor="\033[0m"
@@ -362,14 +368,14 @@ tac(){
   "${exec_cmd_alt_user}" sed '1!G;h;$!d' "${1}"
 }
 
-## dont cat two files, it breaks if there is a pipe or any other thing that is not a file
+## TODO: fix cat two files, it breaks if there is a pipe or any other thing that is not a file
 cat_squeeze_blank(){
   "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' "${1}"
 }
 
 ###########################
 ########## MAIN ###########
-#"${exec_cmd_alt_user}" sed -i'' 's/\/$//' "${tor_conf}" ## no config should end with '/' to find exact match.
+"${exec_cmd_alt_user}" sed -i'' 's/\/$//' "${tor_conf}" ## no config should end with '/' to find exact match with the end of line '$'.
 
 case "${command}" in
 
@@ -1051,7 +1057,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
   ## This addon protects against guard discovery and related traffic analysis attacks.
   ## A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
   ## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
-  ##  TODO: hardening (as in $ sytemctl cat tor@default), but got permission denied: unable to read '/run/tor/control.authcookie'
+  ##  TODO: hardening (as in $ sytemctl cat tor@default), but got permission denied: unable to read '/run/tor/control.authcookie', also see $ systemd-analyze security vanguards@default.service
   vanguards)
     : "${action:?$(usage)}"
 

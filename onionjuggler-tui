@@ -39,9 +39,9 @@ done
 : "${web_server:="nginx"}"
 
 ## tor defaults
-: "${tor_data_dir:="/var/lib/tor"}"
-: "${tor_data_dir_services:="${tor_data_dir}/services"}"
-: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"
+: "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
+: "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
+: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
 
 ## general
 : "${website_dir:="/var/www"}"

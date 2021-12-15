@@ -26,7 +26,6 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
   * [Requirements](#requirements)
   * [Clone the repository](#clone-the-repository)
   * [Set custom variables](#set-custom-variables)
-    * [Caveats](#caveats)
   * [Setup the environment](#setup-the-environment)
   * [Usage](#usage)
 * [Featured on](#featured-on)
@@ -88,8 +87,7 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 
 * General:
   * Unix-like system.
-  * superuser privileges to call some commands as root and the tor user, with `doas` or `sudo`.
-  * Path for folders variables must not contain trainling "/" at the end of the variables on `/etc/onionjuggler..conf` (Incorrect: `/var/lib/tor/`, Correct: `/var/lib/tor`).
+  * superuser privileges to call commands as root and the tor user, with `doas` or `sudo`.
 
 * Required programs:
   * **sh** - any POSIX shell: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `yash` 2.29+, busybox `ash` 1.1.3+,  `zsh` 3.1.9+ (`zsh --emulate sh`) etc.
@@ -127,9 +125,14 @@ cd onionjuggler
 
 ### Set custom variables
 
-Edit the required variables to fit your system on the onionjuggler configuration file, which is defined by the environment variable `ONIONJUGGLER_CONF`, but if the variable is empty, will fallback to the default path on `/etc/onionjuggler.conf`. It is also possible to specify a one time alternative path with the option `-C, --config <PATH_TO_CONF>`.
+Edit the required variables to fit your system on the onionjuggler configuration file, which is defined by the environment variable `ONIONJUGGLER_CONF`, but if the variable is empty, will fallback to the default path on `/etc/onionjuggler.conf`. It is also possible to specify a one time alternative path with the option `-C, --config <PATH_TO_CONF>`, this command line argument has priority over the environment variable.
 
 Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
+
+The required programs can have different names depending on the operating system, modify accordingly, read [docs/compatibility.md](docs/compatibility.md) for the detailed configuration file for your operating system.
+
+It is recommended to have `tor` already installed, because as it is a daemon, it has to be enabled to start on boot and the daemon manager may vary depending on your operating system.
+
 
 To assign values to the variables, you can either:
 
@@ -147,16 +150,6 @@ printf "exec_cmd_alt_user=\"sudo\"\n" | tee -a /etc/onionjuggler.conf
 ```sh
 sed -i'' "s|^exec_cmd_alt_user=.*|exec_cmd_alt_user=\"doas\"|" /etc/onionjuggler.conf
 ```
-
-#### Caveats
-
-Note that no variable that refers to a folder do NOT end with a trailing `/`. Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
-
-The `$exec_cmd_alt_user` to run a command as another (alternative) user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the file and and your user to the privileged group.
-
-It is recommended to have `tor` already installed, because as it is a service, it has to be enabled to start on boot and the service managers may vary depending on your operating system.
-
-Read [docs/compatibility.md](docs/compatibility.md) for the detailed configuration file for your operating system.
 
 ### Setup the enviroment
 
