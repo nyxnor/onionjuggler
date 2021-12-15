@@ -19,18 +19,17 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
 
 * [Introduction](#introduction)
   * [Images](#images)
+  * [History](#history)
   * [Goal](#goal)
-    * [History](#history)
-    * [Future](#future)
   * [Features](#features)
 * [Instructions](#instructions)
-  * [Setup](#setup)
+  * [Requirements](#requirements)
   * [Clone the repository](#clone-the-repository)
-  * [Set custom vars](#set-custom-vars)
+  * [Set custom variables](#set-custom-variables)
+    * [Caveats](#caveats)
   * [Setup the environment](#setup-the-environment)
   * [Usage](#usage)
-* [Requirements](#requirements)
-* [Feature on](#feature-on)
+* [Featured on](#featured-on)
 * [Contributors](#contributors)
 
 ## Introduction
@@ -41,14 +40,11 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
 ![tui-whiptail](images/tui-whiptail.png)
 ![cli](images/cli.png)
 
-
-### Goal
-
-#### History
+### History
 
 This project was started after seeing the amazing [OnionShare CLI python scripts](https://github.com/onionshare/onionshare/tree/develop/cli), which possibilitates ephemeral onion services that never touch the disk and can be run on Tails or Whonix easily. Then after seeing the [RaspiBlitz onion service bash script for the Raspberry Pi](https://github.com/rootzoll/raspiblitz/blob/v1.7/home.admin/config.scripts/internet.hiddenservice.sh), the idea to port it to any Debian distribution started. As the idea grew, using GNU Bash and Linux was a single point of failure [1](https://metrics.torproject.org/platforms.html) [2](https://metrics.torproject.org/webstats-tb-platform.html), so the making the script POSIX compliant to be compatible with any Unix-like system was a definitive goal.
 
-#### Future
+### Goal
 
 The goal of this project is:
 * facilitate onion service management, from activating a service to adding client authorization to it, giving the full capabilities of editing files manually would have but with less tipying.
@@ -86,6 +82,8 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 * **Bulk** - Some commands can be bulked with the argument `@all` to include all services or clients depending on the option `--service` or `--client`, list enabled arguments`[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Fool-proof** - The script tries its best to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
 
+## Instructions
+
 ### Requirements
 
 * General:
@@ -120,8 +118,6 @@ If using Vanguards, `python2.x` is needed, but it is not in the requirements to 
 The packages are downloaded when setting up the environment with [configure.sh](configure.sh).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
 
-## Instructions
-
 ### Clone the repository
 
 ```sh
@@ -129,19 +125,11 @@ git clone https://github.com/nyxnor/onionjuggler.git
 cd onionjuggler
 ```
 
-### Set custom vars
+### Set custom variables
 
 Edit the required variables to fit your system on the configuration file on `/etc/onionjuggler.conf`.
 
 Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
-
-Note that no variable that refers to a folder do NOT end with a trailing `/`. Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
-
-The `$exec_cmd_alt_user` to run a command as another (alternative) user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the configuration file and and your user to the privileged group.
-
-It is recommended to have `tor` already installed, because as it is a service, it has to be enabled to start on boot and the service managers may vary depending on your operating system.
-
-Read [docs/compatibility.md](docs/compatibility.md) for the detailed configuration file for your operating system.
 
 To assign values to the variables, you can either:
 
@@ -160,6 +148,16 @@ printf "exec_cmd_alt_user=\"sudo\"\n" | tee -a /etc/onionjuggler.conf
 sed -i'' "s|^exec_cmd_alt_user=.*|exec_cmd_alt_user=\"doas\"|" /etc/onionjuggler.conf
 ```
 
+#### Caveats
+
+Note that no variable that refers to a folder do NOT end with a trailing `/`. Keep it that way, else it will break. The required packages can have different names depending on the operating system, modify accordingly.
+
+The `$exec_cmd_alt_user` to run a command as another (alternative) user such as `doas` and `sudo` need to be already configured, this project won't modify the `/etc/sudoers` or `/etc/doas.conf`, it is up to the user to configure the file and and your user to the privileged group.
+
+It is recommended to have `tor` already installed, because as it is a service, it has to be enabled to start on boot and the service managers may vary depending on your operating system.
+
+Read [docs/compatibility.md](docs/compatibility.md) for the detailed configuration file for your operating system.
+
 ### Setup the enviroment
 
 Run from inside the cloned repository to create the tor directories, create manual pages and copy scripts to path:
@@ -169,6 +167,14 @@ Run from inside the cloned repository to create the tor directories, create manu
 
 ### Usage
 
+If you are using the TUI, it is expected to be self explanatory the options, but in the case you don't understand or want to go deeper into the CLI, take a look at the documentation inside `docs` folder, there are many other onion services management guides. Read:
+
+Don't forget the [cli manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
+```sh
+man onionjuggler-cli
+man onionjuggler.conf
+```
+
 To create a service named `terminator`, it is as easy as possible:
 ```sh
 onionjuggler-cli on -s terminator
@@ -176,16 +182,6 @@ onionjuggler-cli on -s terminator
 But can be as advanced as specifying all the parameters:
 ```sh
 onionjuggler-cli on --service terminator --socket unix --version 3 --port 80
-```
-
-#### Documentation
-
-Take a loot at the documentation inside `docs` folder, there are many other onion services management guides. Read:
-
-Don't forget the [cli manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
-```sh
-man onionjuggler-cli
-man onionjuggler.conf
 ```
 
 ## Featured on
