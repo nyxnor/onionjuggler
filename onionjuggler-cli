@@ -376,7 +376,7 @@ cat_squeeze_blank(){
     esac
   done
   # shellcheck disable=SC2086
-  "${exec_cmd_alt_user}" sudo sed '1s/^$//p;/./,/^$/!d' ${files}
+  "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' ${files}
 }
 
 ###########################
@@ -389,7 +389,7 @@ case "${command}" in
   ## beaware this only works for the torrc, if you deleted your data directory with command "off" combined with "purge" option, the keys will not be restored, instead new ones will be created
   restore-torrc|RESTORE-TORRC)
     printf "# Restoring torrc with its latest backup\n"
-    sudo cp -v "${tor_conf}".bak "${tor_conf}"
+    "${exec_cmd_alt_user}" cp -v "${tor_conf}".bak "${tor_conf}"
     restarting_tor
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
@@ -883,7 +883,7 @@ server {
     root ${folder};
     index index.html index.htm index.php;
 }
-" | sudo tee /tmp/"${service}"-onion.conf
+" | "${exec_cmd_alt_user}" tee /tmp/"${service}"-onion.conf
           ;;
           apache)
             printf %s"
@@ -892,7 +892,7 @@ server {
     DocumentRoot ${folder}
     ErrorLog /var/log/apache2/${service}.log
 </VirtualHost>
-" | sudo tee /tmp/"${service}"-onion.conf
+" | "${exec_cmd_alt_user}" tee /tmp/"${service}"-onion.conf
           ;;
         esac
 
@@ -1114,7 +1114,7 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
-" | sudo tee /tmp/vanguards@default.service
+" | "${exec_cmd_alt_user}" tee /tmp/vanguards@default.service
       "${exec_cmd_alt_user}" cp /tmp/vanguards@default.service /etc/systemd/system/
       printf "\n>>>>>>>>>>>>>>>>>>>\n"
       while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/vanguards@default.service"
