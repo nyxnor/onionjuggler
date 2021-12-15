@@ -368,9 +368,15 @@ tac(){
   "${exec_cmd_alt_user}" sed '1!G;h;$!d' "${1}"
 }
 
-## TODO: fix cat two files, it breaks if there is a pipe or any other thing that is not a file
 cat_squeeze_blank(){
-  "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' "${1}"
+  while true; do
+    case "${1}" in
+        "/"*|[[:alnum:]]*) files="${files} ${1}"; shift;; ## only consider path starting with "/" or alphanumeric
+        *) break;; ## made to break on pipes and everything else
+    esac
+  done
+  # shellcheck disable=SC2086
+  "${exec_cmd_alt_user}" sudo sed '1s/^$//p;/./,/^$/!d' ${files}
 }
 
 ###########################
@@ -1041,7 +1047,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
           printf '\n%s\n\n' "${client_auth_config}" "${tor_conf}"
           "${exec_cmd_alt_user}" sed -i'' "/ClientOnionAuthDir .*/d" "${tor_backup_dir}"/integrate"${tor_conf}"
         fi
-        "${exec_cmd_alt_user}" sed '1s/^$//p;/./,/^$/!d' "${tor_conf}" "${tor_backup_dir}"/integrate"${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null
+        cat_squeeze_blank "${tor_conf}" "${tor_backup_dir}"/integrate"${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null
         "${exec_cmd_alt_user}" mv "${tor_conf}".tmp "${tor_conf}"
         "${exec_cmd_alt_user}" rm -rf "${tor_backup_dir}"/integrate
         restarting_tor

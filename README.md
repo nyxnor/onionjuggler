@@ -133,7 +133,6 @@ The required programs can have different names depending on the operating system
 
 It is recommended to have `tor` already installed, because as it is a daemon, it has to be enabled to start on boot and the daemon manager may vary depending on your operating system.
 
-
 To assign values to the variables, you can either:
 
 * Open the mentioned configuration file:
