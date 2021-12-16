@@ -132,12 +132,16 @@ service_menu(){
       ;;
     esac
     service_name_list=""
-    [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | sed "s/ /,/g")"
+    [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | tr "\n" ",")"
   fi
 }
 
 
 ###########################
+########## MAIN ##########
+## pattern:
+##  choice_name="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" --"${flags}" --"${dialog_type}" "${subtitle}" "$((${height}+whiptail_height")) "${width}" "${list_height}")"
+##  [ -n "${choice_service}" ] && printf "Do something here\n"
 
 title="OnionJuggler - Main Menu"
 menu="\nUse enter/spacebar to select:"
@@ -244,13 +248,18 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     fi
   ;;
 
-  ## TODO: add warning as in purge before confirming.
+
   RENEW)
     service_menu checklist "Renew"
     if [ -n "${service_name_list}" ]; then
-      tput reset
-      onionjuggler-cli renew --service "${service_name_list}"
-      return_to_tui
+      title="Renew - Confirmation"
+      menu="\nRenewing services will purge its keys. You won't be able to use the same onion after renewing (unless you have made a backup beforehand).\nAre you sure you want to change the currenct onion address of your service(s)?"
+      if "${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+      --yesno "${menu}" "$((10+whiptail_height))" 80 3>&1 1>&2 2>&3; then
+        tput reset
+        onionjuggler-cli renew --service "${service_name_list}"
+        return_to_tui
+      fi
     fi
   ;;
 
@@ -516,7 +525,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       3>&1 1>&2 2>&3)"
       if [ -n "${choice_action}" ]; then
         tput reset
-        action="$(echo "${choice_action}" | tr '[:upper:]' '[:lower:]')"
+        action="$(printf %s"${choice_action}" | tr '[:upper:]' '[:lower:]')"
         onionjuggler-cli location "--${action}" --service "${service_name_list}"
         return_to_tui
       fi
@@ -533,7 +542,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     "ON" "Serve website" \
     "OFF" "Stop serving website" \
     3>&1 1>&2 2>&3)"
-    status="$(echo "${status}" | tr '[:upper:]' '[:lower:]')"
+    status="$(printf %s"${status}" | tr '[:upper:]' '[:lower:]')"
     case "${status}" in
       list)
         tput reset
@@ -619,7 +628,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     "CREATE" "Create backup" \
     3>&1 1>&2 2>&3)"
     if [ -n "${choice_action}" ]; then
-      action="$(echo "${choice_action}" | tr '[:upper:]' '[:lower:]')"
+      action="$(printf %s"${choice_action}" | tr '[:upper:]' '[:lower:]')"
       tput reset
       onionjuggler-cli backup --"${action}"
       return_to_tui
