@@ -12,7 +12,7 @@ usage(){
   #   printf %s"${magenta} ${onion_ascii} ${nocolor}\n\n"
   # fi
 
-  printf "%s${nocolor}Juggle with an Onion Service
+  printf "Juggle with an Onion Service
 \nUsage: onionjuggler-cli command [--option <ARGUMENT>]
 \nComplete options:
   on [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT[,VIRTPORT2]>]
@@ -105,6 +105,7 @@ If your services are unreacheable, restart tor.
 
   exit 1
 }
+[ -z "${1}" ] && usage
 
 ########################
 #### OPTION PARSING ####
@@ -779,7 +780,6 @@ case "${command}" in
   ## change service hostname by deleting its ed25519 pub and priv keys.
   ## <HiddenServiceDir>/authorized_clients/ because the would need to update their '.auth_private' file with the new onion address anyway and for security reasons.
   ## @all will read through all services folders and execute the commands.
-  ## TODO -> Loop services, save hostname, reload tor once and show results.
   renew)
     is_service_dir_empty
     : "${service:?$(error_msg "service is missing")}"
