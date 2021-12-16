@@ -97,16 +97,17 @@ tor_data_dir="/var/tor"
 ```sh
 dnf install epel-release -y
 osys="centos" ## [centos(rhel)|fedora]
-echo "
+printf "
 [tor]
 name=Tor for Enterprise Linux $releasever - $basearch
 baseurl=https://rpm.torproject.org/${osys}/$releasever/$basearch
 enabled=1
 gpgcheck=1
 gpgkey=https://rpm.torproject.org/${osys}/public_gpg.key
-cost=100 " | tee /etc/yum.repos.d/tor.repo
+cost=100
+" | tee /etc/yum.repos.d/tor.repo
 dnf install tor -y
-echo "
+printf "
 RunAsDaemon 1
 " | tee -a /etc/tor/torrc
 ```
@@ -123,7 +124,7 @@ dnf install python3-stem
 
 ```sh
 pacman -Syu tor
-echo "
+printf "
 DataDirectory /var/lib/tor
 User tor
 " | tee -a /ec/tor/torrc
@@ -157,7 +158,7 @@ Untested.
 
 ```sh
 zypper install tor
-echo "
+printf "
 RunAsDaemon 1
 " | tee -a /etc/tor/torrc
 systemctl enable --now tor
@@ -173,10 +174,10 @@ Untested.
 ### tor
 
 ```sh
-echo "PKG_PATH=http://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/$(uname -m)/$(uname -r)/All" > /etc/pkg_install.conf
+printf "PKG_PATH=http://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/$(uname -m)/$(uname -r)/All\n" > /etc/pkg_install.conf
 pkg_add tor
 ln -sf /usr/pkg/share/examples/rc.d/tor /etc/rc.d/tor
-echo "tor=YES" >> /etc/rc.conf
+printf "tor=YES\n" >> /etc/rc.conf
 /etc/rc.d/tor start
 ```
 
@@ -202,13 +203,13 @@ pkg bootstrap
 pkg update -f
 pkg install ca_root_nss
 mkdir -p /usr/local/etc/pkg/repos
-echo "FreeBSD: {
+printf "FreeBSD: {
   url: pkg+https://pkg.freebsd.org/${ABI}/latest
 }" | tee -a /usr/local/etc/pkg/repos/FreeBSD.conf
 pkg update -f
 pkg upgrade -y -f
 pkg install tor
-echo "
+printf "
 RunAsDaemon 1
 " | tee -a /usr/local/etc/tor/torrc
 echo "net.inet.ip.random_id=1" >> /etc/sysctl.conf
