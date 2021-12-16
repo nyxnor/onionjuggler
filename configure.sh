@@ -75,8 +75,6 @@ if [ -d "${man_dir:="/usr/local/man/man1"}" ]; then man_dir="${man_dir%*/}"; els
 
 ## colors
 nocolor="\033[0m"
-#nobold="\033[21m"
-#nounderline="\033[24m"
 #bold="\033[1m"
 #underline="\033[4m"
 #white="\033[97m"
