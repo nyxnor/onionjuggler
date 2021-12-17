@@ -157,6 +157,7 @@ while :; do
   case "${opt}" in
     on|off|list|renew|auth-server|auth-client|web|location|backup|vanguards|restore-torrc) command="${opt}";;
     --on|--off|--list|-n|-f|-l) assign_value status "${opt}"; shift_n=1;;
+    -R|--restart|-r|--reload) assign_value signal "${opt}"; shift_n=1;;
     -P|--purge|--nginx|--apache2|--html|-q|--quiet|-M|--make|-I|--integrate) assign_value action "${opt}"; shift_n=1;;
     -s|--service|-s=*|--service=*) get_arg service "${opt}" "${arg}";;
     -c|--client|-c=*|--client=*) get_arg client "${opt}" "${arg}";;
@@ -245,14 +246,12 @@ set_owner_permission(){
 # shellcheck disable=SC2120
 restarting_tor(){
   set_owner_permission
-  signal="reload"
-  [ -n "${1}" ] && signal="restart"
-  verb_current_signal="${signal}ing"
-  verb_past_signal="${signal}ed"
-  printf %s"\n# ${verb_current_signal} tor, please be patient.\n"
-  printf "# Stuck after several minutes?\n"
-  printf "# Press Ctrl-C and restore the lastest torrc backup with:\n"
-  printf "$ onionjuggler-cli restore-torrc\n"
+  : "${signal:="reload"}"
+  [ "${signal}" = "r" ] && signal="reload"
+  [ "${signal}" = "R" ] && signal="restart"
+  printf %s"\n# ${signal}ing tor, please be patient.\n"
+  printf "# Signaling tor hanged?\n# Press Ctrl-C and restore the lastest torrc backup with:\n"
+  printf "$ onionjuggler-cli restore-torrc --restart\n"
   case "${daemon_control}" in
     systemctl|sv|rcctl) "${exec_cmd_alt_user}" "${daemon_control}" "${signal}" "${tor_daemon}";;
     service) "${exec_cmd_alt_user}" "${daemon_control}" "${tor_daemon}" "${signal}";;
@@ -260,7 +259,7 @@ restarting_tor(){
     *) rerror_msg "daemon_control value not supported: ${daemon_control}"
   esac
   [ "${?}" -eq 1 ] && error_msg "Failed to ${signal} tor"
-  printf %s"${green}# ${verb_past_signal} tor succesfully!\n\n${nocolor}"
+  printf %s"${green}# ${signal}ed tor succesfully!\n\n${nocolor}"
 }
 
 
