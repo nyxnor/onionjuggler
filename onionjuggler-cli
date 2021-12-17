@@ -84,14 +84,18 @@ Options:
     -n, --on                                                 install Vanguards addon, if already installed, upgrade.
     -f, --off                                                remove Vanguards
     -l, --list                                               see Vanguards logs
+  restore-torrc                                              re
 
 Advanced:
     -C, --config                                             specify an alternative onionjuggler.conf to be parsed
+    -R, --restart                                            signal tor to restart when the daemon status is failed or inactive
+    -r, --reload                                             signal tor to reload (default option)
 
 Option names:
   command                                                    on, off, list, renew, auth-server, auth-client, web, location, vanguards
   status                                                     --on, --off, --list
   action                                                     --purge, --quiet, --nginx, --apache2, --html, --make, --integrate
+  signal                                                     --restart, --reload
 
 Positional arguments:
   @all                                                       all services or clients available
