@@ -10,11 +10,25 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
+## colors
+nocolor="\033[0m"
+#bold="\033[1m"
+#underline="\033[4m"
+#white="\033[97m"
+#black="\033[30m"
+red="\033[31m"
+#green="\033[32m"
+yellow="\033[33m"
+#blue="\033[34m"
+#magenta="\033[35m"
+#cyan="\033[36m"
+
 ## display error message with instructions to use the script correctly.
-error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
+error_msg(){ printf %s"${red}ERROR: ${1}${nocolor}\n"; exit 1; }
 
 ###################
 #### VARIABLES ####
+i=0
 
 ## cli has to see the config argument, so export it
 assign_value(){ case "${2}" in --*) value="${2#--}";; -*) value="${2#-}";; *) value="${2}";; esac; eval "${1}"="${value}"; }
@@ -45,22 +59,6 @@ done
 
 ## general
 : "${website_dir:="/var/www"}"
-
-## colors
-nocolor="\033[0m"
-#bold="\033[1m"
-#underline="\033[4m"
-#white="\033[97m"
-#black="\033[30m"
-#red="\033[31m"
-#green="\033[32m"
-yellow="\033[33m"
-#blue="\033[34m"
-#magenta="\033[35m"
-#cyan="\033[36m"
-
-i=0
-
 
 ###########################
 ######## FUNCTIONS ########

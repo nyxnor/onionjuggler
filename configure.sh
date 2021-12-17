@@ -3,14 +3,11 @@
 ## This file should be run from inside the cloned repository
 ## Setup tor directories, user, packages needed for OnionJuggler.
 
+error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
 
 if [ ! -f onionjuggler-cli ]||[ ! -f onionjuggler-tui ]||[ ! -f etc/onionjuggler.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
   ||[ ! -f docs/onionjuggler.conf.1.md ]||[ ! -f man/onionjuggler-cli.1 ]||[ ! -f man/onionjuggler.conf.1 ]; then
-  printf %s"${red}ERROR: OnionJuggler files not found\n"
-  printf %s"${yellow}INFO: Run this script from inside the onionjuggler repository!\n"
-  printf %s"${nocolor}See usage:\n"
-  usage
-  exit 1
+  error_msg "This script must be run from inside the onionjuggler repository!"
 fi
 
 usage(){
@@ -87,8 +84,6 @@ magenta="\033[35m"
 cyan="\033[36m"
 
 ## sanity check
-error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
-
 printf %d "${tor_control_port:=9050}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
 
 range_variable(){
@@ -149,8 +144,7 @@ custom_shellcheck(){
   printf %s"${yellow}# Checking shell syntax"
   ## Customize severity with -S [error|warning|info|style]
   if ! shellcheck configure.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui; then
-    printf %s"${red}# Please fix the shellcheck warnings above before pushing!\n${nocolor}"
-    exit 1
+    error_msg "Please fix the shellcheck warnings above before pushing!"
   else
     printf " - 100%%\n${nocolor}"
   fi
@@ -189,18 +183,19 @@ case "${action}" in
     ## ShellCheck is needed
     ## install https://github.com/koalaman/shellcheck#installing or compile from source https://github.com/koalaman/shellcheck#compiling-from-source
     install_package shellcheck pandoc git
-    printf %s"${magenta}# Creating manual pages\n${nocolor}"
+    printf %s"${magenta}# Creating manual pages"
     pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/onionjuggler-cli.1
     pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o man/onionjuggler.conf.1
+    printf %s" - Made!\n${nocolor}"
     ## run shellcheck
     custom_shellcheck
     ## cleanup
-    printf %s"${cyan}# Checking git status\n${nocolor}"
+    printf %s"${cyan}# Checking git status"
     find . -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \; ## should not delete, could destroy lines, just leave empty lines
     if [ -n "$(git status -s)" ]; then
+      printf %s" - Uncommited changes!\n${nocolor}"
       git status
-      printf %s"${red}# Please record the changes to the file(s) above with a commit before pushing!\n${nocolor}"
-      exit 1
+      error_msg "Please record the changes to the file(s) above with a commit before pushing!"
     fi
     printf %s"${green}# Done!\n${nocolor}"
   ;;
