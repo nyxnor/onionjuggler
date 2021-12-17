@@ -171,7 +171,7 @@ onionjuggler-cli on -s terminator
 ```
 But can be as advanced as specifying all the parameters:
 ```sh
-onionjuggler-cli on --service terminator --socket unix --version 3 --port 80
+onionjuggler-cli on --service terminator --socket unix --version 3 --port 80,127.0.0.1:80
 ```
 
 ## Featured on
