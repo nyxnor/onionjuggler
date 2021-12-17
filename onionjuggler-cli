@@ -443,7 +443,6 @@ case "${command}" in
     : "${port:=80}"
     port="$(printf %s"${port}" | tr "," " " | tr -s " ")"
     virtport="${port%% *}"
-    [ -z "${service}" ] && usage
 
     finish_service_activation(){
       ## remove double empty lines
