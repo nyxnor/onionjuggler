@@ -37,7 +37,7 @@ get_arg(){
   esac
 }
 
-while true; do
+while :; do
   case "${1}" in
     -*=*) arg="${1#*=}"; shift_n=1;;
     *) arg="${2}"; shift_n=2;;
@@ -118,7 +118,7 @@ install_package(){
     case "${package}" in
       python-stem|python3-stem|security/py-stem|py-stem|py37-stem|stem)
         ## https://stem.torproject.org/download.html
-        while true; do
+        while :; do
           command -v python3 >/dev/null && python_path="$(command -v python3)" && break
           command -v python >/dev/null && python_path="$(command -v python)" && break
           printf %s"${red}Python is not installed and it is needed for Vanguards, skipping...\n${nocolor}" && break

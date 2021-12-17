@@ -34,11 +34,11 @@ done
 
 ## system
 : "${exec_cmd_alt_user:="sudo"}"
-: "${tor_user:="debian-tor"}"
 : "${dialog_box:="dialog"}"
 : "${web_server:="nginx"}"
 
 ## tor defaults
+: "${tor_user:="debian-tor"}"
 : "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
 : "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
 : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
