@@ -536,7 +536,7 @@ case "${command}" in
   ## manage client authorization server side (HiddenServiceDir/authorized_clients/) or client side (ClientOnionAuthDir)
   auth-server|auth-client)
     host="${command#*-}"
-    [ -z "${status}" ] && usage
+    [ -z "${status:-}" ] && usage
     case "${host}" in
 
       server)
