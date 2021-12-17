@@ -94,7 +94,7 @@ Variables set to and empty string, either *var=* or *var=""*, they will be assig
 
 **tor_browser_dir**
 
-: Specify the Tor Browser root path. (Default: this is where torbrowser-launcher saves it \$\{HOME\}/.local/share/torbrowser/tbb/\$(uname -m)/tor-tor_browser_\$\{LANG%.*\}).
+: Specify the Tor Browser root path. (Default: this is where torbrowser-launcher saves it \$\{HOME\}/.local/share/torbrowser/tbb/\$(uname -m)/tor-browser_\$\{LANG%.*\}).
 
 **tor_browser_data_dir**
 

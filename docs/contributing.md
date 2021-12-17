@@ -18,41 +18,37 @@ Currently there are many commands used and there is a constant development to us
 
 Commands used by this project:
 
-* [Shell and Utilities volume of POSIX.1-2017](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html):
-
-  * Builtins:
-    * [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
-    * [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
-    * [export](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_22)
-    * [id](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/id.html#tag_20_59)
-    * [trap](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28)
-    * [printf](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html#tag_20_94)
-    * [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
-
-  * Not builtins:
-    * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
-    * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
-    * [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
-    * [cp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cp.html#tag_20_24)
-    * [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html#tag_20_28)
-    * [date](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/date.html#tag_20_30)
-    * [env](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/env.html#tag_20_39)
-    * [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
-    * [ln](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ln.html#tag_20_67)
-    * [ls](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ls.html#tag_20_73)
-    * [man](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/man.html#tag_20_77)
-    * [mkdir](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mkdir.html#tag_20_79)
-    * [mv](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mv.html#tag_20_82)
-    * [rm](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/rm.html#tag_20_111)
-    * [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
-    * [sh](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html#tag_20_117)
-    * [sort](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sort.html#tag_20_119)
-    * [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html#tag_20_125)
-    * [tee](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tee.html#tag_20_127)
-    * [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html#tag_20_132)
-    * [tput](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tput.html#tag_20_131)
-    * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
-    * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
+* [Shell and Utilities volume of POSIX.1-2017 - IEEE Std 1003.1-2017 - ISO/IEC/IEEE 9945:2009](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html):
+  * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
+  * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
+  * [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
+  * [cp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cp.html#tag_20_24)
+  * [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html#tag_20_28)
+  * [date](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/date.html#tag_20_30)
+  * [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
+  * [env](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/env.html#tag_20_39)
+  * [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
+  * [export](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_22)
+  * [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
+  * [id](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/id.html#tag_20_59)
+  * [ln](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ln.html#tag_20_67)
+  * [ls](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ls.html#tag_20_73)
+  * [man](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/man.html#tag_20_77)
+  * [mkdir](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mkdir.html#tag_20_79)
+  * [mv](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mv.html#tag_20_82)
+  * [printf](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html#tag_20_94)
+  * [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
+  * [rm](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/rm.html#tag_20_111)
+  * [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
+  * [sh](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html#tag_20_117)
+  * [sort](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sort.html#tag_20_119)
+  * [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html#tag_20_125)
+  * [tee](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tee.html#tag_20_127)
+  * [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html#tag_20_132)
+  * [trap](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28)
+  * [tput](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tput.html#tag_20_131)
+  * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
+  * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
 
 * Installed:
   * Required:
@@ -62,9 +58,11 @@ Commands used by this project:
     * Vanguards - [git](https://git-scm.com/docs/user-manual), [python3-stem](https://stem.torproject.org/download.html), [systemd](https://www.freedesktop.org/software/systemd/man/)
     * Web - [nginx](https://docs.nginx.com/nginx/admin-guide/), [apache](https://httpd.apache.org/docs/current/)
     * TUI - [dialog](https://www.freebsd.org/cgi/man.cgi?dialog), [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
-  * Optional (not using them will break minimal functionalities)
-    * Creating the manual [pandoc](https://pandoc.org/MANUAL.html) (also creates the manual)
-    * QR encoding - [qrencode](https://github.com/fukuchi/libqrencode/)
+  * Optional:
+    * QR encoding - [(lib)qrencode](https://github.com/fukuchi/libqrencode)
+  * Development:
+    * Creating the manual - [pandoc](https://pandoc.org/MANUAL.html) (also creates the manual)
+    * Shell lintering - [shellcheck](https://github.com/koalaman/shellcheck/blob/master/shellcheck.1.md)
 
 ### Builtins
 
@@ -84,20 +82,21 @@ Operating system extensions (GNU extesions on commands such as grep) and command
 
 ### Syntax
 
-1. Identation is 2.
-1. Lines that begin with "## " try to explain what's going on. Lines that begin with just "#" are disabled commands.
-1. Sacrificing some code legibility for speed is acceptable, but if the maintainer considers it messy because it does not help performance, it won't be approved. This is the only subjective requirement.
-1. Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
-1. variable paths should not end with "/", because it is not viable to check if it exists everytime then act with the result.
-1. `printf` instead of `echo` for portability reasons.
-1. exit codes managed with `&&` for true and `||` for false.
-1. `case` instead of `if-then-else` on most of the cases.
-1. for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`.
-1. variables should be reffered with brackets `{}` and double quotes `""`, resulting in `"${VAR}"`.
-1. unquoted variabes and commands expand, if it is supposed to do so, disable SC2086.
-1. environmental variables are upper case letters -> `VAR=`.
-1. variable values must be quoted -> `VAR="something"`.
-1. for the rest, follow the same pattern predominant in the scripts.
+* Identation is 2.
+* Lines that begin with "## " try to explain what's going on. Lines that begin with just "#" are disabled commands.
+* Sacrificing some code legibility for speed is acceptable, but if the maintainer considers it messy because it does not help performance, it won't be approved. This is the only subjective requirement.
+* Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
+* `printf` instead of `echo` for portability reasons.
+* exit codes if no error occurs is `0`, else `1`.
+* test managed with `&&` for true and `||` for false.
+* `case` instead of `if-then-else` on most of the cases.
+* for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`.
+* variables should be reffered with brackets `{}` and double quotes `""`, resulting in `"${var}"`.
+* unquoted variabes are for commands that need to expand, disable SC2086 as a directive in this case one line before the occurence -> `# shellcheck disable=SC2086`
+* the project variables are lower case and if there are two or more words, separated by `_` (underscore) -> `$var_onion`
+* environmental variables are upper case letters -> `$VAR`.
+* variable values must be quoted -> `var="something"`.
+* for the rest, follow the same pattern predominant in the scripts.
 
 ### Check
 

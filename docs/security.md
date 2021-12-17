@@ -1,8 +1,10 @@
 # Security Policy
 
-## Supported Versions
+## Liability
 
-No upgrade is enforced and will never be. If there is a security update, upgrades will be recommended to avoid greater risks.
+The developers are exempt from any liability according to the license.
+
+No upgrade is enforced and will never be. If there is a security update, upgrades will be recommended to avoid greater risks.The code should be reviewed before being added to your system.
 
 ## What is vulnerable?
 

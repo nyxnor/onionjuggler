@@ -6,10 +6,9 @@
 [![Just works](https://img.shields.io/badge/works-on_my_machine-darkred.svg?style=flat)](https://en.wikipedia.org/wiki/Typewriter)
 
 
-### Feature-rich Onion Service manager for UNIX-like operating systems written in POSIX conformant shellscript
+### Feature-rich onion service manager for UNIX-like operating systems written in POSIX compliant shellscript
 
-OnionJuggler is a collection of Onion Services features implemented for Unix-like systems following the Portable Operating System Interface standard.
-
+OnionJuggler is a minimal requirement, portable collection of scripts and documentation to help the service operator juggle (manage) his onion(s).
 
 **WARNING: `do not trust this repo yet`, backup your hs keys in another location. This project has not been released and should be considered for development only.**
 
@@ -22,8 +21,8 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
   * [History](#history)
   * [Goal](#goal)
   * [Features](#features)
+* [Requirements](#requirements)
 * [Instructions](#instructions)
-  * [Requirements](#requirements)
   * [Clone the repository](#clone-the-repository)
   * [Set custom variables](#set-custom-variables)
   * [Setup the environment](#setup-the-environment)
@@ -81,9 +80,7 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 * **Bulk** - Some commands can be bulked with the argument `@all` to include all services or clients depending on the option `--service` or `--client`, list enabled arguments`[SERV1,SERV2,...]` and `[CLIENT1,CLIENT2,...]`, the command will loop the variables and apply the combination.
 * **Fool-proof** - The script tries its best to filter invalid commands and incorrect syntax. The commands are not difficult but at first sight may scare you. Don't worry, if it is invalid, it won't run to avoid tor daemon failing to reload because of invalid configuration. If an invalid command runs, please open an issue.
 
-## Instructions
-
-### Requirements
+## Requirements
 
 * General:
   * Unix-like system.
@@ -116,6 +113,8 @@ If using Vanguards, `python2.x` is needed, but it is not in the requirements to 
 The packages are downloaded when setting up the environment with [configure.sh](configure.sh).
 The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
 
+## Instructions
+
 ### Clone the repository
 
 ```sh
@@ -133,7 +132,7 @@ The required programs can have different names depending on the operating system
 
 To assign values to the variables, you can either:
 
-* Open the mentioned configuration file:
+* Open the mentioned configuration file with your favorite editor:
 ```sh
 "${EDITOR:-vi}" /etc/onionjuggler.conf
 ```
