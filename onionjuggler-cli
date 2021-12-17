@@ -5,12 +5,52 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
+## colors
+nocolor="\033[0m"
+bold="\033[1m"
+underline="\033[4m"
+#white="\033[97m"
+#black="\033[30m"
+red="\033[31m"
+green="\033[32m"
+yellow="\033[33m"
+blue="\033[34m"
+magenta="\033[35m"
+#cyan="\033[36m"
+
 usage(){
-  # onion_ascii="images/onion-ascii-50-30.txt"
-  # if [ -f "${onion_ascii}" ]; then
-  #   onion_ascii="$(while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "${onion_ascii}")"
-  #   printf %s"${magenta} ${onion_ascii} ${nocolor}\n\n"
-  # fi
+
+  printf %s"${magenta}
+                           ';:  -'''
+                      ':' -=l.:>l_
+                     '^';z;_|J/':'
+                    '|;l''?7xc:'
+                    r1ztJtv;':'
+                   'xxxtx|-'
+               ':' '|ttxv:
+               7Or:{tx|'
+                O?':,Jom,
+                vN'_'i9@;
+               'g9'_'j2Qg-
+             _xBt-':'>USMQv'
+          ;uQDc.'';_:'lOjoOBNu:
+       ~yQ6|.'''':;_:,';DSjjj6#QX;
+     ?BQv''''''-=>'_'l'''8yjjjujqQQi
+   :R#>'''''->|r-''_'.7'';gjjuujjjPQN:
+  7@7'''''rl>-''''.;:'-1.'OPjuuuujjjM@l
+ i@:''''*i'''''''.;_*''.u'lQjuuuuuujjK@r
+~@1''''u,'''''',::'_-J,',1~@SjjuuuujjjQQ'
+}@'''.a.'''':>;.'''_''/,'e.@Ejjuuuuuujh@>
+Z@'''],'''.v^'''''';_''u'l:@Kjjuuuuuuja@v
+}@.''a'''-o''''''->^;;'*l>/@OjjuuuuuujX@|
+_@v'':i''L,'''''_{'_'y''kJu@6jjuuuujjjN@-
+ v@:''7r'l;'''''x''_'o':Eqe@ojjuuuujjE@L
+  F@c''|=.R'''''u''_'o:lSjQQjjjuujjuO@}
+   ?Qq,'rcr8,'''e,'_'q-kZv@EjuujujoNQ|
+    'iQO^,xlm7-''E'_~g;DO@OjjjujhBQ1'
+       :jWkmycjl^:FxPXQ@@kjSEDQQe;
+          -;vmdgN@@Q@@@QROsev^-
+${nocolor}\n"
 
   printf "Juggle with an Onion Service
 \nUsage: onionjuggler-cli command [--option <ARGUMENT>]
@@ -115,7 +155,7 @@ If your services are unreacheable, restart tor.
 #### OPTION PARSING ####
 
 ## display error message with instructions to use the script correctly.
-error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
+error_msg(){ printf %s"${red}ERROR: ${1}${nocolor}\n"; exit 1; }
 
 ## assign_value variable_name "${opt}"
 ## it strips the dashes and assign the clean value to the variable
@@ -211,26 +251,13 @@ done
 : "${tor_control_port:="9051"}" ## only the port, not the host
 
 ## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
-: "${tor_browser_dir:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-tor_browser_${LANG%.*}"}"; tor_browser_dir="${tor_browser_dir%*/}"
+: "${tor_browser_dir:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-browser_${LANG%.*}"}"; tor_browser_dir="${tor_browser_dir%*/}"
 : "${tor_browser_data_dir:="${tor_browser_dir}/Browser/TorBrowser/Data/Tor"}"; tor_browser_data_dir="${tor_browser_data_dir%*/}"
 : "${tor_browser_conf:="${tor_browser_data_dir}/torrc"}"
 : "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"; tor_browser_data_dir_auth="${tor_browser_data_dir_auth%*/}"
 
 ## backup
 : "${tor_backup_dir:="${HOME}/.onionjuggler/backup"}"; tor_backup_dir="${tor_backup_dir%*/}"
-
-## colors
-nocolor="\033[0m"
-bold="\033[1m"
-underline="\033[4m"
-#white="\033[97m"
-#black="\033[30m"
-red="\033[31m"
-green="\033[32m"
-yellow="\033[33m"
-blue="\033[34m"
-#magenta="\033[35m"
-#cyan="\033[36m"
 
 ###################
 #### FUNCTIONS ####
@@ -308,7 +335,7 @@ is_service_dir_empty(){
 test_service_exists(){
   service="${1}"
   onion_hostname=$("${exec_cmd_alt_user}" -u "${tor_user}" grep ".onion" "${tor_data_dir_services}"/"${service}"/hostname 2>/dev/null)
-  [ -z "${onion_hostname}" ] && { printf %s"${red}ERROR: Service does not exist: ${service}\n${nocolor}"; exit 1; }
+  [ -z "${onion_hostname}" ] && error_msg "Service does not exist: ${service}"
 }
 
 
