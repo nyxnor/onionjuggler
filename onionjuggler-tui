@@ -14,8 +14,6 @@
 nocolor="\033[0m"
 #bold="\033[1m"
 #underline="\033[4m"
-#white="\033[97m"
-#black="\033[30m"
 red="\033[31m"
 #green="\033[32m"
 yellow="\033[33m"
@@ -59,6 +57,11 @@ done
 
 ## general
 : "${website_dir:="/var/www"}"
+
+
+## First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
+eval PRIVILEGED_EDITOR='$'"$(printf %s"${exec_cmd_alt_user##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
+VISUAL="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-vi}"}"}"
 
 ###########################
 ######## FUNCTIONS ########
@@ -329,7 +332,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           # shellcheck disable=SC2086
           choice_client="$("${dialog_box}" --backtitle "${backtitle}" --title "${title}" --menu "${menu}" \
           "$((i+8+whiptail_height))" 50 "${i}" ${client_list} 3>&1 1>&2 2>&3)"
-          [ -n "${choice_client}" ] && "${exec_cmd_alt_user}" "${EDITOR:-vi}" "${tor_data_dir_services}"/"${service}"/authorized_clients/"${choice_client}".auth
+          [ -n "${choice_client}" ] && "${exec_cmd_alt_user}" "${VISUAL}" "${tor_data_dir_services}"/"${service}"/authorized_clients/"${choice_client}".auth
         fi
       ;;
 
@@ -455,7 +458,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         # shellcheck disable=SC2086
         choice_onion_auth="$("${dialog_box}" --title "${title}" --menu "${menu}" \
         "$((i+8+whiptail_height))" 80 "${i}" ${onion_auth_list} 3>&1 1>&2 2>&3)"
-        [ -n "${choice_onion_auth}" ] && "${exec_cmd_alt_user}" "${EDITOR:-vi}" "${tor_data_dir_auth}"/"${choice_onion_auth}".auth_private
+        [ -n "${choice_onion_auth}" ] && "${exec_cmd_alt_user}" "${VISUAL}" "${tor_data_dir_auth}"/"${choice_onion_auth}".auth_private
       ;;
 
       GEN)

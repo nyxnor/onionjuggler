@@ -156,6 +156,13 @@ Run from inside the cloned repository to create the tor directories, create manu
 
 ### Usage
 
+Some TUI options will let you edit the authorization files, which is recommended to set your favorite text editor to an environment variable that will be tried on the following order: `DOAS_EDITOR`/`SUDO_EDITOR`, if empty will try `VISUAL`, if empty will try `EDITOR`, if empty WILL fallback to `Vi`.
+
+To use the TUI, just run:
+```sh
+onionjuggler-tui
+```
+
 If you are using the TUI, it is expected to be self explanatory the options, but in the case you don't understand or want to go deeper into the CLI, take a look at the documentation inside `docs` folder, there are many other onion services management guides. Read:
 
 Don't forget the [cli manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
