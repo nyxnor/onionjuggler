@@ -694,11 +694,12 @@ case "${command}" in
           ## adding to Tor Browser automatically not supported yet
           n|on)
             [ -z "${service}" ] && usage
-            onion_hostaname_without_onion=${onion%.onion}
-            suffix_onion=${onion##*.}
+            ## removes protocol such as http(s)://, ssh:// and git:// from the front of the address and trailing / at the end of the onion to clean it and only show the hostname (address.onion)
+            onion="$(printf %s"${onion}\n" | sed "s|.*://||" | sed "s|/$||")"
+            onion_hostaname_without_onion="${onion%.onion}"
+            [ "${onion##*.}" != "onion" ] && error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
             [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#onion}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#onion} is different than 62 characters (<56-char-base32>.onion)"
-            [ "${suffix_onion}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
             "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
             grep -q "ClientOnionAuthDir" "${tor_conf}" && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"; }
             "${exec_cmd_alt_user}" -u "${tor_user}" mkdir -p "${tor_data_dir_auth}"
@@ -740,7 +741,8 @@ case "${command}" in
 
           ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
           f|off)
-                [ -z "${onion}" ] && usage
+            [ -z "${onion}" ] && usage
+            onion="$(printf %s"${onion}\n" | sed "s|.*://||" | sed "s|/.*$||")"
             auth_client_remove  (){
               onion="${1}"
               printf %s"\n{${red}# Removing ${tor_data_dir_auth}/${onion}.auth_private${nocolor}"
