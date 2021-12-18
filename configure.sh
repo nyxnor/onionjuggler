@@ -195,8 +195,10 @@ case "${action}" in
       printf %s" - Uncommited changes!\n${nocolor}"
       git status
       error_msg "Please record the changes to the file(s) above with a commit before pushing!"
+    else
+      printf " - Working tree clean\n"
     fi
-    printf %s"\n${green}# Done!\n${nocolor}"
+    printf %s"${green}# Done!\n${nocolor}"
   ;;
 
   -k|--check) custom_shellcheck;;
