@@ -196,7 +196,7 @@ case "${action}" in
       git status
       error_msg "Please record the changes to the file(s) above with a commit before pushing!"
     fi
-    printf %s"${green}# Done!\n${nocolor}"
+    printf %s"\n${green}# Done!\n${nocolor}"
   ;;
 
   -k|--check) custom_shellcheck;;
