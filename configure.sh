@@ -1,9 +1,21 @@
 #!/usr/bin/env sh
 
+
 ## This file should be run from inside the cloned repository
 ## Setup tor directories, user, packages needed for OnionJuggler.
 
-error_msg(){ printf %s"\033[0;31mERROR: ${1}\033[0m\n"; exit 1; }
+## colors
+nocolor="\033[0m"
+#bold="\033[1m"
+#underline="\033[4m"
+red="\033[31m"
+green="\033[32m"
+yellow="\033[33m"
+blue="\033[34m"
+magenta="\033[35m"
+cyan="\033[36m"
+
+error_msg(){ printf %s"${red}ERROR: ${1}${nocolor}\n"; exit 1; }
 
 if [ ! -f onionjuggler-cli ]||[ ! -f onionjuggler-tui ]||[ ! -f etc/onionjuggler.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
   ||[ ! -f docs/onionjuggler.conf.1.md ]||[ ! -f man/onionjuggler-cli.1 ]||[ ! -f man/onionjuggler.conf.1 ]; then
@@ -69,19 +81,6 @@ if [ -d "${man_dir:="/usr/local/man/man1"}" ]; then man_dir="${man_dir%*/}"; els
 : "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
 : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
 : "${openssl_cmd:="openssl"}"
-
-## colors
-nocolor="\033[0m"
-#bold="\033[1m"
-#underline="\033[4m"
-#white="\033[97m"
-#black="\033[30m"
-red="\033[31m"
-green="\033[32m"
-yellow="\033[33m"
-blue="\033[34m"
-magenta="\033[35m"
-cyan="\033[36m"
 
 ## sanity check
 printf %d "${tor_control_port:=9050}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
