@@ -144,6 +144,7 @@ cabal install cabal-install
 ## pandoc
 
 Source: https://github.com/jgm/pandoc/blob/2.16.2/INSTALL.md
+
 Build [cabal](#cabal).
 ```sh
 git clone https://github.com/jgm/pandoc
@@ -154,6 +155,7 @@ cabal install
 ## shellcheck
 
 Source: https://github.com/koalaman/shellcheck#compiling-shellcheck
+
 Build [cabal](#cabal).
 ```sh
 git clone https://github.com/koalaman/shellcheck
@@ -183,7 +185,7 @@ sudo /usr/sbin/usermod -aG debian-tor "${USER}
 
 ```sh
 printf "https://cdn.openbsd.org/pub/OpenBSD\n" > /etc/installurl
-pkg_add tor
+doas pkg_add tor
 rcctl enable tor
 rcctl start tor
 ```
