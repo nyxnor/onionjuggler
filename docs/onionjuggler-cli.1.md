@@ -36,7 +36,7 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 
 # DESCRIPTION
 
-**onionjuggler-cli** is a part of OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The onionjuggler variables must be inside /etc/onionjuggler.conf.
+**onionjuggler-cli** is a part of OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The onionjuggler variables must be inside /etc/onionjuggler/default.conf.
 
 The script tries its best to avoid inserting incorrect lines to torrc, that would make tor fail. Because of this, any incorrect command flagged show the error mesage to understand what is the cause of the error and display the commands help option, finally exit the script without modifying the torrc. At least two arguments are required for every command, some could have more than one required argument.
 
@@ -279,7 +279,7 @@ onionjuggler-cli vanguards --upgrade
 onionjuggler-cli vanguards --off
 ```
 
-**-h**|**-help**|**--help**|**help**
+**-h**, **-help**, **--help**, **help**
 : Display the script help message. Abscense of any parameter will also have the same effect.
 ```
 onionjuggler-cli
@@ -289,31 +289,29 @@ onionjuggler-cli --help
 onionjuggler-cli help
 ```
 
+**-R**, **--restart**, **-r**, **--reload**
+: Signal tor daemon to restart or reload after the CLI edits tor's configuration files. (Default: reload)
+
+**-C**, **--config**
+: Specify and alternative configuration file to override default configuration.
+
 
 # FILES
 
-**/etc/onionjuggler.conf**
+**/etc/onionjuggler/default.conf**
 
 : Default system configuration file.
 
-**$HOME/.dialogrc-onionjuggler**
+**/etc/onionjuggler/conf.d/*conf**
 
-: Default dialog run commands file.
-
-**onionjuggler-cli**
-
-: Command Line Interface to interact directly with onion services.
-
-**onionjuggler-tui**
-
-: Terminal User Interface that wraps the CLI in a dialog box.
+: Local configuration files that overrrite the default one.
 
 
 # ENVIRONMENT
 
-**EDITOR**
+**ONIONJUGGLER_CONF**
 
-: Use the default editor when editing files on the TUI, else will fallback to Vi(1).
+: The environmental variable will override all previous options.
 
 
 # EXIT VALUE
@@ -332,7 +330,7 @@ Bugs you may find. First search for related issues on https://github.com/nyxnor/
 
 # SEE ALSO
 
-onionjuggler.conf(1), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
+onionjuggler-tui(1), onionjuggler.conf(5), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
 
 
 # COPYRIGHT

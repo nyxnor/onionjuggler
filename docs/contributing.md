@@ -57,7 +57,7 @@ Commands used by this project:
     * Auth - [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html), [basez](http://www.quarkline.net/basez/)
     * Vanguards - [git](https://git-scm.com/docs/user-manual), [python3-stem](https://stem.torproject.org/download.html), [systemd](https://www.freedesktop.org/software/systemd/man/)
     * Web - [nginx](https://docs.nginx.com/nginx/admin-guide/), [apache](https://httpd.apache.org/docs/current/)
-    * TUI - [dialog](https://www.freebsd.org/cgi/man.cgi?dialog), [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
+    * TUI - [dialog](https://invisible-island.net/dialog/manpage/dialog.txt), [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
   * Optional:
     * QR encoding - [(lib)qrencode](https://github.com/fukuchi/libqrencode)
   * Development:

@@ -93,7 +93,7 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * **grep** >=0.9
   * **sed**
   * **tar** (Backup)
-  * **openssl** >= 1.1 (Client Authorization)
+  * **openssl** >= 1.1 (Client Authorization - requires algorithm x25519, so it can't be LibreSSL)
   * **basez** >= 1.6.2 (Client Authorization)
   * **git** (Vanguards)
   * **python(3)-stem** >=1.8.0 (Vanguards)
@@ -102,7 +102,6 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 
 * Optional programs:
   * **(lib)qrencode** >= 4.1.1 (List)
-  * **sha256(sum)** (Backup)
 
 * Development programs:
   * **pandoc** (Manual)
@@ -124,9 +123,9 @@ cd onionjuggler
 
 ### Set custom variables
 
-Edit the required variables to fit your system on the onionjuggler configuration file, which is defined by the environment variable `ONIONJUGGLER_CONF`, but if the variable is empty, will fallback to the default path on `/etc/onionjuggler.conf`. It is also possible to specify a one time alternative path with the option `-C, --config <PATH_TO_CONF>`, this command line argument has priority over the environment variable.
+Edit the required variables to fit your system on the onionjuggler configuration file, which is defined by the environment variable `ONIONJUGGLER_CONF`, but if the variable is empty, will fallback to the default path on `/etc/onionjuggler/default.conf`. It is also possible to specify a one time alternative path with the option `-C, --config <PATH_TO_CONF>`, this command line argument has priority over the environment variable.
 
-Check this [onionjuggler.conf sample](etc/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
+Check this [onionjuggler.conf sample](etc/onionjuggler/default.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler/default.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
 
 The required programs can have different names depending on the operating system and the daemon control will also vary, because of this, read [docs/compatibility.md](docs/compatibility.md) for the detailed configuration file for your operating system.
 
@@ -134,17 +133,17 @@ To assign values to the variables, you can either:
 
 * Open the mentioned configuration file with your favorite editor:
 ```sh
-"${EDITOR:-vi}" /etc/onionjuggler.conf
+"${EDITOR:-vi}" /etc/onionjuggler/default.conf
 ```
 
 * or insert configuration to the end of the file with tee:
 ```sh
-printf "exec_cmd_alt_user=\"sudo\"\n" | tee -a /etc/onionjuggler.conf
+printf "exec_cmd_alt_user=\"sudo\"\n" | tee -a /etc/onionjuggler/default.conf
 ```
 
 * or edit with sed:
 ```sh
-sed -i'' "s|^exec_cmd_alt_user=.*|exec_cmd_alt_user=\"doas\"|" /etc/onionjuggler.conf
+sed -i'' "s|^exec_cmd_alt_user=.*|exec_cmd_alt_user=\"doas\"|" /etc/onionjuggler/default.conf
 ```
 
 ### Setup the enviroment

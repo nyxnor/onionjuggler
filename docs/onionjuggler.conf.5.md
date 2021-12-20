@@ -1,4 +1,4 @@
-% onionjuggler.conf(1) Configuration file for OnionJuggler
+% onionjuggler.conf(5) Configuration file for OnionJuggler
 % Written by nyxnor (nyxnor@protonmail.com)
 % September 2069
 
@@ -9,11 +9,11 @@ onionjuggler.conf - Configuration file for OnionJuggler
 
 # DESCRIPTION
 
-**onionjuggler.conf** is the configuration for for OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The system variables are defined by the environment variable *ONIONJUGGLER_CONF*, but if it is empty, will read */etc/onionjuggler.conf*. The configuration file is then sourced be used by the program. It defines where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used.
+**onionjuggler.conf** is the configuration for for OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The system variables are defined by the environment variable *ONIONJUGGLER_CONF*, but if it is empty, will read */etc/onionjuggler/default.conf*. The configuration file is then sourced be used by the program. It defines where the hidden services are located, the owner of the DataDir folder, the ControlPort to be used.
 
 The configuration file is parsed by the shell and interpreted as variables. When assigning a value to a variable, use double quotes to avoid word splitting: **variable**=*"value"*.
 
-Variables set to and empty string, either *var=* or *var=""*, they will be assigned to the default values.
+Variables set to and empty string, either *var=* or *var=""*, will run with default values.
 
 # OPTIONS
 
@@ -37,7 +37,7 @@ Variables set to and empty string, either *var=* or *var=""*, they will be assig
 
 **dialog_box**
 
-: Terminal User Interface dialog box. Compatible with *dialog* and *whiptail*. (Default: dialog).
+: Terminal User Interface dialog box. Compatible with *dialog* and *whiptail*. (default: whiptail).
 
 **requirements**
 
@@ -123,11 +123,11 @@ Variables set to and empty string, either *var=* or *var=""*, they will be assig
 
 **ONIONJUGGLER_CONF**
 
-: Use the environment variable to search for the configuration file, if the variable is empty, use the default confiugration on */etc/onionjuggler.conf*.
+: Use the environment variable to search for the configuration file, if the variable is empty, use the default confiugration on */etc/onionjuggler/default.conf*.
 
 # FILES
 
-**/etc/onionjuggler.conf**
+**/etc/onionjuggler/default.conf**
 
 : Default system configuration file.
 
@@ -150,7 +150,7 @@ Bugs you may find. First search for related issues on https://github.com/nyxnor/
 
 # SEE ALSO
 
-onionjuggler-cli(1), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
+onionjuggler-tui(1), onionjuggler-cli(1), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
 
 
 # COPYRIGHT

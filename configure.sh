@@ -17,8 +17,8 @@ cyan="\033[36m"
 
 error_msg(){ printf %s"${red}ERROR: ${1}${nocolor}\n"; exit 1; }
 
-if [ ! -f onionjuggler-cli ]||[ ! -f onionjuggler-tui ]||[ ! -f etc/onionjuggler.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
-  ||[ ! -f docs/onionjuggler.conf.1.md ]||[ ! -f man/onionjuggler-cli.1 ]||[ ! -f man/onionjuggler.conf.1 ]; then
+if [ ! -f onionjuggler-cli ]||[ ! -f onionjuggler-tui ]||[ ! -f etc/onionjuggler/sample.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
+  ||[ ! -f docs/onionjuggler.conf.5.md ]||[ ! -f man/man1/onionjuggler-cli.1 ]||[ ! -f man/man5/onionjuggler.conf.5 ]; then
   error_msg "This script must be run from inside the onionjuggler repository!"
 fi
 
@@ -31,10 +31,11 @@ usage(){
 \nAdvanced options:
   -s, --setup [-b <DIR>|-c <DIR>|-m <DIR>]    setup environment with specified paths
   -C, --config <ONIONJUGGLER_CONF>            specify alternative onionjuggler configuration file to be read
-  -b, --bin-dir <DIR>                         script directory that is on path (Default: /usr/local/bin)
-  -c, --conf-dir <DIR>                        configuration directory (Default: /etc)
-  -m, --man-dir <DIR>                         manual directory (Default: /usr/local/man/man1)
+  -B, --bin-dir <DIR>                         script directory that is on path (Default: /usr/local/bin)
+  -F, --conf-dir <DIR>                        configuration directory (Default: /etc)
+  -M, --man-dir <DIR>                         manual directory (Default: /usr/local/man/man1)
   -k, --check                                 run pre-defined shellcheck
+  -m, --man                                   build manual pages
   -r, --release                               prepare for commiting
 "
   exit 1
@@ -52,27 +53,141 @@ while :; do
     *) arg="${2}"; shift_n=2;;
   esac
   case "${1}" in
-    -s|--setup|-r|--release|-k|--check) action="${1}"; shift;;
+    -s|--setup|-r|--release|-k|--check|-m|--man) action="${1}"; shift;;
     -C|--config|-C=*|--confg=*) ONIONJUGGLER_CONF="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -b|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -c|--conf-dir|-c=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -m|--man-dir|-m=*|--man-dir=*) man_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -B|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -F|--conf-dir|-c=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -M|--man-dir|-m=*|--man-dir=*) man_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
     -h|--help) usage;;
     "") break;;
     *) error_msg "Invalid option: ${1}";;
   esac
 done
 
-if [ -d "${bin_dir:="/usr/local/bin"}" ]; then bin_dir="${bin_dir%*/}"; else error_msg "Your system does not seems to support bin_dir=${bin_dir}"; fi
-if [ -d "${conf_dir:="/etc"}" ]; then conf_dir="${conf_dir%*/}"; else error_msg "Your system does not seems to support conf_dir=${conf_dir}"; fi
-if [ -d "${man_dir:="/usr/local/man/man1"}" ]; then man_dir="${man_dir%*/}"; else error_msg "Your system does not seems to support man_dir=${man_dir}"; fi
+[ -d "${bin_dir:="/usr/local/bin"}" ] || error_msg "Your system does not seems to support bin_dir=${bin_dir}"
+[ -d "${conf_dir:="/etc"}" ] || error_msg "Your system does not seems to support conf_dir=${conf_dir}"
+[ -d "${man_dir:="/usr/local/man"}" ] || error_msg "Your system does not seems to support man_dir=${man_dir}"
+
+bin_dir="${bin_dir%*/}"
+conf_dir="${conf_dir%*/}/onionjuggler"
+man_dir="${man_dir%*/}"
+
+###################
+#### FUNCTIONS ####
+
+install_package(){
+  for package in "${@}"; do
+    install_pkg=0
+    case "${package}" in
+      python-stem|python3-stem|security/py-stem|py-stem|py37-stem|stem)
+        ## https://stem.torproject.org/download.html
+        while :; do
+          command -v python3 >/dev/null && python_path="$(command -v python3)" && break
+          command -v python >/dev/null && python_path="$(command -v python)" && break
+          printf %s"${red}Python is not installed and it is needed for Vanguards, skipping...\n${nocolor}" && break
+        done
+        [ -n "${python_path}" ] && ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg=1
+      ;;
+      openssl)
+        if [ "${openssl_cmd}" != "openssl" ]; then
+          ! command -v "${openssl_cmd}" >/dev/null && package="openssl" && install_pkg=1
+        else
+          ! command -v openssl >/dev/null && package="openssl" && install_pkg=1
+        fi
+      ;;
+      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${exec_cmd_alt_user} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
+      libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
+      *) ! command -v "${package}" >/dev/null && install_pkg=1;;
+    esac
+
+    if [ "${install_pkg}" = 1 ]; then
+      printf %s"${nocolor}# Installing ${package}\n"
+      # shellcheck disable=SC2086
+      "${exec_cmd_alt_user}" ${pkg_mngr_install} "${package}"
+    fi
+  done
+}
+
+
+custom_shellcheck(){
+  printf %s"${yellow}# Checking shell syntax"
+  ## Customize severity with -S [error|warning|info|style]
+  if ! shellcheck configure.sh etc/onionjuggler/*.conf onionjuggler-cli onionjuggler-tui; then
+    error_msg "Please fix the shellcheck warnings above before pushing!"
+  else
+    printf " - 100%%\n${nocolor}"
+  fi
+}
+
+make_man(){
+  printf %s"${magenta}# Creating manual pages"
+  pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/man1/onionjuggler-cli.1
+  pandoc -s -f markdown-smart -t man docs/onionjuggler-tui.1.md -o man/man1/onionjuggler-tui.1
+  pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.5.md -o man/man5/onionjuggler.conf.5
+  printf %s" - Made!\n${nocolor}"
+}
+
+get_os(){
+  ## Source: pfetch -> https://github.com/dylanaraps/pfetch/blob/master/pfetch
+  os="$(uname -s)"
+  kernel="$(uname -r)"
+
+  case ${os} in
+    Linux*)
+      if command -v lsb_release >/dev/null; then
+        distro=$(lsb_release -sd)
+      elif [ -f /etc/os-release ]; then
+        while IFS='=' read -r key val; do
+          case $key in (PRETTY_NAME) distro=${val};; esac
+        done < /etc/os-release
+      else
+        command -v crux >/dev/null && distro=$(crux)
+        command -v guix >/dev/null && distro='Guix System'
+      fi
+      distro=${distro##[\"\']}
+      distro=${distro%%[\"\']}
+      case ${PATH} in (*/bedrock/cross/*) distro='Bedrock Linux' ;; esac
+      if [ "${WSLENV}" ]; then
+        distro="${distro}${WSLENV+ on Windows 10 [WSL2]}"
+      elif [ -z "${kernel%%*-Microsoft}" ]; then
+        distro="${distro} on Windows 10 [WSL1]"
+      fi
+    ;;
+    Haiku) distro=$(uname -sv);;
+    Minix|DragonFly) distro="${os} ${kernel}";;
+    SunOS) IFS='(' read -r distro _ < /etc/release;;
+    OpenBSD*) distro="$(uname -sr)";;
+    FreeBSD) distro="${os} $(freebsd-version)";;
+    *) distro="${os} ${kernel}";;
+  esac
+}
 
 ###################
 #### VARIABLES ####
 
-[ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
-## if any of the configurations are empty, use default ones
+## 1. source default configuration file first
+## 2. source local (user made) configuration files to override the default values
+## 3. source the ONIONJUGGLER_CONF specified by the cli argument and if it empty, use the environment variable
+if [ ! -f /etc/onionjuggler/default.conf ]; then
+  get_os
+  case "${os}" in
+    Linux*)
+      case "${distro}" in
+        "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) . etc/onionjuggler/debian.conf;;
+        "Arch"*|"Artix"*|"ArcoLinux"*) . etc/onionjuggler/arch.conf;;
+        "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") . etc/onionjuggler/fedora.conf;;
+      esac
+    ;;
+    "OpenBSD"*) . etc/onionjuggler/openbsd.conf;;
+    "NetBSD"*) . etc/onionjuggler/netbsd.conf;;
+    "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) . etc/onionjuggler/freebsd.conf;;
+  esac
+fi
+[ -r /etc/onionjuggler/default.conf ] && . /etc/onionjuggler/default.conf
+for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}"; done
+[ -r "${ONIONJUGGLER_CONF}" ] && . "${ONIONJUGGLER_CONF}"
 
+## if any of the configurations are empty, use default ones
 : "${exec_cmd_alt_user:="sudo"}"
 : "${tor_user:="debian-tor"}"
 : "${pkg_mngr_install:="apt install -y"}"
@@ -102,78 +217,46 @@ range_variable exec_cmd_alt_user sudo doas
 range_variable web_server nginx apache2
 range_variable dialog_box dialog whiptail
 
-
-###################
-#### FUNCTIONS ####
-
-install_package(){
-  for package in "${@}"; do
-    install_pkg=0
-    case "${package}" in
-      python-stem|python3-stem|security/py-stem|py-stem|py37-stem|stem)
-        ## https://stem.torproject.org/download.html
-        while :; do
-          command -v python3 >/dev/null && python_path="$(command -v python3)" && break
-          command -v python >/dev/null && python_path="$(command -v python)" && break
-          printf %s"${red}Python is not installed and it is needed for Vanguards, skipping...\n${nocolor}" && break
-        done
-        [ -n "${python_path}" ] && ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg=1
-      ;;
-      openssl)
-        case "${kernel}" in
-          OpenBSD) ! command -v "${openssl_cmd}" >/dev/null && package="openssl" && install_pkg=1;;
-          *) ! command -v openssl >/dev/null && package="openssl" && install_pkg=1;;
-        esac
-      ;;
-      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${exec_cmd_alt_user} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
-      libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
-      *) ! command -v "${package}" >/dev/null && install_pkg=1;;
-    esac
-
-    if [ "${install_pkg}" = 1 ]; then
-      printf %s"${nocolor}# Installing ${package}\n"
-      # shellcheck disable=SC2086
-      "${exec_cmd_alt_user}" ${pkg_mngr_install} "${package}"
-    fi
-  done
-}
-
-
-custom_shellcheck(){
-  printf %s"${yellow}# Checking shell syntax"
-  ## Customize severity with -S [error|warning|info|style]
-  if ! shellcheck configure.sh etc/onionjuggler.conf onionjuggler-cli onionjuggler-tui; then
-    error_msg "Please fix the shellcheck warnings above before pushing!"
-  else
-    printf " - 100%%\n${nocolor}"
-  fi
-}
-
 ###################
 ###### MAIN #######
-kernel="$(uname -s)"
+
 
 case "${action}" in
 
   -s|--setup|setup)
-    ## configure
     printf %s"${magenta}# Checking requirements\n${nocolor}"
     # shellcheck disable=SC2086
     install_package ${requirements}
-    #printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
     ## see https://github.com/nyxnor/onionjuggler/issues/15 about using complete path to binary
     ## see https://github.com/nyxnor/onionjuggler/issues/29 about usermod not appending with -a
+    #printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
     #"${exec_cmd_alt_user}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
     printf %s"${yellow}# Creating tor directories\n${nocolor}"
     "${exec_cmd_alt_user}" mkdir -p "${tor_data_dir_services}"
     "${exec_cmd_alt_user}" mkdir -p "${tor_data_dir_auth}"
     "${exec_cmd_alt_user}" chown -R "${tor_user}":"${tor_user}" "${tor_data_dir}"
     printf %s"${green}# Copying files to the system\n${nocolor}"
+    "${exec_cmd_alt_user}" mkdir -p "${man_dir}/man1" "${man_dir}/man5"
+    "${exec_cmd_alt_user}" cp -v man/man1/onionjuggler-cli.1 "${man_dir}/man1"
+    "${exec_cmd_alt_user}" cp -v man/man1/onionjuggler-tui.1 "${man_dir}/man1"
+    "${exec_cmd_alt_user}" cp -v man/man5/onionjuggler.conf.5 "${man_dir}/man5"
     "${exec_cmd_alt_user}" cp -v onionjuggler-cli onionjuggler-tui "${bin_dir}"
-    [ ! -f "${conf_dir}" ] && "${exec_cmd_alt_user}" cp -v etc/onionjuggler.conf "${conf_dir}"
-    "${exec_cmd_alt_user}" cp -v man/onionjuggler-cli.1 man/onionjuggler.conf.1 "${man_dir}"
-    cp -v .dialogrc-onionjuggler "${HOME}/.dialogrc-onionjuggler"
-    ## finish
+    [ ! -d "${conf_dir}/onionjuggler" ] && "${exec_cmd_alt_user}" mkdir -p "${conf_dir}/conf.d"
+    "${exec_cmd_alt_user}" cp -v etc/onionjuggler/dialogrc "${conf_dir}"
+    get_os
+    ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch/blob/master/neofetch
+    case "${os}" in
+      Linux*)
+        case "${distro}" in
+          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/debian.conf "${conf_dir}/default.conf";;
+          "Arch"*|"Artix"*|"ArcoLinux"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/arch.conf "${conf_dir}/default.conf";;
+          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${exec_cmd_alt_user}" cp -v etc/onionjuggler/fedora.conf "${conf_dir}/default.conf";;
+        esac
+      ;;
+      "OpenBSD"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/openbsd.conf "${conf_dir}/default.conf";;
+      "NetBSD"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/netbsd.conf "${conf_dir}/default.conf";;
+      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/freebsd.conf "${conf_dir}/default.conf";;
+    esac
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
   ;;
 
@@ -182,13 +265,8 @@ case "${action}" in
     ## ShellCheck is needed
     ## install https://github.com/koalaman/shellcheck#installing or compile from source https://github.com/koalaman/shellcheck#compiling-from-source
     install_package shellcheck pandoc git
-    printf %s"${magenta}# Creating manual pages"
-    pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/onionjuggler-cli.1
-    pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.1.md -o man/onionjuggler.conf.1
-    printf %s" - Made!\n${nocolor}"
-    ## run shellcheck
+    make_man
     custom_shellcheck
-    ## cleanup
     printf %s"${cyan}# Checking git status"
     find . -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \; ## should not delete, could destroy lines, just leave empty lines
     if [ -n "$(git status -s)" ]; then
@@ -203,6 +281,7 @@ case "${action}" in
 
   -k|--check) custom_shellcheck;;
 
+  -m|--man) make_man;;
 
   *) usage;;
 

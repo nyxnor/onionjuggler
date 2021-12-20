@@ -220,11 +220,13 @@ done
 ###################
 #### VARIABLES ####
 
-## The configuration parsing priority is defined as:
-## 1. command line argument `-C, --config <ONIONJUGGLER_CONF>`
-## 2. environment variable ONIONJUGGLER_CONF
-## 3. if environment variable is empty, fallback to default path /etc/onionjuggler.conf
-[ -r "${ONIONJUGGLER_CONF:="/etc/onionjuggler.conf"}" ] && . "${ONIONJUGGLER_CONF}"
+## 1. source default configuration file first
+## 2. source local (user made) configuration files to override the default values
+## 3. source the ONIONJUGGLER_CONF specified by the cli argument and if it empty, use the environment variable
+[ ! -f /etc/onionjuggler/default.conf ] && error_msg "Default configuration file not found: /etc/onionjuggler/default.conf"
+[ -r /etc/onionjuggler/default.conf ] && . /etc/onionjuggler/default.conf
+for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}"; done
+[ -r "${ONIONJUGGLER_CONF}" ] && . "${ONIONJUGGLER_CONF}"
 
 ## : ${var:="value"} -> initialize the variable (SC2154) and if empty or unset, use default values
 ## var=${var%*/} -> removes the trailing slash "/" at the end of directories variables
@@ -1029,12 +1031,14 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         "${exec_cmd_alt_user}" chown -R "${USER}:${USER}" "${tor_backup_dir}"
         set_owner_permission
         while :; do
-          command -v sha256sum >/dev/null && sha256_command="sha256sum" && break
-          command -v shasum >/dev/null && sha256_command="shasum -a 256" && break
-          command -v sha256 >/dev/null && sha256_command="sha256" && break
+          command -v sha256sum >/dev/null && checksum_sha256="sha256sum" && break
+          command -v shasum >/dev/null && checksum_sha256="shasum -a 256" && break
+          command -v sha256 >/dev/null && checksum_sha256="sha256" && break
+          command -v openssl >/dev/null && checksum_sha256="openssl dgst -sha256 -r" && break
+          command -v digest >/dev/null && checksum_sha256="digest -a sha256" && break
           break
         done
-        [ -n "${sha256_command}" ] && printf %s"\nsha256=$(${sha256_command} "${tor_backup_dir}"/"${tor_backup_file}")\n"
+        [ -n "${checksum_sha256}" ] && printf %s"\nsha256=$(${checksum_sha256} "${tor_backup_dir}"/"${tor_backup_file}")\n"
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 

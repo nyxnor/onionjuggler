@@ -1,14 +1,68 @@
 # Compatibility
 
-The required programs to OnionJuggler listed compatibility for different operating systems.
+**Warning**: OnionJuggler has only been tested on Debian and OpenBSD (almost complete). Contributions to improve current system or make it compatible with other systems is greatly appreciated.
 
-Information to install `tor` acquired on [community.torproject.org/relay/setup/bridge](https://community.torproject.org/relay/setup/bridge/) and and to install `stem` acquired on [stem.torproject.org](https://stem.torproject.org/download.html).
+The code works perfectly on Debian.
+The code is not complete on OpenBSD because of missing packages, will be shortly as it is resolved. (missing basez and service configuration file for vanguards and httpd integration.
 
-The other programs can also be compiled from source and the user should refer to their respective intructions.
+After setup, your operating system distro configuration file will be on /etc/onionjuggler/default.conf. If it is not there of if there is an invalid value to your system, please open an issue on github. You can also override the default configuration file by adding *.conf files inside /etc/onionjuggler/conf.d.
 
-# Packages from source
+# Building requirements from source
+
+As a security practice, you can build the requirements from source. Other programs can also be compiled from source and the user should refer to their respective intructions.
+
+## git
+
+Source: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+
+Requirements: `autotools`, `curl`, `zlib`, `openssl`, `expat`, and `libiconv`
+With `apt` or `dnf` you can use one of these commands to install the minimal dependencies for compiling and installing the Git binaries:
+```sh
+sudo apt-get install dh-autoreconf libcurl4-gnutls-dev libexpat1-dev gettext libz-dev libssl-dev
+## or
+sudo dnf install dh-autoreconf curl-devel expat-devel gettext-devel openssl-devel perl-devel zlib-devel
+```
+
+Optionally add documentation in various formats (`doc`, `html` and `info`):
+```sh
+sudo dnf install asciidoc xmlto docbook2X
+## or
+sudo apt-get install asciidoc xmlto docbook2x
+```
+
+If you’re using a Debian-based distribution (Debian/Ubuntu/Ubuntu-derivatives), you also need the install-info package:
+```sh
+sudo apt-get install install-info
+```
+
+If you’re using a RPM-based distribution (Fedora/RHEL/RHEL-derivatives), you also need the getopt package (which is already installed on a Debian-based distro):
+```sh
+sudo dnf install getopt
+```
+
+Additionally, if you’re using Fedora/RHEL/RHEL-derivatives, due to binary name differences you need to do this:
+```sh
+sudo ln -s /usr/bin/db2x_docbook2texi /usr/bin/docbook2x-texi
+```
+
+```sh
+git_version="2.34.1"
+tar -zxf git-${git_version}.tar.gz
+cd git-${git_version}
+make configure
+./configure --prefix=/usr
+make all doc info
+sudo make install install-doc install-html install-info
+```
+
+After this is done, you can also get Git via Git itself for updates:
+```sh
+git clone git://git.kernel.org/pub/scm/git/git.git
+```
 
 ## tor
+
+Source: https://gitweb.torproject.org/tor.git/tree/INSTALL
 
 Build tor from source and install it:
 ```sh
@@ -19,7 +73,9 @@ make
 make install
 ```
 
-## Stem
+## stem
+
+Source: https://stem.torproject.org/download.html
 
 Build Stem from source:
 ```sh
@@ -34,18 +90,83 @@ easy_install pip
 pip install stem
 ```
 
-# OnionJuggler setup per operating system
+## basez
 
-The code is being tested on Debian and OpenBSD, but because of time and contributors limitation, it is not possible to test on every Unix-like system. Therefore, the rest of documentation is not complete.
+Source: http://www.quarkline.net/basez/download/README
+```sh
+basez_version="1.6.2"
+wget http://www.quarkline.net/basez/download/basez-${basez_version}.tar.gz
+tar -xzvf basez-${basez_version}.tar.gz
+./configure
+make
+make install
+```
 
-Although the code is POSIX, it does not mean that the maintainer can indicate the correc `onionjuggler.conf` for every operating system, it is up to the user to test and we, the developers, are exempt of any liability that results of your failure.
+## openssl
 
-The code works 100% on Debian.
-The code is not complete on OpenBSD because of missing packages, will be shortly as it is resolved. (missing basez and service configuration file for vanguards).
+Source: https://github.com/openssl/openssl/blob/master/INSTALL.md
+```sh
+git clone https://github.com/openssl/openssl
+cd openssl
+./Configure
+make
+make install
+
+```
+
+## dialog
+
+Source: https://invisible-island.net/dialog/dialog.html#download
+```sh
+wget https://invisible-island.net/datafiles/release/dialog.tar.gz
+tar -xzvf dialog.tar.gz
+cd dialog*
+./configure
+make
+make install
+```
+
+## cabal
+
+Source: https://gitlab.haskell.org/ghc/ghc/-/wikis/building/#building-and-porting-ghc
+
+Cabal is used for building Pandoc and ShellCheck.
+```sh
+git clone --recurse-submodules https://gitlab.haskell.org/ghc/ghc.git
+cd ghc
+./configure
+make
+make install
+cabal update
+cabal install cabal-install
+```
+
+## pandoc
+
+Source: https://github.com/jgm/pandoc/blob/2.16.2/INSTALL.md
+Build [cabal](#cabal).
+```sh
+git clone https://github.com/jgm/pandoc
+cd pandoc
+cabal install
+```
+
+## shellcheck
+
+Source: https://github.com/koalaman/shellcheck#compiling-shellcheck
+Build [cabal](#cabal).
+```sh
+git clone https://github.com/koalaman/shellcheck
+cd shellcheck
+cabal install
+```
+
+
+# Install, enable and start tor per operating system
+
+Information to install `tor` acquired on [community.torproject.org/relay/setup/bridge](https://community.torproject.org/relay/setup/bridge/).
 
 ## Debian
-
-### tor
 
 ```sh
 sudo apt install -y apt-transport-https wget gpg
@@ -58,13 +179,7 @@ sudo apt install tor deb.torproject.org-keyring
 sudo /usr/sbin/usermod -aG debian-tor "${USER}
 ```
 
-### onionjuggler.conf
-
-Use the default configuration file.
-
 ## OpenBSD
-
-### tor
 
 ```sh
 printf "https://cdn.openbsd.org/pub/OpenBSD\n" > /etc/installurl
@@ -72,25 +187,6 @@ pkg_add tor
 rcctl enable tor
 rcctl start tor
 ```
-
-### onionjuggler.conf
-
-TODO: basez does not exist on OpenBSD, base64 is a part but missing base32 package, fix this).
-WebServer is also not working, fix with obsd httpd.
-```sh
-exec_cmd_alt_user="doas"
-tor_user="_tor"
-tor_daemon="tor"
-daemon_control="/etc/rc.d" ##
-tor_conf_group="wheel"
-pkg_mngr_install="pkg_add"
-openssl_cmd="eopenssl30"
-dialog_box="dialog"
-web_server="nginx"
-requirements="tor grep sed tar openssl base64 git py-stem libqrencode ${dialog} ${web_server}"
-tor_data_dir="/var/tor"
-```
-
 
 ## Fedora, CentOS, RHEL
 
@@ -112,14 +208,6 @@ RunAsDaemon 1
 " | tee -a /etc/tor/torrc
 ```
 
-### onionjuggler.conf
-
-Untested.
-
-```sh
-dnf install python3-stem
-```
-
 ## Arch Linux
 
 ```sh
@@ -132,27 +220,13 @@ systemctl enable --now tor
 systemctl restart tor
 ```
 
-### onionjuggler.conf
-
-Untested.
-
-```sh
-pacman -S python-stem
-```
-
 ## Void Linux
-
-### tor
 
 ```sh
 xbps-install -S tor
 ln -s /etc/sv/tor /var/service/.
 sv restart tor
 ```
-
-### onionjuggler.conf
-
-Untested.
 
 ## OpenSUSE
 
@@ -164,14 +238,7 @@ RunAsDaemon 1
 systemctl enable --now tor
 ```
 
-### onionjuggler.conf
-
-Untested.
-
-
 ## NetBSD
-
-### tor
 
 ```sh
 printf "PKG_PATH=http://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/$(uname -m)/$(uname -r)/All\n" > /etc/pkg_install.conf
@@ -181,23 +248,8 @@ printf "tor=YES\n" >> /etc/rc.conf
 /etc/rc.d/tor start
 ```
 
-### onionjuggler.conf
-
-Untested.
-
-```sh
-exec_cmd_alt_user="doas"
-tor_user="_tor"
-tor_daemon="tor"
-daemon_control="/etc/rc.d/tor"
-tor_conf_group="wheel"
-pkg_mngr_install="pkg_add"
-requirements="tor grep sed tar openssl base64 git py37-stem libqrencode ${dialog} ${web_server}"
-```
-
 ## FreeBSD
 
-### tor
 ```sh
 pkg bootstrap
 pkg update -f
@@ -219,23 +271,7 @@ sysrc tor_enable=YES
 service tor start
 ```
 
-### onionjuggler.conf
-
-Untested.
-
-```sh
-exec_cmd_alt_user="doas"
-tor_user="_tor"
-tor_daemon="tor"
-daemon_control="/etc/rc.d/tor"
-tor_conf_group="wheel"
-pkg_mngr_install="pkg install"
-requirements="tor grep sed tar openssl base64 git security/py-stem libqrencode ${dialog} ${web_server}"
-```
-
 ## DragonflyBSD
-
-### tor
 
 ```sh
 cd /usr
@@ -254,7 +290,3 @@ echo "tor_setuid=YES" >> /etc/rc.conf
 echo "tor_enable=YES" >> /etc/rc.conf
 service tor start
 ```
-
-### onionjuggler.conf
-
-Untested.

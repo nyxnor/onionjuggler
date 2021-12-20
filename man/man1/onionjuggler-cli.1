@@ -128,7 +128,8 @@ compliant shell
 \f[B]onionjuggler-cli\f[R] is a part of OnionJuggler, a combination of
 POSIX compliant scripts helps the interaction with onion service
 configuration and files to speed up usage and avoid misconfiguration.
-The onionjuggler variables must be inside /etc/onionjuggler.conf.
+The onionjuggler variables must be inside
+/etc/onionjuggler/default.conf.
 .PP
 The script tries its best to avoid inserting incorrect lines to torrc,
 that would make tor fail.
@@ -527,7 +528,7 @@ onionjuggler-cli vanguards --off
 .fi
 .RE
 .TP
-\f[B]-h\f[R]|\f[B]-help\f[R]|\f[B]--help\f[R]|\f[B]help\f[R]
+\f[B]-h\f[R], \f[B]-help\f[R], \f[B]--help\f[R], \f[B]help\f[R]
 Display the script help message.
 Abscense of any parameter will also have the same effect.
 .RS
@@ -542,24 +543,26 @@ onionjuggler-cli help
 \f[R]
 .fi
 .RE
+.TP
+\f[B]-R\f[R], \f[B]--restart\f[R], \f[B]-r\f[R], \f[B]--reload\f[R]
+Signal tor daemon to restart or reload after the CLI edits tor\[aq]s
+configuration files.
+(Default: reload)
+.TP
+\f[B]-C\f[R], \f[B]--config\f[R]
+Specify and alternative configuration file to override default
+configuration.
 .SH FILES
 .TP
-\f[B]/etc/onionjuggler.conf\f[R]
+\f[B]/etc/onionjuggler/default.conf\f[R]
 Default system configuration file.
 .TP
-\f[B]$HOME/.dialogrc-onionjuggler\f[R]
-Default dialog run commands file.
-.TP
-\f[B]onionjuggler-cli\f[R]
-Command Line Interface to interact directly with onion services.
-.TP
-\f[B]onionjuggler-tui\f[R]
-Terminal User Interface that wraps the CLI in a dialog box.
+**/etc/onionjuggler/conf.d/*conf**
+Local configuration files that overrrite the default one.
 .SH ENVIRONMENT
 .TP
-\f[B]EDITOR\f[R]
-Use the default editor when editing files on the TUI, else will fallback
-to Vi(1).
+\f[B]ONIONJUGGLER_CONF\f[R]
+The environmental variable will override all previous options.
 .SH EXIT VALUE
 .TP
 \f[B]0\f[R]
@@ -575,8 +578,8 @@ https://github.com/nyxnor/onionjuggler/issues, if not solved, open a new
 one.
 .SH SEE ALSO
 .PP
-onionjuggler.conf(1), tor(1), sh(1), regex(7), sed(1), grep(1),
-shellcheck(1)
+onionjuggler-tui(1), onionjuggler.conf(5), tor(1), sh(1), regex(7),
+sed(1), grep(1), shellcheck(1)
 .SH COPYRIGHT
 .PP
 Copyright \[co] 2021 OnionJuggler developers (MIT) This is free
