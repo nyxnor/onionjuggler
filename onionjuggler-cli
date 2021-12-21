@@ -1146,6 +1146,9 @@ WantedBy=multi-user.target
         fi
         "${exec_cmd_alt_user}" -u "${tor_user}" git -C "${tor_data_dir}"/vanguards reset --hard "${vanguards_commit}"
         "${exec_cmd_alt_user}" -u "${tor_user}" git -C "${tor_data_dir}"/vanguards show
+        vanguards_version="$(grep "__version__ = " src/vanguards/__init__.py | tr "\"" " " | sed "s/__version__ =  //")"
+        printf %s"Installed Vanguards v${vanguards_version}\n"
+        "${exec_cmd_alt_user}" cp "${tor_data_dir}"/vanguards/vanguards.1 /usr/local/man/man1/
         vanguards_config
       ;;
 
