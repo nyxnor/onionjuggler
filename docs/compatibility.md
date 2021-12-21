@@ -5,7 +5,7 @@
 The code works perfectly on Debian.
 The code is not complete on OpenBSD because of missing packages, will be shortly as it is resolved. (missing basez and service configuration file for vanguards and httpd integration.
 
-After setup, your operating system distro configuration file will be on /etc/onionjuggler/default.conf. If it is not there of if there is an invalid value to your system, please open an issue on github. You can also override the default configuration file by adding *.conf files inside /etc/onionjuggler/conf.d.
+After setup, your operating system distro configuration file will be on /etc/onionjuggler/onionjuggler.conf. If it is not there of if there is an invalid value to your system, please open an issue on github. You can also override the default configuration file by adding *.conf files inside /etc/onionjuggler/conf.d.
 
 # Building requirements from source
 

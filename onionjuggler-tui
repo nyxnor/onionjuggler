@@ -56,8 +56,8 @@ done
 ## 1. source default configuration file first
 ## 2. source local (user made) configuration files to override the default values
 ## 3. source the ONIONJUGGLER_CONF specified by the cli argument and if it empty, use the environment variable
-[ ! -f /etc/onionjuggler/default.conf ] && error_msg "Default configuration file not found: /etc/onionjuggler/default.conf"
-[ -r /etc/onionjuggler/default.conf ] && . /etc/onionjuggler/default.conf
+[ ! -f /etc/onionjuggler/onionjuggler.conf ] && error_msg "Default configuration file not found: /etc/onionjuggler/onionjuggler.conf"
+[ -r /etc/onionjuggler/onionjuggler.conf ] && . /etc/onionjuggler/onionjuggler.conf
 for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}"; done
 [ -r "${ONIONJUGGLER_CONF}" ] && . "${ONIONJUGGLER_CONF}"
 

@@ -168,7 +168,7 @@ get_os(){
 ## 1. source default configuration file first
 ## 2. source local (user made) configuration files to override the default values
 ## 3. source the ONIONJUGGLER_CONF specified by the cli argument and if it empty, use the environment variable
-if [ ! -f /etc/onionjuggler/default.conf ]; then
+if [ ! -f /etc/onionjuggler/onionjuggler.conf ]; then
   get_os
   case "${os}" in
     Linux*)
@@ -182,8 +182,9 @@ if [ ! -f /etc/onionjuggler/default.conf ]; then
     "NetBSD"*) . etc/onionjuggler/netbsd.conf;;
     "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) . etc/onionjuggler/freebsd.conf;;
   esac
+else
+  [ -r /etc/onionjuggler/onionjuggler.conf ] && . /etc/onionjuggler/onionjuggler.conf
 fi
-[ -r /etc/onionjuggler/default.conf ] && . /etc/onionjuggler/default.conf
 for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}"; done
 [ -r "${ONIONJUGGLER_CONF}" ] && . "${ONIONJUGGLER_CONF}"
 
@@ -248,14 +249,14 @@ case "${action}" in
     case "${os}" in
       Linux*)
         case "${distro}" in
-          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/debian.conf "${conf_dir}/default.conf";;
-          "Arch"*|"Artix"*|"ArcoLinux"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/arch.conf "${conf_dir}/default.conf";;
-          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${exec_cmd_alt_user}" cp -v etc/onionjuggler/fedora.conf "${conf_dir}/default.conf";;
+          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
+          "Arch"*|"Artix"*|"ArcoLinux"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
+          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${exec_cmd_alt_user}" cp -v etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac
       ;;
-      "OpenBSD"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/openbsd.conf "${conf_dir}/default.conf";;
-      "NetBSD"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/netbsd.conf "${conf_dir}/default.conf";;
-      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/freebsd.conf "${conf_dir}/default.conf";;
+      "OpenBSD"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/openbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "NetBSD"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
     esac
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
   ;;

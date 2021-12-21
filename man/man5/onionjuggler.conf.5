@@ -13,7 +13,7 @@ service configuration and files to speed up usage and avoid
 misconfiguration.
 The system variables are defined by the environment variable
 \f[I]ONIONJUGGLER_CONF\f[R], but if it is empty, will read
-\f[I]/etc/onionjuggler/default.conf\f[R].
+\f[I]/etc/onionjuggler/onionjuggler.conf\f[R].
 The configuration file is then sourced be used by the program.
 It defines where the hidden services are located, the owner of the
 DataDir folder, the ControlPort to be used.
@@ -144,10 +144,10 @@ Specify the wanted commit from Vanguards repository.
 \f[B]ONIONJUGGLER_CONF\f[R]
 Use the environment variable to search for the configuration file, if
 the variable is empty, use the default confiugration on
-\f[I]/etc/onionjuggler/default.conf\f[R].
+\f[I]/etc/onionjuggler/onionjuggler.conf\f[R].
 .SH FILES
 .TP
-\f[B]/etc/onionjuggler/default.conf\f[R]
+\f[B]/etc/onionjuggler/onionjuggler.conf\f[R]
 Default system configuration file.
 .SH EXAMPLES
 .IP \[bu] 2
