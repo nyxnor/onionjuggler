@@ -871,22 +871,22 @@ case "${command}" in
         only_ports=${port#* }
         virtport=${only_ports% *}
         target=${only_ports##* }
-        printf %s"${cyan}# Activating web server for the onion service: ${service}${nocolor}\n\n"
-        ## If starts with '~/' or '/', user specified the path, if started with anything else expect a folder inside ${website_dir}
-        case "${folder}" in
-          ~/*|/*)
-            # shellcheck disable=SC2269
-            folder="${folder}";;
-          *)
-            folder="${website_dir}/${folder}"
+        case "${web_server}" in
+          apache2|openbsd-httpd) printf %s"${target}" | grep -q "unix" && error_msg "Web server '${web_server}' does not accept listening on a unix domain socket." ;;
         esac
-
+        printf %s"${cyan}# Activating web server for the onion service: ${service}${nocolor}\n\n"
+        ## If $folder starts with '~/' or '/', user specified the path, if started with anything else expect a folder inside ${website_dir}
+        case "${folder}" in
+          ~/*|/*) :;;
+          *) folder="${website_dir}/${folder}";;
+        esac
 
         case "${web_server}" in
           nginx)
             printf %s"
 server {
-    listen ${target} default_server;
+    listen ${target};
+    server_name ${onion_hostname};
 
     access_log /var/log/nginx/access_${service}.log;
     error_log /var/log/nginx/error_${service}.log;
@@ -894,28 +894,36 @@ server {
     root ${folder};
     index index.html index.htm index.php;
 }
-" | "${exec_cmd_alt_user}" tee /tmp/"${service}"-onion.conf
+" | "${exec_cmd_alt_user}" tee /etc/"${web_server}"/sites-available/
+            "${exec_cmd_alt_user}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
           ;;
           apache)
             printf %s"
 <VirtualHost *:${target}>
-    ServerName
+    ServerName ${onion_hostname}
     DocumentRoot ${folder}
     ErrorLog /var/log/apache2/${service}.log
 </VirtualHost>
-" | "${exec_cmd_alt_user}" tee /tmp/"${service}"-onion.conf
+" | "${exec_cmd_alt_user}" tee /etc/"${web_server}"/sites-available/
+            "${exec_cmd_alt_user}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
+          ;;
+          openbsd-httpd)
+            printf %s"
+server \"${onion_hostname}\" {
+  listen on * port ${target}
+  root \"${folder}\"
+}
+" | "${exec_cmd_alt_user}" tee -a /etc/httpd.conf
           ;;
         esac
-
-        "${exec_cmd_alt_user}" cp -v /tmp/"${service}"-onion.conf /etc/"${web_server}"/sites-available/
-        "${exec_cmd_alt_user}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
-        printf "\n# Web server configuration:\n\n"
+        #printf "\n# Web server configuration:\n\n"
         #"${exec_cmd_alt_user}" cat /tmp/"${service}"-onion.conf
         #while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${service}-onion.conf"
         printf "\n# Reloading web server to apply new configuration\n"
         case "${web_server}" in
           nginx) "${exec_cmd_alt_user}" nginx -t && "${exec_cmd_alt_user}" nginx -s reload;;
           apache2) "${exec_cmd_alt_user}" apache2 -t && "${exec_cmd_alt_user}" apache -k graceful;;
+          openbsd-httpd) "${exec_cmd_alt_user}" httpd -n && "${exec_cmd_alt_user}" rcctl reload httpd;;
         esac
         #"${exec_cmd_alt_user}" rm -f /tmp/"${service}"-onion.conf
         printf %s"\n# Address: http://${onion_hostname}:${virtport}\n"
@@ -927,14 +935,22 @@ server {
         disable_site(){
           service="${1}"
           printf %s"\n# Stopping website of the service: ${service}\n"
-          "${exec_cmd_alt_user}" rm -fv /etc/"${web_server}"/sites-available/"${service}"-onion.conf ## for cleanliness
-          "${exec_cmd_alt_user}" rm -fv /etc/"${web_server}"/sites-enabled/"${service}"-onion.conf
+          case "${web_server}" in
+            nginx|apache2)
+              "${exec_cmd_alt_user}" rm -fv /etc/"${web_server}"/sites-available/"${service}"-onion.conf ## for cleanliness
+              "${exec_cmd_alt_user}" rm -fv /etc/"${web_server}"/sites-enabled/"${service}"-onion.conf
+            ;;
+            openbsd-httpd)
+              ## TODO
+            ;;
+          esac
         }
         loop_list disable_site "${service}" 0
         printf %s"\n${blue}# Reloading web server to apply new configuration${nocolor}\n"
         case "${web_server}" in
           nginx) "${exec_cmd_alt_user}" nginx -t && "${exec_cmd_alt_user}" nginx -s reload;;
           apache2) "${exec_cmd_alt_user}" apache2 -t && "${exec_cmd_alt_user}" apache2 -k graceful;;
+          openbsd-httpd) "${exec_cmd_alt_user}" httpd -n && "${exec_cmd_alt_user}" rcctl reload httpd;;
         esac
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
@@ -942,6 +958,7 @@ server {
       l|list)
         printf %s"# Web server = ${web_server}\n\n"
         printf %s"${bold}# Enabled websites:${nocolor}"
+        ## todo for openbsd-httpd
         sites_enabled=$("${exec_cmd_alt_user}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g")
         [ -n "${sites_enabled}" ] && printf %s"\n${sites_enabled}\n" || printf " No website enabled\n"
       ;;
