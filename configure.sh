@@ -79,7 +79,7 @@ install_package(){
   for package in "${@}"; do
     install_pkg=0
     case "${package}" in
-      python-stem|python3-stem|security/py-stem|py-stem|py37-stem|stem)
+      python-stem|python3-stem|security/py-stem|py-stem|py3-stem|py37-stem|stem)
         ## https://stem.torproject.org/download.html
         while :; do
           command -v python3 >/dev/null && python_path="$(command -v python3)" && break
