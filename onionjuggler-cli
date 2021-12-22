@@ -877,6 +877,8 @@ case "${command}" in
         only_ports=${port#* }
         virtport=${only_ports% *}
         target=${only_ports##* }
+        target_addr="${target%%:*}"
+        target_port="${target##*:}"
         case "${web_server}" in
           apache2|openbsd-httpd) printf %s"${target}" | grep -q "unix" && error_msg "Web server '${web_server}' does not accept listening on a unix domain socket." ;;
         esac
@@ -917,7 +919,7 @@ server {
           ;;
           apache)
             printf %s"
-<VirtualHost *:${target}>
+<VirtualHost ${target_addr}:${target_port}>
     ServerName ${onion_hostname}
     DocumentRoot ${folder}
     ErrorLog /var/log/apache2/${service}.log
@@ -926,9 +928,6 @@ server {
             "${exec_cmd_alt_user}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
           ;;
           openbsd-httpd)
-            target_addr="${target%%:*}"
-            target_port="${target##*:}"
-            folder=
             printf %s"
 server \"${onion_hostname}\" {
   listen on ${target_addr} port ${target_port}
@@ -947,7 +946,7 @@ server \"${onion_hostname}\" {
           openbsd-httpd) "${exec_cmd_alt_user}" httpd -n && "${exec_cmd_alt_user}" rcctl -f reload httpd;;
         esac
         #"${exec_cmd_alt_user}" rm -f /tmp/"${service}"-onion.conf
-        printf %s"\n# Address: http://${onion_hostname}:${virtport}\n"
+        printf %s"\n# Address: ${magenta}http://${onion_hostname}:${virtport}${nocolor}\n"
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
