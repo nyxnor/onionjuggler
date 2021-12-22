@@ -31,18 +31,29 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 : The OpenSSL command to create the certificate and private keys for Client Authorization using the x25519 algorithm. It must be the orignal OpenSSL v1.1 or later, not LibreSSL, as the latter does not support the aforementioned algorithm. (Default: openssl).
 
-**web_server**
+**webserver**
 
 : Web server to serve a website. Compatible with *nginx* and *apache2*. (Default: nginx).
 
+**webserver_conf**
+
+: Web server configuration of the virtual hosts. With nginx and apache2 it must be a directory (sites-enabled, conf.d, conf, vhosts). With openbsd-httpd it is /etc/httpd.conf{.local}.
+
+**website_dir**
+
+: Specify the directory to check for website folders. (Default: /var/www).
+
 **dialog_box**
 
-: Terminal User Interface dialog box. Compatible with *dialog* and *whiptail*. (default: whiptail).
+: Terminal User Interface dialog box. Compatible with *dialog* and *whiptail*. (default: dialog).
 
 **requirements**
 
 : Necessary packages to fully control OnionJuggler. They will be checked first if installed already, if not, will install via using the *$pkg_mngr_install*. (Default: tor grep sed openssl basez git qrencode tar python3-stem dialog nginx")
 
+**vanguards_commit**
+
+: Specify the wanted commit from Vanguards repository. (Default: 10942de93f6578f8303f60014f34de2fca345545).
 
 ## TOR DAEMON
 
@@ -90,16 +101,6 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 : Specify the local directory to save your backups. (Default: $HOME/.onionjuggler/backup)
 
-
-## GENERAL
-
-**website_dir**
-
-: Specify the directory to check for website folders. (Default: /var/www).
-
-**vanguards_commit**
-
-: Specify the wanted commit from Vanguards repository. (Default: 10942de93f6578f8303f60014f34de2fca345545).
 
 # ENVIRONMENT
 

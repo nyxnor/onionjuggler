@@ -299,15 +299,27 @@ Web server configuration can vary a lot depending on your system.
 
 ## Nginx
 
-If not present on the default nginx configuration file, usually in `/etc/nginx/nginx.conf`, you might need to include the following option:
+If not present on the default nginx configuration file, usually in `/etc/nginx/nginx.conf`, you should to include a directory with the following option insite the http block (`sites-enabled` is an example, it can have a different name such as `conf.d`):
 ```sh
-include /etc/nginx/conf.d/*.conf;
-include /etc/nginx/sites-enabled/*;
+http {
+    …
+    include /etc/nginx/sites-enabled/*;
+}
+```
+
+Then, create the directory:
+```sh
+mkdir /etc/nginx/sites-enabled
+```
+
+Then reload nginx if the configuration syntax is corret:
+```sh
+nginx -t && nginx -s reload
 ```
 
 ## Apache2
 
-If not present on the default nginx configuration file, usually in `/etc/apache2/apache2.conf` or in `/etc/httpd/conf/httpd.conf`, you might need to include the following option:
+If not present on the default nginx configuration file, usually in `/etc/apache2/apache2.conf` or in `/etc/httpd/conf/httpd.conf`, you should include a directory with the following option (`sites-enabled` is an example, it can have a different name such as `conf.d`):
 ```sh
 IncludeOptional sites-enabled/*.conf;
 ```
@@ -315,17 +327,32 @@ IncludeOptional sites-enabled/*.conf;
 The path used above is relative to your ServerRoot directory (which is normally `/etc/apache2` or `/etc/httpd`), but you can also specify absolute paths
 ```sh
 IncludeOptional /etc/apache2/sites-enabled/*.conf
-## or
+```
+or:
+```sh
 IncludeOptional /etc/httpd/sites-enabled/*.conf
 ```
 
 The `Include` directive will fail with an error if a wildcard expression does not match any file (requires at least one matching file). The `IncludeOptional` directive can be used if non-matching wildcards should be ignored (ignores empty directory or non matching files).
 
+Then, create the directory:
+```sh
+mkdir /etc/apache2/sites-enabled
+```
+or:
+```sh
+mkdir /etc/httpd/sites-enabled
+```
+
+Then reload apache if the configuration syntax is corret:
+```sh
+apache2 -t && apache2 -k graceful
+```
+or:
+```
+httpd -t && httpd -k graceful
+```
+
 ## OpenBSD-httpd
 
-It is not necessary to specify the `$website_dir`, as on `httpd.conf`, the option `chroot` (if empty its value will be `/var/www`) will force every document `root` option of the server block be inside that chrooted directory, so the default value is to include websites files inside `/var/www/htdocs`.
-
-Additional configuration files can be included with the include keyword, for example:
-```sh
-include "/etc/httpd.conf.local"
-```
+It is not necessary to specify the `$website_dir`, as on `httpd.conf`, the option `chroot` (if empty its value will be `/var/www`) will force every document `root` option of the server block be inside that chrooted directory, so the default value is to include websites files inside `/var/www/htdocs`. So if there is a website in `/var/www/htdocs/example`, you only need to specify the `example` folder on the `web` option.

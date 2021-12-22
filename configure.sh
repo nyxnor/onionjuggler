@@ -194,8 +194,8 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 : "${tor_user:="debian-tor"}"
 : "${pkg_mngr_install:="apt install -y"}"
 : "${dialog_box:="dialog"}"
-: "${web_server:="nginx"}"
-: "${requirements:="tor grep sed tar openssl basez git python3-stem qrencode ${dialog_box} ${web_server}"}"
+: "${webserver:="nginx"}"
+: "${requirements:="tor grep sed tar openssl basez git python3-stem qrencode ${dialog_box} ${webserver}"}"
 : "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
 : "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
 : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
@@ -218,7 +218,7 @@ range_variable(){
 }
 
 range_variable exec_cmd_alt_user sudo doas
-range_variable web_server nginx apache2 openbsd-httpd
+range_variable webserver nginx apache2 openbsd-httpd
 range_variable dialog_box dialog whiptail
 
 ###################

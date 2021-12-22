@@ -425,7 +425,7 @@ name is to be considered the wanted folder inside website_dir variable
 defined on /etc/onionservice.conf.
 If the path starts with forward slash \[dq]/\[dq] or tilde and slash
 \[dq]\[ti]/\[dq], that path will be considered instead.
-File(s) modified: /etc/${web_server}/sites-enabled/.
+File(s) modified: \[dq]${webserver_conf}\[dq].
 .RS
 .IP
 .nf
@@ -438,7 +438,7 @@ onionjuggler-cli web on nextcloud nextcloud-local-site
 \f[B]web --off\f[R] \f[B]--service\f[R] [\f[I]SERV\f[R]]
 Disable a website from a specific onion service by removing its
 configuration file from the webserver folder.
-File(s) modified: /etc/${web_server}/sites-enabled/.
+File(s) modified: $webserver_conf
 .RS
 .IP
 .nf
@@ -450,7 +450,7 @@ onionjuggler-cli web off nextcloud
 .TP
 \f[B]web --list\f[R]
 List enabled websites, meaning the configuration files inside the
-webserver folder /etc/${web_server}/sites-enabled/.
+webserver folder /etc/${webserver}/sites-enabled/.
 File(s) modified: none.
 .RS
 .IP

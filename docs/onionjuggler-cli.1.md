@@ -227,21 +227,21 @@ onionjuggler-cli auth-client --list
 
 **web --on** **--service** [*SERV*] **--folder** [*FOLDER*]
 
-: Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside website_dir variable defined on /etc/onionservice.conf. If the path starts with forward slash "/" or tilde and slash "~/", that path will be considered instead. File(s) modified: /etc/${web_server}/sites-enabled/.
+: Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside website_dir variable defined on /etc/onionservice.conf. If the path starts with forward slash "/" or tilde and slash "~/", that path will be considered instead. File(s) modified: "${webserver_conf}".
 ```
 onionjuggler-cli web on nextcloud nextcloud-local-site
 ```
 
 **web --off** **--service** [*SERV*]
 
-: Disable a website from a specific onion service by removing its configuration file from the webserver folder. File(s) modified: /etc/${web_server}/sites-enabled/.
+: Disable a website from a specific onion service by removing its configuration file from the webserver folder. File(s) modified: $webserver_conf
 ```
 onionjuggler-cli web off nextcloud
 ```
 
 **web --list**
 
-: List enabled websites, meaning the configuration files inside the webserver folder /etc/${web_server}/sites-enabled/. File(s) modified: none.
+: List enabled websites, meaning the configuration files inside the webserver folder /etc/${webserver}/sites-enabled/. File(s) modified: none.
 ```
 onionjuggler-cli web list
 ```

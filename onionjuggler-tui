@@ -65,14 +65,14 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 ## system
 : "${exec_cmd_alt_user:="sudo"}"
 : "${dialog_box:="dialog"}"
-: "${web_server:="nginx"}"
+: "${webserver:="nginx"}"
+: "${webserver_conf:="/etc/nginx/sites-enabled"}"
+: "${website_dir:="/var/www"}"
 ## tor defaults
 : "${tor_user:="debian-tor"}"
 : "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
 : "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
 : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
-## general
-: "${website_dir:="/var/www"}"
 
 
 ## First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
@@ -182,7 +182,7 @@ else
   "AUTH_SERVER" "Add or Remove client authorization from your service" \
   "AUTH_CLIENT" "Manage your client keys of remote service" \
   "CREDENTIALS" "See credentials (onion address, authorized clients)" \
-  "WEB_SERVER" "Serve a website folder on onion domain" \
+  "WEBSERVER" "Serve a website folder on onion domain" \
   "VANGUARDS" "Add to protect against traffic analysis" \
   "LOCATION" "Guided steps to add onion-location to your plainnet website" \
   "BACKUP" "Create or integrate backup" \
@@ -550,8 +550,8 @@ PURGE: Service will be permanently disabled, all the directory data, including h
   ;;
 
 
-  WEB_SERVER)
-    { [ "${web_server}" != "nginx" ] && [ "${web_server}" != "apache2" ]; } && error_msg "web_server can be either 'nginx' or 'apache2', not '${web_server}'"
+  WEBSERVER)
+    { [ "${webserver}" != "nginx" ] && [ "${webserver}" != "apache2" ]; } && error_msg "webserver can be either 'nginx' or 'apache2', not '${webserver}'"
     title="Web server - Status"
     menu="\nWould you like to enable or disable serving a website?"
     status="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" --menu "${menu}" "$((12+whiptail_height))" 50 3 \
@@ -563,7 +563,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     case "${status}" in
       list)
         tput reset
-        onionjuggler-cli "${web_server}" "${status}"
+        onionjuggler-cli "${webserver}" "${status}"
         return_to_tui
       ;;
       on)
@@ -590,7 +590,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       ;;
       off)
         i=0
-        for service in $("${exec_cmd_alt_user}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g"); do
+        for service in $("${exec_cmd_alt_user}" ls "${webserver_conf}" | sed "s/-onion.conf//g"); do
           i=$((i+1))
           service_list="$(printf "%s\n%s\n" "${service_list}" "${service}" "." 0)"
         done
