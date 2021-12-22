@@ -90,24 +90,6 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 : Specify the local directory to save your backups. (Default: $HOME/.onionjuggler/backup)
 
-## TOR BROWSER
-
-**tor_browser_dir**
-
-: Specify the Tor Browser root path. (Default: this is where torbrowser-launcher saves it \$\{HOME\}/.local/share/torbrowser/tbb/\$(uname -m)/tor-browser_\$\{LANG%.*\}).
-
-**tor_browser_data_dir**
-
-: Specify the Tor Browser DataDirectory. (Default: Browser/TorBrowser/Data/Tor).
-
-**tor_browser_conf**
-
-: Specify the Tor Browser torrc path. (Default: Browser/TorBrowser/Data/Tor/torrc).
-
-**tor_browser_data_dir_auth**
-
-: Specify the Tor Browser ClientOnionAuthDir. (Default: Browser/TorBrowser/Data/Tor/onion-auth).
-
 
 ## GENERAL
 
