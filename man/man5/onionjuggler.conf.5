@@ -49,10 +49,20 @@ Web server to serve a website.
 Compatible with \f[I]nginx\f[R] and \f[I]apache2\f[R].
 (Default: nginx).
 .TP
+\f[B]webserver_conf\f[R]
+Web server configuration of the virtual hosts.
+With nginx and apache2 it must be a directory (sites-enabled, conf.d,
+conf, vhosts).
+With openbsd-httpd it is /etc/httpd.conf{.local}.
+.TP
+\f[B]website_dir\f[R]
+Specify the directory to check for website folders.
+(Default: /var/www).
+.TP
 \f[B]dialog_box\f[R]
 Terminal User Interface dialog box.
 Compatible with \f[I]dialog\f[R] and \f[I]whiptail\f[R].
-(default: whiptail).
+(default: dialog).
 .TP
 \f[B]requirements\f[R]
 Necessary packages to fully control OnionJuggler.
@@ -60,6 +70,10 @@ They will be checked first if installed already, if not, will install
 via using the \f[I]$pkg_mngr_install\f[R].
 (Default: tor grep sed openssl basez git qrencode tar python3-stem
 dialog nginx\[dq])
+.TP
+\f[B]vanguards_commit\f[R]
+Specify the wanted commit from Vanguards repository.
+(Default: 10942de93f6578f8303f60014f34de2fca345545).
 .SS TOR DAEMON
 .TP
 \f[B]daemon_control\f[R]
@@ -112,15 +126,6 @@ Specify the ControlPort to use with Vanguards.
 \f[B]tor_backup_dir\f[R]
 Specify the local directory to save your backups.
 (Default: $HOME/.onionjuggler/backup)
-.SS GENERAL
-.TP
-\f[B]website_dir\f[R]
-Specify the directory to check for website folders.
-(Default: /var/www).
-.TP
-\f[B]vanguards_commit\f[R]
-Specify the wanted commit from Vanguards repository.
-(Default: 10942de93f6578f8303f60014f34de2fca345545).
 .SH ENVIRONMENT
 .TP
 \f[B]ONIONJUGGLER_CONF\f[R]
