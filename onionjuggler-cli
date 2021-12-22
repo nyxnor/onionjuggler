@@ -546,11 +546,11 @@ case "${command}" in
         ## add configuration block, empty line after and before it
         printf %s"\n${blue}# Including Hidden Service configuration in ${tor_conf}${nocolor}\n"
         unix_path="unix:/var/run"
-        unix_path="${unix_path%*/}"
+        unix_path="${unix_path%*/}/${service}"
         if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}/${service}-${virtport}-onion.sock\nHiddenServicePort ${virtport2} ${unix_path}/${service}-${virtport2}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}-onion.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
         else
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}/${service}-${virtport}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
         fi
         finish_service_activation
       ;;
