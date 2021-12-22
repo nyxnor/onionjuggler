@@ -878,10 +878,22 @@ case "${command}" in
           apache2|openbsd-httpd) printf %s"${target}" | grep -q "unix" && error_msg "Web server '${web_server}' does not accept listening on a unix domain socket." ;;
         esac
         printf %s"${cyan}# Activating web server for the onion service: ${service}${nocolor}\n\n"
-        ## If $folder starts with '~/' or '/', user specified the path, if started with anything else expect a folder inside ${website_dir}
-        case "${folder}" in
-          ~/*|/*) :;;
-          *) folder="${website_dir}/${folder}";;
+        case "${web_server}" in
+          nginx|apache2)
+            ## If $folder starts with '~/' or '/', user specified the path, if started with anything else expect a folder inside ${website_dir}
+            case "${folder}" in
+              ~/*|/*) :;;
+              *) folder="${website_dir}/${folder}";;
+            esac
+          ;;
+          openbsd-httpd)
+            ## TODO: website_dir is not being used here, the chroot dir is /var/www and the root expected is /htdocs
+            case "${folder}" in
+              "htdocs"*) folder="/${folder}";;
+              "/htdocs"*|/*) :;;
+              *) folder="/htdocs/${folder}";;
+            esac
+          ;;
         esac
 
         case "${web_server}" in
@@ -911,9 +923,12 @@ server {
             "${exec_cmd_alt_user}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
           ;;
           openbsd-httpd)
+            target_addr="${target%%:*}"
+            target_port="${target##*:}"
+            folder=
             printf %s"
 server \"${onion_hostname}\" {
-  listen on * port ${target}
+  listen on ${target_addr} port ${target_port}
   root \"${folder}\"
 }
 " | "${exec_cmd_alt_user}" tee -a /etc/httpd.conf
@@ -926,7 +941,7 @@ server \"${onion_hostname}\" {
         case "${web_server}" in
           nginx) "${exec_cmd_alt_user}" nginx -t && "${exec_cmd_alt_user}" nginx -s reload;;
           apache2) "${exec_cmd_alt_user}" apache2 -t && "${exec_cmd_alt_user}" apache -k graceful;;
-          openbsd-httpd) "${exec_cmd_alt_user}" httpd -n && "${exec_cmd_alt_user}" rcctl reload httpd;;
+          openbsd-httpd) "${exec_cmd_alt_user}" httpd -n && "${exec_cmd_alt_user}" rcctl -f reload httpd;;
         esac
         #"${exec_cmd_alt_user}" rm -f /tmp/"${service}"-onion.conf
         printf %s"\n# Address: http://${onion_hostname}:${virtport}\n"
