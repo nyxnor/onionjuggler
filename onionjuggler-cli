@@ -937,6 +937,7 @@ server {
         listen ${target};
         server_name ${onion_hostname};
 
+        server_tokens off;
         access_log /var/log/nginx/access_${service}.log;
         error_log /var/log/nginx/error_${service}.log;
 
@@ -951,6 +952,8 @@ server {
         ServerName ${onion_hostname}
         DocumentRoot ${folder}
         ErrorLog /var/log/${webserver}/${service}.log
+        ServerTokens Prod
+        ServerSignature Off
 </VirtualHost>
 " | "${exec_cmd_alt_user}" tee "${webserver_conf}/${service}-onion.conf"
           ;;
@@ -988,7 +991,7 @@ server \"${onion_hostname}\" {
       ;;
 
       l|list)
-        printf %s"${bold}# Web server = ${webserver}${nocolor}\n\n"
+        printf %s"${bold}# Web server: ${webserver}${nocolor}\n\n"
         printf %s"${bold}# Enabled websites:${nocolor}"
         case "${webserver}" in
           nginx|apache2) sites_enabled=$("${exec_cmd_alt_user}" ls "${webserver_conf}" | sed "s/-onion.conf//g");;
