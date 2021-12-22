@@ -837,6 +837,8 @@ case "${command}" in
     get_service_info(){
       service="${1}"
       test_service_exists "${service}"
+      j=$((j+1))
+      [ ${j} -eq 1 ] && printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
       create_client_list "${service}"
       if [ "${action}" != "q" ] && [ "${action}" != "quiet" ]; then
@@ -852,6 +854,7 @@ case "${command}" in
       fi
       printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
     }
+    j=0
     [ "${service}" = "@all" ] && { create_service_list; service="${service_name_list}"; }
     loop_list get_service_info "${service}"
     printf %s"${green}\n# Done\n${nocolor}"
