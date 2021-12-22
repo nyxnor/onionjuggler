@@ -288,7 +288,7 @@ restarting_tor(){
     /etc/rc.d) "${exec_cmd_alt_user}" "${daemon_control}"/"${tor_daemon}" "${signal}";;
     *) rerror_msg "daemon_control value not supported: ${daemon_control}"
   esac
-  [ "${?}" -eq 1 ] && error_msg "Failed to ${signal} tor"
+  [ "${?}" -eq 1 ] && error_msg "Failed to ${signal} tor. Check logs first, correct the problem them restart tor."
   printf %s"${green}# ${signal}ed tor succesfully!\n\n${nocolor}"
 }
 
@@ -545,11 +545,12 @@ case "${command}" in
         service_block delete "${service}"
         ## add configuration block, empty line after and before it
         printf %s"\n${blue}# Including Hidden Service configuration in ${tor_conf}${nocolor}\n"
-        unix_path="unix:/var/run/${service}-onion"
+        unix_path="unix:/var/run"
+        unix_path="${unix_path%*/}"
         if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}/${service}-${virtport}-onion.sock\nHiddenServicePort ${virtport2} ${unix_path}/${service}-${virtport2}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
         else
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}/${service}-${virtport}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
         fi
         finish_service_activation
       ;;
@@ -946,6 +947,7 @@ server \"${onion_hostname}\" {
           apache2) "${exec_cmd_alt_user}" apache2 -t && "${exec_cmd_alt_user}" apache -k graceful;;
           openbsd-httpd) "${exec_cmd_alt_user}" httpd -n && "${exec_cmd_alt_user}" rcctl reload httpd;;
         esac
+        [ "${?}" -eq 1 ] && error_msg "Failed to reload ${web_server}, you must restart it manually before running this script again."
         #"${exec_cmd_alt_user}" rm -f /tmp/"${service}"-onion.conf
         printf %s"\n# Address: ${magenta}http://${onion_hostname}:${virtport}${nocolor}\n"
         printf %s"${green}\n# Done\n${nocolor}"
