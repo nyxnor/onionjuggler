@@ -251,12 +251,6 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 : "${tor_control_port:="9051"}" ## only the port, not the host
 : "${tor_backup_dir:="${HOME}/.onionjuggler/backup"}"; tor_backup_dir="${tor_backup_dir%*/}"
 
-## torbrowser defaults -> TODO: expectation is to automate onion-auth inclusion, but would  have to be more usable than the browser gui version
-: "${tor_browser_dir:="${HOME}/.local/share/torbrowser/tbb/$(uname -m)/tor-browser_${LANG%.*}"}"; tor_browser_dir="${tor_browser_dir%*/}"
-: "${tor_browser_data_dir:="${tor_browser_dir}/Browser/TorBrowser/Data/Tor"}"; tor_browser_data_dir="${tor_browser_data_dir%*/}"
-: "${tor_browser_conf:="${tor_browser_data_dir}/torrc"}"
-: "${tor_browser_data_dir_auth:="${tor_browser_data_dir}/onion-auth"}"; tor_browser_data_dir_auth="${tor_browser_data_dir_auth%*/}"
-
 
 ###################
 #### FUNCTIONS ####
@@ -369,6 +363,8 @@ loop_list(){
   done
 }
 
+## https://github.com/koalaman/shellcheck/wiki/SC3050
+escape_printf_percent() { printf "%s\n" "$(printf '%s' "${1}" | sed "s/\%/\%/g")"; }
 
 service_block(){
   process="${1}"
@@ -376,20 +372,37 @@ service_block(){
   file="${3:-"${tor_conf}"}"
   i=0
   ## print the exact match HiddenServiceDir of the requested service that must end with the service name or with "/", also prit n lines below it
-  grep -A 7 -E "^HiddenServiceDir ${tor_data_dir_services}/${service}$|^HiddenServiceDir ${tor_data_dir_services}/${service}/$" "${file}" | while IFS= read -r line; do
+  #"${exec_cmd_alt_user}" printf '%s\n' "$(<"${file}")"
+  "${exec_cmd_alt_user}" grep -A 7 -E "^HiddenServiceDir ${tor_data_dir_services}/${service}$|^HiddenServiceDir ${tor_data_dir_services}/${service}/$" "${file}" | while IFS= read -r line; do
     i=$((i+1))
-    ## break check
-    [ ${i} -gt 1 ] && [ "${line%% *}" = "HiddenServiceDir" ] && break ## break on next HiddenService configuration
-    [ -z "${line}" ] && break ## break on empty lines
-    printf "%s${line}" | grep -q "^HiddenService" || break ## break on lines that don't begin with HiddenService
-    ## if it passed the checks, just do
-    case "${process}" in
-      print) printf "%s${line}\n";;
-      delete) "${exec_cmd_alt_user}" sed -i'' "s|${line}||" "${file}";;
+    case "${line}" in
+      "HiddenService"*)
+        ## break on next HiddenService configuration
+        [ ${i} -gt 1 ] && [ "${line%% *}" = "HiddenServiceDir" ] && break
+        case "${process}" in
+          print|printf) printf "%s${line}\n";;
+          delete) "${exec_cmd_alt_user}" sed -i'' "s|${line}||" "${file}";;
+        esac
+      ;;
+      ""|*) break;; ## break on lines not beginning with HiddenService or empty
     esac
   done
 }
 
+http_service_block(){
+  process="${1}"
+  service="${2}"
+  file="${3:-"/etc/httpd.conf"}"
+  i=0
+  test_service_exists "${service}"
+  "${exec_cmd_alt_user}" grep -A 10 "server \"${onion_hostname}\"" "${file}"  | while IFS= read -r line; do
+    case "${process}" in
+      print|printf) escape_printf_percent "${line}";;
+      delete) [ -n "${line}" ] && "${exec_cmd_alt_user}" sed -i'' "s|${line}||" "${file}";;
+    esac
+    escape_printf_percent "${line}" | grep -q "^}" && break
+  done
+}
 
 ## http://sed.sourceforge.net/local/docs/emulating_unix.txt
 tac(){
@@ -907,14 +920,14 @@ case "${command}" in
           nginx)
             printf %s"
 server {
-    listen ${target};
-    server_name ${onion_hostname};
+        listen ${target};
+        server_name ${onion_hostname};
 
-    access_log /var/log/nginx/access_${service}.log;
-    error_log /var/log/nginx/error_${service}.log;
+        access_log /var/log/nginx/access_${service}.log;
+        error_log /var/log/nginx/error_${service}.log;
 
-    root ${folder};
-    index index.html index.htm index.php;
+        root ${folder};
+        index index.html index.htm index.php;
 }
 " | "${exec_cmd_alt_user}" tee /etc/"${web_server}"/sites-available/
             "${exec_cmd_alt_user}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
@@ -922,9 +935,9 @@ server {
           apache)
             printf %s"
 <VirtualHost ${target_addr}:${target_port}>
-    ServerName ${onion_hostname}
-    DocumentRoot ${folder}
-    ErrorLog /var/log/apache2/${service}.log
+        ServerName ${onion_hostname}
+        DocumentRoot ${folder}
+        ErrorLog /var/log/apache2/${service}.log
 </VirtualHost>
 " | "${exec_cmd_alt_user}" tee /etc/"${web_server}"/sites-available/
             "${exec_cmd_alt_user}" ln -sfv /etc/"${web_server}"/sites-available/"${service}"-onion.conf /etc/"${web_server}"/sites-enabled/
@@ -932,8 +945,8 @@ server {
           openbsd-httpd)
             printf %s"
 server \"${onion_hostname}\" {
-  listen on ${target_addr} port ${target_port}
-  root \"${folder}\"
+        listen on ${target_addr} port ${target_port}
+        root \"${folder}\"
 }
 " | "${exec_cmd_alt_user}" tee -a /etc/httpd.conf
           ;;
@@ -941,6 +954,7 @@ server \"${onion_hostname}\" {
         #printf "\n# Web server configuration:\n\n"
         #"${exec_cmd_alt_user}" cat /tmp/"${service}"-onion.conf
         #while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${service}-onion.conf"
+        cat file | while IFS= read -r line; do :; done
         printf "\n# Reloading web server to apply new configuration\n"
         case "${web_server}" in
           nginx) "${exec_cmd_alt_user}" nginx -t && "${exec_cmd_alt_user}" nginx -s reload;;
@@ -979,7 +993,7 @@ server \"${onion_hostname}\" {
       ;;
 
       l|list)
-        printf %s"# Web server = ${web_server}\n\n"
+        printf %s"${bold}# Web server = ${web_server}${nocolor}\n\n"
         printf %s"${bold}# Enabled websites:${nocolor}"
         ## todo for openbsd-httpd
         sites_enabled=$("${exec_cmd_alt_user}" ls /etc/"${web_server}"/sites-enabled/ | sed "s/-onion.conf//g")
