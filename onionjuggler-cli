@@ -502,23 +502,24 @@ case "${command}" in
         port_mid="${port_mid##*"${target}" }"
         virtport2="${port_mid%% *}"
         target2="${port##* }"
-        { [ "${virtport}" = "${virtport2}" ] || [ "${target}" = "${virtport2}" ]; } && virtport2=""
-        [ "${target}" = "${target2}" ] && error_msg "target is the same as target2 -> ${target}=${target2}"
+        { [ "${virtport}" = "${virtport2}" ] || [ "${target}" = "${virtport2}" ]; } && virtport2="" && target2=""
         : "${target:=127.0.0.1:"${virtport}"}"
-        : "${target2:=127.0.0.1:"${virtport2}"}"
         ## Standard check for used ports
         target_addr="${target%%:*}"
         target_port="${target##*:}"
         { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
-        "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}" && error_msg "target=${target} is being used.\nINFO: Choose another port or disable the service that is using the wanted port."
+        "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}" && error_msg "target=${target} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
         is_integer "${virtport}"; is_addr_port "${target}"
         ## Optional
         if [ -n "${virtport2}" ]; then
+          : "${target2:=127.0.0.1:"${virtport2}"}"
+          [ "${target}" = "${target2}" ] && error_msg "target=${target} can't be the same as target2=${target2}"
+          [ "${virtport}" = "${virtport2}" ] && error_msg "virtport=${virtport} can't be the same as virtport2=${virtport2}"
           ## Standard check for used ports
           target2_addr="${target2%%:*}"
           target2_port="${target2##*:}"
           { [ "${target2_addr}" = "${target2_port}" ] || [ "${target2_addr}" = "localhost" ]; } && target2="127.0.0.1:${target2_port}"
-          "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target2}$" "${tor_conf}" && error_msg "target2=${target2} is being used.\nINFO: Choose another port or disable the service that is using the wanted port."
+          "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target2}$" "${tor_conf}" && error_msg "target2=${target2} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
           is_integer "${virtport2}"; is_addr_port "${target2}"
         fi
         "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
