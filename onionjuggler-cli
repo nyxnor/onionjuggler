@@ -860,6 +860,7 @@ case "${command}" in
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
 
+
   ## start serving files with a webserver for a specific onion service and specific website folder
   web)
     [ -z "${status}" ] && usage
@@ -943,7 +944,7 @@ server \"${onion_hostname}\" {
         case "${web_server}" in
           nginx) "${exec_cmd_alt_user}" nginx -t && "${exec_cmd_alt_user}" nginx -s reload;;
           apache2) "${exec_cmd_alt_user}" apache2 -t && "${exec_cmd_alt_user}" apache -k graceful;;
-          openbsd-httpd) "${exec_cmd_alt_user}" httpd -n && "${exec_cmd_alt_user}" rcctl -f reload httpd;;
+          openbsd-httpd) "${exec_cmd_alt_user}" httpd -n && "${exec_cmd_alt_user}" rcctl reload httpd;;
         esac
         #"${exec_cmd_alt_user}" rm -f /tmp/"${service}"-onion.conf
         printf %s"\n# Address: ${magenta}http://${onion_hostname}:${virtport}${nocolor}\n"
