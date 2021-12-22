@@ -213,7 +213,7 @@ range_variable(){
     for tests in "${@}"; do
       [ "${var}" = "${tests}" ] && success=1
     done
-    [ ${success} -ne 1 ] && error_msg "${name} has an incorrect value! Check onionjuggler.conf for more details."
+    [ ${success} -ne 1 ] && error_msg "${name} has an incorrect value of : ${var}! Check onionjuggler.conf for more details."
   fi
 }
 

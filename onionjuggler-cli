@@ -859,7 +859,9 @@ case "${command}" in
   ## start serving files with a webserver for a specific onion service and specific website folder
   web)
     [ -z "${status}" ] && usage
-    { [ "${web_server}" != "nginx" ] && [ "${web_server}" != "apache2" ]; } && error_msg "web_server can be either 'nginx' or 'apache2', not '${web_server}'"
+    if [ "${web_server}" != "nginx" ] && [ "${web_server}" != "apache2" ] && [ "${web_server}" != "openbsd-httpd" ]; then
+      error_msg "web_server can be either 'nginx' or 'apache2', not '${web_server}'"
+    fi
 
     case "${status}" in
 
