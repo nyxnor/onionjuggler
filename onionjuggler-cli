@@ -258,22 +258,45 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 #### FUNCTIONS ####
 
 
-cp_torrc_to_from_tmp(){
-  [ -w "${TMPDIR:-"/tmp"}" ] || TMPDIR="~"; TMPDIR="${TMPDIR%*/}"
-  tor_conf_tmp="${TMPDIR}/${tor_conf##*/}"
+## Elegantly modify files on a temporary directory. Test the configuration with another function.
+## If correct, then save file back to its original location. This avoids running with an invalid
+## configuration that can make a daemon fail to reload or even start
+## Limitation is file name cannot start with a number.
+## $ cp_file_to_from_tmp tmp "${file}"
+## modify "${file}"
+## daemon verify config -f "${file}"
+## $ cp_file_to_from_tmp save "${file}"
+cp_file_to_from_tmp(){
+  [ -w "${TMPDIR:="/tmp"}" ] || export TMPDIR="~"
+  TMPDIR="${TMPDIR%*/}"
+  file="${2}"
+  ## get base file: /etc/tor/vanguards.conf.sample -> vanguards.conf.sample.
+  ## replace dot and hifen for underscore so it can be evaluated as a key (variable name)
+  file_name="$(printf %s"${file_name##*/}" | tr "." "_" | tr "-" "_")"
   case "${1}" in
-    start) "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf_tmp}";;
-    finish) "${exec_cmd_alt_user}" cp "${tor_conf_tmp}" "${tor_conf}";;
+    tmp)
+      file_name_tmp="$(printf '%s\n' "mkstemp(${TMPDIR}/${file_name}.XXXXXX)" | m4)"
+      eval "${file_name}_tmp"="${file_name_tmp}"
+      printf %s"Saving a copy of '${file}' on '${file_name_tmp}'\n"
+      "${exec_cmd_alt_user}" cp -v "${file}" "${file_name_tmp}"
+    ;;
+    save)
+      eval file_name_tmp='$'"${file_name}_tmp"
+      [ -z "${file_name_tmp}" ] && error_msg "file_name_tmp variable is empty"
+      if cmp -s "${file}" "${file_name_tmp}"; then
+        printf %s"File '${file}' do not differ from '${file_name_tmp}'. Not writing back to original location.\n"
+      else
+        printf %s"Copying '${file_name_tmp}' back to its original location '${file}'\n"
+        "${exec_cmd_alt_user}" cp -v "${file_name_tmp}" "${file}"
+      fi
+    ;;
   esac
 }
 
 
-verify_config(){
-  if "${exec_cmd_alt_user}" -u "${tor_user}" -f "${tor_conf_tmp}" --verify-config; then
-    cp_torrc_to_from_tmp finish
-  else
-    error_msg "Tempory copy of the torrc '${tor_conf_tmp}' has is invalid, maintaining the current configuration on '${tor_conf}' intact."
-  fi
+verify_config_tor(){
+  "${exec_cmd_alt_user}" -u "${tor_user}" -f "${tor_conf_tmp:-}" --verify-config \
+  || error_msg "Tempory copy of the tor_conf '${tor_conf_tmp}' has is invalid, maintaining the current configuration on '${tor_conf}' intact."
 }
 
 
@@ -292,7 +315,8 @@ set_owner_permission(){
 # reloads tor by default or forces to restart if $1 is not empty
 # shellcheck disable=SC2120
 signal_tor(){
-  verify_config
+  verify_config_tor
+  cp_file_to_from_tmp save "${tor_conf}"
   set_owner_permission
   : "${signal:="reload"}"
   [ "${signal}" = "r" ] && signal="reload"
@@ -484,6 +508,23 @@ case "${command}" in
       cat_squeeze_blank "${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${tor_conf}".tmp "${tor_conf}"
       printf %s"# Disabled service: ${bold}${service}${magenta}\n\n"
     }
+    for hs_service in ${service}; do
+      case "${action:-}" in
+        purge|P)
+          printf %s"${red}\n# Deleting Hidden Service data in ${tor_data_dir_services}/${hs_service}${nocolor}\n"
+          "${exec_cmd_alt_user}" rm -rfv "${tor_data_dir_services}"/"${hs_service}"
+        ;;
+        *) printf %s"\n${yellow}# HiddenServiceDiretory was kept${nocolor}\n";;
+      esac
+      "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
+      ## remove service paragraph in torrc
+      printf %s"# Deleting Hidden Service configuration in ${tor_conf}\n"
+      service_block delete "${service}"
+      ## substitute multiple sequential empty lines to a single one per sequence
+      cat_squeeze_blank "${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${tor_conf}".tmp "${tor_conf}"
+      printf %s"# Disabled service: ${bold}${hs_service}${magenta}\n\n"
+    done
+
     loop_list delete_service "${service}"
     signal_tor
     printf %s"${green}\n# Done\n${nocolor}"
@@ -846,8 +887,7 @@ case "${command}" in
       eval "${service}"_hostname_new="${onion_hostname}"
       eval hostname_old='$'"${service}"_hostname_old
       eval hostname_new='$'"${service}"_hostname_new
-      # shellcheck disable=SC2154
-      if [ "${hostname_old}" != "${hostname_new}" ]; then
+      if [ "${hostname_old:-}" != "${hostname_new:-}" ]; then
         printf %s"${green}# Onion hostname renewed for the service: ${bold}${service}${nocolor}\nOld = ${underline}${hostname_old}${nocolor}\nNew = ${underline}${hostname_new}${nocolor}\n"
         [ -n "${client_name_list}" ] && printf %s"${yellow}# Info: Notify the clients ${client_name_list} to update their bookmarks to the hostname (including modifying the '.auth_private' file accordingly).\n"
         printf "\n"
