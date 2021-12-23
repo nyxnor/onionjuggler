@@ -136,6 +136,7 @@ Option names:
   signal                                                     --restart, --reload
 
 Positional arguments:
+  TARGET                                                     [addr:]port
   @all                                                       all services or clients available
   SERV1,SERV2...                                             specify services
   CLIENT1,CLIENT2,...                                        specify clients
@@ -166,7 +167,7 @@ assign_value(){
     -*) value="${2#-}";;
     *) value="${2}"
   esac
-  eval "${1}"="${value}"
+  eval "${1}"="\"${value}\""
 }
 
 ## get_arg variable_name "${opt}" "${arg}"
@@ -309,13 +310,14 @@ is_addr_port(){
   is_integer "${port}"; is_integer "${addr_1}"; is_integer "${addr_2}"; is_integer "${addr_3}"; is_integer "${addr_4}"
 
   { [ "${port}" -gt 0 ] && [ "${port}" -le 65535 ] ; } \
-  || error_msg "port is not within range: 0 < port <= 65535: ${port}"
+  || error_msg "port '${port}' is not within range: 0-65535"
 
-  { { [ "${addr_1}" -ge 0 ] && [ "${addr_1}" -le 255 ] ; } \
-  && { [ "${addr_2}" -ge 0 ] && [ "${addr_2}" -le 255 ] ; } \
-  && { [ "${addr_3}" -ge 0 ] && [ "${addr_3}" -le 255 ] ; } \
-  && { [ "${addr_4}" -ge 0 ] && [ "${addr_4}" -le 255 ] ; } ; } \
-  || error_msg "target address is not within range: 0.0.0.0 to 255.255.255.255: ${addr}"
+  if [ "${addr_1}" -ge 0 ] && [ "${addr_1}" -le 255 ] && [ "${addr_2}" -ge 0 ] && [ "${addr_2}" -le 255 ] \
+  && [ "${addr_3}" -ge 0 ] && [ "${addr_3}" -le 255 ] && [ "${addr_4}" -ge 0 ] && [ "${addr_4}" -le 255 ]; then
+    :
+  else
+    error_msg "target address '${addr}' is not within range: 0.0.0.0-255.255.255.255"
+  fi
 }
 
 
@@ -354,13 +356,10 @@ create_service_list(){ service_name_list=$("${exec_cmd_alt_user}" -u "${tor_user
 ## $3 normally is client, but can be any other (accepts list -> client1,client2...)
 loop_list(){
   for item in $(printf %s"${2}" | tr "," " "); do
-    if [ -z "${3}" ]; then
-      "${1}" "${item}"
-    else
-      for subitem in $(printf %s"${3}" | tr "," " "); do
-        "${1}" "${item}" "${subitem}"
-      done
-    fi
+    case "${3}" in
+      "") "${1}" "${item}";;
+      *) for subitem in $(printf %s"${3}" | tr "," " "); do "${1}" "${item}" "${subitem}"; done;;
+    esac
   done
 }
 
@@ -403,6 +402,7 @@ httpd_service_block(){
     esac
     escape_printf_percent "${line}" | grep -q "^}" && break
   done
+  cat_squeeze_blank "${file}"
 }
 
 ## http://sed.sourceforge.net/local/docs/emulating_unix.txt
@@ -480,6 +480,7 @@ case "${command}" in
   ##  if target only contains the port number and not the address, will bind to localhost.
   ## virtport2 and target 2 are optional
   n|on)
+    set -x
     [ -z "${service}" ] && usage
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version=${version} is not available" ## wait for v4 to change this
     : "${socket:=unix}"
