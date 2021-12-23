@@ -239,27 +239,27 @@ case "${action}" in
     [ ! -d "${tor_data_dir_services}" ] && "${exec_cmd_alt_user}" mkdir -p "${tor_data_dir_services}"
     [ ! -d "${tor_data_dir_auth}" ] && "${exec_cmd_alt_user}" mkdir -p "${tor_data_dir_auth}"
     "${exec_cmd_alt_user}" chown -R "${tor_user}":"${tor_user}" "${tor_data_dir}"
-    printf %s"${green}# Copying files to the system\n${nocolor}"
+    printf %s"${green}# Copying files to path\n${nocolor}"
     [ ! -d "${man_dir}/man1" ] && "${exec_cmd_alt_user}" mkdir -p "${man_dir}/man1"
     [ ! -d "${man_dir}/man1" ] && "${exec_cmd_alt_user}" mkdir -p "${man_dir}/man5"
-    "${exec_cmd_alt_user}" cp -v man/man1/onionjuggler-cli.1 man/man1/onionjuggler-tui.1 "${man_dir}/man1"
-    "${exec_cmd_alt_user}" cp -v man/man5/onionjuggler.conf.5 "${man_dir}/man5"
-    "${exec_cmd_alt_user}" cp -v onionjuggler-cli onionjuggler-tui "${bin_dir}"
+    "${exec_cmd_alt_user}" cp man/man1/onionjuggler-cli.1 man/man1/onionjuggler-tui.1 "${man_dir}/man1"
+    "${exec_cmd_alt_user}" cp man/man5/onionjuggler.conf.5 "${man_dir}/man5"
+    "${exec_cmd_alt_user}" cp onionjuggler-cli onionjuggler-tui "${bin_dir}"
     [ ! -d "${conf_dir}/onionjuggler" ] && "${exec_cmd_alt_user}" mkdir -p "${conf_dir}/conf.d"
-    "${exec_cmd_alt_user}" cp -v etc/onionjuggler/dialogrc "${conf_dir}"
+    "${exec_cmd_alt_user}" cp etc/onionjuggler/dialogrc "${conf_dir}"
     get_os
     ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch/blob/master/neofetch
     case "${os}" in
       Linux*)
         case "${distro}" in
-          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
-          "Arch"*|"Artix"*|"ArcoLinux"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
-          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${exec_cmd_alt_user}" cp -v etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
+          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
+          "Arch"*|"Artix"*|"ArcoLinux"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
+          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${exec_cmd_alt_user}" cp etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac
       ;;
-      "OpenBSD"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/openbsd.conf "${conf_dir}/onionjuggler.conf";;
-      "NetBSD"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
-      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${exec_cmd_alt_user}" cp -v etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
+      "OpenBSD"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/openbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "NetBSD"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
     esac
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
   ;;
