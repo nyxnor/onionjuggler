@@ -282,7 +282,7 @@ safe_edit(){
       file_name_tmp="$(printf %s"mkstemp(${TMPDIR}/${file_name}.XXXXXX)" | m4)"
       eval "${file_name}"_tmp="${file_name_tmp}"
       printf %s"${blue}Saving a copy of '${file}' to '${file_name_tmp}'${nocolor}\n"
-      "${su_cmd}" chown root:root "${file_name_tmp}"
+      "${su_cmd}" chown root:"${tor_conf_group}" "${file_name_tmp}"
       "${su_cmd}" cp "${file}" "${file_name_tmp}"
     ;;
     getvar)

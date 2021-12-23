@@ -272,7 +272,7 @@ case "${command}" in
     "${su_cmd}" rm -f "${man_dir}/man5/onionjuggler.conf.5"
     "${su_cmd}" rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui"
     printf %s"${green}# Done!${nocolor}"
-    if [ "${action}" = "P" ] || [ "${action}" = "purge" ]; then
+    if [ "${action}" = "-P" ] || [ "${action}" = "--purge" ]; then
       printf %s"${red}# Purging OnionJuggler configuration from your system.${nocolor}\n"
       "${su_cmd}" rm -f "${conf_dir}/onionjuggler"
     fi

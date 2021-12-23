@@ -302,7 +302,7 @@ onionjuggler-cli help
 
 : Default system configuration file.
 
-**/etc/onionjuggler/conf.d/*conf**
+**/etc/onionjuggler/conf.d/\*.conf**
 
 : Local configuration files that overrrite the default one.
 
