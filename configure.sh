@@ -27,7 +27,7 @@ usage(){
 \nUsage: configure.sh command [option <ARG>]
 \nOptions:
   -i, --install                               setup environment copying files to path
-  -u, --uninstall                             remove onionjuggler scripts and manual pages from path
+  -u, --uninstall [-P, --purge]               remove onionjuggler scripts and manual pages from path
   -h, --help                                  show this help message
 \nAdvanced options:
   -i, --install [-b <DIR>|-c <DIR>|-m <DIR>]  setup environment with specified paths
@@ -54,7 +54,8 @@ while :; do
     *) arg="${2}"; shift_n=2;;
   esac
   case "${1}" in
-    -s|--install|-r|--release|-k|--check|-m|--man) action="${1}"; shift;;
+    -i|--install|-u|--uninstall|-r|--release|-k|--check|-m|--man) command="${1}"; shift;;
+    -P|--purge) action="${1}"; shift;;
     -C|--config|-C=*|--confg=*) ONIONJUGGLER_CONF="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
     -B|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
     -F|--conf-dir|-c=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
@@ -111,7 +112,7 @@ install_package(){
 }
 
 
-custom_shellcheck(){
+make_shellcheck(){
   printf %s"${yellow}# Checking shell syntax"
   ## Customize severity with -S [error|warning|info|style]
   if ! shellcheck configure.sh etc/onionjuggler/*.conf onionjuggler-cli onionjuggler-tui; then
@@ -226,9 +227,9 @@ range_variable dialog_box dialog whiptail
 ###### MAIN #######
 
 
-case "${action}" in
+case "${command}" in
 
-  --install|install)
+  -i|--install)
     printf %s"${magenta}# Checking requirements\n${nocolor}"
     # shellcheck disable=SC2086
     install_package ${requirements}
@@ -265,18 +266,23 @@ case "${action}" in
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
   ;;
 
-  -u|--uninstall|uninstall)
-
-
+  -u|--uninstall)
+    printf %s"${red}# Removing OnionJuggler scripts from your system.${nocolor}\n"
+    "${su_cmd}" rm -f "${man_dir}/man1/onionjuggler-cli.1" "${man_dir}/man1/onionjuggler-tui.1"
+    "${su_cmd}" rm -f "${man_dir}/man5/onionjuggler.conf.5"
+    "${su_cmd}" rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui"
+    printf %s"${green}# Done!${nocolor}"
+    if [ "${action}" = "P" ] || [ "${action}" = "purge" ]; then
+      printf %s"${red}# Purging OnionJuggler configuration from your system.${nocolor}\n"
+      "${su_cmd}" rm -f "${conf_dir}/onionjuggler"
+    fi
   ;;
 
-  -r|--release|release)
+  -r|--release)
     printf %s"${blue}# Preparing release\n${nocolor}"
-    ## ShellCheck is needed
-    ## install https://github.com/koalaman/shellcheck#installing or compile from source https://github.com/koalaman/shellcheck#compiling-from-source
     install_package shellcheck pandoc git
     make_man
-    custom_shellcheck
+    make_shellcheck
     printf %s"${cyan}# Checking git status"
     find . -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \; ## should not delete, could destroy lines, just leave empty lines
     if [ -n "$(git status -s)" ]; then
@@ -289,7 +295,7 @@ case "${action}" in
     printf %s"${green}# Done!\n${nocolor}"
   ;;
 
-  -k|--check) custom_shellcheck;;
+  -k|--check) make_shellcheck;;
 
   -m|--man) make_man;;
 
