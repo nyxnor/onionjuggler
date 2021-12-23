@@ -306,7 +306,7 @@ safe_edit(){
 ## Verify tor configuration of the temporary file and if variable is empty, use the main configuration, if wrong, exit.
 verify_config_tor(){
   config="${tor_conf_tmp:-"${tor_conf}"}"
-  "${su_cmd}" -u "${tor_user}" tor -f "${config}" --verify-config || error_msg "The tor_conf '${config}' configuration is invalid."
+  "${su_cmd}" tor --User "${tor_user}" -f "${config}" --verify-config || error_msg "The tor_conf '${config}' configuration is invalid."
 }
 
 
