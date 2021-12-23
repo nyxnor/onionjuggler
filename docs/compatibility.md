@@ -356,3 +356,26 @@ httpd -t && httpd -k graceful
 ## OpenBSD-httpd
 
 It is not necessary to specify the `$website_dir`, as on `httpd.conf`, the option `chroot` (if empty its value will be `/var/www`) will force every document `root` option of the server block be inside that chrooted directory, so the default value is to include websites files inside `/var/www/htdocs`. So if there is a website in `/var/www/htdocs/example`, you only need to specify the `example` folder on the `web` option.
+
+
+# Execute command as another user
+
+It is recommended to enable persistance of the passwords to avoid having to type them continuously during runtime.
+
+## Sudo
+
+Run:
+```sh
+sudo visudo
+```
+Insert this line:
+```sh
+Defaults env_reset,timestamp_timeout=30
+```
+
+## Doas
+
+Inside `/etc/doas.conf`:
+```sh
+permit persist YOUR_USER
+```
