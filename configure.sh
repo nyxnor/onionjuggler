@@ -26,10 +26,11 @@ usage(){
   printf "Configure the environment for OnionJuggler
 \nUsage: configure.sh command [option <ARG>]
 \nOptions:
-  -s, --setup                                 setup environment
+  -i, --install                               setup environment copying files to path
+  -u, --uninstall                             remove onionjuggler scripts and manual pages from path
   -h, --help                                  show this help message
 \nAdvanced options:
-  -s, --setup [-b <DIR>|-c <DIR>|-m <DIR>]    setup environment with specified paths
+  -i, --install [-b <DIR>|-c <DIR>|-m <DIR>]  setup environment with specified paths
   -C, --config <ONIONJUGGLER_CONF>            specify alternative onionjuggler configuration file to be read
   -B, --bin-dir <DIR>                         script directory that is on path (Default: /usr/local/bin)
   -F, --conf-dir <DIR>                        configuration directory (Default: /etc)
@@ -53,7 +54,7 @@ while :; do
     *) arg="${2}"; shift_n=2;;
   esac
   case "${1}" in
-    -s|--setup|-r|--release|-k|--check|-m|--man) action="${1}"; shift;;
+    -s|--install|-r|--release|-k|--check|-m|--man) action="${1}"; shift;;
     -C|--config|-C=*|--confg=*) ONIONJUGGLER_CONF="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
     -B|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
     -F|--conf-dir|-c=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
@@ -95,7 +96,7 @@ install_package(){
           ! command -v openssl >/dev/null && package="openssl" && install_pkg=1
         fi
       ;;
-      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${exec_cmd_alt_user} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
+      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${su_cmd} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
       openbsd-httpd) :;;
       libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
       *) ! command -v "${package}" >/dev/null && install_pkg=1;;
@@ -104,7 +105,7 @@ install_package(){
     if [ "${install_pkg}" = 1 ]; then
       printf %s"${nocolor}# Installing ${package}\n"
       # shellcheck disable=SC2086
-      "${exec_cmd_alt_user}" ${pkg_mngr_install} "${package}"
+      "${su_cmd}" ${pkg_mngr_install} "${package}"
     fi
   done
 }
@@ -190,7 +191,7 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 [ -r "${ONIONJUGGLER_CONF}" ] && . "${ONIONJUGGLER_CONF}"
 
 ## if any of the configurations are empty, use default ones
-: "${exec_cmd_alt_user:="sudo"}"
+: "${su_cmd:="sudo"}"
 : "${tor_user:="debian-tor"}"
 : "${pkg_mngr_install:="apt install -y"}"
 : "${dialog_box:="dialog"}"
@@ -217,7 +218,7 @@ range_variable(){
   fi
 }
 
-range_variable exec_cmd_alt_user sudo doas
+range_variable su_cmd sudo doas
 range_variable webserver nginx apache2 openbsd-httpd
 range_variable dialog_box dialog whiptail
 
@@ -227,41 +228,46 @@ range_variable dialog_box dialog whiptail
 
 case "${action}" in
 
-  -s|--setup|setup)
+  --install|install)
     printf %s"${magenta}# Checking requirements\n${nocolor}"
     # shellcheck disable=SC2086
     install_package ${requirements}
     ## see https://github.com/nyxnor/onionjuggler/issues/15 about using complete path to binary
     ## see https://github.com/nyxnor/onionjuggler/issues/29 about usermod not appending with -a
     #printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
-    #"${exec_cmd_alt_user}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
+    #"${su_cmd}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
     printf %s"${yellow}# Creating tor directories\n${nocolor}"
-    [ ! -d "${tor_data_dir_services}" ] && "${exec_cmd_alt_user}" mkdir -p "${tor_data_dir_services}"
-    [ ! -d "${tor_data_dir_auth}" ] && "${exec_cmd_alt_user}" mkdir -p "${tor_data_dir_auth}"
-    "${exec_cmd_alt_user}" chown -R "${tor_user}":"${tor_user}" "${tor_data_dir}"
+    [ ! -d "${tor_data_dir_services}" ] && "${su_cmd}" mkdir -p "${tor_data_dir_services}"
+    [ ! -d "${tor_data_dir_auth}" ] && "${su_cmd}" mkdir -p "${tor_data_dir_auth}"
+    "${su_cmd}" chown -R "${tor_user}":"${tor_user}" "${tor_data_dir}"
     printf %s"${green}# Copying files to path\n${nocolor}"
-    [ ! -d "${man_dir}/man1" ] && "${exec_cmd_alt_user}" mkdir -p "${man_dir}/man1"
-    [ ! -d "${man_dir}/man1" ] && "${exec_cmd_alt_user}" mkdir -p "${man_dir}/man5"
-    "${exec_cmd_alt_user}" cp man/man1/onionjuggler-cli.1 man/man1/onionjuggler-tui.1 "${man_dir}/man1"
-    "${exec_cmd_alt_user}" cp man/man5/onionjuggler.conf.5 "${man_dir}/man5"
-    "${exec_cmd_alt_user}" cp onionjuggler-cli onionjuggler-tui "${bin_dir}"
-    [ ! -d "${conf_dir}/onionjuggler" ] && "${exec_cmd_alt_user}" mkdir -p "${conf_dir}/conf.d"
-    "${exec_cmd_alt_user}" cp etc/onionjuggler/dialogrc "${conf_dir}"
+    [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man1"
+    [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man5"
+    "${su_cmd}" cp man/man1/onionjuggler-cli.1 man/man1/onionjuggler-tui.1 "${man_dir}/man1"
+    "${su_cmd}" cp man/man5/onionjuggler.conf.5 "${man_dir}/man5"
+    "${su_cmd}" cp onionjuggler-cli onionjuggler-tui "${bin_dir}"
+    [ ! -d "${conf_dir}/onionjuggler" ] && "${su_cmd}" mkdir -p "${conf_dir}/conf.d"
+    "${su_cmd}" cp etc/onionjuggler/dialogrc "${conf_dir}"
     get_os
     ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch/blob/master/neofetch
     case "${os}" in
       Linux*)
         case "${distro}" in
-          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
-          "Arch"*|"Artix"*|"ArcoLinux"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
-          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${exec_cmd_alt_user}" cp etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
+          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${su_cmd}" cp etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
+          "Arch"*|"Artix"*|"ArcoLinux"*) "${su_cmd}" cp etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
+          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${su_cmd}" cp etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac
       ;;
-      "OpenBSD"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/openbsd.conf "${conf_dir}/onionjuggler.conf";;
-      "NetBSD"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
-      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${exec_cmd_alt_user}" cp etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
+      "OpenBSD"*) "${su_cmd}" cp etc/onionjuggler/openbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "NetBSD"*) "${su_cmd}" cp etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${su_cmd}" cp etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
     esac
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
+  ;;
+
+  -u|--uninstall|uninstall)
+
+
   ;;
 
   -r|--release|release)

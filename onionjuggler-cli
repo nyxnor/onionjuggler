@@ -310,7 +310,6 @@ verify_config_tor(){
 }
 
 
-## TODO tighten permissions https://github.com/nyxnor/onionjuggler/issues/38
 ## set correct permissions for tor directories and files
 set_owner_permission(){
   ## data

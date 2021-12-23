@@ -19,7 +19,7 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 ## SYSTEM
 
-**exec_cmd_alt_user**
+**su_cmd**
 
 : Command to run as another user, use to run as the root and the tor user. Compatible with *doas* and *sudo*. (Default: sudo).
 
@@ -116,7 +116,7 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 # EXAMPLES
 
-* **exec_cmd_alt_user**=doas
+* **su_cmd**=doas
 
 * **tor_user**=tor
 

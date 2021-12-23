@@ -138,12 +138,12 @@ To assign values to the variables, you can either:
 
 * or insert configuration to the end of the file with tee:
 ```sh
-printf "exec_cmd_alt_user=\"sudo\"\n" | tee -a /etc/onionjuggler/onionjuggler.conf
+printf "su_cmd=\"sudo\"\n" | tee -a /etc/onionjuggler/onionjuggler.conf
 ```
 
 * or edit with sed:
 ```sh
-sed -i'' "s|^exec_cmd_alt_user=.*|exec_cmd_alt_user=\"doas\"|" /etc/onionjuggler/onionjuggler.conf
+sed -i'' "s|^su_cmd=.*|su_cmd=\"doas\"|" /etc/onionjuggler/onionjuggler.conf
 ```
 
 ### Setup the enviroment

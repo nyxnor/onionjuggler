@@ -19,8 +19,8 @@ To configure this header in Apache 2.2 or above, you will need to enable a `head
 **Step 1.** Enable headers and rewrite modules and reload Apache2
 
 ```
-"${exec_cmd_alt_user}" a2enmod headers rewrite
-"${exec_cmd_alt_user}" systemctl reload apache2
+"${su_cmd}" a2enmod headers rewrite
+"${su_cmd}" systemctl reload apache2
 ```
 
 If you get an error message, something has gone wrong and you cannot continue until you've figured out why this didn't work.
@@ -52,7 +52,7 @@ Virtual Host example:
 
 Reload the apache2 service, so your configuration changes take effect:
 ```
-"${exec_cmd_alt_user}" systemctl reload apache2
+"${su_cmd}" systemctl reload apache2
 ```
 
 If you get an error message, something has gone wrong and you cannot continue until you've figured out why this didn't work.
@@ -149,7 +149,7 @@ server {
 **Step 3.** Test website configuration
 
 ```
-"${exec_cmd_alt_user}" nginx -t
+"${su_cmd}" nginx -t
 ```
 
 The web server should confirm that the new syntax is working:
@@ -162,7 +162,7 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 **Step 4.** Restart nginx
 
 ```
-"${exec_cmd_alt_user}" nginx -s reload
+"${su_cmd}" nginx -s reload
 ```
 
 If you get an error message, something has gone wrong and you cannot continue until you've figured out why this didn't work.
