@@ -263,8 +263,8 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 ## configuration that can make a daemon fail to reload or even start
 ## Limitation is file name cannot start with a number.
 ## $ cp_file_to_from_tmp tmp "${file}"
-## modify "${file}"
-## daemon verify config -f "${file}"
+## modify the "${file_tmp}"
+## use the daemon option to verify config -f "${file_tmp}"
 ## $ cp_file_to_from_tmp save "${file}"
 cp_file_to_from_tmp(){
   [ -w "${TMPDIR:="/tmp"}" ] || export TMPDIR="~"
@@ -278,7 +278,7 @@ cp_file_to_from_tmp(){
       file_name_tmp="$(printf '%s\n' "mkstemp(${TMPDIR}/${file_name}.XXXXXX)" | m4)"
       eval "${file_name}_tmp"="${file_name_tmp}"
       printf %s"Saving a copy of '${file}' on '${file_name_tmp}'\n"
-      "${exec_cmd_alt_user}" cp -v "${file}" "${file_name_tmp}"
+      "${exec_cmd_alt_user}" cp "${file}" "${file_name_tmp}"
     ;;
     save)
       eval file_name_tmp='$'"${file_name}_tmp"
@@ -286,8 +286,8 @@ cp_file_to_from_tmp(){
       if cmp -s "${file}" "${file_name_tmp}"; then
         printf %s"File '${file}' do not differ from '${file_name_tmp}'. Not writing back to original location.\n"
       else
-        printf %s"Copying '${file_name_tmp}' back to its original location '${file}'\n"
-        "${exec_cmd_alt_user}" cp -v "${file_name_tmp}" "${file}"
+        printf %s"Moving '${file_name_tmp}' back to its original location '${file}'\n"
+        "${exec_cmd_alt_user}" mv "${file_name_tmp}" "${file}"
       fi
     ;;
   esac
@@ -477,7 +477,7 @@ case "${command}" in
   ## beaware this only works for the torrc, if you deleted your data directory with command "off" combined with "purge" option, the keys will not be restored, instead new ones will be created
   restore-torrc|RESTORE-TORRC)
     printf %s"${cyan}# Restoring torrc with its latest backup${nocolor}\n"
-    "${exec_cmd_alt_user}" cp -v "${tor_conf}".bak "${tor_conf}"
+    "${exec_cmd_alt_user}" cp "${tor_conf}".bak "${tor_conf}"
     signal_tor
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
@@ -508,23 +508,6 @@ case "${command}" in
       cat_squeeze_blank "${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${tor_conf}".tmp "${tor_conf}"
       printf %s"# Disabled service: ${bold}${service}${magenta}\n\n"
     }
-    for hs_service in ${service}; do
-      case "${action:-}" in
-        purge|P)
-          printf %s"${red}\n# Deleting Hidden Service data in ${tor_data_dir_services}/${hs_service}${nocolor}\n"
-          "${exec_cmd_alt_user}" rm -rfv "${tor_data_dir_services}"/"${hs_service}"
-        ;;
-        *) printf %s"\n${yellow}# HiddenServiceDiretory was kept${nocolor}\n";;
-      esac
-      "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
-      ## remove service paragraph in torrc
-      printf %s"# Deleting Hidden Service configuration in ${tor_conf}\n"
-      service_block delete "${service}"
-      ## substitute multiple sequential empty lines to a single one per sequence
-      cat_squeeze_blank "${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${tor_conf}".tmp "${tor_conf}"
-      printf %s"# Disabled service: ${bold}${hs_service}${magenta}\n\n"
-    done
-
     loop_list delete_service "${service}"
     signal_tor
     printf %s"${green}\n# Done\n${nocolor}"
@@ -1212,7 +1195,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     vanguards_config(){
       "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
       ## Keep config with the torrc and torsocks.conf
-      "${exec_cmd_alt_user}" cp -v "${tor_data_dir}"/vanguards/vanguards-example.conf "${tor_conf_dir}"/vanguards.conf
+      "${exec_cmd_alt_user}" cp "${tor_data_dir}"/vanguards/vanguards-example.conf "${tor_conf_dir}"/vanguards.conf
       "${exec_cmd_alt_user}" sed -i'' "s|tor_control_port =.*|tor_control_port = ${tor_control_port}|g" "${tor_conf_dir}"/vanguards.conf
       "${exec_cmd_alt_user}" sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${tor_conf_dir}"/vanguards.conf
       ## Control and Authentication methods are needed. Use the easiest to configure if the manual ones are not present, else do nothing.
