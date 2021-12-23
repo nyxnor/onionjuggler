@@ -4,6 +4,8 @@
 ## This file should be run from inside the cloned repository
 ## Setup tor directories, user, packages needed for OnionJuggler.
 
+repo="https://github.com/nyxnor/onionjuggler.git"
+
 ## colors
 nocolor="\033[0m"
 #bold="\033[1m"
@@ -27,7 +29,7 @@ usage(){
 \nUsage: configure.sh command [option <ARG>]
 \nOptions:
   -i, --install                               setup environment copying files to path
-  -u, --uninstall [-P, --purge]               remove onionjuggler scripts and manual pages from path
+  -d, --uninstall [-P, --purge]               remove onionjuggler scripts and manual pages from path
   -h, --help                                  show this help message
 \nAdvanced options:
   -i, --install [-b <DIR>|-c <DIR>|-m <DIR>]  setup environment with specified paths
@@ -38,6 +40,7 @@ usage(){
   -k, --check                                 run pre-defined shellcheck
   -m, --man                                   build manual pages
   -r, --release                               prepare for commiting
+  -u, --update                                development updating by pulling from upstream
 "
   exit 1
 }
@@ -54,7 +57,7 @@ while :; do
     *) arg="${2}"; shift_n=2;;
   esac
   case "${1}" in
-    -i|--install|-u|--uninstall|-r|--release|-k|--check|-m|--man) command="${1}"; shift;;
+    -i|--install|-u|--update|-d|--uninstall|-r|--release|-k|--check|-m|--man) command="${1}"; shift;;
     -P|--purge) action="${1}"; shift;;
     -C|--config|-C=*|--confg=*) ONIONJUGGLER_CONF="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
     -B|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
@@ -229,6 +232,11 @@ range_variable dialog_box dialog whiptail
 
 case "${command}" in
 
+  -u|--update)
+    printf %s"${magenta}# Pulling, hold back\n${nocolor}"
+    git pull "${repo}"
+  ;;
+
   -i|--install)
     printf %s"${magenta}# Checking requirements\n${nocolor}"
     # shellcheck disable=SC2086
@@ -266,7 +274,7 @@ case "${command}" in
     printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
   ;;
 
-  -u|--uninstall)
+  -d|--uninstall)
     printf %s"${red}# Removing OnionJuggler scripts from your system.${nocolor}\n"
     "${su_cmd}" rm -f "${man_dir}/man1/onionjuggler-cli.1" "${man_dir}/man1/onionjuggler-tui.1"
     "${su_cmd}" rm -f "${man_dir}/man5/onionjuggler.conf.5"
