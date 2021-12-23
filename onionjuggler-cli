@@ -5,6 +5,7 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
+
 ## colors
 nocolor="\033[0m"
 bold="\033[1m"
@@ -167,6 +168,8 @@ assign_value(){
     -*) value="${2#-}";;
     *) value="${2}"
   esac
+  ## Escaping quotes is needed because else if will fail if the argument is quoted
+  # shellcheck disable=SC2140
   eval "${1}"="\"${value}\""
 }
 
@@ -262,29 +265,35 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 ## If correct, then save file back to its original location. This avoids running with an invalid
 ## configuration that can make a daemon fail to reload or even start
 ## Limitation is file name cannot start with a number.
-## $ cp_file_to_from_tmp tmp "${file}"
+## $ safe_edit tmp "${file}"
 ## modify the "${file_tmp}"
 ## use the daemon option to verify config -f "${file_tmp}"
-## $ cp_file_to_from_tmp save "${file}"
-cp_file_to_from_tmp(){
+## $ safe_edit save "${file}"
+safe_edit(){
   [ -w "${TMPDIR:="/tmp"}" ] || export TMPDIR="~"
   TMPDIR="${TMPDIR%*/}"
   file="${2}"
   ## get base file: /etc/tor/vanguards.conf.sample -> vanguards.conf.sample.
   ## replace dot and hifen for underscore so it can be evaluated as a key (variable name)
-  file_name="$(printf %s"${file_name##*/}" | tr "." "_" | tr "-" "_")"
+  file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
+  [ -z "${file_name}" ] && error_msg "file_name is empty"
   case "${1}" in
     tmp)
-      file_name_tmp="$(printf '%s\n' "mkstemp(${TMPDIR}/${file_name}.XXXXXX)" | m4)"
-      eval "${file_name}_tmp"="${file_name_tmp}"
-      printf %s"Saving a copy of '${file}' on '${file_name_tmp}'\n"
+      file_name_tmp="$(printf %s"mkstemp(${TMPDIR}/${file_name}.XXXXXX)" | m4)"
+      eval "${file_name}"_tmp="${file_name_tmp}"
+      printf %s"Saving a copy of '${file}' to '${file_name_tmp}'\n"
+      "${exec_cmd_alt_user}" chown root:root "${file_name_tmp}"
       "${exec_cmd_alt_user}" cp "${file}" "${file_name_tmp}"
+    ;;
+    getvar)
+      eval file_name_tmp='$'"${file_name}_tmp"
+      printf %s"${file_name_tmp}"
     ;;
     save)
       eval file_name_tmp='$'"${file_name}_tmp"
-      [ -z "${file_name_tmp}" ] && error_msg "file_name_tmp variable is empty"
-      if cmp -s "${file}" "${file_name_tmp}"; then
-        printf %s"File '${file}' do not differ from '${file_name_tmp}'. Not writing back to original location.\n"
+      if cmp -s "${file_name_tmp}" "${file}"; then
+        printf %s"File '${file_name_tmp}' do not differ from '${file}'. Not writing back to original location.\n"
+        "${exec_cmd_alt_user}" rm -f "${file_name_tmp}"
       else
         printf %s"Moving '${file_name_tmp}' back to its original location '${file}'\n"
         "${exec_cmd_alt_user}" mv "${file_name_tmp}" "${file}"
@@ -294,21 +303,25 @@ cp_file_to_from_tmp(){
 }
 
 
+## Verify tor configuration of the temporary file, if wrong, exit.
 verify_config_tor(){
-  "${exec_cmd_alt_user}" -u "${tor_user}" -f "${tor_conf_tmp:-}" --verify-config \
-  || error_msg "Tempory copy of the tor_conf '${tor_conf_tmp}' has is invalid, maintaining the current configuration on '${tor_conf}' intact."
+  "${exec_cmd_alt_user}" -u "${tor_user}" tor -f "${tor_conf_tmp:-"${tor_conf}"}" --verify-config \
+  || error_msg "The tor_conf '${tor_conf_tmp:-${tor_conf}}' configuration is invalid."
 }
 
 
 ## TODO tighten permissions https://github.com/nyxnor/onionjuggler/issues/38
 ## set correct permissions for tor directories and files
 set_owner_permission(){
+  ## data
   "${exec_cmd_alt_user}" chown -R "${tor_user}:${tor_user}" "${tor_data_dir}"
-  "${exec_cmd_alt_user}" chmod 700 "${tor_data_dir}"
-
+  "${exec_cmd_alt_user}" find "${tor_data_dir}" -type d -exec chmod 700 {} \;
+  "${exec_cmd_alt_user}" find "${tor_data_dir}" -type f -exec chmod 600 {} \;
+  ## conf
   "${exec_cmd_alt_user}" chown -R root:"${tor_conf_group}" "${tor_conf_dir}"
-  "${exec_cmd_alt_user}" chmod 755 "${tor_conf_dir}"
-  "${exec_cmd_alt_user}" chmod 644 "${tor_conf}"
+  "${exec_cmd_alt_user}" find "${tor_conf_dir}" -type d -exec chmod 755 {} \;
+  "${exec_cmd_alt_user}" find "${tor_conf_dir}" -type f -exec chmod 644 {} \;
+
 }
 
 
@@ -316,7 +329,7 @@ set_owner_permission(){
 # shellcheck disable=SC2120
 signal_tor(){
   verify_config_tor
-  cp_file_to_from_tmp save "${tor_conf}"
+  [ -n "${tor_conf_tmp}" ] && safe_edit save "${tor_conf}"
   set_owner_permission
   : "${signal:="reload"}"
   [ "${signal}" = "r" ] && signal="reload"
@@ -393,7 +406,7 @@ create_client_list(){
 
 ## save the service names that have a <HiddenServiceDir> in list format (SERV1,SERV2,...)
 create_service_list(){ service_name_list=$("${exec_cmd_alt_user}" -u "${tor_user}" ls "${tor_data_dir_services}"/ | tr " " ","); }
-#create_service_list(){ service_name_list=$("${exec_cmd_alt_user}" grep "HiddenServiceDir ${tor_data_dir_services}/" "${tor_conf}" | sed "s|HiddenServiceDir ${tor_data_dir_services}/||" | tr "\n" " "); }
+#create_service_list(){ service_name_list=$("${exec_cmd_alt_user}" grep "HiddenServiceDir ${tor_data_dir_services}/" "${tor_conf_tmp}" | sed "s|HiddenServiceDir ${tor_data_dir_services}/||" | tr "\n" " "); }
 
 
 ## loops the parameters
@@ -415,7 +428,7 @@ escape_printf_percent() { printf "%s\n" "$(printf '%s' "${1}" | sed "s/\%/\%/g")
 service_block(){
   process="${1}"
   service="${2}"
-  file="${3:-"${tor_conf}"}"
+  file="${3:-"${tor_conf_tmp}"}"
   i=0
   ## print the exact match HiddenServiceDir of the requested service that must end with the service name or with "/", also prit n lines below it
   #"${exec_cmd_alt_user}" printf '%s\n' "$(<"${file}")"
@@ -469,7 +482,9 @@ cat_squeeze_blank(){
 
 ###########################
 ########## MAIN ###########
-"${exec_cmd_alt_user}" sed -i'' 's/\/$//' "${tor_conf}" ## no config should end with '/' to find exact match with the end of line '$'.
+
+## no config should end with '/' to find exact match with the end of line '$'.
+"${exec_cmd_alt_user}" sed -i'' 's/\/$//' "${tor_conf}"
 
 case "${command}" in
 
@@ -477,7 +492,7 @@ case "${command}" in
   ## beaware this only works for the torrc, if you deleted your data directory with command "off" combined with "purge" option, the keys will not be restored, instead new ones will be created
   restore-torrc|RESTORE-TORRC)
     printf %s"${cyan}# Restoring torrc with its latest backup${nocolor}\n"
-    "${exec_cmd_alt_user}" cp "${tor_conf}".bak "${tor_conf}"
+    "${exec_cmd_alt_user}" cp "${tor_conf_tmp}".bak "${tor_conf_tmp}"
     signal_tor
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
@@ -500,14 +515,14 @@ case "${command}" in
         ;;
         *) printf %s"\n${yellow}# HiddenServiceDiretory was kept${nocolor}\n";;
       esac
-      "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
       ## remove service paragraph in torrc
-      printf %s"# Deleting Hidden Service configuration in ${tor_conf}\n"
-      service_block delete "${service}"
+      printf %s"# Deleting Hidden Service configuration in ${tor_conf_tmp}\n"
+      service_block delete "${service}" "${tor_conf_tmp}"
       ## substitute multiple sequential empty lines to a single one per sequence
-      cat_squeeze_blank "${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${tor_conf}".tmp "${tor_conf}"
-      printf %s"# Disabled service: ${bold}${service}${magenta}\n\n"
+      cat_squeeze_blank "${tor_conf_tmp}" | "${exec_cmd_alt_user}" tee "${tor_conf_tmp}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${tor_conf_tmp}".tmp "${tor_conf_tmp}"
+      printf %s"# Disabled service: ${bold}${service}${magenta}${nocolor}\n\n"
     }
+    safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
     loop_list delete_service "${service}"
     signal_tor
     printf %s"${green}\n# Done\n${nocolor}"
@@ -526,17 +541,17 @@ case "${command}" in
   ##  if target only contains the port number and not the address, will bind to localhost.
   ## virtport2 and target 2 are optional
   n|on)
-    set -x
     [ -z "${service}" ] && usage
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version=${version} is not available" ## wait for v4 to change this
     : "${socket:=unix}"
     : "${port:=80}"
     port="$(printf %s"${port}" | tr "," " " | tr -s " ")"
     virtport="${port%% *}"
+    safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
 
     finish_service_activation(){
       ## remove double empty lines
-      cat_squeeze_blank "${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${tor_conf}".tmp "${tor_conf}"
+      cat_squeeze_blank "${tor_conf_tmp}" | "${exec_cmd_alt_user}" tee "${tor_conf_tmp}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${tor_conf_tmp}".tmp "${tor_conf_tmp}"
       signal_tor
       ## show the Hidden Service address
       test_service_exists "${service}"
@@ -569,7 +584,7 @@ case "${command}" in
         target_addr="${target%%:*}"
         target_port="${target##*:}"
         { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
-        "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}" && error_msg "target=${target} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
+        "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}" && error_msg "target=${target} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
         is_integer "${virtport}"; is_addr_port "${target}"
         ## Optional
         if [ -n "${virtport2}" ]; then
@@ -580,18 +595,17 @@ case "${command}" in
           target2_addr="${target2%%:*}"
           target2_port="${target2##*:}"
           { [ "${target2_addr}" = "${target2_port}" ] || [ "${target2_addr}" = "localhost" ]; } && target2="127.0.0.1:${target2_port}"
-          "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target2}$" "${tor_conf}" && error_msg "target2=${target2} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
+          "${exec_cmd_alt_user}" grep -q "^HiddenServicePort .* ${target2}$" "${tor_conf_tmp}" && error_msg "target2=${target2} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
           is_integer "${virtport2}"; is_addr_port "${target2}"
         fi
-        "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
         ## delete any old entry for that servive
-        service_block delete "${service}"
+        service_block delete "${service}" "${tor_conf}"
         ## add configuration block, empty line after and before it
-        printf %s"\n${blue}# Including Hidden Service configuration in ${tor_conf}${nocolor}\n"
+        printf %s"\n${blue}# Including Hidden Service configuration in ${tor_conf_tmp}${nocolor}\n"
         if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\nHiddenServicePort ${virtport2} ${target2}\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\nHiddenServicePort ${virtport2} ${target2}\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf_tmp}"
         else
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf_tmp}"
         fi
         finish_service_activation
       ;;
@@ -601,17 +615,16 @@ case "${command}" in
         virtport2="${port##* }"
         [ "${virtport}" = "${virtport2}" ] && virtport2=""
         [ -n "${virtport2}" ] && is_integer "${virtport2}" ## var not mandatory
-        "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
         ## delete any old entry for that servive
-        service_block delete "${service}"
+        service_block delete "${service}" "${tor_conf}"
         ## add configuration block, empty line after and before it
-        printf %s"\n${blue}# Including Hidden Service configuration in ${tor_conf}${nocolor}\n"
+        printf %s"\n${blue}# Including Hidden Service configuration in ${tor_conf_tmp}${nocolor}\n"
         unix_path="unix:/var/run"
         unix_path="${unix_path%*/}/${service}"
         if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}-onion.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}-onion.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf_tmp}"
         else
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"
+          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}-onion.sock\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf_tmp}"
         fi
         finish_service_activation
       ;;
@@ -657,7 +670,7 @@ case "${command}" in
               # Server side configuration
               printf %s"${client_pub_key_config}\n" | "${exec_cmd_alt_user}" tee "${tor_data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
               ## Client side configuration
-              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+              printf "|<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>|\n"
               printf %s"service=${bold}${service}${nocolor}\n"
               printf %s"client=${bold}${client}${nocolor}\n"
               printf %s"onion_hostname=${bold}${magenta}${onion_hostname}${nocolor}\n"
@@ -665,7 +678,7 @@ case "${command}" in
               printf %s"client_pub_key_config=${bold}${client_pub_key_config}${nocolor}\n"
               printf %s"client_priv_key=${bold}${client_priv_key}${nocolor}\n"
               printf %s"client_priv_key_config=${bold}${client_priv_key_config}${nocolor}\n"
-              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n"
+              printf "|<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>|\n\n"
               ## Delete pem and keys
               "${exec_cmd_alt_user}" rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
             }
@@ -765,8 +778,8 @@ case "${command}" in
             [ "${onion##*.}" != "onion" ] && error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
             [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#onion}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#onion} is different than 62 characters (<56-char-base32>.onion)"
-            "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
-            grep -q "ClientOnionAuthDir" "${tor_conf}" && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"; }
+            safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
+            grep -q "ClientOnionAuthDir" "${tor_conf_tmp}" && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf_tmp}"; }
             "${exec_cmd_alt_user}" -u "${tor_user}" mkdir -p "${tor_data_dir_auth}"
             if [ -z "${client_priv_key}" ]; then
               ## Generate pem and derive pub and priv keys
@@ -788,12 +801,12 @@ case "${command}" in
               printf %s" client_priv_key_config=${bold}${client_priv_key_config}${nocolor}\n"
               printf "\n# Now it depends on the service operator to authorize you client public key\n\n"
               ## Server side configuration
-              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+              printf "|<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>|\n"
               printf "# Send the public key and instructions to the onion service operator\n\n"
               printf %s" onion=${bold}${onion}${nocolor}\n"
               printf %s" client_pub_key=${bold}${client_pub_key}${nocolor}\n"
               printf %s" client_pub_key_config=${bold}descriptor:x25519:${client_pub_key}${nocolor}\n\n"
-              printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+              printf "|<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>|\n"
             else
               client_priv_key_config="${onion%.onion}:descriptor:x25519:${client_priv_key}"
               printf %s"${client_priv_key_config}\n" | "${exec_cmd_alt_user}" tee "${tor_data_dir_auth}"/"${onion}".auth_private >/dev/null
@@ -899,7 +912,7 @@ case "${command}" in
       service="${1}"
       test_service_exists "${service}"
       j=$((j+1))
-      [ ${j} -eq 1 ] && printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+      [ ${j} -eq 1 ] && printf "|<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>|\n"
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
       create_client_list "${service}"
       if [ "${action}" != "q" ] && [ "${action}" != "quiet" ]; then
@@ -909,11 +922,11 @@ case "${command}" in
       printf %s"Service  = ${bold}${service}${nocolor}\n"
       [ -n "${client_name_list}" ] && printf %s"Clients  = ${bold}${client_name_list} (${client_count})${nocolor}\n"
       if "${exec_cmd_alt_user}" grep -q "^HiddenServiceDir ${tor_data_dir_services}/${service}$" "${tor_conf}"; then
-        printf %s"Status   = ${bold}${green}active${nocolor}\n" && service_block print "${service}"
+        printf %s"Status   = ${bold}${green}active${nocolor}\n" && service_block print "${service}" "${tor_conf}"
       else
         printf %s"Status   = ${bold}${yellow}inactive${nocolor}\n"
       fi
-      printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+      printf "|<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>|\n"
     }
     j=0
     [ "${service}" = "@all" ] && { create_service_list; service="${service_name_list}"; }
@@ -950,7 +963,7 @@ case "${command}" in
         is_service_dir_empty
         { [ -z "${service}" ] || [ -z "${folder}" ]; } && usage
         test_service_exists "${service}"
-        port=$(service_block print "${service}" | grep "HiddenServicePort" | tail -n 1)
+        port=$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | tail -n 1)
         only_ports=${port#* }
         virtport=${only_ports% *}
         target=${only_ports##* }
@@ -1017,9 +1030,6 @@ server \"${onion_hostname}\" {
 " | "${exec_cmd_alt_user}" tee -a "${webserver_conf}"
           ;;
         esac
-        #printf "\n# Web server configuration:\n\n"
-        #"${exec_cmd_alt_user}" cat /tmp/"${service}"-onion.conf
-        #while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${service}-onion.conf"
         reload_webserver
         #"${exec_cmd_alt_user}" rm -f /tmp/"${service}"-onion.conf
         printf %s"\n# Address: ${magenta}http://${onion_hostname}:${virtport}${nocolor}\n"
@@ -1193,21 +1203,21 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     [ -z "${python_path}" ] && error_msg "Python is not installed and it is needed for Vanguards."
 
     vanguards_config(){
-      "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf}".bak
+      safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
       ## Keep config with the torrc and torsocks.conf
       "${exec_cmd_alt_user}" cp "${tor_data_dir}"/vanguards/vanguards-example.conf "${tor_conf_dir}"/vanguards.conf
       "${exec_cmd_alt_user}" sed -i'' "s|tor_control_port =.*|tor_control_port = ${tor_control_port}|g" "${tor_conf_dir}"/vanguards.conf
       "${exec_cmd_alt_user}" sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${tor_conf_dir}"/vanguards.conf
       ## Control and Authentication methods are needed. Use the easiest to configure if the manual ones are not present, else do nothing.
       ## Control methods are Port (default: 9051) and Socket (default: /run/tor/control). Prefer port because socket path may differ on different systems https://github.com/mikeperry-tor/vanguards/pull/54#issuecomment-812185302.
-      if ! grep -q "ControlPort ${tor_control_port}" "${tor_conf}" && ! grep -q "ControlSocket" "${tor_conf}"; then
-        "${exec_cmd_alt_user}" sed -i'' "s/ControlPort .*/ControlPort ${tor_control_port}/" "${tor_conf}"
-        grep -q "ControlPort ${tor_control_port}" "${tor_conf}" || printf %s"\nControlPort ${tor_control_port}\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}" >/dev/null
+      if ! grep -q "ControlPort ${tor_control_port}" "${tor_conf_tmp}" && ! grep -q "ControlSocket" "${tor_conf_tmp}"; then
+        "${exec_cmd_alt_user}" sed -i'' "s/ControlPort .*/ControlPort ${tor_control_port}/" "${tor_conf_tmp}"
+        grep -q "ControlPort ${tor_control_port}" "${tor_conf_tmp}" || printf %s"\nControlPort ${tor_control_port}\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf_tmp}" >/dev/null
       fi
       ## Authentication methods are Cookie (default: 0) and HashedPassword, to read the "control_auth_cookie". Prefer cookie because else a password is needed. If any method was already configured, use it.
-      if ! grep -q "CookieAuthentication 1" "${tor_conf}" && ! grep -q "HashedControlPassword" "${tor_conf}"; then
-        "${exec_cmd_alt_user}" sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${tor_conf}"
-        grep -q "CookieAuthentication" "${tor_conf}" || printf "\nCookieAuthentication 1\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf}"  >/dev/null
+      if ! grep -q "CookieAuthentication 1" "${tor_conf_tmp}" && ! grep -q "HashedControlPassword" "${tor_conf_tmp}"; then
+        "${exec_cmd_alt_user}" sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${tor_conf_tmp}"
+        grep -q "CookieAuthentication" "${tor_conf_tmp}" || printf "\nCookieAuthentication 1\n\n" | "${exec_cmd_alt_user}" tee -a "${tor_conf_tmp}"  >/dev/null
       fi
       ## Generate Vanguards service
       printf %s"
@@ -1228,10 +1238,9 @@ Restart=always
 WantedBy=multi-user.target
 " | "${exec_cmd_alt_user}" tee /tmp/vanguards@default.service
       "${exec_cmd_alt_user}" cp /tmp/vanguards@default.service /etc/systemd/system/
-      printf "\n>>>>>>>>>>>>>>>>>>>\n"
-      while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/vanguards@default.service"
-      #cat /tmp/vanguards@default.service
-      printf ">>>>>>>>>>>>>>>>>>>\n\n"
+      printf "\n<><><><><><><><><><>\n"
+      cat /tmp/vanguards@default.service
+      printf "\n<><><><><><><><><><>\n"
       signal_tor
       "${exec_cmd_alt_user}" systemctl daemon-reload
       "${exec_cmd_alt_user}" systemctl enable vanguards@default.service
