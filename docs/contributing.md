@@ -22,6 +22,7 @@ Commands used by this project:
   * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
   * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
   * [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
+  * [cmp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cmp.html#tag_20_20)
   * [cp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cp.html#tag_20_24)
   * [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html#tag_20_28)
   * [date](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/date.html#tag_20_30)
@@ -50,19 +51,23 @@ Commands used by this project:
   * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
   * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
 
-* Installed:
+* Installation:
+  * Pre-configured (won't be installed by the project):
+    * [sudo](https://www.sudo.ws/docs/man/1.9.8/sudo.conf.man/)/[doas](https://man.openbsd.org/doas.conf.5)
   * Required:
-    * Main - [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
-    * Backup - [tar](https://linux.die.net/man/1/tar)
-    * Auth - [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html), [basez](http://www.quarkline.net/basez/)
-    * Vanguards - [git](https://git-scm.com/docs/user-manual), [python3-stem](https://stem.torproject.org/download.html), [systemd](https://www.freedesktop.org/software/systemd/man/)
-    * Web - [nginx](https://docs.nginx.com/nginx/admin-guide/), [apache](https://httpd.apache.org/docs/current/)
-    * TUI - [dialog](https://invisible-island.net/dialog/manpage/dialog.txt), [whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
+    * [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
+    * [tar](https://linux.die.net/man/1/tar)
+    * [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html)
+    * [basez](http://www.quarkline.net/basez/)
+    * [git](https://git-scm.com/docs/user-manual)
+    * [python3-stem](https://stem.torproject.org/download.html)
+    * [nginx](https://docs.nginx.com/nginx/admin-guide/)/[apache](https://httpd.apache.org/docs/current/)/[openbsd-httpd](https://man.openbsd.org/httpd.8)
+    * [dialog](https://invisible-island.net/dialog/manpage/dialog.txt)/[whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
   * Optional:
-    * QR encoding - [(lib)qrencode](https://github.com/fukuchi/libqrencode)
+    * [(lib)qrencode](https://github.com/fukuchi/libqrencode)
   * Development:
-    * Creating the manual - [pandoc](https://pandoc.org/MANUAL.html) (also creates the manual)
-    * Shell lintering - [shellcheck](https://github.com/koalaman/shellcheck/blob/master/shellcheck.1.md)
+    * [pandoc](https://pandoc.org/MANUAL.html)
+    * [shellcheck](https://github.com/koalaman/shellcheck/blob/master/shellcheck.1.md)
 
 ### Builtins
 
