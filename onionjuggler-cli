@@ -257,10 +257,27 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 ###################
 #### FUNCTIONS ####
 
-verify_config(){
-:
+
+cp_torrc_to_from_tmp(){
+  [ -w "${TMPDIR:-"/tmp"}" ] || TMPDIR="~"; TMPDIR="${TMPDIR%*/}"
+  tor_conf_tmp="${TMPDIR}/${tor_conf##*/}"
+  case "${1}" in
+    start) "${exec_cmd_alt_user}" cp "${tor_conf}" "${tor_conf_tmp}";;
+    finish) "${exec_cmd_alt_user}" cp "${tor_conf_tmp}" "${tor_conf}";;
+  esac
 }
 
+
+verify_config(){
+  if "${exec_cmd_alt_user}" -u "${tor_user}" -f "${tor_conf_tmp}" --verify-config; then
+    cp_torrc_to_from_tmp finish
+  else
+    error_msg "Tempory copy of the torrc '${tor_conf_tmp}' has is invalid, maintaining the current configuration on '${tor_conf}' intact."
+  fi
+}
+
+
+## TODO tighten permissions https://github.com/nyxnor/onionjuggler/issues/38
 ## set correct permissions for tor directories and files
 set_owner_permission(){
   "${exec_cmd_alt_user}" chown -R "${tor_user}:${tor_user}" "${tor_data_dir}"
@@ -275,6 +292,7 @@ set_owner_permission(){
 # reloads tor by default or forces to restart if $1 is not empty
 # shellcheck disable=SC2120
 signal_tor(){
+  verify_config
   set_owner_permission
   : "${signal:="reload"}"
   [ "${signal}" = "r" ] && signal="reload"
