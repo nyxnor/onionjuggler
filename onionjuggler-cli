@@ -257,6 +257,10 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 ###################
 #### FUNCTIONS ####
 
+verify_config(){
+:
+}
+
 ## set correct permissions for tor directories and files
 set_owner_permission(){
   "${exec_cmd_alt_user}" chown -R "${tor_user}:${tor_user}" "${tor_data_dir}"
@@ -270,7 +274,7 @@ set_owner_permission(){
 
 # reloads tor by default or forces to restart if $1 is not empty
 # shellcheck disable=SC2120
-restarting_tor(){
+signal_tor(){
   set_owner_permission
   : "${signal:="reload"}"
   [ "${signal}" = "r" ] && signal="reload"
@@ -432,7 +436,7 @@ case "${command}" in
   restore-torrc|RESTORE-TORRC)
     printf %s"${cyan}# Restoring torrc with its latest backup${nocolor}\n"
     "${exec_cmd_alt_user}" cp -v "${tor_conf}".bak "${tor_conf}"
-    restarting_tor
+    signal_tor
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
 
@@ -463,7 +467,7 @@ case "${command}" in
       printf %s"# Disabled service: ${bold}${service}${magenta}\n\n"
     }
     loop_list delete_service "${service}"
-    restarting_tor
+    signal_tor
     printf %s"${green}\n# Done\n${nocolor}"
   ;;
 
@@ -491,7 +495,7 @@ case "${command}" in
     finish_service_activation(){
       ## remove double empty lines
       cat_squeeze_blank "${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null && "${exec_cmd_alt_user}" mv "${tor_conf}".tmp "${tor_conf}"
-      restarting_tor
+      signal_tor
       ## show the Hidden Service address
       test_service_exists "${service}"
       printf %s"\n${cyan}# Hidden Service information:${nocolor}\n"
@@ -636,7 +640,7 @@ case "${command}" in
               loop_list auth_server_add "${service}" "${client}"
               instructions_auth
             fi
-            restarting_tor
+            signal_tor
             printf %s"${green}\n# Done\n${nocolor}"
           ;;
 
@@ -670,7 +674,7 @@ case "${command}" in
               || printf "# If any client remains, the service will still be authenticated.\n\n"
             fi
             loop_list auth_server_remove_clients "${service}" "${client}"
-            restarting_tor
+            signal_tor
             printf %s"${green}\n# Done\n${nocolor}"
           ;;
 
@@ -837,7 +841,7 @@ case "${command}" in
     [ "${service}" = "@all" ] && { create_service_list; service="${service_name_list}"; }
     service_save="${service}"
     loop_list renew_delete_old "${service_save}"
-    restarting_tor
+    signal_tor
     sleep 0.5
     loop_list renew_get_new "${service_save}"
     printf %s"${green}\n# Done\n${nocolor}"
@@ -1122,7 +1126,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         cat_squeeze_blank "${tor_conf}" "${tor_backup_dir}"/integrate"${tor_conf}" | "${exec_cmd_alt_user}" tee "${tor_conf}".tmp >/dev/null
         "${exec_cmd_alt_user}" mv "${tor_conf}".tmp "${tor_conf}"
         "${exec_cmd_alt_user}" rm -rf "${tor_backup_dir}"/integrate
-        restarting_tor
+        signal_tor
         printf %s"${green}\n# Done\n${nocolor}"
       ;;
 
@@ -1187,7 +1191,7 @@ WantedBy=multi-user.target
       while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/vanguards@default.service"
       #cat /tmp/vanguards@default.service
       printf ">>>>>>>>>>>>>>>>>>>\n\n"
-      restarting_tor
+      signal_tor
       "${exec_cmd_alt_user}" systemctl daemon-reload
       "${exec_cmd_alt_user}" systemctl enable vanguards@default.service
       "${exec_cmd_alt_user}" systemctl restart vanguards@default.service
