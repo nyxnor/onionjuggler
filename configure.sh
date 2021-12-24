@@ -19,7 +19,7 @@ cyan="\033[36m"
 
 error_msg(){ printf %s"${red}ERROR: ${1}${nocolor}\n"; exit 1; }
 
-if [ ! -f onionjuggler-cli ]||[ ! -f onionjuggler-tui ]||[ ! -f etc/onionjuggler/sample.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
+if [ ! -f bin/onionjuggler-cli ]||[ ! -f bin/onionjuggler-tui ]||[ ! -f etc/onionjuggler/sample.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
   ||[ ! -f docs/onionjuggler.conf.5.md ]||[ ! -f man/man1/onionjuggler-cli.1 ]||[ ! -f man/man5/onionjuggler.conf.5 ]; then
   error_msg "This script must be run from inside the onionjuggler repository!"
 fi
@@ -118,7 +118,7 @@ install_package(){
 make_shellcheck(){
   printf %s"${yellow}# Checking shell syntax"
   ## Customize severity with -S [error|warning|info|style]
-  if ! shellcheck configure.sh etc/onionjuggler/*.conf onionjuggler-cli onionjuggler-tui; then
+  if ! shellcheck configure.sh etc/onionjuggler/*.conf bin/*; then
     error_msg "Please fix the shellcheck warnings above before pushing!"
   else
     printf " - 100%%\n${nocolor}"
@@ -235,6 +235,7 @@ case "${command}" in
   -u|--update)
     printf %s"${magenta}# Pulling, hold back\n${nocolor}"
     git pull "${repo}"
+    "${0}" -i
   ;;
 
   -i|--install)
@@ -254,7 +255,7 @@ case "${command}" in
     [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man5"
     "${su_cmd}" cp man/man1/onionjuggler-cli.1 man/man1/onionjuggler-tui.1 "${man_dir}/man1"
     "${su_cmd}" cp man/man5/onionjuggler.conf.5 "${man_dir}/man5"
-    "${su_cmd}" cp onionjuggler-cli onionjuggler-tui "${bin_dir}"
+    "${su_cmd}" cp bin/onionjuggler-cli bin/onionjuggler-tui "${bin_dir}"
     [ ! -d "${conf_dir}/onionjuggler" ] && "${su_cmd}" mkdir -p "${conf_dir}/conf.d"
     "${su_cmd}" cp etc/onionjuggler/dialogrc "${conf_dir}"
     get_os
