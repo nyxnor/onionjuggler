@@ -150,7 +150,7 @@ sed -i'' "s|^su_cmd=.*|su_cmd=\"doas\"|" /etc/onionjuggler/onionjuggler.conf
 
 Run from inside the cloned repository to create the tor directories, create manual pages and copy scripts to path:
 ```sh
-./configure.sh --setup
+./configure.sh --install
 ```
 
 ### Usage
