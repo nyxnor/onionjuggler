@@ -19,8 +19,9 @@ cyan="\033[36m"
 
 error_msg(){ printf %s"${red}ERROR: ${1}${nocolor}\n"; exit 1; }
 
-if [ ! -f bin/onionjuggler-cli ]||[ ! -f bin/onionjuggler-tui ]||[ ! -f etc/onionjuggler/sample.conf ]||[ ! -f docs/onionjuggler-cli.1.md ] \
-  ||[ ! -f docs/onionjuggler.conf.5.md ]||[ ! -f man/man1/onionjuggler-cli.1 ]||[ ! -f man/man5/onionjuggler.conf.5 ]; then
+if [ ! -f bin/onionjuggler-cli ] || [ ! -f bin/onionjuggler-tui ] || [ ! -f etc/onionjuggler/sample.conf ] \
+  || [ ! -f docs/onionjuggler-cli.1.md ] || [ ! -f docs/onionjuggler-tui.1.md ] || [ ! -f docs/onionjuggler.conf.5.md ] \
+  || [ ! -f docs/vitor.8.md ]; then
   error_msg "This script must be run from inside the onionjuggler repository!"
 fi
 
@@ -130,6 +131,7 @@ make_man(){
   pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/man1/onionjuggler-cli.1
   pandoc -s -f markdown-smart -t man docs/onionjuggler-tui.1.md -o man/man1/onionjuggler-tui.1
   pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.5.md -o man/man5/onionjuggler.conf.5
+  pandoc -s -f markdown-smart -t man docs/vitor.8.md -o man/man8/vitor.8
   printf %s" - Made!\n${nocolor}"
 }
 
@@ -255,6 +257,7 @@ case "${command}" in
     [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man5"
     "${su_cmd}" cp man/man1/onionjuggler-cli.1 man/man1/onionjuggler-tui.1 "${man_dir}/man1"
     "${su_cmd}" cp man/man5/onionjuggler.conf.5 "${man_dir}/man5"
+    "${su_cmd}" cp man/man8/vitor.8 "${man_dir}/man8"
     "${su_cmd}" cp bin/onionjuggler-cli bin/onionjuggler-tui "${bin_dir}"
     [ ! -d "${conf_dir}/onionjuggler" ] && "${su_cmd}" mkdir -p "${conf_dir}/conf.d"
     "${su_cmd}" cp etc/onionjuggler/dialogrc "${conf_dir}"
@@ -279,6 +282,7 @@ case "${command}" in
     printf %s"${red}# Removing OnionJuggler scripts from your system.${nocolor}\n"
     "${su_cmd}" rm -f "${man_dir}/man1/onionjuggler-cli.1" "${man_dir}/man1/onionjuggler-tui.1"
     "${su_cmd}" rm -f "${man_dir}/man5/onionjuggler.conf.5"
+    "${su_cmd}" rm -f "${man_dir}/man8/vitor.8"
     "${su_cmd}" rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui"
     printf %s"${green}# Done!${nocolor}"
     if [ "${action}" = "-P" ] || [ "${action}" = "--purge" ]; then

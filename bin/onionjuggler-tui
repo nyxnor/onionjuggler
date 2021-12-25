@@ -29,7 +29,6 @@ error_msg(){ printf %s"${red}ERROR: ${1}${nocolor}\n"; exit 1; }
 i=0
 
 usage(){
-  :
   printf "Configure the environment for OnionJuggler
 \nUsage: onionjuggler-tui command [option <ARG>]
 \nOptions:

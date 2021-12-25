@@ -330,7 +330,7 @@ Bugs you may find. First search for related issues on https://github.com/nyxnor/
 
 # SEE ALSO
 
-onionjuggler-tui(1), onionjuggler.conf(5), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
+onionjuggler-tui(1), onionjuggler.conf(5), vitor(8), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
 
 
 # COPYRIGHT

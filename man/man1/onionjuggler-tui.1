@@ -48,9 +48,10 @@ Default dialog run commands file.
 \f[B]ONIONJUGGLER_CONF\f[R]
 The environmental variable will override all previous options.
 .TP
-\f[B]VISUAL\f[R], \f[B]EDITOR\f[R]
-Use the default text editor when editing files on the TUI, else will
-fallback to Vi(1).
+\f[B]SUDO_EDITOR\f[R], \f[B]DOAS_EDITOR\f[R], \f[B]VISUAL\f[R], \f[B]EDITOR\f[R]
+Use environment variables in the above order to define the editor, in
+case any are empty, fallback to the next.
+If every variable is empty, fallback to Vi(1).
 .SH EXIT VALUE
 .TP
 \f[B]0\f[R]
@@ -66,8 +67,8 @@ https://github.com/nyxnor/onionjuggler/issues, if not solved, open a new
 one.
 .SH SEE ALSO
 .PP
-onionjuggler-cli(1), onionjuggler.conf(5), tor(1), sh(1), regex(7),
-sed(1), grep(1), shellcheck(1)
+onionjuggler-cli(1), onionjuggler.conf(5), vitor(8), tor(1), sh(1),
+regex(7), sed(1), grep(1), shellcheck(1)
 .SH COPYRIGHT
 .PP
 Copyright \[co] 2021 OnionJuggler developers (MIT) This is free

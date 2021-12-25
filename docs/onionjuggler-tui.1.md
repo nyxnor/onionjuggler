@@ -46,9 +46,9 @@ onionjuggler-tui - OnionJuggler Terminal User Interface, also known as the *onio
 
 : The environmental variable will override all previous options.
 
-**VISUAL**, **EDITOR**
+**SUDO_EDITOR**, **DOAS_EDITOR**, **VISUAL**, **EDITOR**
 
-: Use the default text editor when editing files on the TUI, else will fallback to Vi(1).
+: Use environment variables in the above order to define the editor, in case any are empty, fallback to the next. If every variable is empty, fallback to Vi(1).
 
 # EXIT VALUE
 
@@ -66,7 +66,7 @@ Bugs you may find. First search for related issues on https://github.com/nyxnor/
 
 # SEE ALSO
 
-onionjuggler-cli(1), onionjuggler.conf(5), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
+onionjuggler-cli(1), onionjuggler.conf(5), vitor(8), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
 
 
 # COPYRIGHT
