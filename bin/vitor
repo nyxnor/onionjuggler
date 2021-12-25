@@ -82,7 +82,7 @@ check_tmp_tor_user(){
   else
     if [ -z "${tor_user}" ]; then
       notice "You probably commented or deleted the \"User\" option, but you can only do that if you specify the tor user:"
-      error_msg "$ ${me} -u tor_user"
+      notice "Interrupt and run: $ ${me} -u tor_user"
     else
       su_tor_cmd="${su_cmd} -u ${tor_user}"
     fi

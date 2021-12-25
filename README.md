@@ -155,6 +155,9 @@ Run from inside the cloned repository to create the tor directories, create manu
 
 ### Usage
 
+#### TUI
+
+**onionjuggler-tui** wraps the CLI in a Terminal User Interface.
 Some TUI options will let you edit the authorization files, which is recommended to set your favorite text editor to an environment variable that will be tried on the following order: `DOAS_EDITOR`/`SUDO_EDITOR`, if empty will try `VISUAL`, if empty will try `EDITOR`, if empty WILL fallback to `Vi`.
 
 To use the TUI, just run:
@@ -162,7 +165,9 @@ To use the TUI, just run:
 onionjuggler-tui
 ```
 
-If you are using the TUI, it is expected to be self explanatory the options, but in the case you don't understand or want to go deeper into the CLI, take a look at the documentation inside `docs` folder, there are many other onion services management guides. Read:
+#### CLI
+
+**onionjuggler-cli** is the main script that manages the HiddenServices. Take a look at the documentation inside `docs` folder, there are many other onion services management guides. Read:
 
 Don't forget the [cli manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
 ```sh
@@ -177,6 +182,27 @@ onionjuggler-cli on -s terminator
 But can be as advanced as specifying all the parameters:
 ```sh
 onionjuggler-cli on --service terminator --socket unix --version 3 --port 80,127.0.0.1:80
+```
+
+#### VITOR
+
+**vitor** helps the user edit the tor configuration files in a safe manner, making a temporary copy of the desired file, opening the editor with this temporary file, after existing the editor, the validity check will be done with `tor -f FILE --verify-config` and if it doesn't pass, will warn about the error and give the option to open the editor again and fix the problems or interrupt to exit vitor and delete changes.
+
+You must run **vitor** as root using `sudo` or `doas`. Root privilege is necessary to edit the configuration files and the programs to run as another user are used to run tor a the tor user if it is not specified on the configuration file.
+
+To open the default file on /etc/tor/torrc, just run:
+```sh
+doas vitor
+```
+
+To open an alternative file, specify it with the `-f` option:
+```sh
+doas vitor -f /usr/local/etc/tor/torrc
+```
+
+You may need to run tor as another user if the `User` option is not already on the configuration file, specify it with the `-t` option:
+```sh
+doas vitor -t _tor
 ```
 
 ## Featured on
