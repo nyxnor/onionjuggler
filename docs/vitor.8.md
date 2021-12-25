@@ -53,7 +53,7 @@ vitor - Is a visudo/vidoas but for tor configuration files written in POSIX comp
 
 # BUGS
 
-Bugs you may find. First search for related issues on https://github.com/nyxnor/onionjuggler/issues, if not solved, open a new one.
+It is not possible to edit the "User" option on the tor configuration file.
 
 
 # SEE ALSO
