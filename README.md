@@ -27,6 +27,9 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
   * [Set custom variables](#set-custom-variables)
   * [Setup the environment](#setup-the-environment)
   * [Usage](#usage)
+    * [TUI](#tui)
+    * [CLI](#cli)
+    * [VITOR](#vitor)
 * [Featured on](#featured-on)
 * [Contributors](#contributors)
 
