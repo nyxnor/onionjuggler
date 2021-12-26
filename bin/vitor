@@ -1,11 +1,29 @@
 #!/usr/bin/env sh
 
-## Copy tor config to temp, modify it, verify it is ok then save back to origin
+## Copy tor config to temp, lock the original file, modify the temp,
+## verify it is ok then save back to original place and remove other files
+
+## Inspired by https://github.com/slicer69/doas/blob/master/vidoas
+
 
 file_mode="644"
 me="${0##*/}"
 
-notice(){ printf '%s\n' "${me}: ${1}" 1>&2; }
+## colors
+#nocolor="\033[0m"
+#bold="\033[1m"
+#nobold="\033[22m"
+#underline="\033[4m"
+#nounderline="\033[24m"
+#red="\033[31m"
+#green="\033[32m"
+#yellow="\033[33m"
+#blue="\033[34m"
+#magenta="\033[35m"
+#cyan="\033[36m"
+
+## display error message with instructions to use the script correctly.
+notice(){ printf %s"${me}: ${1}\n" 1>&2; }
 error_msg(){ notice "${1}"; exit 1; }
 usage(){ printf '%s\n' "Usage: ${me} [-f tor_conf] [-u tor_user]
 Note:
@@ -41,7 +59,7 @@ file="${file%*/}"
 
 [ -n "${SUDO_USER}" ] && su_cmd="sudo"
 [ -n "${DOAS_USER}" ] && su_cmd="doas"
-{ [ -z "${su_cmd}" ] && [ "$(id -u)" -ne 0 ]; } && error_msg "Run ${me} as the root user with 'sudo' or 'doas':"
+{ [ -z "${su_cmd}" ] && [ "$(id -u)" -ne 0 ]; } && error_msg "Run ${me} as the root user with 'sudo' or 'doas'."
 
 if [ -f "${file}" ]; then
   tor_user_check="$(grep "^User" "${file}" | sed "s/^User //")"
@@ -63,11 +81,15 @@ file_dir="${file%/*}"
 [ ! -w "${file_dir}" ] && error_msg "${file_dir} is not writable by ${USER}."
 [ ! -r "${file_dir}" ] && error_msg "${file_dir} is not readble by ${USER}."
 
+## test if file is already in use.
+[ -f "${file}.lck" ] && error_msg "${file} is busy, try again later."
+ln "${file}" "${file}.lck"
+
 ## file is the first argument, replace '.' and '-' for '_'.
 file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
 file_name_tmp="$(printf %s"mkstemp(${file_dir}/${file_name}.XXXXXX)" | m4)"
 chmod "${file_mode}" "${file_name_tmp}"
-trap 'rm -f ${file_name_tmp}' EXIT
+trap 'rm -f ${file_name_tmp} "${file}.lck"' EXIT
 
 if [ -f "${file}" ]; then
   [ ! -r "${file}" ] && error_msg "${file} is not readable."
@@ -81,8 +103,9 @@ check_tmp_tor_user(){
     su_tor_cmd="${su_cmd}"
   else
     if [ -z "${tor_user}" ]; then
-      notice "You probably commented or deleted the \"User\" option, but you can only do that if you specify the tor user:"
-      notice "Interrupt and run: $ ${me} -u tor_user"
+      notice "You probably commented or deleted the \"User\" option, but you can only do that if you specify the tor user."
+      notice "If that is what you want interrupt with ${get_intr} and run:"
+      notice "$ ${me} -u tor_user"
     else
       su_tor_cmd="${su_cmd} -u ${tor_user}"
     fi
@@ -92,7 +115,6 @@ check_tmp_tor_user(){
 ## open temporary file to be edited
 "${editor}" "${file_name_tmp}"
 check_tmp_tor_user
-notice "$ ${su_tor_cmd} tor -f ${file_name_tmp} --verify-config --hush"
 
 ## while the config is not ok, loop to enter and continue to edit or signal to interrupt.
 while ! ${su_tor_cmd} tor -f "${file_name_tmp}" --verify-config --hush; do
@@ -108,7 +130,6 @@ while ! ${su_tor_cmd} tor -f "${file_name_tmp}" --verify-config --hush; do
   notice "$ ${su_tor_cmd} tor -f ${file_name_tmp} --verify-config --hush"
 done
 
-notice "Configuration OK"
 if cmp -s "${file_name_tmp}" "${file}"; then
   error_msg "No changes made. ${file} unchanged."
 else
