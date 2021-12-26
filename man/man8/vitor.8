@@ -21,14 +21,17 @@ to speed up usage and avoid misconfiguration.
 \f[I]vitor\f[R] creates a temporary copy of the file specified on
 \f[I]tor_conf\f[R] and if file doesn\[aq]t exist, the editor will create
 one.
+Then, it is checked if vitor is already in use on that file by testing
+if lock file exists, if it does, abort.
 To get the editor value, it is checked for the environment variables to
 open the editor with the \f[I]SUDO_EDITOR\f[R]/\f[I]DOAS_EDITOR\f[R], if
 they are empty try \f[I]VISUAL\f[R], if it is also empty try
 \f[I]EDITOR\f[R], if it is also empty fallback to Vi(1).
 After exiting the editor, the temporary copy is checked with \f[I]tor -f
 temp_file --verify-config\f[R] and if it is invalid, warn the user about
-the errors and press enter to continue (loop opens the editor again) or
-\[ha]C to interrupt which will delete the temporary file.
+the errors and press \f[I]e\f[R] to continue (loop opens the editor
+again) or \f[I]x\f[R] exit which will delete the temporary file and the
+lock file.
 If the configuration if valid, save the temporary copy to its original
 location.
 .SH OPTIONS

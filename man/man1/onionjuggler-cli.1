@@ -14,7 +14,7 @@ compliant shell
 .P
 .PD
 .PP
-\f[B]onionjuggler-cli restore-torrc\f[R]
+\f[B]onionjuggler-cli getconf\f[R]
 .PD 0
 .P
 .PD
@@ -197,7 +197,7 @@ characters using the base32 format with the range \f[I]a-z2-7\f[R] and
 ending with (dot)onion.
 String format.
 .TP
-\f[B]command\f[R] [\f[B]--option\f[R]<=\f[I]ARGUMENT\f[R]>]
+\f[B]main\f[R] [\f[B]--option\f[R]<=\f[I]ARGUMENT\f[R]>]
 Commands that accept arguments can be specified as follow: --service ssh
 OR --service \[dq]ssh nextcloud\[dq] OR --service=ssh,nextcloud
 .TP
@@ -205,11 +205,10 @@ OR --service \[dq]ssh nextcloud\[dq] OR --service=ssh,nextcloud
 Example of onion services directory names.
 .SS ARGUMENTS
 .TP
-\f[B]restore-torrc\f[R]
-Restore the latest torrc backup and reload tor.
-Every time onionjuggler-cli is ran, it creates a torrc.bak, with this
-option, it will copy the backup file to the torrc named file.
-File(s) modified: torrc.
+\f[B]getconf\f[R]
+Print configuration in the format key=val.
+.PP
+\f[B]getcliopt\f[R]
 .TP
 \f[B]on\f[R] \f[B]--service\f[R] [\f[I]SERV\f[R]] \f[B]--version\f[R] \f[I]3\f[R] \f[B]--socket\f[R] \f[I]tcp\f[R] \f[B]--port\f[R] [\f[I]VIRTPORT\f[R],<\f[I]TARGET\f[R]>,<\f[I]VIRTPORT2\f[R]>,<\f[I]TARGET2\f[R]>]
 Enable an onion service using TCP socket (addr:port) as target.

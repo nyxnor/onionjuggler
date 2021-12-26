@@ -34,6 +34,7 @@ Note:
                       else it tor fails to validate the configuration"
   exit 1
 }
+
 get_arg(){ case "${2}" in ""|-*) error_msg "Option '${1}' requires an argument.";; esac; }
 
 [ -n "${1}" ] && [ -z "${2}" ] && tor_conf="${1}"
@@ -81,15 +82,14 @@ file_dir="${file%/*}"
 [ ! -w "${file_dir}" ] && error_msg "${file_dir} is not writable by ${USER}."
 [ ! -r "${file_dir}" ] && error_msg "${file_dir} is not readble by ${USER}."
 
-## test if file is already in use.
-[ -f "${file}.lck" ] && error_msg "${file} is busy, try again later."
-ln "${file}" "${file}.lck"
-
 ## file is the first argument, replace '.' and '-' for '_'.
 file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
 file_name_tmp="$(printf %s"mkstemp(${file_dir}/${file_name}.XXXXXX)" | m4)"
 chmod "${file_mode}" "${file_name_tmp}"
-trap 'rm -f ${file_name_tmp} "${file}.lck"' EXIT
+
+file_locked="${file}.lck"
+## test if file is already in use.
+ln "${file}" "${file_locked}" || error_msg "${file} is busy, try again later."
 
 if [ -f "${file}" ]; then
   [ ! -r "${file}" ] && error_msg "${file} is not readable."
@@ -112,8 +112,11 @@ check_tmp_tor_user(){
   fi
 }
 
+trap '' INT
+trap 'rm -f ${file_name_tmp} ${file_locked}' EXIT
+
 ## open temporary file to be edited
-"${editor}" "${file_name_tmp}"
+"${editor}" "${file_name_tmp}" || true
 check_tmp_tor_user
 
 ## while the config is not ok, loop to enter and continue to edit or signal to interrupt.
@@ -122,16 +125,18 @@ while ! ${su_tor_cmd} tor -f "${file_name_tmp}" --verify-config --hush; do
   printf '%s\n' "${tor_check}" | grep -q "Permission denied" && notice "Got permission denied to read tor directories, did you specify the tor user? If yes, maybe the directories do not have the right owner."
   printf '%s\n' "${tor_check}" | grep -q "You are running Tor as root. You don't need to, and you probably shouldn't." && notice "Do not run tor as root if you did not set the \"User\" option."
   notice "The temporary copy on ${file_name_tmp} is not a valid configuration."
-  notice "Press enter to edit ${file} again to fix it, or interrupt (${get_intr}) to cancel."
-  # shellcheck disable=SC2034
-  read -r status
-  "${editor}" "${file_name_tmp}"
+  notice "Options are:"
+  notice "  (e)enter to edit again."
+  notice "  e(x)it to cancel without saving changes."
+  while :; do
+  printf %s"${me}: Your choice: "
+    # shellcheck disable=SC2034
+    read -r status
+    [ "${status}" = "e" ] && break
+    [ "${status}" = "x" ] && exit
+  done
+  "${editor}" "${file_name_tmp}" || true
   check_tmp_tor_user
-  notice "$ ${su_tor_cmd} tor -f ${file_name_tmp} --verify-config --hush"
 done
 
-if cmp -s "${file_name_tmp}" "${file}"; then
-  error_msg "No changes made. ${file} unchanged."
-else
-  cp -p "${file_name_tmp}" "${file}" && notice "${file} updated." && exit 0
-fi
+! cmp -s "${file_name_tmp}" "${file}" && cp -p "${file_name_tmp}" "${file}" && notice "${file} updated." && exit 0
