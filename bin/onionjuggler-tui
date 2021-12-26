@@ -10,10 +10,13 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
+me="${0##*/}"
 ## colors
 nocolor="\033[0m"
 #bold="\033[1m"
-#underline="\033[4m"
+#nobold="\033[22m"
+underline="\033[4m"
+nounderline="\033[24m"
 red="\033[31m"
 #green="\033[32m"
 yellow="\033[33m"
@@ -22,7 +25,8 @@ yellow="\033[33m"
 #cyan="\033[36m"
 
 ## display error message with instructions to use the script correctly.
-error_msg(){ printf %s"${red}ERROR: ${1}${nocolor}\n"; exit 1; }
+notice(){ printf %s"${me}: ${1}\n" 1>&2; }
+error_msg(){ notice "${red}error: ${1}"; exit 1; }
 
 ###################
 #### VARIABLES ####
@@ -111,7 +115,7 @@ esac
 trap 'tput reset' EXIT
 
 return_to_tui(){
-  printf %s"${yellow}\nPress ENTER to return to the TUI: ${nocolor}" >&2
+  notice "${yellow}Press ${underline}ENTER${nounderline}${yellow} to return to the TUI! ${nocolor}"
   # shellcheck disable=SC2034
   read -r confirmation
 }

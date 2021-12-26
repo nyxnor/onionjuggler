@@ -6,10 +6,13 @@
 
 repo="https://github.com/nyxnor/onionjuggler.git"
 
+me="${0##*/}"
 ## colors
 nocolor="\033[0m"
 #bold="\033[1m"
+#nobold="\033[22m"
 #underline="\033[4m"
+#nounderline="\033[24m"
 red="\033[31m"
 green="\033[32m"
 yellow="\033[33m"
@@ -17,7 +20,8 @@ blue="\033[34m"
 magenta="\033[35m"
 cyan="\033[36m"
 
-error_msg(){ printf %s"${red}ERROR: ${1}${nocolor}\n"; exit 1; }
+notice(){ printf %s"${me}: ${1}\n" 1>&2; }
+error_msg(){ notice "${red}error: ${1}"; exit 1; }
 
 if [ ! -f bin/onionjuggler-cli ] || [ ! -f bin/onionjuggler-tui ] || [ ! -f etc/onionjuggler/sample.conf ] \
   || [ ! -f docs/onionjuggler-cli.1.md ] || [ ! -f docs/onionjuggler-tui.1.md ] || [ ! -f docs/onionjuggler.conf.5.md ] \
@@ -90,7 +94,7 @@ install_package(){
         while :; do
           command -v python3 >/dev/null && python_path="$(command -v python3)" && break
           command -v python >/dev/null && python_path="$(command -v python)" && break
-          printf %s"${red}Python is not installed and it is needed for Vanguards, skipping...\n${nocolor}" && break
+          notice "${red}Python is not installed and is required for Vanguards, skipping...\n${nocolor}" && break
         done
         [ -n "${python_path}" ] && ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg=1
       ;;
@@ -108,7 +112,7 @@ install_package(){
     esac
 
     if [ "${install_pkg}" = 1 ]; then
-      printf %s"${nocolor}# Installing ${package}\n"
+      notice "${nocolor}Installing ${package}"
       # shellcheck disable=SC2086
       "${su_cmd}" ${pkg_mngr_install} "${package}"
     fi
@@ -117,22 +121,19 @@ install_package(){
 
 
 make_shellcheck(){
-  printf %s"${yellow}# Checking shell syntax"
+  notice "${yellow}Checking shell syntax${nocolor}"
   ## Customize severity with -S [error|warning|info|style]
   if ! shellcheck configure.sh etc/onionjuggler/*.conf bin/*; then
     error_msg "Please fix the shellcheck warnings above before pushing!"
-  else
-    printf " - 100%%\n${nocolor}"
   fi
 }
 
 make_man(){
-  printf %s"${magenta}# Creating manual pages"
+  notice "${magenta}Creating manual pages${nocolor}"
   pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/man1/onionjuggler-cli.1
   pandoc -s -f markdown-smart -t man docs/onionjuggler-tui.1.md -o man/man1/onionjuggler-tui.1
   pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.5.md -o man/man5/onionjuggler.conf.5
   pandoc -s -f markdown-smart -t man docs/vitor.8.md -o man/man8/vitor.8
-  printf %s" - Made!\n${nocolor}"
 }
 
 get_os(){
@@ -235,24 +236,24 @@ range_variable dialog_box dialog whiptail
 case "${command}" in
 
   -u|--update)
-    printf %s"${magenta}# Pulling, hold back\n${nocolor}"
+    notice "${magenta}Pulling, hold back${nocolor}"
     git pull "${repo}"
     "${0}" -i
   ;;
 
   -i|--install)
-    printf %s"${magenta}# Checking requirements\n${nocolor}"
+    notice "${magenta}Checking requirements${nocolor}"
     # shellcheck disable=SC2086
     install_package ${requirements}
     ## see https://github.com/nyxnor/onionjuggler/issues/15 about using complete path to binary
     ## see https://github.com/nyxnor/onionjuggler/issues/29 about usermod not appending with -a
-    #printf %s"${cyan}# Appending ${USER} to the ${tor_user} group\n${nocolor}"
+    #notice "${cyan}Appending ${USER} to the ${tor_user} group${nocolor}"
     #"${su_cmd}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
-    printf %s"${yellow}# Creating tor directories\n${nocolor}"
+    notice "${yellow}Creating tor directories${nocolor}"
     [ ! -d "${tor_data_dir_services}" ] && "${su_cmd}" mkdir -p "${tor_data_dir_services}"
     [ ! -d "${tor_data_dir_auth}" ] && "${su_cmd}" mkdir -p "${tor_data_dir_auth}"
     "${su_cmd}" chown -R "${tor_user}":"${tor_user}" "${tor_data_dir}"
-    printf %s"${green}# Copying files to path\n${nocolor}"
+    notice "${green}Copying files to path${nocolor}"
     [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man1"
     [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man5"
     "${su_cmd}" cp man/man1/onionjuggler-cli.1 man/man1/onionjuggler-tui.1 "${man_dir}/man1"
@@ -275,37 +276,34 @@ case "${command}" in
       "NetBSD"*) "${su_cmd}" cp etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
       "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${su_cmd}" cp etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
     esac
-    printf %s"${blue}# OnionJuggler enviroment is ready\n${nocolor}"
+    notice %s"${blue}OnionJuggler enviroment is ready${nocolor}"
   ;;
 
   -d|--uninstall)
-    printf %s"${red}# Removing OnionJuggler scripts from your system.${nocolor}\n"
+    notice "${red}Removing OnionJuggler scripts from your system.${nocolor}"
     "${su_cmd}" rm -f "${man_dir}/man1/onionjuggler-cli.1" "${man_dir}/man1/onionjuggler-tui.1"
     "${su_cmd}" rm -f "${man_dir}/man5/onionjuggler.conf.5"
     "${su_cmd}" rm -f "${man_dir}/man8/vitor.8"
     "${su_cmd}" rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui"
-    printf %s"${green}# Done!${nocolor}"
     if [ "${action}" = "-P" ] || [ "${action}" = "--purge" ]; then
-      printf %s"${red}# Purging OnionJuggler configuration from your system.${nocolor}\n"
+      notice "${red}Purging OnionJuggler configuration from your system.${nocolor}"
       "${su_cmd}" rm -f "${conf_dir}/onionjuggler"
     fi
+    notice "${green}Done!${nocolor}"
   ;;
 
   -r|--release)
-    printf %s"${blue}# Preparing release\n${nocolor}"
+    notice "${blue}Preparing release${nocolor}"
     install_package shellcheck pandoc git
     make_man
     make_shellcheck
-    printf %s"${cyan}# Checking git status"
+    notice "${cyan}Checking git status${nocolor}"
     find . -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \; ## should not delete, could destroy lines, just leave empty lines
     if [ -n "$(git status -s)" ]; then
-      printf %s" - Uncommited changes!\n${nocolor}"
       git status
       error_msg "Please record the changes to the file(s) above with a commit before pushing!"
-    else
-      printf " - Working tree clean\n"
     fi
-    printf %s"${green}# Done!\n${nocolor}"
+    notice "${green}Done!${nocolor}"
   ;;
 
   -k|--check) make_shellcheck;;

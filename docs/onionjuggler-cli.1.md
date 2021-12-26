@@ -12,7 +12,7 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 **onionjuggler-cli** **command** [**--option**<=*ARGUMENT*>]\
 
 
-**onionjuggler-cli restore-torrc**\
+**onionjuggler-cli getconf**\
 **onionjuggler-cli on** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT*[,*TARGET*][,*VIRTPORT2*][,*TARGET2*]>]\
 **onionjuggler-cli on**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*> [**--port** [*VIRTPORT*[,*VIRTPORT2*]>]\
 **onionjuggler-cli off** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
@@ -97,7 +97,7 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 
 : Onion address of the authenticated service for the client to connect to. Only accepted format is for onion v3 addresses, which contains 56 characters using the base32 format with the range *a-z2-7* and ending with (dot)onion. String format.
 
-**command** [**--option**<=*ARGUMENT*>]
+**main** [**--option**<=*ARGUMENT*>]
 
 : Commands that accept arguments can be specified as follow: --service ssh OR --service "ssh nextcloud" OR --service=ssh,nextcloud
 
@@ -107,9 +107,13 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 
 ## ARGUMENTS
 
-**restore-torrc**
+**getconf**
 
-: Restore the latest torrc backup and reload tor. Every time onionjuggler-cli is ran, it creates a torrc.bak, with this option, it will copy the backup file to the torrc named file. File(s) modified: torrc.
+: Print configuration in the format key=val.
+
+**getcliopt**
+
+
 
 **on** **--service** [*SERV*] **--version** *3* **--socket** *tcp* **--port** [*VIRTPORT*,<*TARGET*>,<*VIRTPORT2*>,<*TARGET2*>]
 
