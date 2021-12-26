@@ -126,27 +126,23 @@ cd onionjuggler
 
 ### Set custom variables
 
-Edit the required variables to fit your system on the onionjuggler configuration file, which is defined by the environment variable `ONIONJUGGLER_CONF`, but if the variable is empty, will fallback to the default path on `/etc/onionjuggler/onionjuggler.conf`. It is also possible to specify a one time alternative path with the option `-C, --config <PATH_TO_CONF>`, this command line argument has priority over the environment variable.
+You should not modify the default configuration on `/etc/onionjuggler/onionjuggler.conf`, it will be modified on every update. Your local configurations should be on `/etc/onionjuggler/conf.d/*.conf`.
 
-Check this [onionjuggler.conf sample](etc/onionjuggler/onionjuggler.conf), it also shows the default values for each variable. If you wish to modify any value, copy it to `/etc/onionjuggler/onionjuggler.conf` or create an empty file and just insert the options that needs to be modified to fit your system (empty variables will be assigned to default values).
-
-The required programs can have different names depending on the operating system and the daemon control will also vary, because of this, read [docs/compatibility.md](docs/compatibility.md) for the detailed configuration file for your operating system.
-
-To assign values to the variables, you can either:
+To assign values to the variables, yyou can either:
 
 * Open the mentioned configuration file with your favorite editor:
 ```sh
-"${EDITOR:-vi}" /etc/onionjuggler/onionjuggler.conf
+"${EDITOR:-vi}" /etc/onionjuggler/cond.d/local.conf
 ```
 
 * or insert configuration to the end of the file with tee:
 ```sh
-printf "su_cmd=\"sudo\"\n" | tee -a /etc/onionjuggler/onionjuggler.conf
+printf "su_cmd=\"sudo\"\n" | tee -a /etc/onionjuggler/cond.d/local.conf
 ```
 
 * or edit with sed:
 ```sh
-sed -i'' "s|^su_cmd=.*|su_cmd=\"doas\"|" /etc/onionjuggler/onionjuggler.conf
+sed -i'' "s|^su_cmd=.*|su_cmd=\"doas\"|" /etc/onionjuggler/cond.d/local.conf
 ```
 
 ### Setup the enviroment
