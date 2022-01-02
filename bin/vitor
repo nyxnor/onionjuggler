@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 ## Copy tor config to temp, lock the original file, modify the temp,
-## verify it is ok then save back to original place and remove other files
+## verify it is ok then save back to original place and remove temporary and lock file.
 
 ## Inspired by https://github.com/slicer69/doas/blob/master/vidoas
 
@@ -25,7 +25,7 @@ me="${0##*/}"
 ## display error message with instructions to use the script correctly.
 notice(){ printf %s"${me}: ${1}\n" 1>&2; }
 error_msg(){ notice "${1}"; exit 1; }
-usage(){ printf '%s\n' "Usage: ${me} [-f tor_conf] [-u tor_user]
+usage(){ printf '%s\n' "Usage: [sudo|doas] ${me} [-f tor_conf] [-u tor_user]
 Note:
   ${me}               run ${me} as the root user with 'sudo' or 'doas'
   -f tor_conf         if 'tor_conf' is not set, default to /etc/tor/torrc
@@ -51,7 +51,7 @@ done
 eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
 editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-vi}"}"}"
 ## get interrupt signal
-get_intr="$(stty -a | sed -n '/.*intr = / {s///;s/;.*$//;p;}')"
+#get_intr="$(stty -a | sed -n '/.*intr = / {s///;s/;.*$//;p;}')"
 
 ## get first argument, if empty, onionjuggler.conf variable, if empty, fallback to default torrc
 file="${tor_conf:-"/etc/tor/torrc"}"
@@ -60,7 +60,7 @@ file="${file%*/}"
 
 [ -n "${SUDO_USER}" ] && su_cmd="sudo"
 [ -n "${DOAS_USER}" ] && su_cmd="doas"
-{ [ -z "${su_cmd}" ] && [ "$(id -u)" -ne 0 ]; } && error_msg "Run ${me} as the root user with 'sudo' or 'doas'."
+{ [ -z "${su_cmd}" ] || [ "$(id -u)" -ne 0 ]; } && error_msg "Run ${me} as the root user with 'sudo' or 'doas'."
 
 if [ -f "${file}" ]; then
   tor_user_check="$(grep "^User" "${file}" | sed "s/^User //")"
@@ -78,6 +78,8 @@ fi
 
 ## get just the directory
 file_dir="${file%/*}"
+
+## check permissions
 [ ! -d "${file_dir}" ] && error_msg "${file_dir} is not a directory or doesnt exist."
 [ ! -w "${file_dir}" ] && error_msg "${file_dir} is not writable by ${USER}."
 [ ! -r "${file_dir}" ] && error_msg "${file_dir} is not readble by ${USER}."
@@ -104,7 +106,7 @@ check_tmp_tor_user(){
   else
     if [ -z "${tor_user}" ]; then
       notice "You probably commented or deleted the \"User\" option, but you can only do that if you specify the tor user."
-      notice "If that is what you want interrupt with ${get_intr} and run:"
+      notice "If that is what you want, exit and run:"
       notice "$ ${me} -u tor_user"
     else
       su_tor_cmd="${su_cmd} -u ${tor_user}"
@@ -132,8 +134,10 @@ while ! ${su_tor_cmd} tor -f "${file_name_tmp}" --verify-config --hush; do
   printf %s"${me}: Your choice: "
     # shellcheck disable=SC2034
     read -r status
-    [ "${status}" = "e" ] && break
-    [ "${status}" = "x" ] && exit
+    case "${status}" in
+      e|E) break;;
+      x|X) exit;;
+    esac
   done
   "${editor}" "${file_name_tmp}" || true
   check_tmp_tor_user

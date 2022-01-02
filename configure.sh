@@ -4,7 +4,7 @@
 ## This file should be run from inside the cloned repository
 ## Setup tor directories, user, packages needed for OnionJuggler.
 
-repo="https://github.com/nyxnor/onionjuggler.git"
+onionjuggler_repo="${ONIONJUGGLER_GIT_ORIGIN:-"https://github.com/nyxnor/onionjuggler.git"}"
 
 me="${0##*/}"
 ## colors
@@ -23,11 +23,15 @@ cyan="\033[36m"
 notice(){ printf %s"${me}: ${1}\n" 1>&2; }
 error_msg(){ notice "${red}error: ${1}"; exit 1; }
 
-if [ ! -f bin/onionjuggler-cli ] || [ ! -f bin/onionjuggler-tui ] || [ ! -f etc/onionjuggler/sample.conf ] \
-  || [ ! -f docs/onionjuggler-cli.1.md ] || [ ! -f docs/onionjuggler-tui.1.md ] || [ ! -f docs/onionjuggler.conf.5.md ] \
-  || [ ! -f docs/vitor.8.md ]; then
-  error_msg "This script must be run from inside the onionjuggler repository!"
-fi
+
+check_repo(){
+  if [ ! -f bin/onionjuggler-cli ] || [ ! -f bin/onionjuggler-tui ] || [ ! -f bin/vitor ] \
+    || [ ! -f etc/onionjuggler/sample.conf ] || [ ! -f docs/onionjuggler-cli.1.md ] || [ ! -f docs/onionjuggler-tui.1.md ] \
+    || [ ! -f docs/onionjuggler.conf.5.md ] || [ ! -f docs/vitor.8.md ]; then
+    error_msg "This script must be run from inside the onionjuggler repository!"
+  fi
+}
+
 
 usage(){
   printf "Configure the environment for OnionJuggler
@@ -49,6 +53,7 @@ usage(){
 "
   exit 1
 }
+[ -z "${1}" ] && usage
 
 get_arg(){
   case "${2}" in
@@ -62,28 +67,32 @@ while :; do
     *) arg="${2}"; shift_n=2;;
   esac
   case "${1}" in
-    -i|--install|-u|--update|-d|--uninstall|-r|--release|-k|--check|-m|--man) command="${1}"; shift;;
+    -c|--clone|-i|--install|-u|--update|-d|--uninstall|-r|--release|-k|--check|-m|--man) command="${1}"; shift;;
     -P|--purge) action="${1}"; shift;;
     -C|--config|-C=*|--confg=*) ONIONJUGGLER_CONF="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -B|--bin-dir|-b=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -F|--conf-dir|-c=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -M|--man-dir|-m=*|--man-dir=*) man_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -B|--bin-dir|-B=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -F|--conf-dir|-F=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
+    -M|--man-dir|-M=*|--man-dir=*) man_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
     -h|--help) usage;;
     "") break;;
     *) error_msg "Invalid option: ${1}";;
   esac
 done
 
-[ -d "${bin_dir:="/usr/local/bin"}" ] || error_msg "Your system does not seems to support bin_dir=${bin_dir}"
-[ -d "${conf_dir:="/etc"}" ] || error_msg "Your system does not seems to support conf_dir=${conf_dir}"
-[ -d "${man_dir:="/usr/local/man"}" ] || error_msg "Your system does not seems to support man_dir=${man_dir}"
-
-bin_dir="${bin_dir%*/}"
-conf_dir="${conf_dir%*/}/onionjuggler"
-man_dir="${man_dir%*/}"
 
 ###################
 #### FUNCTIONS ####
+
+check_dir(){
+  [ -d "${bin_dir:="/usr/local/bin"}" ] || error_msg "Your system does not seems to support bin_dir=${bin_dir}"
+  [ -d "${conf_dir:="/etc"}" ] || error_msg "Your system does not seems to support conf_dir=${conf_dir}"
+  [ -d "${man_dir:="/usr/local/man"}" ] || error_msg "Your system does not seems to support man_dir=${man_dir}"
+
+  bin_dir="${bin_dir%*/}"
+  conf_dir="${conf_dir%*/}/onionjuggler"
+  man_dir="${man_dir%*/}"
+}
+
 
 install_package(){
   for package in "${@}"; do
@@ -128,6 +137,7 @@ make_shellcheck(){
   fi
 }
 
+
 make_man(){
   notice "${magenta}Creating manual pages${nocolor}"
   pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/man1/onionjuggler-cli.1
@@ -135,6 +145,7 @@ make_man(){
   pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.5.md -o man/man5/onionjuggler.conf.5
   pandoc -s -f markdown-smart -t man docs/vitor.8.md -o man/man8/vitor.8
 }
+
 
 get_os(){
   ## Source: pfetch -> https://github.com/dylanaraps/pfetch/blob/master/pfetch
@@ -169,6 +180,20 @@ get_os(){
     FreeBSD) distro="${os} $(freebsd-version)";;
     *) distro="${os} ${kernel}";;
   esac
+}
+
+
+range_variable(){
+  name="${1}"
+  eval var='$'"${1}"
+  shift
+  if [ -n "${var:-}" ]; then
+    success=0
+    for tests in "${@}"; do
+      [ "${var}" = "${tests}" ] && success=1
+    done
+    [ ${success} -ne 1 ] && error_msg "${name} has an incorrect value of : ${var}! Check onionjuggler.conf for more details."
+  fi
 }
 
 ###################
@@ -212,19 +237,6 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 ## sanity check
 printf %d "${tor_control_port:=9050}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
 
-range_variable(){
-  name="${1}"
-  eval var='$'"${1}"
-  shift
-  if [ -n "${var:-}" ]; then
-    success=0
-    for tests in "${@}"; do
-      [ "${var}" = "${tests}" ] && success=1
-    done
-    [ ${success} -ne 1 ] && error_msg "${name} has an incorrect value of : ${var}! Check onionjuggler.conf for more details."
-  fi
-}
-
 range_variable su_cmd sudo doas
 range_variable webserver nginx apache2 openbsd-httpd
 range_variable dialog_box dialog whiptail
@@ -235,13 +247,30 @@ range_variable dialog_box dialog whiptail
 
 case "${command}" in
 
+  -c|--clone)
+    if ! check_repo; then
+      git clone "${onionjuggler_repo}"
+      onionjuggler_dir="${onionjuggler_repo%*.git}"
+      onionjuggler_dir="${onionjuggler_repo##*/}"
+      if [ -d "${onionjuggler_dir}" ]; then
+        cd "${onionjuggler_dir}" || error_msg "Couldn't change to directory ${onionjuggler_dir}"
+        "${0}" -i
+      fi
+    else
+      error_msg "Can't clone when already in the repository."
+    fi
+  ;;
+
   -u|--update)
+    check_repo
     notice "${magenta}Pulling, hold back${nocolor}"
-    git pull "${repo}"
+    git pull "${onionjuggler_repo}"
     "${0}" -i
   ;;
 
   -i|--install)
+    check_repo
+    check_dir
     notice "${magenta}Checking requirements${nocolor}"
     # shellcheck disable=SC2086
     install_package ${requirements}
@@ -259,7 +288,7 @@ case "${command}" in
     "${su_cmd}" cp man/man1/onionjuggler-cli.1 man/man1/onionjuggler-tui.1 "${man_dir}/man1"
     "${su_cmd}" cp man/man5/onionjuggler.conf.5 "${man_dir}/man5"
     "${su_cmd}" cp man/man8/vitor.8 "${man_dir}/man8"
-    "${su_cmd}" cp bin/onionjuggler-cli bin/onionjuggler-tui "${bin_dir}"
+    "${su_cmd}" cp bin/onionjuggler-cli bin/onionjuggler-tui bin/vitor "${bin_dir}"
     [ ! -d "${conf_dir}/onionjuggler" ] && "${su_cmd}" mkdir -p "${conf_dir}/conf.d"
     "${su_cmd}" cp etc/onionjuggler/dialogrc "${conf_dir}"
     get_os
@@ -280,11 +309,12 @@ case "${command}" in
   ;;
 
   -d|--uninstall)
+    check_dir
     notice "${red}Removing OnionJuggler scripts from your system.${nocolor}"
     "${su_cmd}" rm -f "${man_dir}/man1/onionjuggler-cli.1" "${man_dir}/man1/onionjuggler-tui.1"
     "${su_cmd}" rm -f "${man_dir}/man5/onionjuggler.conf.5"
     "${su_cmd}" rm -f "${man_dir}/man8/vitor.8"
-    "${su_cmd}" rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui"
+    "${su_cmd}" rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui" "${bin_dir}/vitor"
     if [ "${action}" = "-P" ] || [ "${action}" = "--purge" ]; then
       notice "${red}Purging OnionJuggler configuration from your system.${nocolor}"
       "${su_cmd}" rm -f "${conf_dir}/onionjuggler"
@@ -293,6 +323,7 @@ case "${command}" in
   ;;
 
   -r|--release)
+    check_repo
     notice "${blue}Preparing release${nocolor}"
     install_package shellcheck pandoc git
     make_man
@@ -306,9 +337,9 @@ case "${command}" in
     notice "${green}Done!${nocolor}"
   ;;
 
-  -k|--check) make_shellcheck;;
+  -k|--check) check_repo; make_shellcheck;;
 
-  -m|--man) make_man;;
+  -m|--man) check_repo; make_man;;
 
   *) usage;;
 

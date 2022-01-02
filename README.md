@@ -1,8 +1,8 @@
 # OnionJuggler
 [![shellcheck](https://github.com/nyxnor/onionjuggler/actions/workflows/main.yaml/badge.svg)](https://github.com/nyxnor/onionjuggler/actions/workflows/main.yaml)
 [![CodeFactor](https://www.codefactor.io/repository/github/nyxnor/onionjuggler/badge/main)](https://www.codefactor.io/repository/github/nyxnor/onionjuggler/overview/main)
-[![License](https://img.shields.io/github/license/nyxnor/onionjuggler.svg)](https://github.com/nyxnor/onionjuggler/blob/main/LICENSE)
 [![GitHub top language](https://img.shields.io/github/languages/top/nyxnor/onionjuggler.svg)](https://github.com/nyxnor/onionjuggler/search?l=Shell)
+[![License](https://img.shields.io/github/license/nyxnor/onionjuggler.svg)](https://github.com/nyxnor/onionjuggler/blob/main/LICENSE)
 [![Just works](https://img.shields.io/badge/works-on_my_machine-darkred.svg?style=flat)](https://en.wikipedia.org/wiki/Typewriter)
 
 
@@ -27,9 +27,9 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
   * [Set custom variables](#set-custom-variables)
   * [Setup the environment](#setup-the-environment)
   * [Usage](#usage)
-    * [TUI](#tui)
-    * [CLI](#cli)
-    * [VITOR](#vitor)
+    * [tui](#tui)
+    * [cli](#cli)
+    * [vitor](#vitor)
 * [Featured on](#featured-on)
 * [Contributors](#contributors)
 
@@ -55,10 +55,11 @@ The goal of this project is:
 Mitigation from a single point of failure:
 * **Kernel** from predominant `Linux` to also `BSD` and any other Unix-like system.
 * **Shell** from predominant `Bash` to also any POSIX shell such as `ksh`, `(y,d)ash` and `Zsh` (emulating sh).
-* **Service manager** from predominant `Systemd` to also `OpenRC`, `SysVinit`, `Runit`.
+* **Service manager** from predominant `Systemd` to also `RC`, `OpenRC`, `SysVinit`, `Runit`.
 
 Editing the tor configuration file (torrc) is not difficult, but automation solves problem of misconfiguration and having:
-* less time spent
+* less time spent by running a single line command
+* no downtime by rejecting invalid configuration before applying them to be used
 * complete uniformity
 * graphical interface to help newbies
 
@@ -110,10 +111,7 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * **pandoc** (Manual)
   * **shellcheck** (Review)
 
-If using Vanguards, `python2.x` is needed, but it is not in the requirements to be installed by default.
-
-The packages are downloaded when setting up the environment with [configure.sh](configure.sh).
-The absolute minimum you can go to is `doas/sudo tor grep sed`, and you will be limited to enable, disable and renew services.
+If using Vanguards, `python2.6` is the minimal required for [Stem](https://stem.torproject.org/faq.html#what-python-versions-is-stem-compatible-with), but it is not going to be installed by default.
 
 ## Instructions
 
@@ -154,21 +152,45 @@ Run from inside the cloned repository to create the tor directories, create manu
 
 ### Usage
 
-#### TUI
+### configure.sh
+
+**configure.sh** setup the environment for OnionJuggler by adding the scripts and manual pages to path and detecting your operating system to fit with its default configuration. It can also be used to uninstall. Common development use is to create manual pages, check shell syntax and do all of the aforementioned and give the git status for files to be commited. The update option is raw and only recommended for development as of now.
+
+Install:
+```sh
+configure.sh --install ## -i
+```
+
+Uninstall:
+```sh
+configure.sh --uninstall ## -d
+```
+
+Update:
+```sh
+configure.sh --update ## -u
+```
+
+#### tui
 
 **onionjuggler-tui** wraps the CLI in a Terminal User Interface.
 Some TUI options will let you edit the authorization files, which is recommended to set your favorite text editor to an environment variable that will be tried on the following order: `DOAS_EDITOR`/`SUDO_EDITOR`, if empty will try `VISUAL`, if empty will try `EDITOR`, if empty WILL fallback to `Vi`.
+
+Read the [tui manual](docs/onionjuggler-tui.1.md)
+```sh
+man onionjuggler-tui
+```
 
 To use the TUI, just run:
 ```sh
 onionjuggler-tui
 ```
 
-#### CLI
+#### cli
 
 **onionjuggler-cli** is the main script that manages the HiddenServices. Take a look at the documentation inside `docs` folder, there are many other onion services management guides. Read:
 
-Don't forget the [cli manual](docs/onionjuggler-cli.md) and the [conf manual](docs/onionjuggler.conf.md) for advanced usage:
+Don't forget the [cli manual](docs/onionjuggler-cli.1.md) and the [conf manual](docs/onionjuggler.conf.5.md) for advanced usage:
 ```sh
 man onionjuggler-cli
 man onionjuggler.conf
@@ -183,11 +205,16 @@ But can be as advanced as specifying all the parameters:
 onionjuggler-cli on --service terminator --socket unix --version 3 --port 80,127.0.0.1:80
 ```
 
-#### VITOR
+#### vitor
 
-**vitor** helps the user edit the tor configuration files in a safe manner, making a temporary copy of the desired file, opening the editor with this temporary file, after existing the editor, the validity check will be done with `tor -f FILE --verify-config` and if it doesn't pass, will warn about the error and give the option to open the editor again and fix the problems or interrupt to exit vitor and delete changes.
+**vitor** is short for Vi for tor, a script the helps the user edit the tor configuration files in a safe manner, making a temporary copy of the desired file, opening the editor with this temporary file, after existing the editor, the validity check will be done with `tor -f FILE --verify-config` and if it doesn't pass, will warn about the error and give the option to open the editor again and fix the problems or interrupt to exit vitor and delete changes.
 
 You must run **vitor** as root using `sudo` or `doas`. Root privilege is necessary to edit the configuration files and the programs to run as another user are used to run tor a the tor user if it is not specified on the configuration file.
+
+Read the [vitor manual](docs/vitor.8.md)
+```sh
+man vitor
+```
 
 To open the default file on /etc/tor/torrc, just run:
 ```sh
@@ -199,9 +226,9 @@ To open an alternative file, specify it with the `-f` option:
 doas vitor -f /usr/local/etc/tor/torrc
 ```
 
-You may need to run tor as another user if the `User` option is not already on the configuration file, specify it with the `-t` option:
+You may need to run tor as another user if the `User` option is not already on the configuration file, specify it with the `-u` option:
 ```sh
-doas vitor -t _tor
+doas vitor -u _tor
 ```
 
 ## Featured on
