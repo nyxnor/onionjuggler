@@ -47,6 +47,10 @@ while :; do
   esac
 done
 
+[ -n "${SUDO_USER}" ] && su_cmd="sudo"
+[ -n "${DOAS_USER}" ] && su_cmd="doas"
+{ [ -z "${su_cmd}" ] || [ "$(id -u)" -ne 0 ]; } && error_msg "Run ${me} as the root user with 'sudo' or 'doas'."
+
 ## get editor. First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
 eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
 editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-vi}"}"}"
@@ -57,10 +61,6 @@ editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-vi}"}"}"
 file="${tor_conf:-"/etc/tor/torrc"}"
 ## remove last backlash if inserted by mistake
 file="${file%*/}"
-
-[ -n "${SUDO_USER}" ] && su_cmd="sudo"
-[ -n "${DOAS_USER}" ] && su_cmd="doas"
-{ [ -z "${su_cmd}" ] || [ "$(id -u)" -ne 0 ]; } && error_msg "Run ${me} as the root user with 'sudo' or 'doas'."
 
 if [ -f "${file}" ]; then
   tor_user_check="$(grep "^User" "${file}" | sed "s/^User //")"

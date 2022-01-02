@@ -348,7 +348,7 @@ signal_tor(){
     systemctl|sv|rcctl) "${su_cmd}" "${daemon_control}" "${signal}" "${tor_daemon}";;
     service) "${su_cmd}" "${daemon_control}" "${tor_daemon}" "${signal}";;
     /etc/rc.d) "${su_cmd}" "${daemon_control}"/"${tor_daemon}" "${signal}";;
-    *) rerror_msg "daemon_control value not supported: ${daemon_control}"
+    *) error_msg "daemon_control value not supported: ${daemon_control}"
   esac
   [ "${?}" -eq 1 ] && error_msg "Failed to ${signal} tor. Check logs first, correct the problem them restart tor."
   notice "${green}${signal}ed tor succesfully!${nocolor}"
