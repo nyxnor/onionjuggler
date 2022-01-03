@@ -23,11 +23,12 @@ cyan="\033[36m"
 notice(){ printf %s"${me}: ${1}\n" 1>&2; }
 error_msg(){ notice "${red}error: ${1}"; exit 1; }
 
-
+topdir="$(git rev-parse --show-toplevel)"
 check_repo(){
-  if [ ! -f bin/onionjuggler-cli ] || [ ! -f bin/onionjuggler-tui ] || [ ! -f bin/vitor ] \
-    || [ ! -f etc/onionjuggler/sample.conf ] || [ ! -f docs/onionjuggler-cli.1.md ] || [ ! -f docs/onionjuggler-tui.1.md ] \
-    || [ ! -f docs/onionjuggler.conf.5.md ] || [ ! -f docs/vitor.8.md ]; then
+  if [ ! -f "${topdir}"/bin/onionjuggler-cli ] || [ ! -f "${topdir}"/bin/onionjuggler-tui ] \
+    || [ ! -f "${topdir}"/bin/vitor ] || [ ! -f "${topdir}"/etc/onionjuggler/sample.conf ] \
+    || [ ! -f "${topdir}"/docs/onionjuggler-cli.1.md ] || [ ! -f "${topdir}"/docs/onionjuggler-tui.1.md ] \
+    || [ ! -f "${topdir}"/docs/onionjuggler.conf.5.md ] || [ ! -f "${topdir}"/docs/vitor.8.md ]; then
     error_msg "This script must be run from inside the onionjuggler repository!"
   fi
 }
@@ -140,10 +141,10 @@ make_shellcheck(){
 
 make_man(){
   notice "${magenta}Creating manual pages${nocolor}"
-  pandoc -s -f markdown-smart -t man docs/onionjuggler-cli.1.md -o man/man1/onionjuggler-cli.1
-  pandoc -s -f markdown-smart -t man docs/onionjuggler-tui.1.md -o man/man1/onionjuggler-tui.1
-  pandoc -s -f markdown-smart -t man docs/onionjuggler.conf.5.md -o man/man5/onionjuggler.conf.5
-  pandoc -s -f markdown-smart -t man docs/vitor.8.md -o man/man8/vitor.8
+  pandoc -s -f markdown-smart -t man "${topdir}"/docs/onionjuggler-cli.1.md -o "${topdir}"/man/man1/onionjuggler-cli.1
+  pandoc -s -f markdown-smart -t man "${topdir}"/docs/onionjuggler-tui.1.md -o "${topdir}"/man/man1/onionjuggler-tui.1
+  pandoc -s -f markdown-smart -t man "${topdir}"/docs/onionjuggler.conf.5.md -o "${topdir}"/man/man5/onionjuggler.conf.5
+  pandoc -s -f markdown-smart -t man "${topdir}"/docs/vitor.8.md -o "${topdir}"/man/man8/vitor.8
 }
 
 
@@ -207,14 +208,14 @@ if [ ! -f /etc/onionjuggler/onionjuggler.conf ]; then
   case "${os}" in
     Linux*)
       case "${distro}" in
-        "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) . etc/onionjuggler/debian.conf;;
-        "Arch"*|"Artix"*|"ArcoLinux"*) . etc/onionjuggler/arch.conf;;
-        "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") . etc/onionjuggler/fedora.conf;;
+        "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) . "${topdir}"/etc/onionjuggler/debian.conf;;
+        "Arch"*|"Artix"*|"ArcoLinux"*) . "${topdir}"/etc/onionjuggler/arch.conf;;
+        "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") . "${topdir}"/etc/onionjuggler/fedora.conf;;
       esac
     ;;
     "OpenBSD"*) . etc/onionjuggler/openbsd.conf;;
     "NetBSD"*) . etc/onionjuggler/netbsd.conf;;
-    "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) . etc/onionjuggler/freebsd.conf;;
+    "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) . "${topdir}"/etc/onionjuggler/freebsd.conf;;
   esac
 else
   [ -r /etc/onionjuggler/onionjuggler.conf ] && . /etc/onionjuggler/onionjuggler.conf
@@ -285,25 +286,25 @@ case "${command}" in
     notice "${green}Copying files to path${nocolor}"
     [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man1"
     [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man5"
-    "${su_cmd}" cp man/man1/onionjuggler-cli.1 man/man1/onionjuggler-tui.1 "${man_dir}/man1"
-    "${su_cmd}" cp man/man5/onionjuggler.conf.5 "${man_dir}/man5"
-    "${su_cmd}" cp man/man8/vitor.8 "${man_dir}/man8"
-    "${su_cmd}" cp bin/onionjuggler-cli bin/onionjuggler-tui bin/vitor "${bin_dir}"
+    "${su_cmd}" cp "${topdir}"/man/man1/onionjuggler-cli.1 "${topdir}"/man/man1/onionjuggler-tui.1 "${man_dir}/man1"
+    "${su_cmd}" cp "${topdir}"/man/man5/onionjuggler.conf.5 "${man_dir}/man5"
+    "${su_cmd}" cp "${topdir}"/man/man8/vitor.8 "${man_dir}/man8"
+    "${su_cmd}" cp "${topdir}"/bin/onionjuggler-cli "${topdir}"/bin/onionjuggler-tui "${topdir}"/bin/vitor "${bin_dir}"
     [ ! -d "${conf_dir}/onionjuggler" ] && "${su_cmd}" mkdir -p "${conf_dir}/conf.d"
-    "${su_cmd}" cp etc/onionjuggler/dialogrc "${conf_dir}"
+    "${su_cmd}" cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
     get_os
     ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch/blob/master/neofetch
     case "${os}" in
       Linux*)
         case "${distro}" in
-          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${su_cmd}" cp etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
-          "Arch"*|"Artix"*|"ArcoLinux"*) "${su_cmd}" cp etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
-          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${su_cmd}" cp etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
+          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
+          "Arch"*|"Artix"*|"ArcoLinux"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
+          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${su_cmd}" cp "${topdir}"/etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac
       ;;
-      "OpenBSD"*) "${su_cmd}" cp etc/onionjuggler/openbsd.conf "${conf_dir}/onionjuggler.conf";;
-      "NetBSD"*) "${su_cmd}" cp etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
-      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${su_cmd}" cp etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
+      "OpenBSD"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/openbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "NetBSD"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
     esac
     notice %s"${blue}OnionJuggler enviroment is ready${nocolor}"
   ;;
@@ -329,7 +330,7 @@ case "${command}" in
     make_man
     make_shellcheck
     notice "${cyan}Checking git status${nocolor}"
-    find . -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \; ## should not delete, could destroy lines, just leave empty lines
+    find "${topdir}" -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \; ## should not delete, could destroy lines, just leave empty lines
     if [ -n "$(git status -s)" ]; then
       git status
       error_msg "Please record the changes to the file(s) above with a commit before pushing!"
