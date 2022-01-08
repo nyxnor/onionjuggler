@@ -236,7 +236,7 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 : "${openssl_cmd:="openssl"}"
 
 ## sanity check
-printf %d "${tor_control_port:=9050}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
+printf %d "${tor_control_port:=9051}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
 
 range_variable su_cmd sudo doas
 range_variable webserver nginx apache2 openbsd-httpd

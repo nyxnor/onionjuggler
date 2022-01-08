@@ -1038,7 +1038,7 @@ server \"${onion_hostname}\" {
         esac
         reload_webserver
         #"${su_cmd}" rm -f /tmp/"${service}"-onion.conf
-        notice "\n# Address: ${magenta}http://${onion_hostname}:${virtport}${nocolor}"
+        notice "\n# Address: ${magenta}${onion_hostname}:${virtport}${nocolor}"
       ;;
 
       f|off)
