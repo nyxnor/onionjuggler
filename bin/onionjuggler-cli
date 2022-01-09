@@ -288,6 +288,8 @@ safe_edit(){
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       "${su_cmd}" chown root:"${tor_conf_group}" "${file_name_tmp}"
       "${su_cmd}" cp "${file}" "${file_name_tmp}"
+      # shellcheck disable=SC2064
+      trap "${su_cmd} rm -f ${file_name_tmp}" EXIT
     ;;
     getvar) eval file_name_tmp='$'"${file_name}_tmp" && printf %s"${file_name_tmp}";;
     save)
@@ -367,24 +369,14 @@ is_addr_port(){
   addr_port="${1}"
   port="${addr_port##*:}"
   addr="${addr_port%%:*}"
-  addr_1="${addr%%.*}"
-  addr_mid="${addr##*"${addr_1}".}"
-  addr_2="${addr_mid%%.*}"
-  addr_4="${addr_mid##*.}"
-  addr_mid="${addr_mid##*"${addr_2}".}"
-  addr_3="${addr_mid%%.*}"
 
-  is_integer "${port}"; is_integer "${addr_1}"; is_integer "${addr_2}"; is_integer "${addr_3}"; is_integer "${addr_4}"
+  printf %d "${port}" >/dev/null 2>&1 || error_msg "${port} is not a valid port, not an integer"
+  { [ "${port}" -gt 0 ] && [ "${port}" -le 65535 ]; } || error_msg "${port} is not a valid port, not within range: 0-65535"
 
-  { [ "${port}" -gt 0 ] && [ "${port}" -le 65535 ] ; } \
-  || error_msg "port '${port}' is not within range: 0-65535"
-
-  if [ "${addr_1}" -ge 0 ] && [ "${addr_1}" -le 255 ] && [ "${addr_2}" -ge 0 ] && [ "${addr_2}" -le 255 ] \
-  && [ "${addr_3}" -ge 0 ] && [ "${addr_3}" -le 255 ] && [ "${addr_4}" -ge 0 ] && [ "${addr_4}" -le 255 ]; then
-    :
-  else
-    error_msg "target address '${addr}' is not within range: 0.0.0.0-255.255.255.255"
-  fi
+  for quad in $(printf '%s\n' "${addr}" | tr "." " "); do
+    printf %d "${quad}" >/dev/null 2>&1 || error_msg "${addr} is not a valid address, ${quad} is not and integer"
+    { [ "${quad}" -ge 0 ] && [ "${quad}" -le 255 ]; } || error_msg "${addr} is not a valid address, ${quad} is not within range: 0-255"
+  done
 }
 
 
@@ -565,7 +557,6 @@ case "${main}" in
     : "${port:=80}"
     port="$(printf %s"${port}" | tr "," " " | tr -s " ")"
     virtport="${port%% *}"
-    safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
 
     finish_service_activation(){
       ## remove double empty lines
@@ -600,7 +591,7 @@ case "${main}" in
         target_addr="${target%%:*}"
         target_port="${target##*:}"
         { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
-        "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}" && error_msg "target=${target} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
+        "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}" && error_msg "target=${target} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
         is_integer "${virtport}"; is_addr_port "${target}"
         ## Optional
         if [ -n "${virtport2}" ]; then
@@ -611,9 +602,11 @@ case "${main}" in
           target2_addr="${target2%%:*}"
           target2_port="${target2##*:}"
           { [ "${target2_addr}" = "${target2_port}" ] || [ "${target2_addr}" = "localhost" ]; } && target2="127.0.0.1:${target2_port}"
-          "${su_cmd}" grep -q "^HiddenServicePort .* ${target2}$" "${tor_conf_tmp}" && error_msg "target2=${target2} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
+          "${su_cmd}" grep -q "^HiddenServicePort .* ${target2}$" "${tor_conf}" && error_msg "target2=${target2} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
           is_integer "${virtport2}"; is_addr_port "${target2}"
         fi
+        ## backup torrc
+        safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
         ## delete any old entry for that servive
         service_block delete "${service}" "${tor_conf_tmp}"
         ## add configuration block, empty line after and before it
@@ -631,6 +624,8 @@ case "${main}" in
         virtport2="${port##* }"
         [ "${virtport}" = "${virtport2}" ] && virtport2=""
         [ -n "${virtport2}" ] && is_integer "${virtport2}" ## var not mandatory
+        ## backup torrc
+        safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
         ## delete any old entry for that servive
         service_block delete "${service}" "${tor_conf_tmp}"
         ## add configuration block, empty line after and before it
