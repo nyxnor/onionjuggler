@@ -53,13 +53,20 @@ done
 [ -n "${DOAS_USER}" ] && su_cmd="doas"
 { [ -z "${su_cmd}" ] || [ "$(id -u)" -ne 0 ]; } && error_msg "Run ${me} as the root user with 'sudo' or 'doas'."
 
-## get editor. First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
+## get editor. First try [sudo|doas]edit command if available
+## then environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR,
+## if still empty, try the default editor specified by the command editor, them Vi for unix
+## later try common terminal commands
+
 eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
+eval privileged_editor_safe='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')edit"
+# shellcheck disable=SC2154
+command -v "${privileged_editor_safe}" >/dev/null || privileged_editor_safe=""
 editor_programs="editor vi vim nvim nano pico emacs mg"
 for e in ${editor_programs}; do
   command -v "${e}" >/dev/null && editor_fallback="$(command -v "${e}")" && break
 done
-vitor_editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-"${editor_fallback}"}"}"}"
+vitor_editor="${privileged_editor_safe:-"${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-"${editor_fallback}"}"}"}"}"
 [ -z "${vitor_editor}" ] && error_msg "No editor provided, read the manual pages."
 command -v "${vitor_editor}" >/dev/null || error_msg "Editor '${vitor_editor}' does not seem to be a command"
 
