@@ -96,6 +96,7 @@ fi
 file_dir="${file%/*}"
 
 ## check permissions
+## this is never run because we block if not running vitor as root, but having this as precaution
 [ ! -d "${file_dir}" ] && error_msg "${file_dir} is not a directory or doesnt exist."
 [ ! -w "${file_dir}" ] && error_msg "${file_dir} is not writable by ${USER}."
 [ ! -r "${file_dir}" ] && error_msg "${file_dir} is not readble by ${USER}."
