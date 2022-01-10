@@ -26,7 +26,10 @@ if lock file exists, if it does, abort.
 To get the editor value, it is checked for the environment variables to
 open the editor with the \f[I]SUDO_EDITOR\f[R]/\f[I]DOAS_EDITOR\f[R], if
 they are empty try \f[I]VISUAL\f[R], if it is also empty try
-\f[I]EDITOR\f[R], if it is also empty fallback to Vi(1).
+\f[I]EDITOR\f[R], if it is also empty fallback to a unix text editor
+first, the Vi(1), else try Vim(1), NVim(1), Nano(1), Pico(1), Emacs(1),
+Mg(1).
+If there is no available editor, fail.
 After exiting the editor, the temporary copy is checked with \f[I]tor -f
 temp_file --verify-config\f[R] and if it is invalid, warn the user about
 the errors and press \f[I]e\f[R] to continue (loop opens the editor
