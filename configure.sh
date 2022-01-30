@@ -26,9 +26,9 @@ error_msg(){ notice "${red}error: ${1}"; exit 1; }
 topdir="$(git rev-parse --show-toplevel)"
 check_repo(){
   if [ ! -f "${topdir}"/bin/onionjuggler-cli ] || [ ! -f "${topdir}"/bin/onionjuggler-tui ] \
-    || [ ! -f "${topdir}"/bin/vitor ] || [ ! -f "${topdir}"/etc/onionjuggler/sample.conf ] \
+    || [ ! -f "${topdir}"/etc/onionjuggler/sample.conf ] \
     || [ ! -f "${topdir}"/docs/onionjuggler-cli.1.md ] || [ ! -f "${topdir}"/docs/onionjuggler-tui.1.md ] \
-    || [ ! -f "${topdir}"/docs/onionjuggler.conf.5.md ] || [ ! -f "${topdir}"/docs/vitor.8.md ]; then
+    || [ ! -f "${topdir}"/docs/onionjuggler.conf.5.md ]; then
     error_msg "This script must be run from inside the onionjuggler repository!"
   fi
 }
@@ -144,7 +144,6 @@ make_man(){
   pandoc -s -f markdown-smart -t man "${topdir}"/docs/onionjuggler-cli.1.md -o "${topdir}"/man/man1/onionjuggler-cli.1
   pandoc -s -f markdown-smart -t man "${topdir}"/docs/onionjuggler-tui.1.md -o "${topdir}"/man/man1/onionjuggler-tui.1
   pandoc -s -f markdown-smart -t man "${topdir}"/docs/onionjuggler.conf.5.md -o "${topdir}"/man/man5/onionjuggler.conf.5
-  pandoc -s -f markdown-smart -t man "${topdir}"/docs/vitor.8.md -o "${topdir}"/man/man8/vitor.8
 }
 
 
@@ -288,8 +287,7 @@ case "${command}" in
     [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man5"
     "${su_cmd}" cp "${topdir}"/man/man1/onionjuggler-cli.1 "${topdir}"/man/man1/onionjuggler-tui.1 "${man_dir}/man1"
     "${su_cmd}" cp "${topdir}"/man/man5/onionjuggler.conf.5 "${man_dir}/man5"
-    "${su_cmd}" cp "${topdir}"/man/man8/vitor.8 "${man_dir}/man8"
-    "${su_cmd}" cp "${topdir}"/bin/onionjuggler-cli "${topdir}"/bin/onionjuggler-tui "${topdir}"/bin/vitor "${bin_dir}"
+    "${su_cmd}" cp "${topdir}"/bin/onionjuggler-cli "${topdir}"/bin/onionjuggler-tui "${bin_dir}"
     [ ! -d "${conf_dir}/onionjuggler" ] && "${su_cmd}" mkdir -p "${conf_dir}/conf.d"
     "${su_cmd}" cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
     get_os
@@ -314,8 +312,7 @@ case "${command}" in
     notice "${red}Removing OnionJuggler scripts from your system.${nocolor}"
     "${su_cmd}" rm -f "${man_dir}/man1/onionjuggler-cli.1" "${man_dir}/man1/onionjuggler-tui.1"
     "${su_cmd}" rm -f "${man_dir}/man5/onionjuggler.conf.5"
-    "${su_cmd}" rm -f "${man_dir}/man8/vitor.8"
-    "${su_cmd}" rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui" "${bin_dir}/vitor"
+    "${su_cmd}" rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui"
     if [ "${action}" = "-P" ] || [ "${action}" = "--purge" ]; then
       notice "${red}Purging OnionJuggler configuration from your system.${nocolor}"
       "${su_cmd}" rm -f "${conf_dir}/onionjuggler"
