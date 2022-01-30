@@ -29,7 +29,6 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
   * [Usage](#usage)
     * [tui](#tui)
     * [cli](#cli)
-    * [vitor](#vitor)
 * [Featured on](#featured-on)
 * [Contributors](#contributors)
 
@@ -203,32 +202,6 @@ onionjuggler-cli on -s terminator
 But can be as advanced as specifying all the parameters:
 ```sh
 onionjuggler-cli on --service terminator --socket unix --version 3 --port 80,127.0.0.1:80
-```
-
-#### vitor
-
-**vitor** is short for Vi for tor, a script the helps the user edit the tor configuration files in a safe manner, making a temporary copy of the desired file, opening the editor with this temporary file, after existing the editor, the validity check will be done with `tor -f FILE --verify-config` and if it doesn't pass, will warn about the error and give the option to open the editor again and fix the problems or interrupt to exit vitor and delete changes.
-
-You must run **vitor** as root using `sudo` or `doas`. Root privilege is necessary to edit the configuration files and the programs to run as another user are used to run tor a the tor user if it is not specified on the configuration file.
-
-Read the [vitor manual](docs/vitor.8.md)
-```sh
-man vitor
-```
-
-To open the default file on /etc/tor/torrc, just run:
-```sh
-doas vitor
-```
-
-To open an alternative file, specify it with the `-f` option:
-```sh
-doas vitor -f /usr/local/etc/tor/torrc
-```
-
-You may need to run tor as another user if the `User` option is not already on the configuration file, specify it with the `-u` option:
-```sh
-doas vitor -u _tor
 ```
 
 ## Featured on
