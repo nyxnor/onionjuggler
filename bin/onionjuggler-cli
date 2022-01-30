@@ -205,7 +205,8 @@ while :; do
     *) opt="${1}"; arg="${2}"; shift_n=1;;
   esac
   case "${opt}" in
-    --getcliopt|--getconf|on|off|list|renew|auth-server|auth-client|web|location|backup|vanguards) main="${opt}"; shift_n=1;;
+    on|off|list|renew|auth-server|auth-client|web|location|backup|vanguards) main="${opt}"; shift_n=1;;
+    --getcliopt|--getconf) assign_value main "${opt}"; shift_n=1;;
     --on|--off|--list|-n|-f|-l) assign_value status "${opt}"; shift_n=1;;
     -R|--restart|-r|--reload) assign_value signal "${opt}"; shift_n=1;;
     -P|--purge|--nginx|--apache2|--html|-q|--quiet|-M|--make|-I|--integrate) assign_value action "${opt}"; shift_n=1;;
@@ -483,11 +484,14 @@ cat_squeeze_blank(){
 ###########################
 ########## MAIN ###########
 
+#printf '%s\n' "${service}" grep -q -e "\[" -e "\]"
+[ "${service%%*[^a-z0-9_.]*}" ] || error_msg "Service is invalid, it must only contain the following characters range: 'a-z, 'A-Z', '0-9', '_', '.'"
+
 case "${main}" in
 
   ## execute or modify nothing, just print the configuration values
   ## usefult to see if there is nothing messed up and if there is, can be checked before running the cli.
-  --getconf)
+  getconf)
     for key in ONIONJUGGLER_CONF su_cmd openssl_cmd webserver webserver_conf website_dir vanguards_commit \
     tor_daemon tor_user tor_conf_group tor_data_dir tor_data_dir_services tor_data_dir_auth tor_conf_dir tor_control_port tor_backup_dir; do
       eval val='$'"${key}"
@@ -498,7 +502,7 @@ case "${main}" in
 
   ## only print the options given on the command line, mostly for development purposes to check the argument
   ## but can be useful to see if the command is correct before running it.
-  --getcliopt)
+  getcliopt)
     for key in signal main service client onion status action version socket port folder client_priv_key client_pub_key; do
       eval val='$'"${key}"
       [ -n "${val}" ] && printf '%s\n' "${key}=${val}"
