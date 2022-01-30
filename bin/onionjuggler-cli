@@ -484,7 +484,6 @@ cat_squeeze_blank(){
 ###########################
 ########## MAIN ###########
 
-#printf '%s\n' "${service}" grep -q -e "\[" -e "\]"
 [ "${service%%*[^a-z0-9_.]*}" ] || error_msg "Service is invalid, it must only contain the following characters range: 'a-z, 'A-Z', '0-9', '_', '.'"
 
 case "${main}" in
