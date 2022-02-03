@@ -795,7 +795,7 @@ case "${main}" in
             onion="$(printf %s"${onion}\n" | sed "s|.*://||" | sed "s|/$||")"
             onion_hostaname_without_onion="${onion%.onion}"
             [ "${onion##*.}" != "onion" ] && error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
-            [ "${onion_hostaname_without_onion%%*[^a-zA-Z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
+            [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#onion}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#onion} is different than 62 characters (<56-char-base32>.onion)"
             safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
             "${su_cmd}" grep -q "ClientOnionAuthDir" "${tor_conf_tmp}" && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | "${su_cmd}" tee -a "${tor_conf_tmp}"; }
