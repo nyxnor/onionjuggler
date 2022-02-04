@@ -69,9 +69,9 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 : The tor user that runs the tor process. Common usernames are *debian-tor*, *tor*, *_tor* (Default: debian-tor).
 
-**tor_conf_group**
+**tor_conf_user_group**
 
-: The /etc directory group owner. Normally *root* or *wheel*. (Default: root)
+: The /etc directory group owner. Normally *root* or *wheel*. (Default: root:root)
 
 **tor_conf_dir**
 

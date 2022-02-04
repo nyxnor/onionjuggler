@@ -252,7 +252,7 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 : "${daemon_control:="systemctl"}"; daemon_control="${daemon_control%*/}"
 : "${tor_daemon:="tor@default"}"
 : "${tor_user:="debian-tor"}"
-: "${tor_conf_group:="root"}"
+: "${tor_conf_user_group:="root:root"}"
 : "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
 : "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
 : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
@@ -287,7 +287,7 @@ safe_edit(){
       file_name_tmp="$(printf %s"mkstemp(${TMPDIR}/${file_name}.XXXXXX)" | m4)"
       eval "${file_name}"_tmp="${file_name_tmp}"
       notice "Saving a copy of ${file} to ${file_name_tmp}"
-      "${su_cmd}" chown root:"${tor_conf_group}" "${file_name_tmp}"
+      "${su_cmd}" chown "${tor_conf_user_group}" "${file_name_tmp}"
       "${su_cmd}" cp "${file}" "${file_name_tmp}"
       # shellcheck disable=SC2064
       trap "${su_cmd} rm -f ${file_name_tmp}" EXIT
@@ -329,7 +329,7 @@ set_owner_permission(){
   "${su_cmd}" find "${tor_data_dir}" -type d -exec chmod 700 {} \;
   "${su_cmd}" find "${tor_data_dir}" -type f -exec chmod 600 {} \;
   ## conf
-  "${su_cmd}" chown -R root:"${tor_conf_group}" "${tor_conf_dir}"
+  "${su_cmd}" chown -R "${tor_conf_user_group}" "${tor_conf_dir}"
   "${su_cmd}" find "${tor_conf_dir}" -type d -exec chmod 755 {} \;
   "${su_cmd}" find "${tor_conf_dir}" -type f -exec chmod 644 {} \;
 
@@ -498,7 +498,7 @@ case "${main}" in
   ## usefult to see if there is nothing messed up and if there is, can be checked before running the cli.
   getconf)
     for key in ONIONJUGGLER_CONF su_cmd openssl_cmd webserver webserver_conf website_dir vanguards_commit \
-    tor_daemon tor_user tor_conf_group tor_data_dir tor_data_dir_services tor_data_dir_auth tor_conf_dir tor_control_port tor_backup_dir; do
+    tor_daemon tor_user tor_conf_user_group tor_data_dir tor_data_dir_services tor_data_dir_auth tor_conf_dir tor_control_port tor_backup_dir; do
       eval val='$'"${key}"
       [ -n "${val:-}" ] && printf '%s\n' "${key}=${val}"
     done
