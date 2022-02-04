@@ -610,10 +610,12 @@ case "${main}" in
           is_integer "${virtport}"
           is_addr_port "${target}"
           if "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}"; then
+            printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
           fi
           if "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}"; then
+            printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' was specified multiple times, but it can only happen once."
           fi
@@ -640,10 +642,12 @@ case "${main}" in
           target="${unix_path}-${virtport}-onion.sock"
           is_integer "${virtport}"
           if "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}"; then
+            printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
           fi
           if "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}"; then
+            printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' was specified multiple times, but it can only happen once."
           fi
