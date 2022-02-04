@@ -13,8 +13,8 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 
 
 **onionjuggler-cli getconf**\
-**onionjuggler-cli on** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT*[,*TARGET*][,*VIRTPORT2*][,*TARGET2*]>]\
-**onionjuggler-cli on**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*> [**--port** [*VIRTPORT*[,*VIRTPORT2*]>]\
+**onionjuggler-cli on** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT* [,*TARGET*] [*VIRTPORT2*][,*TARGET2*]>]\
+**onionjuggler-cli on**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*> [**--port** [*VIRTPORT* [*VIRTPORT2*]>]\
 **onionjuggler-cli off** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
 **onionjuggler-cli list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
 **onionjuggler-cli renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
@@ -117,15 +117,15 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 
 **on** **--service** [*SERV*] **--version** *3* **--socket** *tcp* **--port** [*VIRTPORT*,<*TARGET*>,<*VIRTPORT2*>,<*TARGET2*>]
 
-: Enable an onion service using TCP socket (addr:port) as target. If the TARGET is only the port of it TARGET was not provided, will use the same port as VIRTPORT and bind to 127.0.0.1. TARGET examples: 127.0.0.1:80, 192.168.1.100:80, 140.82.121.3. File(s) modified: torrc.
+: Enable an onion service using TCP socket (addr:port) as target. If the TARGET is only the port of it TARGET was not provided, will use the same port as VIRTPORT and bind to 127.0.0.1. TARGET examples: 127.0.0.1:80, 192.168.1.100:80. File(s) modified: torrc.
 ```
 onionjuggler-cli on --service ssh --version 3 --socket tcp --port 22
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22 22"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port="22 22 80"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port="22,22,80,80"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22 127.0.0.1:22"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22 127.0.0.1:22 80"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22 127.0.0.1:22 80 127.0.0.1:80"
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22,22"
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port="22,22 80"
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port="22 80"
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22"
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80"
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80,127.0.0.1:80"
 ```
 
 **on** **--service** [*SERV*] **--version** *3* **--socket** *unix* **--port** [*VIRTPORT*,<*VIRTPORT2*>]

@@ -24,7 +24,7 @@ get_intr="$(stty -a | sed -n '/.*intr = / {s///;s/;.*$//;p;}')"
 ## display error message with instructions to use the script correctly.
 #notice(){ printf %s"${me}: ${1}\n" 1>&2; }
 notice(){ printf %s"${1}\n" 1>&2; }
-error_msg(){ notice "${red}error: ${1}"; exit 1; }
+error_msg(){ notice "${red}error: ${1}${nocolor}"; exit 1; }
 
 usage(){
   printf %s"${magenta}
@@ -60,9 +60,9 @@ _@v'':i''L,'''''_{'_'y''kJu@6jjuuuujjjN@-
 ${nocolor}
 Usage: ${me} command [--option <ARGUMENT>]
 \nComplete options:
-  on [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT[,VIRTPORT2]>]
+  on [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT [VIRTPORT2]>]
                                                              enable a service listening with tcp sockets
-  on [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[,TARGET][,VIRTPORT2][,TARGET2]>]
+  on [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[,TARGET] [,VIRTPORT2][,TARGET2]>]
                                                              enable a service listening on unix sockets
   off [--purge] [--service <@all|SERV1,SERV2,...>            disable a service and optionally purge its directory
   list [--quiet] [--service <@all|SERV1,SERV2,...>]          see credentials from indicated services
@@ -221,6 +221,7 @@ while :; do
     -K|--client-pub-key|-K=*|--client-pub-key=*) get_arg client_pub_key "${opt}" "${arg}";;
     -C|--config|-C=*|--config=*) get_arg ONIONJUGGLER_CONF "${opt}" "${arg}";;
     "") break;;
+    -h|--help|help) usage;;
     *) error_msg "Invalid option: ${opt}";;
   esac
   shift "${shift_n}"
@@ -290,7 +291,7 @@ safe_edit(){
       "${su_cmd}" chown "${tor_conf_user_group}" "${file_name_tmp}"
       "${su_cmd}" cp "${file}" "${file_name_tmp}"
       # shellcheck disable=SC2064
-      trap "${su_cmd} rm -f ${file_name_tmp}" EXIT
+      trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; ${su_cmd} rm -f ${file_name_tmp}" EXIT
     ;;
     getvar) eval file_name_tmp='$'"${file_name}_tmp" && printf %s"${file_name_tmp}";;
     save)
@@ -371,7 +372,7 @@ is_addr_port(){
   port="${addr_port##*:}"
   addr="${addr_port%%:*}"
 
-  printf %d "${port}" >/dev/null 2>&1 || error_msg "${port} is not a valid port, not an integer"
+  printf %d "${port}" >/dev/null 2>&1 || error_msg "'${port}' is not a valid port, not an integer"
   { [ "${port}" -gt 0 ] && [ "${port}" -le 65535 ]; } || error_msg "${port} is not a valid port, not within range: 0-65535"
 
   for quad in $(printf '%s\n' "${addr}" | tr "." " "); do
@@ -481,16 +482,18 @@ cat_squeeze_blank(){
   "${su_cmd}" sed '1s/^$//p;/./,/^$/!d' ${files}
 }
 
-###########################
-########## MAIN ###########
-
-[ "${service%%*[^a-zA-Z0-9_.-]*}" ] || {
- error_msg "Service name \"${service}\" is invalid\nIt must only contain the characters that are:
+check_service_name(){
+  [ "${service%%*[^a-zA-Z0-9_.-]*}" ] || {
+  error_msg "Service name \"${service}\" is invalid\nIt must only contain the characters that are:
   - letters (a-z A-Z)
   - numbers (0-9)
   - punctuations limited to hifen (-), underscore (_), dot (.)"
+  }
 }
 
+
+###########################
+########## MAIN ###########
 
 case "${main}" in
 
@@ -561,23 +564,26 @@ case "${main}" in
   ## virtport2 and target 2 are optional
   n|on)
     [ -z "${service}" ] && usage
+    check_service_name
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version ${version} is not available" ## wait for v4 to change this
     : "${socket:=unix}"
     : "${port:=80}"
-    port="$(printf %s"${port}" | tr "," " " | tr -s " ")"
-    virtport="${port%% *}"
+    ## backup torrc
+    safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
+    notice "Including Hidden Service configuration to ${tor_conf_tmp}"
+    printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\n" | "${su_cmd}" tee -a "${tor_conf_tmp}"
 
     finish_service_activation(){
       ## remove double empty lines
       cat_squeeze_blank "${tor_conf_tmp}" | "${su_cmd}" tee "${tor_conf_tmp}".tmp >/dev/null && "${su_cmd}" mv "${tor_conf_tmp}".tmp "${tor_conf_tmp}"
       signal_tor
+      virtport="$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | sed "s/HiddenServicePort //;s/ .*//" | tr "\n" ",")"
       ## show the Hidden Service address
       test_service_exists "${service}"
       notice "Hidden Service information:"
       notice "Service name    = ${service}"
       notice "Service address = ${magenta}${onion_hostname}${nocolor}"
       notice "Virtual port    = ${virtport}"
-      [ -n "${virtport2}" ] && notice "Virtual port 2  = ${virtport2}"
       command -v qrencode >/dev/null && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"
     }
 
@@ -589,63 +595,65 @@ case "${main}" in
         ## Also, substitutes localhost:port for 127.0.0.1:$port to make exact math for target always, as localhost and 127.0.0.1 mean the same thing
         ## This measures avoid using the same local port for different services
         ## Sanity check
-        port_mid="${port##*"${virtport}" }"
-        target="${port_mid%% *}"
-        port_mid="${port_mid##*"${target}" }"
-        virtport2="${port_mid%% *}"
-        target2="${port##* }"
-        { [ "${virtport}" = "${virtport2}" ] || [ "${target}" = "${virtport2}" ]; } && virtport2="" && target2=""
-        : "${target:=127.0.0.1:"${virtport}"}"
-        ## Standard check for used ports
-        target_addr="${target%%:*}"
-        target_port="${target##*:}"
-        { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
-        "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}" && error_msg "target=${target} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
-        is_integer "${virtport}"; is_addr_port "${target}"
-        ## Optional
-        if [ -n "${virtport2}" ]; then
-          : "${target2:=127.0.0.1:"${virtport2}"}"
-          [ "${target}" = "${target2}" ] && error_msg "target=${target} can't be the same as target2=${target2}"
-          [ "${virtport}" = "${virtport2}" ] && error_msg "virtport=${virtport} can't be the same as virtport2=${virtport2}"
-          ## Standard check for used ports
-          target2_addr="${target2%%:*}"
-          target2_port="${target2##*:}"
-          { [ "${target2_addr}" = "${target2_port}" ] || [ "${target2_addr}" = "localhost" ]; } && target2="127.0.0.1:${target2_port}"
-          "${su_cmd}" grep -q "^HiddenServicePort .* ${target2}$" "${tor_conf}" && error_msg "target2=${target2} is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
-          is_integer "${virtport2}"; is_addr_port "${target2}"
-        fi
-        ## backup torrc
-        safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
-        ## delete any old entry for that servive
-        service_block delete "${service}" "${tor_conf_tmp}"
-        ## add configuration block, empty line after and before it
-        notice "Including Hidden Service configuration to ${tor_conf_tmp}"
-        if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\nHiddenServicePort ${virtport2} ${target2}\n\n" | "${su_cmd}" tee -a "${tor_conf_tmp}"
-        else
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${target}\n\n" | "${su_cmd}" tee -a "${tor_conf_tmp}"
-        fi
+        port="$(printf %s"${port}" | tr " " "\n" | tr "," " " | tr -s " ")"
+
+        fail_log="$(mktemp)"
+        printf '%s\n' "${port}" | while IFS="$(printf '\n')" read -r port_line; do
+          IFS=" " read -r virtport target <<-EOF
+            $(printf '%s\n' "${port_line}")
+					EOF
+          [ -z "${virtport}" ] && break
+          [ -z "${target}" ] && target="127.0.0.1:${virtport}"
+          target_addr="${target%%:*}"
+          target_port="${target##*:}"
+          { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
+          is_integer "${virtport}"
+          is_addr_port "${target}"
+          if "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}"; then
+            echo "1" | tee -a "${fail_log}" >/dev/null
+            error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
+          fi
+          if "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}"; then
+            echo "1" | tee -a "${fail_log}" >/dev/null
+            error_msg "Target '${target}' was specified multiple times, but it can only happen once."
+          fi
+          printf %s"HiddenServicePort ${virtport} ${target}\n" | "${su_cmd}" tee -a "${tor_conf_tmp}"
+        done
+        printf '\n' | "${su_cmd}" tee -a "${tor_conf_tmp}"
+
+        test -s "${fail_log}" && { rm "${fail_log}"; exit 1; }
+
+        ## get info
         finish_service_activation
       ;;
 
       unix)
-        is_integer "${virtport}"
-        virtport2="${port##* }"
-        [ "${virtport}" = "${virtport2}" ] && virtport2=""
-        [ -n "${virtport2}" ] && is_integer "${virtport2}" ## var not mandatory
-        ## backup torrc
-        safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
-        ## delete any old entry for that servive
-        service_block delete "${service}" "${tor_conf_tmp}"
-        ## add configuration block, empty line after and before it
-        notice "Including Hidden Service configuration to ${tor_conf_tmp}"
-        unix_path="unix:/var/run"
-        unix_path="${unix_path%*/}/${service}"
-        if [ -n "${virtport2}" ]; then
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}-onion.sock\nHiddenServicePort ${virtport2} ${unix_path}-${virtport2}-onion.sock\n\n" | "${su_cmd}" tee -a "${tor_conf_tmp}"
-        else
-          printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\nHiddenServicePort ${virtport} ${unix_path}-${virtport}-onion.sock\n\n" | "${su_cmd}" tee -a "${tor_conf_tmp}"
-        fi
+        port="$(printf %s"${port}" | tr "," " " | tr " " "\n" | tr -s " ")"
+        unix_path="unix:/var/run/${service}"
+
+        fail_log="$(mktemp)"
+        printf '%s\n' "${port}" | while IFS="$(printf '\n')" read -r port_line; do
+          IFS=" " read -r virtport <<-EOF
+            $(printf '%s\n' "${port_line}")
+					EOF
+          [ -z "${virtport}" ] && break
+          target="${unix_path}-${virtport}-onion.sock"
+          is_integer "${virtport}"
+          if "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}"; then
+            echo "1" | tee -a "${fail_log}" >/dev/null
+            error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
+          fi
+          if "${su_cmd}" grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}"; then
+            echo "1" | tee -a "${fail_log}" >/dev/null
+            error_msg "Target '${target}' was specified multiple times, but it can only happen once."
+          fi
+          printf %s"HiddenServicePort ${virtport} ${target}\n" | "${su_cmd}" tee -a "${tor_conf_tmp}"
+        done
+        printf '\n' | "${su_cmd}" tee -a "${tor_conf_tmp}"
+
+        test -s "${fail_log}" && { rm -f -- "${fail_log}"; exit 1; }
+
+        ## get info
         finish_service_activation
       ;;
 
@@ -663,6 +671,7 @@ case "${main}" in
 
       server)
         [ -z "${service}" ] && usage
+        [ "${service}" != "@all" ] && check_service_name
         is_service_dir_empty
         case "${status}" in
 
@@ -720,7 +729,7 @@ case "${main}" in
           ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
           ## if no clients are present, the service will be available to anyone that has the onion service address
           f|off)
-                [ -z "${client}" ] && usage
+
             auth_server_remove_clients(){
               service="${1}"
               client="${2}"
@@ -731,7 +740,11 @@ case "${main}" in
                 "${su_cmd}" rm -fv "${tor_data_dir_services}"/"${service}"/authorized_clients/"${client}".auth
               fi
             }
+
+            [ -z "${client}" ] && usage
             [ -z "${service}" ] && error_msg "service is missing"
+            [ "${service}" != "@all" ] && check_service_name
+
             if [ "${service}" = "@all" ]; then
               notice "Removing client authorization for:"
               notice "Service: @all"
@@ -877,6 +890,7 @@ case "${main}" in
   ## @all will read through all services folders and execute the commands.
   renew)
     [ -z "${service}" ] && usage
+    [ "${service}" != "@all" ] && check_service_name
     is_service_dir_empty
 
     renew_delete_old(){
