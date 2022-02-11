@@ -227,6 +227,8 @@ while :; do
   shift "${shift_n}"
 done
 
+[ "$(id -u)" -ne 0 ] && error_msg "run as root"
+
 ###################
 #### VARIABLES ####
 
@@ -433,21 +435,43 @@ service_block(){
   file="${3:-"${tor_conf_tmp}"}"
   i=0
   ## print the exact match HiddenServiceDir of the requested service that must end with the service name or with "/", also prit n lines below it
-  #"${su_cmd}" printf '%s\n' "$(<"${file}")"
-  "${su_cmd}" grep -A 7 -E "^HiddenServiceDir ${tor_data_dir_services}/${service}$|^HiddenServiceDir ${tor_data_dir_services}/${service}/$" "${file}" | while IFS= read -r line; do
-    i=$((i+1))
-    case "${line}" in
-      "HiddenService"*)
-        ## break on next HiddenService configuration
-        [ ${i} -gt 1 ] && [ "${line%% *}" = "HiddenServiceDir" ] && break
-        case "${process}" in
-          print|printf) printf "%s${line}\n";;
-          delete) "${su_cmd}" sed -i'' "s|${line}||" "${file}";;
-        esac
-      ;;
-      ""|*) break;; ## break on lines not beginning with HiddenService or empty
-    esac
-  done
+  match="HiddenServiceDir ${tor_data_dir_services}/${service}"
+  hs_found=""
+  while IFS="$(printf '\n')" read -r line; do
+    [ -z "${hs_found}" ] && printf '%s\n' "${line}" | "${su_cmd}" grep -q -E "^${match}$|^${match}/$" && hs_found="1"
+    if [ "${hs_found}" = "1" ]; then
+      i=$((i+1))
+      case "${line}" in
+        "HiddenServiceStatistics"*) :;; ## relays only
+        "HiddenService"*)
+          ## break on next HiddenService configuration
+          { [ ${i} -gt 1 ] && [ "${line%% *}" = "HiddenServiceDir" ]; } && break
+          case "${process}" in
+            print|printf) printf '%s\n' "${line}";;
+            delete)
+              ## delete only works if hs lines are consecutive,
+              ## meaning no blank lines or commented lines between the wanted hs
+              if [ -z "${hs_lines_delete}" ]; then
+                hs_lines_delete="$(printf '%s\n' "${line}")"
+              else
+                hs_lines_delete="$(printf '%s\n%s\n' "${hs_lines_delete}" "${line}")"
+              fi
+              ;;
+          esac
+        ;;
+      esac
+    fi
+  done < "${file}"
+
+
+  if [ -n "${hs_lines_delete}" ]; then
+    ## sed is a stream line editor, so lets make the file a single line transforming new lines to carriage return
+    hs_lines_delete="$(printf '%s\n' "${hs_lines_delete}" | tr "\n" "\r")"
+    ## then convert the file also as done above, so sed can see the file and pattern on the same format
+    "${su_cmd}" cat "${file}" | tr "\n" "\r" | sed "s|${hs_lines_delete}||" | tr "\r" "\n" | tee tmpfile >/dev/null
+    "${su_cmd}" mv tmpfile "${file}"
+  fi
+
 }
 
 httpd_service_block(){
