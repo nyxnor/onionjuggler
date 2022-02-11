@@ -128,7 +128,8 @@ service_menu(){
   dialog_type="${1}"
   compl_title="${2}"
   i=0
-  for service in $(ls -A "${tor_data_dir_services}"); do
+  for service in "${tor_data_dir_services}"/*; do
+    service="${service##*/}"
     i=$((i+1))
     onion_hostname="$(grep ".onion" "${tor_data_dir_services}"/"${service}"/hostname 2>/dev/null)"
     case "${dialog_type}" in
@@ -289,7 +290,8 @@ PURGE: Service will be permanently disabled, all the directory data, including h
   AUTH_SERVER)
     i=0
     service_list=""
-    for service in $(ls -A "${tor_data_dir_services}"); do
+    for service in "${tor_data_dir_services}"/*; do
+      service="${service##*/}"
       ## only include services that have at least one client
       client_exist="$(ls -A "${tor_data_dir_services}"/"${service}"/authorized_clients/ | sed "s/\.auth//g")"
       if [ -n "${client_exist}" ]; then
@@ -442,7 +444,8 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
   AUTH_CLIENT)
     i=0
-    for onion_auth in $(ls -A "${tor_data_dir_auth}"/); do
+    for onion_auth in "${tor_data_dir_auth}"/*; do
+      onion_auth="${onion_auth##*/}"
       onion_auth_name=${onion_auth%.auth_private}
       i=$((i+1))
       onion_auth_list="$(printf "%s\n%s\n%s\n" "${onion_auth_list}" "${onion_auth_name}" ".")"
@@ -575,7 +578,8 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         service_menu menu "Web server "
         if [ -n "${service_name_list}" ]; then
           i=0
-          for folder in $(ls -A "${website_dir}"); do
+          for folder in "${website_dir}"/*; do
+            folder="${folder##*/}"
             i=$((i+1))
             folder_list="$(printf "%s\n%s\n%s\n" "${folder_list}" "${folder}" ".")"
           done
@@ -595,7 +599,9 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       ;;
       off)
         i=0
-        for service in $(ls -A "${webserver_conf}" | sed "s/-onion.conf//g"); do
+        for service in "${webserver_conf}"/*; do
+          service="${service##*/}"
+          service="${service%*-onion.conf}"
           i=$((i+1))
           service_list="$(printf "%s\n%s\n" "${service_list}" "${service}" "." 0)"
         done

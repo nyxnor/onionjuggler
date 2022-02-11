@@ -804,7 +804,7 @@ case "${main}" in
               notice "\nService: ${service}"
               if [ -n "${client_count}" ]; then
                 [ -n "${client_name_list}" ] && printf %s"Clients: ${client_name_list} (${client_count})\n"
-                for auth in $(ls -A "${tor_data_dir_services}/${service}/authorized_clients/"); do
+                for auth in "${tor_data_dir_services}/${service}/authorized_clients"/*; do
                   notice "${auth}: $(grep "descriptor:x25519:" "${tor_data_dir_services}"/"${service}"/authorized_clients/"${auth}")${nocolor}"
                 done
               else
@@ -892,7 +892,7 @@ case "${main}" in
           l|list)
             if [ "$(ls -A "${tor_data_dir_auth}")" != "" ]; then
               notice "ClientOnionAuthDir ${tor_data_dir_auth}"
-              for auth in $(ls -A "${tor_data_dir_auth}"); do
+              for auth in "${tor_data_dir_auth}"/*; do
                 notice "\nFile name: ${bold}${auth}${nocolor}"
                 notice "Content:   ${bold}$(grep "descriptor:x25519:" "${tor_data_dir_auth}"/"${auth}")${nocolor}"
               done
