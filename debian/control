@@ -1,0 +1,24 @@
+## Copyright (C) 2012 - 2020 ENCRYPTED SUPPORT LP <adrelanos@riseup.net>
+## See the file COPYING for copying conditions.
+
+Source: onionjuggler
+Section: misc
+Priority: optional
+Maintainer: nyxnpor <nyxnor@protonmail.com>
+Build-Depends: debhelper (>= 13), debhelper-compat (= 13),
+Homepage: https://github.com/nyxnor/onionjuggler
+Vcs-Browser: https://github.com/nyxnor/onionjuggler
+Vcs-Git: https://github.com/nyxnor/onionjuggler.git
+Standards-Version: 4.5.1
+Rules-Requires-Root: no
+
+Package: onionjuggler
+Architecture: all
+Depends: tor, ${misc:Depends}
+Description: Onion-Wash to sanitize tor configuration files
+  Feature-rich onion service manager for UNIX-like operating
+  systems written in POSIX compliant shellscript.
+  .
+  OnionJuggler is a minimal requirement, portable collection
+  of scripts and documentation to help the service operator
+  juggle (manage) his onion(s).

@@ -1,0 +1,16 @@
+Package: onionjuggler
+Version: 3:0.0.1-1
+Architecture: all
+Maintainer: nyxnpor <nyxnor@protonmail.com>
+Installed-Size: 118
+Depends: tor
+Section: misc
+Priority: optional
+Homepage: https://github.com/nyxnor/onionjuggler
+Description: Onion-Wash to sanitize tor configuration files
+  Feature-rich onion service manager for UNIX-like operating
+  systems written in POSIX compliant shellscript.
+  .
+  OnionJuggler is a minimal requirement, portable collection
+  of scripts and documentation to help the service operator
+  juggle (manage) his onion(s).

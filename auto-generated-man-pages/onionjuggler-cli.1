@@ -20,15 +20,15 @@ compliant shell
 .PD
 \f[B]onionjuggler-cli on\f[R] [\f[B]--service\f[R] <\f[I]SERVICE\f[R]>]
 [\f[B]--version\f[R] <\f[I]VERSION\f[R]>] [\f[B]--socket\f[R]
-<\f[I]tcp\f[R]>] [\f[B]--port\f[R]
-<\f[I]VIRTPORT\f[R][,\f[I]TARGET\f[R]][,\f[I]VIRTPORT2\f[R]][,\f[I]TARGET2\f[R]]>]
+<\f[I]tcp\f[R]>] [\f[B]--port\f[R] <\f[I]VIRTPORT\f[R]
+[,\f[I]TARGET\f[R]] [\f[I]VIRTPORT2\f[R]][,\f[I]TARGET2\f[R]]>]
 .PD 0
 .P
 .PD
 \f[B]onionjuggler-cli on\f[R] [\f[B]--service\f[R] <\f[I]SERVICE\f[R]>]
 [\f[B]--version\f[R] <\f[I]VERSION\f[R]>] [\f[B]--socket\f[R]
-<\f[I]unix\f[R]> [\f[B]--port\f[R]
-[\f[I]VIRTPORT\f[R][,\f[I]VIRTPORT2\f[R]]>]
+<\f[I]unix\f[R]> [\f[B]--port\f[R] [\f[I]VIRTPORT\f[R]
+[\f[I]VIRTPORT2\f[R]]>]
 .PD 0
 .P
 .PD
@@ -214,19 +214,19 @@ Print configuration in the format key=val.
 Enable an onion service using TCP socket (addr:port) as target.
 If the TARGET is only the port of it TARGET was not provided, will use
 the same port as VIRTPORT and bind to 127.0.0.1.
-TARGET examples: 127.0.0.1:80, 192.168.1.100:80, 140.82.121.3.
+TARGET examples: 127.0.0.1:80, 192.168.1.100:80.
 File(s) modified: torrc.
 .RS
 .IP
 .nf
 \f[C]
 onionjuggler-cli on --service ssh --version 3 --socket tcp --port 22
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port \[dq]22 22\[dq]
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port=\[dq]22 22 80\[dq]
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port=\[dq]22,22,80,80\[dq]
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port \[dq]22 127.0.0.1:22\[dq]
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port \[dq]22 127.0.0.1:22 80\[dq]
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port \[dq]22 127.0.0.1:22 80 127.0.0.1:80\[dq]
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port \[dq]22,22\[dq]
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port=\[dq]22,22 80\[dq]
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port=\[dq]22 80\[dq]
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port \[dq]22,127.0.0.1:22\[dq]
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port \[dq]22,127.0.0.1:22 80\[dq]
+onionjuggler-cli on --service ssh --version 3 --socket tcp --port \[dq]22,127.0.0.1:22 80,127.0.0.1:80\[dq]
 \f[R]
 .fi
 .RE

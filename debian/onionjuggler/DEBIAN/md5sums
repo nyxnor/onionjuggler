@@ -1,0 +1,8 @@
+a29f3563d5700f5bfa3535899ee30803  usr/bin/onionjuggler-cli
+d968dcd17d64d376eb563990cdd344ae  usr/bin/onionjuggler-tui
+1ebcbced5a98f4777aaf44581e97b0bb  usr/share/doc/onionjuggler/changelog.Debian.gz
+4a4dd3598707603b3f76a2378a4504aa  usr/share/doc/onionjuggler/changelog.gz
+81318ab5180aceec9fd3e2400323f371  usr/share/doc/onionjuggler/copyright
+4c507921c35cf8c55435e32360b53ddb  usr/share/man/man1/onionjuggler-cli.1.gz
+76c7f9c6f750cb6b4700c2faf977d645  usr/share/man/man1/onionjuggler-tui.1.gz
+bed98431663fa7f6aa496e71fbcfa303  usr/share/man/man5/onionjuggler.conf.5.gz

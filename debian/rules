@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+## Copyright (C) 2012 - 2020 ENCRYPTED SUPPORT LP <adrelanos@riseup.net>
+## See the file COPYING for copying conditions.
+
+#export DH_VERBOSE=1
+
+%:
+	dh $@
+
+override_dh_installman:
+	dh_installman $(CURDIR)/auto-generated-man-pages/*
+
+override_dh_installchangelogs:
+	dh_installchangelogs changelog.upstream upstream

@@ -25,10 +25,7 @@ error_msg(){ notice "${red}error: ${1}"; exit 1; }
 
 topdir="$(git rev-parse --show-toplevel)"
 check_repo(){
-  if [ ! -f "${topdir}"/bin/onionjuggler-cli ] || [ ! -f "${topdir}"/bin/onionjuggler-tui ] \
-    || [ ! -f "${topdir}"/etc/onionjuggler/sample.conf ] \
-    || [ ! -f "${topdir}"/docs/onionjuggler-cli.1.md ] || [ ! -f "${topdir}"/docs/onionjuggler-tui.1.md ] \
-    || [ ! -f "${topdir}"/docs/onionjuggler.conf.5.md ]; then
+  if [ ! -f "${topdir}"/usr/bin/onionjuggler-cli ] || [ ! -f "${topdir}"/usr/bin/onionjuggler-tui ]; then
     error_msg "This script must be run from inside the onionjuggler repository!"
   fi
 }
@@ -84,6 +81,10 @@ done
 ###################
 #### FUNCTIONS ####
 
+requires_root(){ [ "$(id -u)" -ne 0 ] && error_msg "run as root"; }
+
+not_as_root(){ [ "$(id -u)" -eq 0 ] && error_msg "do not run this option as root"; }
+
 check_dir(){
   [ -d "${bin_dir:="/usr/local/bin"}" ] || error_msg "Your system does not seems to support bin_dir=${bin_dir}"
   [ -d "${conf_dir:="/etc"}" ] || error_msg "Your system does not seems to support conf_dir=${conf_dir}"
@@ -115,7 +116,7 @@ install_package(){
           ! command -v openssl >/dev/null && package="openssl" && install_pkg=1
         fi
       ;;
-      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! ${su_cmd} "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
+      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
       openbsd-httpd) :;;
       libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
       *) ! command -v "${package}" >/dev/null && install_pkg=1;;
@@ -124,7 +125,7 @@ install_package(){
     if [ "${install_pkg}" = 1 ]; then
       notice "${nocolor}Installing ${package}"
       # shellcheck disable=SC2086
-      "${su_cmd}" ${pkg_mngr_install} "${package}"
+      ${pkg_mngr_install} "${package}"
     fi
   done
 }
@@ -133,7 +134,7 @@ install_package(){
 make_shellcheck(){
   notice "${yellow}Checking shell syntax${nocolor}"
   ## Customize severity with -S [error|warning|info|style]
-  if ! shellcheck configure.sh etc/onionjuggler/*.conf bin/*; then
+  if ! shellcheck configure.sh etc/onionjuggler/*.conf usr/bin/*; then
     error_msg "Please fix the shellcheck warnings above before pushing!"
   fi
 }
@@ -141,9 +142,10 @@ make_shellcheck(){
 
 make_man(){
   notice "${magenta}Creating manual pages${nocolor}"
-  pandoc -s -f markdown-smart -t man "${topdir}"/docs/onionjuggler-cli.1.md -o "${topdir}"/man/man1/onionjuggler-cli.1
-  pandoc -s -f markdown-smart -t man "${topdir}"/docs/onionjuggler-tui.1.md -o "${topdir}"/man/man1/onionjuggler-tui.1
-  pandoc -s -f markdown-smart -t man "${topdir}"/docs/onionjuggler.conf.5.md -o "${topdir}"/man/man5/onionjuggler.conf.5
+  for man in "${topdir}"/man/*; do
+    man="${man##*/}"
+    pandoc -s -f markdown-smart -t man "${topdir}/man/${man}" -o "${topdir}/auto-generated-man-pages/${man%*.md}"
+  done
 }
 
 
@@ -263,6 +265,7 @@ case "${command}" in
 
   -u|--update)
     check_repo
+    not_as_root
     notice "${magenta}Pulling, hold back${nocolor}"
     git pull "${onionjuggler_repo}"
     "${0}" -i
@@ -271,57 +274,59 @@ case "${command}" in
   -i|--install)
     check_repo
     check_dir
+    requires_root
     notice "${magenta}Checking requirements${nocolor}"
     # shellcheck disable=SC2086
     install_package ${requirements}
     ## see https://github.com/nyxnor/onionjuggler/issues/15 about using complete path to binary
     ## see https://github.com/nyxnor/onionjuggler/issues/29 about usermod not appending with -a
     #notice "${cyan}Appending ${USER} to the ${tor_user} group${nocolor}"
-    #"${su_cmd}" /usr/sbin/usermod -G "${tor_user}" "${USER}"
+    #/usr/sbin/usermod -G "${tor_user}" "${USER}"
     notice "${yellow}Creating tor directories${nocolor}"
-    [ ! -d "${tor_data_dir_services}" ] && "${su_cmd}" mkdir -p "${tor_data_dir_services}"
-    [ ! -d "${tor_data_dir_auth}" ] && "${su_cmd}" mkdir -p "${tor_data_dir_auth}"
-    "${su_cmd}" chown -R "${tor_user}":"${tor_user}" "${tor_data_dir}"
+    [ ! -d "${tor_data_dir_services}" ] && mkdir -p "${tor_data_dir_services}"
+    [ ! -d "${tor_data_dir_auth}" ] && mkdir -p "${tor_data_dir_auth}"
+    chown -R "${tor_user}":"${tor_user}" "${tor_data_dir}"
     notice "${green}Copying files to path${nocolor}"
-    [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man1"
-    [ ! -d "${man_dir}/man1" ] && "${su_cmd}" mkdir -p "${man_dir}/man5"
-    "${su_cmd}" cp "${topdir}"/man/man1/onionjuggler-cli.1 "${topdir}"/man/man1/onionjuggler-tui.1 "${man_dir}/man1"
-    "${su_cmd}" cp "${topdir}"/man/man5/onionjuggler.conf.5 "${man_dir}/man5"
-    "${su_cmd}" cp "${topdir}"/bin/onionjuggler-cli "${topdir}"/bin/onionjuggler-tui "${bin_dir}"
-    [ ! -d "${conf_dir}/onionjuggler" ] && "${su_cmd}" mkdir -p "${conf_dir}/conf.d"
-    "${su_cmd}" cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
+    [ ! -d "${man_dir}/man1" ] && mkdir -p "${man_dir}/man1"
+    [ ! -d "${man_dir}/man1" ] && mkdir -p "${man_dir}/man5"
+    cp "${topdir}"/man/man1/onionjuggler-cli.1 "${topdir}"/man/man1/onionjuggler-tui.1 "${man_dir}/man1"
+    cp "${topdir}"/man/man5/onionjuggler.conf.5 "${man_dir}/man5"
+    cp "${topdir}"/usr/bin/onionjuggler-cli "${topdir}"/usr/bin/onionjuggler-tui "${bin_dir}"
+    [ ! -d "${conf_dir}/onionjuggler" ] && mkdir -p "${conf_dir}/conf.d"
+    cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
     get_os
     ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch/blob/master/neofetch
     case "${os}" in
       Linux*)
         case "${distro}" in
-          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
-          "Arch"*|"Artix"*|"ArcoLinux"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
-          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") "${su_cmd}" cp "${topdir}"/etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
+          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) cp "${topdir}"/etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
+          "Arch"*|"Artix"*|"ArcoLinux"*) cp "${topdir}"/etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
+          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") cp "${topdir}"/etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac
       ;;
-      "OpenBSD"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/openbsd.conf "${conf_dir}/onionjuggler.conf";;
-      "NetBSD"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
-      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) "${su_cmd}" cp "${topdir}"/etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
+      "OpenBSD"*) cp "${topdir}"/etc/onionjuggler/openbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "NetBSD"*) cp "${topdir}"/etc/onionjuggler/netbsd.conf "${conf_dir}/onionjuggler.conf";;
+      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) cp "${topdir}"/etc/onionjuggler/freebsd.conf "${conf_dir}/onionjuggler.conf";;
     esac
     notice %s"${blue}OnionJuggler enviroment is ready${nocolor}"
   ;;
 
   -d|--uninstall)
     check_dir
+    requires_root
     notice "${red}Removing OnionJuggler scripts from your system.${nocolor}"
-    "${su_cmd}" rm -f "${man_dir}/man1/onionjuggler-cli.1" "${man_dir}/man1/onionjuggler-tui.1"
-    "${su_cmd}" rm -f "${man_dir}/man5/onionjuggler.conf.5"
-    "${su_cmd}" rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui"
+    rm -f "${man_dir}/man1/onionjuggler-cli.1" "${man_dir}/man1/onionjuggler-tui.1" "${man_dir}/man5/onionjuggler.conf.5"
+    rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui"
     if [ "${action}" = "-P" ] || [ "${action}" = "--purge" ]; then
       notice "${red}Purging OnionJuggler configuration from your system.${nocolor}"
-      "${su_cmd}" rm -f "${conf_dir}/onionjuggler"
+      rm -f "${conf_dir}/onionjuggler"
     fi
     notice "${green}Done!${nocolor}"
   ;;
 
   -r|--release)
     check_repo
+    not_as_root
     notice "${blue}Preparing release${nocolor}"
     install_package shellcheck pandoc git
     make_man
@@ -337,7 +342,7 @@ case "${command}" in
 
   -k|--check) check_repo; make_shellcheck;;
 
-  -m|--man) check_repo; make_man;;
+  -m|--man) check_repo; not_as_root; make_man;;
 
   *) usage;;
 
