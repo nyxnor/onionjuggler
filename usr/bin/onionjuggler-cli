@@ -615,7 +615,7 @@ case "${main}" in
       ## remove double empty lines
       cat_squeeze_blank "${tor_conf_tmp}" | tee "${tor_conf_tmp}".tmp >/dev/null && mv "${tor_conf_tmp}".tmp "${tor_conf_tmp}"
       signal_tor
-      virtport="$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | sed "s/HiddenServicePort //;s/ .*//" | tr "\n" ",")"
+      virtport="$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | sed "s/HiddenServicePort //;s/ .*//" | tr "\n" "," | sed "s/\,$//")"
       ## show the Hidden Service address
       test_service_exists "${service}"
       notice "Hidden Service information:"
@@ -647,12 +647,12 @@ case "${main}" in
           { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
           is_integer "${virtport}"
           is_addr_port "${target}"
-          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}"; then
+          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
           fi
-          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}"; then
+          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf_tmp}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' was specified multiple times, but it can only happen once."
