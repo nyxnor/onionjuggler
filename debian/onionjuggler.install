@@ -1,8 +1,6 @@
-## Copyright (C) 2020 - 2020 ENCRYPTED SUPPORT LP <adrelanos@riseup.net>
-## See the file COPYING for copying conditions.
+#!/usr/bin/dh-exec
 
-## This file was generated using genmkfile 'make debinstfile'.
-
-etc/onionjuggler/dialogrc
 etc/onionjuggler/conf.d/*
+etc/onionjuggler/debian.conf => etc/onionjuggler/onionjuggler.conf
+etc/onionjuggler/dialogrc
 usr/*

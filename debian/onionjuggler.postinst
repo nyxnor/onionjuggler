@@ -1,5 +1,0 @@
-#!/usr/bin/dh-exec-install
-
-## debian.conf should be renamed onionjuggler.conf
-
-etc/onionjuggler/debian.conf => /etc/onionjuggler/onionjuggler.conf
