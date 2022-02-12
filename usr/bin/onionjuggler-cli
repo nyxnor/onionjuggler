@@ -60,12 +60,12 @@ _@v'':i''L,'''''_{'_'y''kJu@6jjuuuujjjN@-
 ${nocolor}
 Usage: ${me} command [--option <ARGUMENT>]
 \nComplete options:
-  on [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT [VIRTPORT2]>]
+  activate [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT [VIRTPORT2]>]
                                                              enable a service listening with tcp sockets
-  on [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[,TARGET] [,VIRTPORT2][,TARGET2]>]
+  deactivate [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[,TARGET] [,VIRTPORT2][,TARGET2]>]
                                                              enable a service listening on unix sockets
-  off [--purge] [--service <@all|SERV1,SERV2,...>            disable a service and optionally purge its directory
-  list [--quiet] [--service <@all|SERV1,SERV2,...>]          see credentials from indicated services
+  deactivate [--purge] [--service <@all|SERV1,SERV2,...>     disable a service and optionally purge its directory
+  info [--quiet] [--service <@all|SERV1,SERV2,...>]          see credentials from indicated services
   renew [--service <@all|SERV1,SERV2,...>]                   renew indicated services addresses
   auth-server --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-key <CLIENT_PUB_KEY>]
                                                              add client authorization, optionally add client's public key
@@ -88,7 +88,7 @@ Usage: ${me} command [--option <ARGUMENT>]
 
 Options:
   --getconf                                                  print configuration
-  --getcliopt                                                print options given by the command line
+  --getopt                                                   print options given by the command line
   on                                                         activate an onion service
     -s, --service <SERVICE>                                  service to activate
     -S, --socket <tcp|unix>                                  define a socket for the new onion service
@@ -97,7 +97,7 @@ Options:
   off                                                        deactivate an onion service configuration
     -s, --service <SERV1,SERV2,...>                          service to deactivate
     -P, --purge                                              purge the onion service data
-  list                                                       list existing services and their configuration, clients
+  info                                                       list existing services and their configuration, clients
     -s, --service <@all|SERV1,SERV2,...>                     list all services or a indicate them comma separated
     -q, --quiet                                              don't QR encode the hostname
   auth-server                                                manage authorized_clients
@@ -138,7 +138,7 @@ Advanced:
   -r, --reload                                             signal tor to reload (default option)
 
 Option names:
-  main                                                       on, off, list, renew, auth-server, auth-client, web, location, vanguards
+  main                                                       activate, deactivate, info, renew, auth-server, auth-client, web, location, vanguards
   status                                                     --on, --off, --list
   action                                                     --purge, --quiet, --nginx, --apache2, --html, --make, --integrate
   signal                                                     --restart, --reload
@@ -161,76 +161,91 @@ If your services are unreacheable, restart tor.
 ########################
 #### OPTION PARSING ####
 
-## code and commentes teaching how to getopts on:
+## this getopts might seem complex, so check this template
 ##  https://github.com/nyxnor/scripts/blob/master/getopts.sh
 
-## assign_value variable_name "${opt}"
-## it strips the dashes and assign the clean value to the variable
-## assign_value status --on IS status=on
-## variable_name is the name you want it to have
-## $opt being options with single or double dashes that don't require arguments
-assign_value(){
-  case "${2}" in
-    --*) value="${2#--}";;
-    -*) value="${2#-}";;
-    *) value="${2}"
-  esac
-  ## Escaping quotes is needed because else if will fail if the argument is quoted
-  # shellcheck disable=SC2140
-  eval "${1}"="\"${value}\""
+## check if argument is within range
+## usage:
+## $ range_arg key "1-5"
+## $ range_arg key "1" "2" "3" "4" "5"
+## $ range_arg key "a-cA-C"
+## $ range_arg key "a" "b" "c" "A" "B" "C"
+range_arg(){
+  list="${*}"
+  eval var='$'"${1}"
+  range="${list#"${1} "}"
+  if [ -n "${var:-}" ]; then
+    success=0
+    for tests in ${range}; do
+      ## it needs to expand for ranges 'a-z' to be evaluated, and not considered as a value to be used
+      # shellcheck disable=SC2295
+      [ "${var%%*[^${tests}]*}" ] && success=1
+    done
+    ## if not withing range, fail and show the fixed range that can be used
+    [ ${success} -ne 1 ] && error_msg "Option '${opt_orig}'can not be '${var}'! It can only be: ${range}."
+  fi
 }
 
-## get_arg variable_name "${opt}" "${arg}"
-## get_arg service --service ssh
-## variable_name is the name you want it to have
-## $opt being options with single or double dashes
-## $arg is requiring and argument, else it fails
-## assign_value "${1}" "${3}" means it is assining the argument ($3) to the variable_name ($1)
+## if option requires argument, check if it was provided, if yes, assign the arg to the opt
+## $arg was already assigned, and if valid, will use it for the key value
+## usage: get_arg key
 get_arg(){
-  case "${3}" in
-    ""|-*) error_msg "Option '${2}' requires an argument.";;
-  esac
-  assign_value "${1}" "${3}"
+  ## if argument is empty or starts with '-', fail as it possibly is an option
+  case "${arg}" in ""|-*) error_msg "Option '${opt_orig}' requires an argument.";; esac
+  ## assign
+  value="${arg}"
+  ## Escaping quotes is needed because else it will fail if the argument is quoted
+  # shellcheck disable=SC2140
+  eval "${1}"="\"${value}\""
+
+  ## shift positional argument two times, as this option demands argument, unless they are separated by equal sign '='
+  ## shift_n default value was assigned when trimming hifens '--' from the options
+  ## if shift_n is equal to zero, '--option arg'
+  ## if shift_n is not equal to zero, '--option=arg'
+  [ -z "${shift_n}" ] && shift_n=2
 }
 
 ## hacky getopts
-## 1. if the option requires argument, and the option is preceeded by single or double dash and it
-##    can be it can be specified with '-s=ssh' or '-s ssh' or '--service=ssh' or '--service ssh'
-##    use: get_arg variable_name "${opt}" "${arg}"
-## 2. if a bunch of options that does different things are to be assigned to the same variable
-##    and the option is preceeded by single or double dash use: assign_value variable_name "${opt}"
-##    as this option does not require argument, specifu $shift_n=1
-## 3. if the option does not start with dash and does not require argument, assign to command manually.
+## accepts long (--option) and short (-o) options
+## accept argument assignment with space (--option arg | -o arg) or equal sign (--option=arg | -o=arg)
 while :; do
-  case "${1}" in
-    -*=*) opt="${1%=*}"; arg="${1#*=}"; shift_n=1;;
-    -*) opt="${1}"; arg="${2}"; shift_n=2;;
-    *) opt="${1}"; arg="${2}"; shift_n=1;;
+  ## '--option=value' should shift once and '--option value' should shift twice
+  ## but at this point it is not possible to be sure if option requires an argument
+  ## reset shift to zero, at the end, if it is still 0, it will be assigned to one
+  ## has to be zero here so we can check later if option argument is separated by space ' ' or equal sign '='
+  shift_n=""
+  opt_orig="${1}" ## save opt orig for error message to understand which opt failed
+  case "${opt_orig}" in
+    ""|--) break;; ## options ended
+    --*=*) opt="${1%=*}"; opt="${opt#*--}"; arg="${1#*=}"; shift_n=1;; ## long option '--sleep=1'
+    -*=*) opt="${1%=*}"; opt="${opt#*-}"; arg="${1#*=}"; shift_n=1;; ## short option '-s=1'
+    --*) opt="${1#*--}"; arg="${2}";; ## long option '--sleep 1'
+    -*) opt="${1#*-}"; arg="${2}";; ## short option '-s 1'
+    *) usage;; ## not an option
   esac
   case "${opt}" in
-    on|off|list|renew|auth-server|auth-client|web|location|backup|vanguards) main="${opt}"; shift_n=1;;
-    --getcliopt|--getconf) assign_value main "${opt}"; shift_n=1;;
-    --on|--off|--list|-n|-f|-l) assign_value status "${opt}"; shift_n=1;;
-    -R|--restart|-r|--reload) assign_value signal "${opt}"; shift_n=1;;
-    -P|--purge|--nginx|--apache2|--html|-q|--quiet|-M|--make|-I|--integrate) assign_value action "${opt}"; shift_n=1;;
-    -s|--service|-s=*|--service=*) get_arg service "${opt}" "${arg}";;
-    -c|--client|-c=*|--client=*) get_arg client "${opt}" "${arg}";;
-    -o|--onion|-o=*|--onion=*) get_arg onion "${opt}" "${arg}";;
-    -v|--version|-v=*|--version=*) get_arg version "${opt}" "${arg}";;
-    -S|--socket|-S=*|--socket=*) get_arg socket "${opt}" "${arg}";;
-    -p|--port|-p=*|--port=*) get_arg port "${opt}" "${arg}";;
-    -w|--folder|-w=*|--folder=*) get_arg folder "${opt}" "${arg}";;
-    -k|--client-priv-key|-k=*|--client-priv-key=*) get_arg client_priv_key "${opt}" "${arg}";;
-    -K|--client-pub-key|-K=*|--client-pub-key=*) get_arg client_pub_key "${opt}" "${arg}";;
-    -C|--config|-C=*|--config=*) get_arg ONIONJUGGLER_CONF "${opt}" "${arg}";;
-    "") break;;
-    -h|--help|help) usage;;
-    *) error_msg "Invalid option: ${opt}";;
+    activate|deactivate|info|renew|auth-server|auth-client|web|location|backup|vanguards) main="${opt}";;
+    getopt|getopts|getconf) dev="${opt}";;
+    on|off|list|n|f|l) status="${opt}";;
+    R|restart|r|reload) signal="${opt}";;
+    P|purge|nginx|apache2|html|q|quiet|M|make|I|integrate) action="${opt}";;
+    s|service|s=*|service=*) get_arg service;;
+    c|client|c=*|client=*) get_arg client;;
+    o|onion|o=*|onion=*) get_arg onion;;
+    v|version|v=*|version=*) get_arg version;;
+    S|socket|S=*|socket=*) get_arg socket;;
+    p|port|p=*|port=*) get_arg port;;
+    w|folder|w=*|folder=*) get_arg folder;;
+    k|client-priv-key|k=*|client-priv-key=*) get_arg client_priv_key;;
+    K|client-pub-key|K=*|client-pub-key=*) get_arg client_pub_key;;
+    C|config|C=*|config=*) get_arg ONIONJUGGLER_CONF;;
+    h|help) usage;;
+    *) error_msg "Invalid option: '${opt_orig}'";;
   esac
-  shift "${shift_n}"
+  ## shift as many times as demanded
+  ## if empty, shift at least once to pass to next option
+  shift "${shift_n:-1}"
 done
-
-[ "$(id -u)" -ne 0 ] && error_msg "run as root"
 
 ###################
 #### VARIABLES ####
@@ -394,13 +409,16 @@ is_addr_port(){
 ## no better way to do with posix utilities
 check_folder_is_not_empty(){
   dir="${1}"
-  [ -d "${dir}" ] && files=$(ls -qAH -- "${dir}") && [ -z "${files}" ] || return 1
+  if [ -d "${dir}" ] && files=$(ls -qAH -- "${dir}") && [ -z "${files}" ]; then
+   return 1
+  else
+    return 0
+  fi
 }
 
 
 is_service_dir_empty(){
-  check_folder_is_not_empty "${tor_data_dir_services}" || \
-  error_msg "Onion services directory is empty. Create a service first before running this command again."
+  check_folder_is_not_empty "${tor_data_dir_services}" || error_msg "Onion services directory is empty. Create a service first before running this command again."
 }
 
 
@@ -416,12 +434,14 @@ test_service_exists(){
 ## save the clients names that are inside the <HiddenServiceDir>/authorized_clients/ in list format (CLIENT1,CLIENT2,...)
 create_client_list(){
   service="${1}"
+  client_name_list=""
   for client_listed in "${tor_data_dir_services}/${service}/authorized_clients"/*; do
     client_listed="${client_listed##*/}"
+    [ "${client_listed}" = "*" ] && break
     client_listed="${client_listed%*.auth}"
     client_name_list="$(printf '%s\n%s\n' "${client_name_list}" "${client_listed}")"
   done
-  client_name_list="$(printf '%s\n' "${client_name_list}" | tr "\n" ",")"
+  [ -n "${client_name_list}" ] && client_name_list="$(printf '%s\n' "${client_name_list}" | tr "\n" "," | sed "s/\,$//" | sed "s/^,//")"
   client_count=""
   # shellcheck disable=SC2086
   [ -n "${client_name_list}" ] && client_count="$(IFS=','; set -f -- ${client_name_list}; printf %s"${#}")"
@@ -549,35 +569,41 @@ check_service_name(){
 ###########################
 ########## MAIN ###########
 
-case "${main}" in
-
+## development options
+case "${dev}" in
   ## execute or modify nothing, just print the configuration values
   ## usefult to see if there is nothing messed up and if there is, can be checked before running the cli.
   getconf)
     for key in ONIONJUGGLER_CONF su_cmd openssl_cmd webserver webserver_conf website_dir vanguards_commit \
     tor_daemon tor_user tor_conf_user_group tor_data_dir tor_data_dir_services tor_data_dir_auth tor_conf_dir tor_control_port tor_backup_dir; do
       eval val='$'"${key}"
-      [ -n "${val:-}" ] && printf '%s\n' "${key}=${val}"
+      [ -n "${val:-}" ] && printf '%s\n' "${key}=\"${val}\""
     done
     exit 1
   ;;
 
   ## only print the options given on the command line, mostly for development purposes to check the argument
   ## but can be useful to see if the command is correct before running it.
-  getcliopt)
+  getopt|getopts)
     for key in signal main service client onion status action version socket port folder client_priv_key client_pub_key; do
       eval val='$'"${key}"
-      [ -n "${val}" ] && printf '%s\n' "${key}=${val}"
+      [ -n "${val}" ] && printf '%s\n' "${key}=\"${val}\""
     done
     exit 1
   ;;
+esac
+
+## user option
+[ "$(id -u)" -ne 0 ] && error_msg "run as root"
+case "${main}" in
+
 
   ## disable a service by removing service torrc's block.
   ## it is raw, services variables should be separated by an empty line per service, else you might get other non-related configuration deleted.
   ## purge is optional, it deletes the <HiddenServiceDir>
   ## will not check if folder or configuration exist, this is cleanup mode
   ## will not use '@all'. Purge is dangerous, purging all service is even more dangerous. Always backup.
-  f|off)
+  deactivate)
     [ -z "${service}" ] && usage
     delete_service(){
       service="${1}"
@@ -615,8 +641,8 @@ case "${main}" in
   ##  if target is not specified, will use the same port from virtport and bind to localhost.
   ##  if target only contains the port number and not the address, will bind to localhost.
   ## virtport2 and target 2 are optional
-  n|on)
-    [ -z "${service}" ] && usage
+  activate)
+    [ -z "${service}" ] && error_msg "service name can not be empty"
     check_service_name
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version ${version} is not available" ## wait for v4 to change this
     : "${socket:=tcp}"
@@ -998,7 +1024,7 @@ case "${main}" in
   ## show all the necessary information to access the service such as the hostname and the QR encoded hostname to scan for Tor Browser Mobile
   ## show the clients names and quantity, as well as the service torrc's block
   ## @all will read through all services folders and execute the commands
-  l|list)
+  info)
     is_service_dir_empty
     [ -z "${service}" ] && usage
     get_service_info(){

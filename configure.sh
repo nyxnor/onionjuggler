@@ -53,27 +53,53 @@ usage(){
 }
 [ -z "${1}" ] && usage
 
+## if option requires argument, check if it was provided, if yes, assign the arg to the opt
+## $arg was already assigned, and if valid, will use it for the key value
+## usage: get_arg key
 get_arg(){
-  case "${2}" in
-    ""|-*) error_msg "Option '${1}' requires an argument.";;
-  esac
+  ## if argument is empty or starts with '-', fail as it possibly is an option
+  case "${arg}" in ""|-*) error_msg "Option '${opt_orig}' requires an argument.";; esac
+  ## assign
+  value="${arg}"
+  ## Escaping quotes is needed because else it will fail if the argument is quoted
+  # shellcheck disable=SC2140
+  eval "${1}"="\"${value}\""
+
+  ## shift positional argument two times, as this option demands argument, unless they are separated by equal sign '='
+  ## shift_n default value was assigned when trimming hifens '--' from the options
+  ## if shift_n is equal to zero, '--option arg'
+  ## if shift_n is not equal to zero, '--option=arg'
+  [ -z "${shift_n}" ] && shift_n=2
 }
 
+## hacky getopts
+## accepts long (--option) and short (-o) options
+## accept argument assignment with space (--option arg | -o arg) or equal sign (--option=arg | -o=arg)
 while :; do
-  case "${1}" in
-    -*=*) arg="${1#*=}"; shift_n=1;;
-    *) arg="${2}"; shift_n=2;;
+  ## '--option=value' should shift once and '--option value' should shift twice
+  ## but at this point it is not possible to be sure if option requires an argument
+  ## reset shift to zero, at the end, if it is still 0, it will be assigned to one
+  ## has to be zero here so we can check later if option argument is separated by space ' ' or equal sign '='
+  shift_n=""
+  opt_orig="${1}" ## save opt orig for error message to understand which opt failed
+  case "${opt_orig}" in
+    ""|--) break;; ## options ended
+    --*=*) opt="${1%=*}"; opt="${opt#*--}"; arg="${1#*=}"; shift_n=1;; ## long option '--sleep=1'
+    -*=*) opt="${1%=*}"; opt="${opt#*-}"; arg="${1#*=}"; shift_n=1;; ## short option '-s=1'
+    --*) opt="${1#*--}"; arg="${2}";; ## long option '--sleep 1'
+    -*) opt="${1#*-}"; arg="${2}";; ## short option '-s 1'
+    *) usage;; ## not an option
   esac
-  case "${1}" in
-    -c|--clone|-i|--install|-u|--update|-d|--uninstall|-r|--release|-k|--check|-m|--man) command="${1}"; shift;;
-    -P|--purge) action="${1}"; shift;;
-    -C|--config|-C=*|--confg=*) ONIONJUGGLER_CONF="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -B|--bin-dir|-B=*|--bin-dir=*) bin_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -F|--conf-dir|-F=*|--confi-dir=*) conf_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -M|--man-dir|-M=*|--man-dir=*) man_dir="${arg}"; get_arg "${1}" "${arg}"; shift "${shift_n}";;
-    -h|--help) usage;;
+  case "${opt}" in
+    c|clone|i|install|u|update|d|uninstall|r|release|k|check|m|man) command="${opt}"; shift;;
+    P|purge) action="${opt}"; shift;;
+    C|config|C=*|confg=*) get_arg ONIONJUGGLER_CONF;;
+    B|bin-dir|B=*|bin-dir=*) get_arg bin_dir;;
+    F|conf-dir|F=*|confi-dir=*) get_arg conf_dir;;
+    M|man-dir|M=*|man-dir=*) get_arg man_dir;;
+    h|help) usage;;
     "") break;;
-    *) error_msg "Invalid option: ${1}";;
+    *) error_msg "Invalid option: '${opt}'";;
   esac
 done
 
@@ -249,7 +275,7 @@ range_variable dialog_box dialog whiptail
 
 case "${command}" in
 
-  -c|--clone)
+  c|clone)
     if ! check_repo; then
       git clone "${onionjuggler_repo}"
       onionjuggler_dir="${onionjuggler_repo%*.git}"
@@ -263,7 +289,7 @@ case "${command}" in
     fi
   ;;
 
-  -u|--update)
+  u|update)
     check_repo
     not_as_root
     notice "${magenta}Pulling, hold back${nocolor}"
@@ -271,7 +297,7 @@ case "${command}" in
     "${0}" -i
   ;;
 
-  -i|--install)
+  i|install)
     check_repo
     check_dir
     requires_root
@@ -289,8 +315,10 @@ case "${command}" in
     notice "${green}Copying files to path${nocolor}"
     [ ! -d "${man_dir}/man1" ] && mkdir -p "${man_dir}/man1"
     [ ! -d "${man_dir}/man1" ] && mkdir -p "${man_dir}/man5"
-    cp "${topdir}"/man/man1/onionjuggler-cli.1 "${topdir}"/man/man1/onionjuggler-tui.1 "${man_dir}/man1"
-    cp "${topdir}"/man/man5/onionjuggler.conf.5 "${man_dir}/man5"
+    for man in "${topdir}"/auto-generated-man-pages/*; do
+      man_extension="${man##*.}"
+      cp "${man}" "${man_dir}/man${man_extension}"
+    done
     cp "${topdir}"/usr/bin/onionjuggler-cli "${topdir}"/usr/bin/onionjuggler-tui "${bin_dir}"
     [ ! -d "${conf_dir}/onionjuggler" ] && mkdir -p "${conf_dir}/conf.d"
     cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
@@ -311,7 +339,7 @@ case "${command}" in
     notice %s"${blue}OnionJuggler enviroment is ready${nocolor}"
   ;;
 
-  -d|--uninstall)
+  d|uninstall)
     check_dir
     requires_root
     notice "${red}Removing OnionJuggler scripts from your system.${nocolor}"
@@ -324,7 +352,7 @@ case "${command}" in
     notice "${green}Done!${nocolor}"
   ;;
 
-  -r|--release)
+  r|release)
     check_repo
     not_as_root
     notice "${blue}Preparing release${nocolor}"
@@ -340,9 +368,9 @@ case "${command}" in
     notice "${green}Done!${nocolor}"
   ;;
 
-  -k|--check) check_repo; make_shellcheck;;
+  k|check) check_repo; make_shellcheck;;
 
-  -m|--man) check_repo; not_as_root; make_man;;
+  m|man) check_repo; not_as_root; make_man;;
 
   *) usage;;
 

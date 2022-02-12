@@ -88,7 +88,7 @@ Usage: ${me} command [--option <ARGUMENT>]
 
 Options:
   --getconf                                                  print configuration
-  --getcliopt                                                print options given by the command line
+  --getopt                                                print options given by the command line
   on                                                         activate an onion service
     -s, --service <SERVICE>                                  service to activate
     -S, --socket <tcp|unix>                                  define a socket for the new onion service
@@ -206,7 +206,7 @@ while :; do
   esac
   case "${opt}" in
     on|off|list|renew|auth-server|auth-client|web|location|backup|vanguards) main="${opt}"; shift_n=1;;
-    --getcliopt|--getconf) assign_value main "${opt}"; shift_n=1;;
+    --getopt|--getconf) assign_value main "${opt}"; shift_n=1;;
     --on|--off|--list|-n|-f|-l) assign_value status "${opt}"; shift_n=1;;
     -R|--restart|-r|--reload) assign_value signal "${opt}"; shift_n=1;;
     -P|--purge|--nginx|--apache2|--html|-q|--quiet|-M|--make|-I|--integrate) assign_value action "${opt}"; shift_n=1;;
@@ -549,7 +549,7 @@ case "${main}" in
 
   ## only print the options given on the command line, mostly for development purposes to check the argument
   ## but can be useful to see if the command is correct before running it.
-  getcliopt)
+  getopt)
     for key in signal main service client onion status action version socket port folder client_priv_key client_pub_key; do
       eval val='$'"${key}"
       [ -n "${val}" ] && printf '%s\n' "${key}=${val}"

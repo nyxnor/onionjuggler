@@ -197,11 +197,11 @@ man onionjuggler.conf
 
 To create a service named `terminator`, it is as easy as possible:
 ```sh
-onionjuggler-cli on -s terminator -p 80
+onionjuggler-cli activate -s terminator -p 80
 ```
 But can be as advanced as specifying all the parameters:
 ```sh
-onionjuggler-cli on --service terminator --socket unix --version 3 --port 80,127.0.0.1:80
+onionjuggler-cli activate --service terminator --socket unix --version 3 --port 80,127.0.0.1:80
 ```
 
 ## Featured on

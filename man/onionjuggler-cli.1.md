@@ -13,9 +13,9 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 
 
 **onionjuggler-cli getconf**\
-**onionjuggler-cli on** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT* [,*TARGET*] [*VIRTPORT2*][,*TARGET2*]>]\
-**onionjuggler-cli on**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*> [**--port** [*VIRTPORT* [*VIRTPORT2*]>]\
-**onionjuggler-cli off** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
+**onionjuggler-cli activate** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT* [,*TARGET*] [*VIRTPORT2*][,*TARGET2*]>]\
+**onionjuggler-cli activate**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*> [**--port** [*VIRTPORT* [*VIRTPORT2*]>]\
+**onionjuggler-cli deactivate** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
 **onionjuggler-cli list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
 **onionjuggler-cli renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
 **onionjuggler-cli auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
@@ -111,176 +111,172 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 
 : Print configuration in the format key=val.
 
-**getcliopt**
+**getopt**
 
 
 
-**on** **--service** [*SERV*] **--version** *3* **--socket** *tcp* **--port** [*VIRTPORT*,<*TARGET*>,<*VIRTPORT2*>,<*TARGET2*>]
+**--activate** **--service** [*SERV*] **--version** *3* **--socket** *tcp* **--port** [*VIRTPORT*,<*TARGET*>,<*VIRTPORT2*>,<*TARGET2*>]
 
 : Enable an onion service using TCP socket (addr:port) as target. If the TARGET is only the port of it TARGET was not provided, will use the same port as VIRTPORT and bind to 127.0.0.1. TARGET examples: 127.0.0.1:80, 192.168.1.100:80. File(s) modified: torrc.
 ```
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port 22
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22,22"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port="22,22 80"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port="22 80"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80"
-onionjuggler-cli on --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80,127.0.0.1:80"
+onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port 22
+onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,22"
+onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port="22,22 80"
+onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port="22 80"
+onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22"
+onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80"
+onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80,127.0.0.1:80"
 ```
 
-**on** **--service** [*SERV*] **--version** *3* **--socket** *unix* **--port** [*VIRTPORT*,<*VIRTPORT2*>]
+**--activate** **--service** [*SERV*] **--version** *3* **--socket** *unix* **--port** [*VIRTPORT*,<*VIRTPORT2*>]
 
 : Enable an onion service using UNIX socket (unix:path) as target. The TARGET is handled automatically by the script. This method avoids leaking the onion service address to the local network. File(s) modified: torrc.
 ```
-onionjuggler-cli on --service web
-onionjuggler-cli on --service ssh --socket unix --port 22
-onionjuggler-cli on --service ssh --version 3--socket unix --port 22,80
+onionjuggler-cli --activate --service web
+onionjuggler-cli --activate --service ssh --socket unix --port 22
+onionjuggler-cli --activate --service ssh --version 3--socket unix --port 22,80
 ```
 
-**off** **--service** [*SERV1*,*SERV2*,*...*] <*--purge*>
+**--deactivate** **--service** [*SERV1*,*SERV2*,*...*] <*--purge*>
 
 : Disable an onion service by removing it configuration lines (HiddenService) from the torrc. Optionally purge its data directory, which will delete permanently the onion service folder (HiddenServiceDir). File(s) modified: torrc and optionally HiddenServiceDir.
 ```
-onionjuggler-cli off --service ssh
-onionjuggler-cli off --service ssh,xmpp
-onionjuggler-cli off --service ssh,xmpp --purge
+onionjuggler-cli --deactivate --service ssh
+onionjuggler-cli --deactivate --service ssh,xmpp
+onionjuggler-cli --deactivate --service ssh,xmpp --purge
 ```
 
-**list** **--service** [*@all*|*SERV1*,*SERV2*,*...*] <*--quiet*>
+**--info** **--service** [*@all*|*SERV1*,*SERV2*,*...*] <*--quiet*>
 
 : List onion service information: hostname (address) and in QR encoded format, clients names and quantity, status if service is active or inactive regarding the torrc lines (un)present and the HiddenServiceDir presence, the torrc block. File(s) modified: none.
 ```
-onionjuggler-cli list --service ssh
-onionjuggler-cli list --service ssh,xmpp
-onionjuggler-cli list --service @all
-onionjuggler-cli list --service @all --quiet
+onionjuggler-cli --info --service ssh
+onionjuggler-cli --info --service ssh,xmpp
+onionjuggler-cli --info --service @all
+onionjuggler-cli --info --service @all --quiet
 ```
 
-**renew** **--service** [*@all*|*SERV1*,*SERV2*,*...*]
+**--renew** **--service** [*@all*|*SERV1*,*SERV2*,*...*]
 
 : Renew onion service hostname (.onion domain) and clients (inside HiddenServiceDir/authorized_clients/). The onion service keys (hs_ed25519_public_key and hs_ed25519_private_key) will be removed to override the hostname file. File(s) modified: HiddenServiceDir.
 ```
-onionjuggler-cli renew --service ssh
-onionjuggler-cli renew --service ssh,xmpp
-onionjuggler-cli renew --service @all
+onionjuggler-cli --renew --service ssh
+onionjuggler-cli --renew --service ssh,xmpp
+onionjuggler-cli --renew --service @all
 ```
 
-**auth-server --on** **--service** [*SERV*] **--client** [*CLIENT*] **--client-pub-key** <*CLIENT_PUB_KEY*>
+**--auth-server --on** **--service** [*SERV*] **--client** [*CLIENT*] **--client-pub-key** <*CLIENT_PUB_KEY*>
 
 : Authorize to your service a client. If the client public key is not provided, a new key pair of public and private keys will be generated, keys are sent to stdout and you should send to the client. A $CLIENT.auth file will be created on HiddenServiceDir/authorized_clients folder. File(s) modified: HiddenServiceDir/authorized_clients/
 ```
-onionjuggler-cli auth-server --on --service ssh --client alice
-onionjuggler-cli auth-server --on --service ssh --client alice --client-pub-key ABVCL52QL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
+onionjuggler-cli --auth-server --on --service ssh --client alice
+onionjuggler-cli --auth-server --on --service ssh --client alice --client-pub-key ABVCL52QL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
 ```
 
-**auth-server --on** **--service** [*@all*|*SERV1*,*SERV2*,*...*] **--client** [*CLIENT1*,*CLIENT2*,*...*]
+**--auth-server --on** **--service** [*@all*|*SERV1*,*SERV2*,*...*] **--client** [*CLIENT1*,*CLIENT2*,*...*]
 
 : Authorize to your service a client. A key pair of public and private keys will be generated, keys are sent to stdout and you should send to the client. A $CLIENT.auth file will be created on HiddenServiceDir/authorized_clients folder. File(s) modified: HiddenServiceDir/authorized_clients/
 ```
-onionjuggler-cli auth-server --on --service ssh --client alice
-onionjuggler-cli auth-server --on -service ssh --client alice,bob
-onionjuggler-cli auth-server --on -service ssh,xmpp --client alice
-onionjuggler-cli auth-server --on -service ssh,xmpp --client alice,bob
-onionjuggler-cli auth-server --on -service @all --client alice,bob
-onionjuggler-cli auth-server --on -service @all --client @all
+onionjuggler-cli --auth-server --on --service ssh --client alice
+onionjuggler-cli --auth-server --on -service ssh --client alice,bob
+onionjuggler-cli --auth-server --on -service ssh,xmpp --client alice
+onionjuggler-cli --auth-server --on -service ssh,xmpp --client alice,bob
+onionjuggler-cli --auth-server --on -service @all --client alice,bob
+onionjuggler-cli --auth-server --on -service @all --client @all
 ```
 
-**auth-server --off** **--service** [*@all*|*SERV1*,*SERV2*,*...*] **--client** [*@all*|*CLIENT1*,*CLIENT2*,*...*]
+**--auth-server --off** **--service** [*@all*|*SERV1*,*SERV2*,*...*] **--client** [*@all*|*CLIENT1*,*CLIENT2*,*...*]
 
 : Deauthorize from your service a client that is inside HiddenServiceDir/authorized_clients folder. File(s) modified: HiddenServiceDir/authorized_clients/
 ```
-onionjuggler-cli auth-server --off --service ssh --client alice
-onionjuggler-cli auth-server --off --service ssh --client alice,bob
-onionjuggler-cli auth-server --off --service ssh,xmpp --client alice
-onionjuggler-cli auth-server --off --service ssh,xmpp --client alice,bob
-onionjuggler-cli auth-server --off --service @all --client alice,bob
-onionjuggler-cli auth-server --off --service @all --client @all
+onionjuggler-cli --auth-server --off --service ssh --client alice
+onionjuggler-cli --auth-server --off --service ssh --client alice,bob
+onionjuggler-cli --auth-server --off --service ssh,xmpp --client alice
+onionjuggler-cli --auth-server --off --service ssh,xmpp --client alice,bob
+onionjuggler-cli --auth-server --off --service @all --client alice,bob
+onionjuggler-cli --auth-server --off --service @all --client @all
 ```
 
-**auth-server --list**  **--service** [*@all*|*SERV1*,*SERV2*,*...*]
+**--auth-server --list**  **--service** [*@all*|*SERV1*,*SERV2*,*...*]
 
 : List authorized clients and the respective public keys that are inside HiddenServiceDir/authorized_clients folder. File(s) modified: none
 ```
-onionjuggler-cli auth-server --list --service ssh
-onionjuggler-cli auth-server --list --service ssh,xmpp
-onionjuggler-cli auth-server --list --service @all
+onionjuggler-cli --auth-server --list --service ssh
+onionjuggler-cli --auth-server --list --service ssh,xmpp
+onionjuggler-cli --auth-server --list --service @all
 ```
 
-**auth-client --on** **--onion** [*ONION*] **--client-priv-key** <*CLIENT_PRIV_KEY*>
+**--auth-client --on** **--onion** [*ONION*] **--client-priv-key** <*CLIENT_PRIV_KEY*>
 
 : Authenticate as a client to a remote onion serivce. If the client private keys is not provided, a new key pair of public and private keys will be generated, keys are sent to stdout and you should send to the onion service operator. Add a $ONION.auth_private to ClientOnionAuthDir. File(s) modified: ClientOnionAuthDir.
 ```
-onionjuggler-cli auth-client --on --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
-onionjuggler-cli auth-client --on --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion --client-priv-key UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
+onionjuggler-cli --auth-client --on --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
+onionjuggler-cli --auth-client --on --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion --client-priv-key UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
 ```
 
-**auth-client --off** **--onion** [*ONION1*,*ONION2*,*...*]
+**--auth-client --off** **--onion** [*ONION1*,*ONION2*,*...*]
 
 : Deauthenticate from a remote onion serivce. Remove the $ONION.auth_private file from ClientOnionAuthDir. File(s) modified: ClientOnionAuthDir/.
 ```
-onionjuggler-cli auth-client --off --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
-onionjuggler-cli auth-client --off --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion,yyyzxhjk6psc6ul5jnfwloamhtyh7si74b47a3k2q3pskwwxrzhsxmad.onion
+onionjuggler-cli --auth-client --off --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
+onionjuggler-cli --auth-client --off --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion,yyyzxhjk6psc6ul5jnfwloamhtyh7si74b47a3k2q3pskwwxrzhsxmad.onion
 ```
 
-**auth-client --list**
+**--auth-client --list**
 
 : List authentication files and the respective private keys from ClientOnionAuthDir.Useful when removing files and you want to see which onions you are already authenticated with.  File(s) modified: none.
 ```
-onionjuggler-cli auth-client --list
+onionjuggler-cli --auth-client --list
 ```
 
-**web --on** **--service** [*SERV*] **--folder** [*FOLDER*]
+**--web --on** **--service** [*SERV*] **--folder** [*FOLDER*]
 
 : Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside website_dir variable defined on /etc/onionservice.conf. If the path starts with forward slash "/" or tilde and slash "~/", that path will be considered instead. File(s) modified: "${webserver_conf}".
 ```
-onionjuggler-cli web on nextcloud nextcloud-local-site
+onionjuggler-cli --web on nextcloud nextcloud-local-site
 ```
 
-**web --off** **--service** [*SERV*]
+**--web --off** **--service** [*SERV*]
 
 : Disable a website from a specific onion service by removing its configuration file from the webserver folder. File(s) modified: $webserver_conf
 ```
-onionjuggler-cli web off nextcloud
+onionjuggler-cli --web --off --service nextcloud
 ```
 
-**web --list**
+**--web --list**
 
 : List enabled websites, meaning the configuration files inside the webserver folder /etc/${webserver}/sites-enabled/. File(s) modified: none.
 ```
-onionjuggler-cli web list
+onionjuggler-cli --web --list
 ```
 
-**location**  **--service** [*SERV*] [*--nginx*|*--apache2*|*--html*]
+**--location**  **--service** [*SERV*] [*--nginx*|*--apache2*|*--html*]
 
 : Guide to add onion location to your plainnet website when using the webserver Nginx or Apache2 or an HTML header. It does not modify any configuration by itself, the instructions to do so are send to stdout. File(s) modified: none.
 ```
-onionjuggler-cli location --service nextcloud --nginx
-onionjuggler-cli location --service nextcloud --apache2
-onionjuggler-cli location --service nextcloud --html
+onionjuggler-cli --location --service nextcloud --nginx
+onionjuggler-cli --location --service nextcloud --apache2
+onionjuggler-cli --location --service nextcloud --html
 ```
 
 **backup** [*--create*|*--integrate*]
 
 : Backup all of the torrc, DataDir/services and ClientOnionAuthDir either by creating a backup file or integrating to the system from a backup made before. File(s) modified: torrc, DataDir/services, ClientOnionAuthDir.
 ```
-onionjuggler-cli backup --create
-onionjuggler-cli backup --integrate
+onionjuggler-cli --backup --create
+onionjuggler-cli --backup --integrate
 ```
 
-**restore** *torrc*
-
-: Before every change to the torrc state, a backup is saved on the same folder named torrc.bak. This option restore the latest torrc change to revert the last change to the configuration.
-
-**vanguards** [*--on*|*--list*|*--upgrade*|*--off*]
+**--vanguards** [*--on*|*--list*|*--upgrade*|*--off*]
 
 : Manage Vanguards addon using the repository https://github.com/mikeperry-tor/vanguards. This addon protects against guard discovery and related traffic analysis attacks.
 A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
 Installation (git clone) and Upgrade (git pull) are bound to a commit hash set on the /etc/onionservice.conf (git reset --hard vanguards_commit). Remove will delete the vanguards directory. Logs follow the service logs. When installing, it create a service called vanguards@default, which you can stop and start. File(s) modified: DataDir/vanguards/vanguards.conf.
 ```
-onionjuggler-cli vanguards --on
-onionjuggler-cli vanguards --list
-onionjuggler-cli vanguards --upgrade
-onionjuggler-cli vanguards --off
+onionjuggler-cli --vanguards --on
+onionjuggler-cli --vanguards --list
+onionjuggler-cli --vanguards --upgrade
+onionjuggler-cli --vanguards --off
 ```
 
 **-h**, **-help**, **--help**, **help**
