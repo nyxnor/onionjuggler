@@ -384,8 +384,15 @@ is_addr_port(){
 }
 
 
+## returns 1 if is not empty
+check_folder_is_not_empty(){
+  dir="${1}"
+  [ -d "${dir}" ] && files=$(ls -qAH -- "${dir}") && [ -z "${files}" ] || return 1
+}
+
+
 is_service_dir_empty(){
-  [ "$(ls -A "${tor_data_dir_services}"/)" = "" ] && error_msg "Onion services directory is empty. Create a service first before running this command again."
+  check_folder_is_not_empty "${tor_data_dir_services}" || error_msg "Onion services directory is empty. Create a service first before running this command again."
 }
 
 
@@ -401,7 +408,12 @@ test_service_exists(){
 ## save the clients names that are inside the <HiddenServiceDir>/authorized_clients/ in list format (CLIENT1,CLIENT2,...)
 create_client_list(){
   service="${1}"
-  client_name_list="$(printf %s"$(ls -A "${tor_data_dir_services}"/"${service}"/authorized_clients/)" | sed "s/\.auth//g" | tr "\n" ",")"
+  for client_listed in "${tor_data_dir_services}/${service}/authorized_clients"/*; do
+    client_listed="${client_listed##*/}"
+    client_listed="${client_listed%*.auth}"
+    client_name_list="$(printf '%s\n%s\n' "${client_name_list}" "${client_listed}")"
+  done
+  client_name_list="$(printf '%s\n' "${client_name_list}" | tr "\n" ",")"
   client_count=""
   # shellcheck disable=SC2086
   [ -n "${client_name_list}" ] && client_count="$(IFS=','; set -f -- ${client_name_list}; printf %s"${#}")"
@@ -409,9 +421,12 @@ create_client_list(){
 
 
 ## save the service names that have a <HiddenServiceDir> in list format (SERV1,SERV2,...)
-create_service_list(){ service_name_list=$(ls -A "${tor_data_dir_services}"/ | tr " " ","); }
-#create_service_list(){ service_name_list=$(grep "HiddenServiceDir ${tor_data_dir_services}/" "${tor_conf_tmp}" | sed "s|HiddenServiceDir ${tor_data_dir_services}/||" | tr "\n" " "); }
-
+create_service_list(){
+  for hs in "${tor_data_dir_services}"/*; do
+    hs="${hs##*/}"
+    service_name_list="$(printf '%s\n' "${service_name_list}" "${hs}")"
+  done
+}
 
 ## loops the parameters
 ## $1 must be the function to loop
@@ -805,6 +820,7 @@ case "${main}" in
               if [ -n "${client_count}" ]; then
                 [ -n "${client_name_list}" ] && printf %s"Clients: ${client_name_list} (${client_count})\n"
                 for auth in "${tor_data_dir_services}/${service}/authorized_clients"/*; do
+                  auth="${auth##*/}"
                   notice "${auth}: $(grep "descriptor:x25519:" "${tor_data_dir_services}"/"${service}"/authorized_clients/"${auth}")${nocolor}"
                 done
               else
@@ -882,7 +898,7 @@ case "${main}" in
               notice "\n${red}Removing ${tor_data_dir_auth}/${onion}.auth_private${nocolor}"
               rm -fv "${tor_data_dir_auth}"/"${onion}".auth_private
             }
-            if [ "$(ls -A "${tor_data_dir_auth}")" != "" ]; then
+            if ! check_folder_is_not_empty "${tor_data_dir_auth}"; then
               loop_list auth_client_remove "${onion}"
             else
               error_msg "ClientOnionAuthDir is empty"
@@ -890,9 +906,10 @@ case "${main}" in
           ;;
 
           l|list)
-            if [ "$(ls -A "${tor_data_dir_auth}")" != "" ]; then
+            if ! check_folder_is_not_empty "${tor_data_dir_auth}"; then
               notice "ClientOnionAuthDir ${tor_data_dir_auth}"
               for auth in "${tor_data_dir_auth}"/*; do
+                auth="${auth##*/}"
                 notice "\nFile name: ${bold}${auth}${nocolor}"
                 notice "Content:   ${bold}$(grep "descriptor:x25519:" "${tor_data_dir_auth}"/"${auth}")${nocolor}"
               done
@@ -1105,7 +1122,13 @@ server \"${onion_hostname}\" {
         notice "${bold}Web server: ${webserver}${nocolor}\n"
         notice "${bold}# Enabled websites:${nocolor}"
         case "${webserver}" in
-          nginx|apache2) sites_enabled=$(ls -A "${webserver_conf}" | sed "s/-onion.conf//g");;
+          nginx|apache2)
+            for site in "${webserver_conf}"/*; do
+              site="${site##*/}"
+              site="${site%*-onion.conf}"
+              sites_enabled="$(printf '%s\n%s\n' "${sites_enabled}" "${site}")"
+            done
+            ;;
           openbsd-httpd) httpd_service_block print "${service}" "${webserver_conf}";;
         esac
         if [ -n "${sites_enabled}" ]; then
@@ -1214,7 +1237,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ## backup tar file will be extracted and integrated into their respective tor folders
       I|integrate)
         mkdir -p "${tor_backup_dir}"/integrate
-        tor_backup_file=$(ls -A "${tor_backup_dir}" | grep ".tar.gz" | tail -n -1)
+        tor_backup_file=$(find "${tor_backup_dir}" -type -f -name "*.tar.gz" | tail -n -1)
         notice "${cyan}Integrating backup from file: ${bold}${tor_backup_file}${nocolor}\n"
         notice "Extracting the archive\n"
         tar -xpzvf "${tor_backup_dir}"/"${tor_backup_file}" -C "${tor_backup_dir}"/integrate
