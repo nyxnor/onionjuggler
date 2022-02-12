@@ -197,7 +197,7 @@ man onionjuggler.conf
 
 To create a service named `terminator`, it is as easy as possible:
 ```sh
-onionjuggler-cli on -s terminator
+onionjuggler-cli on -s terminator -p 80
 ```
 But can be as advanced as specifying all the parameters:
 ```sh
