@@ -161,6 +161,9 @@ If your services are unreacheable, restart tor.
 ########################
 #### OPTION PARSING ####
 
+## code and commentes teaching how to getopts on:
+##  https://github.com/nyxnor/scripts/blob/master/getopts.sh
+
 ## assign_value variable_name "${opt}"
 ## it strips the dashes and assign the clean value to the variable
 ## assign_value status --on IS status=on
@@ -268,7 +271,6 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 ###################
 #### FUNCTIONS ####
 
-
 ## Elegantly modify files on a temporary directory. Test the configuration with another function.
 ## If correct, then save file back to its original location. This avoids running with an invalid
 ## configuration that can make a daemon fail to reload or even start
@@ -326,6 +328,7 @@ verify_config_tor(){
 
 
 ## set correct permissions for tor directories and files
+## find helps do the job because it can segreggate directories from files
 set_owner_permission(){
   ## data
   chown -R "${tor_user}:${tor_user}" "${tor_data_dir}"
@@ -344,6 +347,7 @@ set_owner_permission(){
 signal_tor(){
   verify_config_tor
   set_owner_permission
+  ## default signal is to reload, but if restart was specified, use it
   : "${signal:="reload"}"
   [ "${signal}" = "r" ] && signal="reload"
   [ "${signal}" = "R" ] && signal="restart"
@@ -375,16 +379,19 @@ is_addr_port(){
   addr="${addr_port%%:*}"
 
   printf %d "${port}" >/dev/null 2>&1 || error_msg "'${port}' is not a valid port, not an integer"
-  { [ "${port}" -gt 0 ] && [ "${port}" -le 65535 ]; } || error_msg "${port} is not a valid port, not within range: 0-65535"
+  { [ "${port}" -gt 0 ] && [ "${port}" -le 65535 ]; } || \
+    error_msg "${port} is not a valid port, not within range: 0-65535"
 
   for quad in $(printf '%s\n' "${addr}" | tr "." " "); do
     printf %d "${quad}" >/dev/null 2>&1 || error_msg "${addr} is not a valid address, ${quad} is not and integer"
-    { [ "${quad}" -ge 0 ] && [ "${quad}" -le 255 ]; } || error_msg "${addr} is not a valid address, ${quad} is not within range: 0-255"
+    { [ "${quad}" -ge 0 ] && [ "${quad}" -le 255 ]; } || \
+      error_msg "${addr} is not a valid address, ${quad} is not within range: 0-255"
   done
 }
 
 
 ## returns 1 if is not empty
+## no better way to do with posix utilities
 check_folder_is_not_empty(){
   dir="${1}"
   [ -d "${dir}" ] && files=$(ls -qAH -- "${dir}") && [ -z "${files}" ] || return 1
@@ -392,7 +399,8 @@ check_folder_is_not_empty(){
 
 
 is_service_dir_empty(){
-  check_folder_is_not_empty "${tor_data_dir_services}" || error_msg "Onion services directory is empty. Create a service first before running this command again."
+  check_folder_is_not_empty "${tor_data_dir_services}" || \
+  error_msg "Onion services directory is empty. Create a service first before running this command again."
 }
 
 
@@ -432,6 +440,7 @@ create_service_list(){
 ## $1 must be the function to loop
 ## $2 normally is service, but can be any other parameter (accepts list -> SERV1,SERV2,...)
 ## $3 normally is client, but can be any other (accepts list -> client1,client2...)
+## $ loop_list function_name ssh,xmpp,web [alice,bob]
 loop_list(){
   for item in $(printf %s"${2}" | tr "," " "); do
     case "${3}" in
@@ -444,6 +453,11 @@ loop_list(){
 ## https://github.com/koalaman/shellcheck/wiki/SC3050
 escape_printf_percent() { printf "%s\n" "$(printf '%s' "${1}" | sed "s/\%/\%/g")"; }
 
+
+## TODO: find a better way to handle commented lines and empty lines
+## the problem is that the script only stop at the next HiddenServiceDir,
+## but discard every line not starting with HiddenServiceDir
+## https://github.com/nyxnor/onionjuggler/issues/51
 service_block(){
   process="${1}"
   service="${2}"
@@ -478,7 +492,6 @@ service_block(){
     fi
   done < "${file}"
 
-
   if [ -n "${hs_lines_delete}" ]; then
     ## sed is a stream line editor, so lets make the file a single line transforming new lines to carriage return
     hs_lines_delete="$(printf '%s\n' "${hs_lines_delete}" | tr "\n" "\r")"
@@ -486,9 +499,9 @@ service_block(){
     tr "\n" "\r" < "${file}" | sed "s|${hs_lines_delete}||" | tr "\r" "\n" | tee tmpfile >/dev/null
     mv tmpfile "${file}"
   fi
-
 }
 
+## TODO: finish: https://github.com/nyxnor/onionjuggler/issues/32
 httpd_service_block(){
   process="${1}"
   service="${2}"
@@ -506,10 +519,12 @@ httpd_service_block(){
 }
 
 ## http://sed.sourceforge.net/local/docs/emulating_unix.txt
+## tac is not posix
 tac(){
   sed '1!G;h;$!d' "${1}"
 }
 
+## 'cat -s' is not posix
 cat_squeeze_blank(){
   while :; do
     case "${1}" in
@@ -521,6 +536,7 @@ cat_squeeze_blank(){
   sed '1s/^$//p;/./,/^$/!d' ${files}
 }
 
+## error_msg self explanatory, tor breaks with special chars on the dir name
 check_service_name(){
   [ "${service%%*[^a-zA-Z0-9_.-]*}" ] || {
   error_msg "Service name \"${service}\" is invalid\nIt must only contain the characters that are:
@@ -529,7 +545,6 @@ check_service_name(){
   - punctuations limited to hifen (-), underscore (_), dot (.)"
   }
 }
-
 
 ###########################
 ########## MAIN ###########
@@ -640,18 +655,26 @@ case "${main}" in
           IFS=" " read -r virtport target <<-EOF
             $(printf '%s\n' "${port_line}")
 					EOF
+          ## virtport is necessary
           [ -z "${virtport}" ] && break
+          ## target if empty will tcp local host on interface 127.0.0.1 using the same port as virtport
           [ -z "${target}" ] && target="127.0.0.1:${virtport}"
           target_addr="${target%%:*}"
           target_port="${target##*:}"
+          ## the first check is in case target was provided as an integer, not as a target
+          ## the second check is for uniformity, convert localhost to 127.0.0.1
           { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
           is_integer "${virtport}"
           is_addr_port "${target}"
+          ## check if the tager is already used in the torrc
+          ## the first part check if the target is present on the tor configuration file
+          ## the second part checks if the target port is used on a hs port without a target, meaning using the same port from virtual port
           if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
           fi
+          ## this check is the same as from above, but instead, it check the temporary configuration file that is being modified now
           if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf_tmp}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
@@ -660,7 +683,6 @@ case "${main}" in
           printf %s"HiddenServicePort ${virtport} ${target}\n" | tee -a "${tor_conf_tmp}"
         done
         printf '\n' | tee -a "${tor_conf_tmp}"
-
         test -s "${fail_log}" && { rm "${fail_log}"; exit 1; }
 
         ## get info
@@ -669,6 +691,7 @@ case "${main}" in
 
       unix)
         port="$(printf %s"${port}" | tr "," " " | tr " " "\n" | tr -s " ")"
+        ## /var/run/ because it exists on Debian and OpenBSD, so respecting standards
         unix_path="unix:/var/run/${service}"
 
         fail_log="$(mktemp)"
@@ -677,13 +700,16 @@ case "${main}" in
             $(printf '%s\n' "${port_line}")
 					EOF
           [ -z "${virtport}" ] && break
+          ## use a key="-onion" on the target to facilitate discovering it later and distinction if there is a plain net site
           target="${unix_path}-${virtport}-onion.sock"
           is_integer "${virtport}"
+          ## check wheter target is already in use on the tor configuration file
           if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
           fi
+          ## check wheter target is already in use on the temporary copy of the tor configuration file
           if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
@@ -692,7 +718,6 @@ case "${main}" in
           printf %s"HiddenServicePort ${virtport} ${target}\n" | tee -a "${tor_conf_tmp}"
         done
         printf '\n' | tee -a "${tor_conf_tmp}"
-
         test -s "${fail_log}" && { rm -f -- "${fail_log}"; exit 1; }
 
         ## get info
@@ -850,9 +875,8 @@ case "${main}" in
             ## removes protocol such as http(s)://, ssh:// and git:// from the front of the address and trailing / at the end of the onion to clean it and only show the hostname (address.onion)
             onion="$(printf %s"${onion}\n" | sed "s|.*://||" | sed "s|/$||")"
             onion_hostaname_without_onion="${onion%.onion}"
-            [ "${onion##*.}" != "onion" ] && error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
-            [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
-            [ "${#onion}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#onion} is different than 62 characters (<56-char-base32>.onion)"
+            [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "Onion domain is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
+            [ "${#onion}" = "56" ] || error_msg "Onion domain is invalid, LENGTH=${#onion} is different than 56 characters (<56-char-base32>.onion)"
             safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
             grep -q "ClientOnionAuthDir" "${tor_conf_tmp}" && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | tee -a "${tor_conf_tmp}"; }
             "${su_cmd}" -u "${tor_user}" mkdir -p "${tor_data_dir_auth}"
@@ -864,7 +888,7 @@ case "${main}" in
               ## save variables
               client_pub_key=$(cat /tmp/k1.pub.key)
               client_priv_key=$(cat /tmp/k1.prv.key)
-              client_priv_key_config="${onion%.onion}:descriptor:x25519:${client_priv_key}"
+              client_priv_key_config="${onion_hostaname_without_onion}:descriptor:x25519:${client_priv_key}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
               ## Delete pem and keys
               rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
@@ -880,7 +904,7 @@ case "${main}" in
               notice "client_pub_key=${client_pub_key}"
               notice "client_pub_key_config=descriptor:x25519:${client_pub_key}"
             else
-              client_priv_key_config="${onion%.onion}:descriptor:x25519:${client_priv_key}"
+              client_priv_key_config="${onion_hostaname_without_onion}:descriptor:x25519:${client_priv_key}"
               printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}"/"${onion}".auth_private >/dev/null
               notice "\n${bold}Client side authorization configured${nocolor}"
               notice "As you inserted the private key manually, it ise expected that you have already sent/received the public key to/from the onion service operator"
@@ -892,7 +916,7 @@ case "${main}" in
           f|off)
             [ -z "${onion}" ] && usage
             onion="$(printf %s"${onion}\n" | sed "s|.*://||" | sed "s|/.*$||")"
-            auth_client_remove  (){
+            auth_client_remove(){
               onion="${1}"
               notice "\n${red}Removing ${tor_data_dir_auth}/${onion}.auth_private${nocolor}"
               rm -fv "${tor_data_dir_auth}"/"${onion}".auth_private
@@ -1221,6 +1245,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
         mv "${tor_conf}".rest "${tor_conf}"
         chown -R "${USER}:${USER}" "${tor_backup_dir}"
         set_owner_permission
+        ## try every way to find a program to compute a sha 256 message digest
         while :; do
           command -v sha256sum >/dev/null && checksum_sha256="sha256sum" && break
           command -v shasum >/dev/null && checksum_sha256="shasum -a 256" && break
@@ -1229,26 +1254,38 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
           command -v digest >/dev/null && checksum_sha256="digest -a sha256" && break
           break
         done
+        ## but if no program is available (unlikley), don't exec nothing
         [ -n "${checksum_sha256}" ] && notice "\nsha256=$(${checksum_sha256} "${tor_backup_dir}"/"${tor_backup_file}")"
       ;;
 
       ## restore backup
       ## backup tar file will be extracted and integrated into their respective tor folders
       I|integrate)
+        ## make a separate dir indie the backup dir to unpack files
         mkdir -p "${tor_backup_dir}"/integrate
+        ## get the latest backup
         tor_backup_file=$(find "${tor_backup_dir}" -type -f -name "*.tar.gz" | tail -n -1)
         notice "${cyan}Integrating backup from file: ${bold}${tor_backup_file}${nocolor}\n"
         notice "Extracting the archive\n"
+        ## extract to integrate directory
         tar -xpzvf "${tor_backup_dir}"/"${tor_backup_file}" -C "${tor_backup_dir}"/integrate
         chown -R "${USER}:${USER}" "${tor_backup_dir}"
+        ## place files into their correct directories
         cp -rf "${tor_backup_dir}"/integrate"${tor_data_dir_services}"/* "${tor_data_dir_services}"/
         cp -rf "${tor_backup_dir}"/integrate"${tor_data_dir_auth}"/* "${tor_data_dir_auth}"/
+        ## TODO: remove this?
+        ## this is necessary to avoid duplicated configuration lines,
+        ## but maybe it does not suffice because HS lines will still be repeated if present on the backup and on the current torrc
         client_auth_config="$(grep "ClientOnionAuthDir" "${tor_backup_dir}"/integrate"${tor_conf}")"
         if [ -n "${client_auth_config}" ]; then
           sed -i'' "/ClientOnionAuthDir .*/d" "${tor_conf}"
           printf '\n%s\n\n' "${client_auth_config}" "${tor_conf}"
           sed -i'' "/ClientOnionAuthDir .*/d" "${tor_backup_dir}"/integrate"${tor_conf}"
         fi
+        ## TODO: should it merge or substitute?
+        ##  - merging ends up in possibly having repeated lines
+        ##  - substituing maybe ends up in losing configuration lines
+        ## merge the backup torrc with the current torrc
         cat_squeeze_blank "${tor_conf}" "${tor_backup_dir}"/integrate"${tor_conf}" | tee "${tor_conf}".tmp >/dev/null
         mv "${tor_conf}".tmp "${tor_conf}"
         rm -rf "${tor_backup_dir}"/integrate
