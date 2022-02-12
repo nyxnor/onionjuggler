@@ -594,9 +594,8 @@ case "${main}" in
   ## tcp-socket uses addr:port, which can be remote or localhost. It leaks onion address to the local network
   ## unix-socket uses unix:path, which is create a unique name for it. It does not leak onion address to the local network.
   ## virtport is the port to be used by the client when visiting the service.
-  ## empty socket will default to unix
+  ## empty socket will default to tcp
   ## empty version will default to 3
-  ## empty port will default to 80
   ## target is where the incoming traffic from virtport gets redirected. This option is abscent on unix-socket because the script completes it.
   ##  if target is not specified, will use the same port from virtport and bind to localhost.
   ##  if target only contains the port number and not the address, will bind to localhost.
@@ -605,8 +604,8 @@ case "${main}" in
     [ -z "${service}" ] && usage
     check_service_name
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version ${version} is not available" ## wait for v4 to change this
-    : "${socket:=unix}"
-    : "${port:=80}"
+    : "${socket:=tcp}"
+    [ -z "${port}" ] && error_msg "port can not be empty"
     ## backup torrc
     safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
     notice "Including Hidden Service configuration to ${tor_conf_tmp}"
