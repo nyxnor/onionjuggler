@@ -579,6 +579,8 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     if [ -n "${service_name_list}" ]; then
       tput reset
       "${su_cmd}" onionjuggler-cli --info --service "${service_name_list}"
+      #su -c "onionjuggler-cli --info --service \"${service_name_list}\""
+      #onionjuggler-cli --info --service "${service_name_list}"
       return_to_tui
     fi
   ;;

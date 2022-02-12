@@ -3,4 +3,6 @@
 
 ## This file was generated using genmkfile 'make debinstfile'.
 
+etc/onionjuggler/dialogrc
+etc/onionjuggler/conf.d/*
 usr/*
