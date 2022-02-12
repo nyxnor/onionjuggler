@@ -83,11 +83,12 @@ while :; do
   shift_n=""
   opt_orig="${1}" ## save opt orig for error message to understand which opt failed
   case "${opt_orig}" in
-    ""|--) break;; ## options ended
+    --) shift 1; break;; ## stop option parsing
     --*=*) opt="${1%=*}"; opt="${opt#*--}"; arg="${1#*=}"; shift_n=1;; ## long option '--sleep=1'
     -*=*) opt="${1%=*}"; opt="${opt#*-}"; arg="${1#*=}"; shift_n=1;; ## short option '-s=1'
     --*) opt="${1#*--}"; arg="${2}";; ## long option '--sleep 1'
     -*) opt="${1#*-}"; arg="${2}";; ## short option '-s 1'
+    "") break;; ## options ended
     *) usage;; ## not an option
   esac
   case "${opt}" in
