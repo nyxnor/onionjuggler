@@ -583,7 +583,7 @@ case "${dev}" in
       eval val='$'"${key}"
       [ -n "${val:-}" ] && printf '%s\n' "${key}=\"${val}\""
     done
-    exit 1
+    exit 0
   ;;
 
   ## only print the options given on the command line, mostly for development purposes to check the argument
@@ -594,7 +594,7 @@ case "${dev}" in
       eval val='$'"${key}"
       [ -n "${val}" ] && printf '%s\n' "${key}=\"${val}\""
     done
-    exit 1
+    exit 0
   ;;
 esac
 
@@ -730,7 +730,7 @@ case "${main}" in
           printf %s"HiddenServicePort ${virtport} ${target}\n" | tee -a "${tor_conf_tmp}"
         done
         printf '\n' | tee -a "${tor_conf_tmp}"
-        test -s "${fail_log}" && { rm "${fail_log}"; exit 1; }
+        test -s "${fail_log}" && { rm -f -- "${fail_log}"; exit 1; }
 
         ## get info
         finish_service_activation
