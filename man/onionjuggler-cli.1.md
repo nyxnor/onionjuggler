@@ -12,25 +12,26 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 **onionjuggler-cli** **command** [**--option**<=*ARGUMENT*>]\
 
 
-**onionjuggler-cli getconf**\
-**onionjuggler-cli activate** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT* [,*TARGET*] [*VIRTPORT2*][,*TARGET2*]>]\
-**onionjuggler-cli activate**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*> [**--port** [*VIRTPORT* [*VIRTPORT2*]>]\
-**onionjuggler-cli deactivate** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
-**onionjuggler-cli list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
-**onionjuggler-cli renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
-**onionjuggler-cli auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
-**onionjuggler-cli auth-server** [**--on**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*CLIENT1*,*CLIENT2*,*...*>]\
-**onionjuggler-cli auth-server** [**--off**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
-**onionjuggler-cli auth-server** [**--list**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
-**onionjuggler-cli auth-client** [**--on**] [**--onion** <*ONION*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>]\
-**onionjuggler-cli auth-client** [**--off**] [**--onion** <*ONION1*,*ONION2*,*...*>]\
-**onionjuggler-cli auth-client** [**--list**]\
-**onionjuggler-cli web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>]\
-**onionjuggler-cli web** [**--off**] [**--service** <*SERVICE*>]\
-**onionjuggler-cli web** [**--list**]\
-**onionjuggler-cli location** [**--service** <*SERVICE*>] [**--nginx**|**--apache2**|**--html**]\
-**onionjuggler-cli backup** [**--create**|**--integrate**]\
-**onionjuggler-cli vanguards** [**--on**|**--list**|**--upgrade**|**--off**]\
+**onionjuggler-cli [--getconf]**\
+**onionjuggler-cli [--getopt]**\
+**onionjuggler-cli --activate** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT* [,*TARGET*] [*VIRTPORT2*][,*TARGET2*]>] [**--whonix-gateway**]\
+**onionjuggler-cli --activate**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*> [**--port** [*VIRTPORT* [*VIRTPORT2*]>]\
+**onionjuggler-cli --deactivate** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
+**onionjuggler-cli --list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
+**onionjuggler-cli --renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli --auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
+**onionjuggler-cli --auth-server** [**--on**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*CLIENT1*,*CLIENT2*,*...*>]\
+**onionjuggler-cli --auth-server** [**--off**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
+**onionjuggler-cli --auth-server** [**--list**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli --auth-client** [**--on**] [**--onion** <*ONION*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>]\
+**onionjuggler-cli --auth-client** [**--off**] [**--onion** <*ONION1*,*ONION2*,*...*>]\
+**onionjuggler-cli --auth-client** [**--list**]\
+**onionjuggler-cli --web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>]\
+**onionjuggler-cli --web** [**--off**] [**--service** <*SERVICE*>]\
+**onionjuggler-cli --web** [**--list**]\
+**onionjuggler-cli --location** [**--service** <*SERVICE*>] [**--nginx**|**--apache2**|**--html**]\
+**onionjuggler-cli --backup** [**--create**|**--integrate**]\
+**onionjuggler-cli --vanguards** [**--on**|**--list**|**--upgrade**|**--off**]\
 **onionjuggler-cli** [**-h**|**-help**|**--help**|**help**]
 
 
@@ -115,7 +116,7 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 
 
 
-**--activate** **--service** [*SERV*] **--version** *3* **--socket** *tcp* **--port** [*VIRTPORT*,<*TARGET*>,<*VIRTPORT2*>,<*TARGET2*>]
+**--activate** **--service** [*SERV*] **--version** *3* **--socket** *tcp* **--port** [*VIRTPORT*,<*TARGET*>,<*VIRTPORT2*>,<*TARGET2*>] [**--whonix-gateway**]
 
 : Enable an onion service using TCP socket (addr:port) as target. If the TARGET is only the port of it TARGET was not provided, will use the same port as VIRTPORT and bind to 127.0.0.1. TARGET examples: 127.0.0.1:80, 192.168.1.100:80. File(s) modified: torrc.
 ```
@@ -126,6 +127,10 @@ onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port="22 80
 onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22"
 onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80"
 onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80,127.0.0.1:80"
+```
+By default, services created on a Qubes-Whonix Gateway uses the Whonix Workstation qube IP address, services created on a Non-Qubes-Whonix uses the IP address 10.152.152.11. If you are on Whonix Gateway want to enforce the creation of a service to be running on the Whonix-Gateway (for itself), for example and onion service to ssh to the Gateway, and you haven't set the target, just the virtual port, use the option *--whonix-gateway*:
+```
+onionjuggler-cli --activate --service ssh --socket tcp --port 22 --whonix-gateway
 ```
 
 **--activate** **--service** [*SERV*] **--version** *3* **--socket** *unix* **--port** [*VIRTPORT*,<*VIRTPORT2*>]

@@ -94,6 +94,7 @@ Options:
     -S, --socket <tcp|unix>                                  define a socket for the new onion service
     -v, --version 3                                          define a version for the new onion service
     -p, --port <VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>       define ports for the new onion service
+    -g, --whonix-gateway                                     define target 127.0.0.1 (Whonix Gateway IP) (does not overwrite specified target)
   off                                                        deactivate an onion service configuration
     -s, --service <SERV1,SERV2,...>                          service to deactivate
     -P, --purge                                              purge the onion service data
@@ -236,6 +237,7 @@ while :; do
     v|version|v=*|version=*) get_arg version;;
     S|socket|S=*|socket=*) get_arg socket;;
     p|port|p=*|port=*) get_arg port;;
+    g|whonix-gateway) whonix_gateway_service=1;;
     w|folder|w=*|folder=*) get_arg folder;;
     k|client-priv-key|k=*|client-priv-key=*) get_arg client_priv_key;;
     K|client-pub-key|K=*|client-pub-key=*) get_arg client_pub_key;;
@@ -576,7 +578,8 @@ case "${dev}" in
   ## usefult to see if there is nothing messed up and if there is, can be checked before running the cli.
   getconf)
     for key in ONIONJUGGLER_CONF su_cmd openssl_cmd webserver webserver_conf website_dir vanguards_commit \
-    tor_daemon tor_user tor_conf_user_group tor_data_dir tor_data_dir_services tor_data_dir_auth tor_conf_dir tor_control_port tor_backup_dir; do
+    tor_daemon tor_user tor_conf_user_group tor_data_dir tor_data_dir_services tor_data_dir_auth tor_conf_dir \
+    tor_control_port tor_backup_dir; do
       eval val='$'"${key}"
       [ -n "${val:-}" ] && printf '%s\n' "${key}=\"${val}\""
     done
@@ -586,13 +589,15 @@ case "${dev}" in
   ## only print the options given on the command line, mostly for development purposes to check the argument
   ## but can be useful to see if the command is correct before running it.
   getopt|getopts)
-    for key in signal main service client onion status action version socket port folder client_priv_key client_pub_key; do
+    for key in signal main service client onion status action version socket port folder \
+    client_priv_key client_pub_key whonix_gateway_service; do
       eval val='$'"${key}"
       [ -n "${val}" ] && printf '%s\n' "${key}=\"${val}\""
     done
     exit 1
   ;;
 esac
+
 
 ## user option
 [ "$(id -u)" -ne 0 ] && error_msg "run as root"
@@ -648,6 +653,21 @@ case "${main}" in
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version ${version} is not available" ## wait for v4 to change this
     : "${socket:=tcp}"
     [ -z "${port}" ] && error_msg "port can not be empty"
+
+    if test -f /usr/share/anon-gw-base-files/gateway; then ## Whonix Gateway
+      if [ "${whonix_gateway_service}" = "1" ]; then
+        target_ip_default="127.0.0.1" ## Service should use Gateway ip (127.0.0.1)
+      elif command -v qubesdb-read >/dev/null; then
+        target_ip_default="$(qubesdb-read /qubes-ip)" ## Qubes-Whonix
+      else
+        target_ip_default=10.152.152.11 ## Non-Qubes-Whonix
+      fi
+    elif test -f /usr/share/anon-ws-base-files/workstation; then ## Whonix Workstation
+      error_msg "Create onion services on Whonix Gateway, not on Whonix Workstation"
+    else
+      target_ip_default="127.0.0.1" ## Common target
+    fi
+
     ## backup torrc
     safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
     notice "Including Hidden Service configuration to ${tor_conf_tmp}"
@@ -670,9 +690,9 @@ case "${main}" in
     case "${socket}" in
 
       tcp)
-        ## tor-manual: By default, this option maps the virtual port to the same port on 127.0.0.1 over TCP
-        ## Because of that, this project lets the user leave target="" and write target as 127.0.0.1:$virtport
-        ## Also, substitutes localhost:port for 127.0.0.1:$port to make exact math for target always, as localhost and 127.0.0.1 mean the same thing
+        ## tor-manual: By default, this option maps the virtual port to the same port on target_ip_default over TCP
+        ## Because of that, this project lets the user leave target="" and write target as $target_ip_default:$virtport
+        ## Also, substitutes localhost:port for $target_ip_default:$port to make exact math for target always, as localhost and target_ip_default mean the same thing
         ## This measures avoid using the same local port for different services
         ## Sanity check
         port="$(printf %s"${port}" | tr " " "\n" | tr "," " " | tr -s " ")"
@@ -684,13 +704,13 @@ case "${main}" in
 					EOF
           ## virtport is necessary
           [ -z "${virtport}" ] && break
-          ## target if empty will tcp local host on interface 127.0.0.1 using the same port as virtport
-          [ -z "${target}" ] && target="127.0.0.1:${virtport}"
+          ## target if empty will tcp local host on interface target_ip_default using the same port as virtport
+          [ -z "${target}" ] && target="${target_ip_default}:${virtport}"
           target_addr="${target%%:*}"
           target_port="${target##*:}"
           ## the first check is in case target was provided as an integer, not as a target
-          ## the second check is for uniformity, convert localhost to 127.0.0.1
-          { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="127.0.0.1:${target_port}"
+          ## the second check is for uniformity, convert localhost to target_ip_default
+          { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="${target_ip_default}:${target_port}"
           is_integer "${virtport}"
           is_addr_port "${target}"
           ## check if the tager is already used in the torrc
