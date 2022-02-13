@@ -262,7 +262,7 @@ case "${choice_main}" in
           --inputbox "${UNIX_PORT_MSG}" 10 60 3>&1 1>&2 2>&3)"
           if [ -n "${service_ports}" ]; then
             tput reset
-            "${su_cmd}" onionjuggler-cli --activate --service "${service_name}" --socket unix --port "${service_ports}"
+            onionjuggler-cli --activate --service "${service_name}" --socket unix --port "${service_ports}"
             return_to_tui
           fi
         fi
@@ -275,7 +275,7 @@ case "${choice_main}" in
           service_ports="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
           --inputbox "${TCP_PORT_MSG}" 13 80 3>&1 1>&2 2>&3)"
           if [ -n "${service_ports}" ]; then
-            "${su_cmd}" onionjuggler-cli --activate --service "${service_name}" --socket tcp --port "${service_ports}"
+            onionjuggler-cli --activate --service "${service_name}" --socket tcp --port "${service_ports}"
             return_to_tui
           fi
         fi
@@ -301,7 +301,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       if [ -n "${choice_disable}" ]; then
         [ "${choice_disable}" = "PURGE" ] && purge="--purge"
         tput reset
-        "${su_cmd}" onionjuggler-cli --deactivate --service "${service_name_list}" "${purge}"
+        onionjuggler-cli --deactivate --service "${service_name_list}" "${purge}"
         return_to_tui
       else
         text="\nOperation canceled, nothing was executed."
@@ -319,7 +319,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       if "${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
       --yesno "${menu}" "$((10+whiptail_height))" 80 3>&1 1>&2 2>&3; then
         tput reset
-        "${su_cmd}" onionjuggler-cli --renew --service "${service_name_list}"
+        onionjuggler-cli --renew --service "${service_name_list}"
         return_to_tui
       fi
     fi
@@ -371,7 +371,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | sed "s/ /,/g")"
         if [ -n "${service_name_list}" ]; then
           tput reset
-          "${su_cmd}" onionjuggler-cli --auth-server --list --service "${service_name_list}"
+          onionjuggler-cli --auth-server --list --service "${service_name_list}"
           return_to_tui
         fi
       ;;
@@ -410,7 +410,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           client_name_list="$(printf %s"${client_name_list}" | tr -s ' ' ',' | tr -s ',' ',')"
           if { [ -n "${service_name_list}" ] && [ -n "${client_name_list}" ]; }; then
             tput reset
-            "${su_cmd}" onionjuggler-cli --auth-server --on --service "${service_name_list}" --client "${client_name_list}"
+            onionjuggler-cli --auth-server --on --service "${service_name_list}" --client "${client_name_list}"
             return_to_tui
           fi
         fi
@@ -430,7 +430,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
             --inputbox "${menu}" 9 50 3>&1 1>&2 2>&3)"
             if [ -n "${client_pub_key}" ]; then
               tput reset
-              "${su_cmd}" onionjuggler-cli --auth-server --on --service "${service_name_list}" --client "${client_name_list}" --client-pub-key "${client_pub_key}"
+              onionjuggler-cli --auth-server --on --service "${service_name_list}" --client "${client_name_list}" --client-pub-key "${client_pub_key}"
               return_to_tui
             fi
           fi
@@ -479,7 +479,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         fi
         if [ -n "${client_name_list}" ]; then
           tput reset
-          "${su_cmd}" onionjuggler-cli --auth-server --off --service "${service_name_list}" --client "${client_name_list}"
+          onionjuggler-cli --auth-server --off --service "${service_name_list}" --client "${client_name_list}"
           return_to_tui
         fi
       ;;
@@ -518,7 +518,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     case "${auth_type}" in
 
       LIST)
-        "${su_cmd}" onionjuggler-cli --auth-client --list
+        onionjuggler-cli --auth-client --list
         return_to_tui
       ;;
 
@@ -537,7 +537,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         --inputbox "${menu}" 9 80 3>&1 1>&2 2>&3)"
         if [ -n "${onion_hostname}" ]; then
           tput reset
-          "${su_cmd}" onionjuggler-cli --auth-client --on --onion "${onion_hostname}"
+          onionjuggler-cli --auth-client --on --onion "${onion_hostname}"
           return_to_tui
         fi
       ;;
@@ -551,7 +551,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         --inputbox "${menu}" 9 80 3>&1 1>&2 2>&3)"
         if { [ -n "${onion_hostname}" ] && [ -n "${client_priv_key}" ]; }; then
           tput reset
-          "${su_cmd}" onionjuggler-cli --auth-client --on --onion "${onion_hostname}" --client-priv-key "${client_priv_key}"
+          onionjuggler-cli --auth-client --on --onion "${onion_hostname}" --client-priv-key "${client_priv_key}"
           return_to_tui
         fi
       ;;
@@ -565,7 +565,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_onion_auth}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
         if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
           tput reset
-          "${su_cmd}" onionjuggler-cli --auth-client --off --onion "${ONION_AUTH_NAME_LIST}"
+          onionjuggler-cli --auth-client --off --onion "${ONION_AUTH_NAME_LIST}"
           return_to_tui
         fi
       ;;
@@ -578,9 +578,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     service_menu checklist "Credentials"
     if [ -n "${service_name_list}" ]; then
       tput reset
-      "${su_cmd}" onionjuggler-cli --info --service "${service_name_list}"
-      #su -c "onionjuggler-cli --info --service \"${service_name_list}\""
-      #onionjuggler-cli --info --service "${service_name_list}"
+      onionjuggler-cli --info --service "${service_name_list}"
       return_to_tui
     fi
   ;;
@@ -599,7 +597,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       if [ -n "${choice_action}" ]; then
         tput reset
         action="$(printf %s"${choice_action}" | tr '[:upper:]' '[:lower:]')"
-        "${su_cmd}" onionjuggler-cli --location "--${action}" --service "${service_name_list}"
+        onionjuggler-cli --location "--${action}" --service "${service_name_list}"
         return_to_tui
       fi
     fi
@@ -619,7 +617,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     case "${status}" in
       list)
         tput reset
-        "${su_cmd}" onionjuggler-cli --"${webserver}" "${status}"
+        onionjuggler-cli --"${webserver}" "${status}"
         return_to_tui
       ;;
       on)
@@ -640,7 +638,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           [ -n "${choice_folder}" ] && folder_name_list="$(printf %s"${choice_folder}" | sed "s/ /,/g")"
           if [ -n "${folder_name_list}" ]; then
             tput reset
-            "${su_cmd}" onionjuggler-cli --web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}"
+            onionjuggler-cli --web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}"
             return_to_tui
           fi
         fi
@@ -662,7 +660,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | sed "s/ /,/g")"
         if [ -n "${service_name_list}" ]; then
           tput reset
-          "${su_cmd}" onionjuggler-cli --web "--${status}" --service "${service_name_list}"
+          onionjuggler-cli --web "--${status}" --service "${service_name_list}"
           return_to_tui
         fi
       ;;
@@ -690,7 +688,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       tail -f -n 25 /var/log/tor/vanguards.log
     elif [ -n "${choice_action}" ]; then
       tput reset
-      "${su_cmd}" onionjuggler-cli --vanguards "--${choice_action}"
+      onionjuggler-cli --vanguards "--${choice_action}"
       return_to_tui
     fi
   ;;
@@ -706,7 +704,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     if [ -n "${choice_action}" ]; then
       action="$(printf %s"${choice_action}" | tr '[:upper:]' '[:lower:]')"
       tput reset
-      "${su_cmd}" onionjuggler-cli --backup --"${action}"
+      onionjuggler-cli --backup --"${action}"
       return_to_tui
     fi
   ;;
