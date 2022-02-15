@@ -21,7 +21,7 @@ magenta="\033[35m"
 cyan="\033[36m"
 
 notice(){ printf %s"${me}: ${1}\n" 1>&2; }
-error_msg(){ notice "${red}error: ${1}"; exit 1; }
+error_msg(){ notice "${red}error: ${1}${nocolor}"; exit 1; }
 
 topdir="$(git rev-parse --show-toplevel)"
 check_repo(){
@@ -183,7 +183,11 @@ get_os(){
 
   case ${os} in
     Linux*)
-      if command -v lsb_release >/dev/null; then
+      if test -f /usr/share/anon-ws-base-files/workstation; then
+        error_msg "OnionJuggler is meant to be run on the Gateway, not Workstation"
+      elif test -f /usr/share/anon-gw-base-files/gateway; then
+        distro="Whonix"
+      elif command -v lsb_release >/dev/null; then
         distro=$(lsb_release -sd)
       elif [ -f /etc/os-release ]; then
         while IFS='=' read -r key val; do
@@ -231,44 +235,49 @@ range_variable(){
 ## 1. source default configuration file first
 ## 2. source local (user made) configuration files to override the default values
 ## 3. source the ONIONJUGGLER_CONF specified by the cli argument and if it empty, use the environment variable
-if [ ! -f /etc/onionjuggler/onionjuggler.conf ]; then
-  get_os
-  case "${os}" in
-    Linux*)
-      case "${distro}" in
-        "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) . "${topdir}"/etc/onionjuggler/debian.conf;;
-        "Arch"*|"Artix"*|"ArcoLinux"*) . "${topdir}"/etc/onionjuggler/arch.conf;;
-        "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") . "${topdir}"/etc/onionjuggler/fedora.conf;;
-      esac
-    ;;
-    "OpenBSD"*) . etc/onionjuggler/openbsd.conf;;
-    "NetBSD"*) . etc/onionjuggler/netbsd.conf;;
-    "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) . "${topdir}"/etc/onionjuggler/freebsd.conf;;
-  esac
-else
-  [ -r /etc/onionjuggler/onionjuggler.conf ] && . /etc/onionjuggler/onionjuggler.conf
-fi
-for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}"; done
-[ -r "${ONIONJUGGLER_CONF}" ] && . "${ONIONJUGGLER_CONF}"
+get_vars(){
+  if [ ! -f /etc/onionjuggler/onionjuggler.conf ]; then
+    get_os
+    case "${os}" in
+      Linux*)
+        case "${distro}" in
+          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*) . "${topdir}"/etc/onionjuggler/debian.conf;;
+  	  "Tails"*) . "${topdir}"/etc/onionjuggler/tails.conf;;
+	  "Whonix"*) . "${topdir}"/etc/onionjuggler/whonix.conf;;
+          "Arch"*|"Artix"*|"ArcoLinux"*) . "${topdir}"/etc/onionjuggler/arch.conf;;
+          "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") . "${topdir}"/etc/onionjuggler/fedora.conf;;
+        esac
+      ;;
+      "OpenBSD"*) . etc/onionjuggler/openbsd.conf;;
+      "NetBSD"*) . etc/onionjuggler/netbsd.conf;;
+      "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) . "${topdir}"/etc/onionjuggler/freebsd.conf;;
+      *) error_msg "Unsupported system: ${os} ${kernel} ${distro}"
+    esac
+  else
+    [ -r /etc/onionjuggler/onionjuggler.conf ] && . /etc/onionjuggler/onionjuggler.conf
+  fi
+  for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}"; done
+  [ -r "${ONIONJUGGLER_CONF}" ] && . "${ONIONJUGGLER_CONF}"
 
-## if any of the configurations are empty, use default ones
-: "${su_cmd:="sudo"}"
-: "${tor_user:="debian-tor"}"
-: "${pkg_mngr_install:="apt install -y"}"
-: "${dialog_box:="dialog"}"
-: "${webserver:="nginx"}"
-: "${requirements:="tor grep sed tar openssl basez git python3-stem qrencode ${dialog_box} ${webserver}"}"
-: "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
-: "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
-: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
-: "${openssl_cmd:="openssl"}"
+  ## if any of the configurations are empty, use default ones
+  : "${su_cmd:="sudo"}"
+  : "${tor_user:="debian-tor"}"
+  : "${pkg_mngr_install:="apt install -y"}"
+  : "${dialog_box:="dialog"}"
+  : "${webserver:="nginx"}"
+  : "${requirements:="tor grep sed tar openssl basez git python3-stem qrencode ${dialog_box} ${webserver}"}"
+  : "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
+  : "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
+  : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
+  : "${openssl_cmd:="openssl"}"
 
-## sanity check
-printf %d "${tor_control_port:=9051}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
+  ## sanity check
+  printf %d "${tor_control_port:=9051}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
 
-range_variable su_cmd sudo doas
-range_variable webserver nginx apache2 openbsd-httpd
-range_variable dialog_box dialog whiptail
+  range_variable su_cmd sudo doas
+  range_variable webserver nginx apache2 openbsd-httpd
+  range_variable dialog_box dialog whiptail
+}
 
 ###################
 ###### MAIN #######
@@ -301,6 +310,7 @@ case "${command}" in
   i|install)
     check_repo
     check_dir
+    get_vars
     requires_root
     notice "${magenta}Checking requirements${nocolor}"
     # shellcheck disable=SC2086
@@ -328,7 +338,9 @@ case "${command}" in
     case "${os}" in
       Linux*)
         case "${distro}" in
-          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Tails"*|"Linux Mint"*|"LinuxMint"*|"mint"*) cp "${topdir}"/etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
+          "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*) cp "${topdir}"/etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
+          "Tails"*) cp "${topdir}"/etc/onionjuggler/tails.conf "${conf_dir}"/etc/onionjuggler/onionjuggler.conf;;
+          "Whonix"*) cp "${topdir}"/etc/onionjuggler/whonix.conf "${conf_dir}"/etc/onionjuggler/onionjuggler.conf;;
           "Arch"*|"Artix"*|"ArcoLinux"*) cp "${topdir}"/etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
           "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") cp "${topdir}"/etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac
