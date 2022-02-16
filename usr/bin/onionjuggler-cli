@@ -303,14 +303,9 @@ safe_edit(){
   TMPDIR="${TMPDIR%*/}"
   key="${2}"
   file="${3}"
-  ## get base file: /etc/tor/vanguards.conf.sample -> vanguards.conf.sample.
-  ## replace dot and hifen for underscore so it can be evaluated as a key (variable name)
-  file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
-  [ -z "${file_name}" ] && error_msg "file_name is empty"
   case "${1}" in
     tmp)
-      file_name_tmp="$(printf %s"mkstemp(${TMPDIR}/${file_name}.XXXXXX)" | m4)"
-      eval "${file_name}"_tmp="${file_name_tmp}"
+      file_name_tmp="$(printf %s"mkstemp(${TMPDIR}/${file##*/}.XXXXXX)" | m4)"
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       chown "${tor_conf_user_group}" "${file_name_tmp}"
       cp "${file}" "${file_name_tmp}"
@@ -318,7 +313,6 @@ safe_edit(){
       # shellcheck disable=SC2064
       trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}" EXIT
     ;;
-    #getvar) eval file_name_tmp='$'"${file_name}_tmp" && printf %s"${file_name_tmp}";;
     save)
       eval file_name_tmp='$'"${file_name}_tmp"
       if cmp -s "${file_name_tmp}" "${file}"; then
