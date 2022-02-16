@@ -306,7 +306,6 @@ case "${command}" in
     not_as_root
     notice "${magenta}Pulling, hold back${nocolor}"
     git pull "${onionjuggler_repo}"
-    "${0}" -i
   ;;
 
   i|install)

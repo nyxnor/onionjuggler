@@ -314,7 +314,7 @@ safe_edit(){
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       chown "${tor_conf_user_group}" "${file_name_tmp}"
       cp "${file}" "${file_name_tmp}"
-      eval ${key}_tmp="${file_name_tmp}"
+      eval "${key}"_tmp="${file_name_tmp}"
       # shellcheck disable=SC2064
       trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}" EXIT
     ;;
