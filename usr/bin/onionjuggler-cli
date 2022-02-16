@@ -302,7 +302,7 @@ safe_edit(){
   [ -w "${TMPDIR:="/tmp"}" ] || export TMPDIR="~"
   TMPDIR="${TMPDIR%*/}"
   key="${2}"
-  eval file=$(printf '%s\n' "${key}")
+  eval file="$(printf '%s\n' '$'"${key}")"
   case "${1}" in
     tmp)
       file_name_tmp="$(mktemp "${TMPDIR}/${file##*/}.XXXXXX")"

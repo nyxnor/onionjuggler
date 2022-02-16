@@ -162,7 +162,7 @@ make_shellcheck(){
   command -v shellcheck >/dev/null || error_msg "Install shellcheck to review syntax"
   notice "${yellow}Checking shell syntax${nocolor}"
   ## Customize severity with -S [error|warning|info|style]
-  if ! shellcheck configure.sh etc/onionjuggler/*.conf usr/bin/*; then
+  if ! shellcheck "${topdir}"/configure.sh "${topdir}"/etc/onionjuggler/*.conf "${topdir}"/usr/bin/*; then
     error_msg "Please fix the shellcheck warnings above before pushing!"
   fi
 }
