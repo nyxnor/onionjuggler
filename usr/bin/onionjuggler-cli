@@ -293,28 +293,30 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 ## If correct, then save file back to its original location. This avoids running with an invalid
 ## configuration that can make a daemon fail to reload or even start
 ## Limitation is file name cannot start with a number.
-## $ safe_edit tmp variable "${variable}"
-## $ safe_edit tmp tor_conf "${tor_conf}"
-## modify the "${file_tmp}"
-## use the daemon option to verify config -f "${file_tmp}"
-## $ safe_edit save "${file}"
+## $ safe_edit tmp variable
+## $ safe_edit tmp tor_conf
+## modify the "${tor_conf_tmp}"
+## use the daemon option to verify config -f "${tor_conf_tmp}"
+## $ safe_edit save tor_conf
 safe_edit(){
   [ -w "${TMPDIR:="/tmp"}" ] || export TMPDIR="~"
   TMPDIR="${TMPDIR%*/}"
   key="${2}"
-  file="${3}"
+  eval file=$(printf '%s\n' "${key}")
   case "${1}" in
     tmp)
-      file_name_tmp="$(printf %s"mkstemp(${TMPDIR}/${file##*/}.XXXXXX)" | m4)"
+      file_name_tmp="$(mktemp "${TMPDIR}/${file##*/}.XXXXXX")"
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       chown "${tor_conf_user_group}" "${file_name_tmp}"
       cp "${file}" "${file_name_tmp}"
+      ## assign variable_tmp
       eval "${key}"_tmp="${file_name_tmp}"
       # shellcheck disable=SC2064
       trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}" EXIT
     ;;
     save)
-      eval file_name_tmp='$'"${file_name}_tmp"
+      ## get variable_tmp file
+      eval file_name_tmp='$'"${key}_tmp"
       if cmp -s "${file_name_tmp}" "${file}"; then
         notice "File ${file_name_tmp} do not differ from ${file}"
         notice "Not writing back to original location.${nocolor}"
@@ -338,7 +340,7 @@ verify_config_tor(){
   notice "Verifying tor configuration file ${config}"
   ! ${su_tor_cmd} tor -f "${config}" --verify-config --hush && error_msg "aborting: configuration is invalid"
   notice "${green}Configuration OK${nocolor}"
-  [ -n "${tor_conf_tmp}" ] && safe_edit save "${tor_conf}"
+  [ -n "${tor_conf_tmp}" ] && safe_edit save tor_conf
 }
 
 
@@ -640,7 +642,7 @@ case "${main}" in
       cat_squeeze_blank "${tor_conf_tmp}" | tee "${tor_conf_tmp}".tmp >/dev/null && mv "${tor_conf_tmp}".tmp "${tor_conf_tmp}"
       notice "Disabled service: ${bold}${service}${magenta}${nocolor}"
     }
-    safe_edit tmp tor_conf "${tor_conf}"
+    safe_edit tmp tor_conf
     loop_list delete_service "${service}"
     printf "\n"
     signal_tor
@@ -680,7 +682,7 @@ case "${main}" in
     fi
 
     ## backup torrc
-    safe_edit tmp tor_conf "${tor_conf}"
+    safe_edit tmp tor_conf
     notice "Including Hidden Service configuration to ${tor_conf_tmp}"
     printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\n" | tee -a "${tor_conf_tmp}"
 
@@ -935,7 +937,7 @@ case "${main}" in
             onion_hostaname_without_onion="${onion%.onion}"
             [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "Onion domain is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#onion}" = "56" ] || error_msg "Onion domain is invalid, LENGTH=${#onion} is different than 56 characters (<56-char-base32>.onion)"
-            safe_edit tmp tor_conf "${tor_conf}"
+            safe_edit tmp tor_conf
             read_tor_files
             # shellcheck disable=SC2086
             grep -q "ClientOnionAuthDir" ${tor_config_files} && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | tee -a "${tor_conf_tmp}"; }
@@ -1374,7 +1376,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     [ -z "${python_path}" ] && error_msg "Python is not installed and it is needed for Vanguards."
 
     vanguards_config(){
-      safe_edit tmp tor_conf "${tor_conf}"
+      safe_edit tmp tor_conf
       ## Keep config with the torrc and torsocks.conf
       cp "${tor_data_dir}"/vanguards/vanguards-example.conf "${tor_conf_dir}"/vanguards.conf
       sed -i'' "s|tor_control_port =.*|tor_control_port = ${tor_control_port}|g" "${tor_conf_dir}"/vanguards.conf
