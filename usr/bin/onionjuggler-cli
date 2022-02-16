@@ -293,14 +293,16 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 ## If correct, then save file back to its original location. This avoids running with an invalid
 ## configuration that can make a daemon fail to reload or even start
 ## Limitation is file name cannot start with a number.
-## $ safe_edit tmp "${file}" && file_tmp="$(safe_edit getver "${file}")"
+## $ safe_edit tmp variable "${variable}"
+## $ safe_edit tmp tor_conf "${tor_conf}"
 ## modify the "${file_tmp}"
 ## use the daemon option to verify config -f "${file_tmp}"
 ## $ safe_edit save "${file}"
 safe_edit(){
   [ -w "${TMPDIR:="/tmp"}" ] || export TMPDIR="~"
   TMPDIR="${TMPDIR%*/}"
-  file="${2}"
+  key="${2}"
+  file="${3}"
   ## get base file: /etc/tor/vanguards.conf.sample -> vanguards.conf.sample.
   ## replace dot and hifen for underscore so it can be evaluated as a key (variable name)
   file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
@@ -312,10 +314,11 @@ safe_edit(){
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       chown "${tor_conf_user_group}" "${file_name_tmp}"
       cp "${file}" "${file_name_tmp}"
+      eval ${key}_tmp="${file_name_tmp}"
       # shellcheck disable=SC2064
       trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}" EXIT
     ;;
-    getvar) eval file_name_tmp='$'"${file_name}_tmp" && printf %s"${file_name_tmp}";;
+    #getvar) eval file_name_tmp='$'"${file_name}_tmp" && printf %s"${file_name_tmp}";;
     save)
       eval file_name_tmp='$'"${file_name}_tmp"
       if cmp -s "${file_name_tmp}" "${file}"; then
@@ -643,7 +646,7 @@ case "${main}" in
       cat_squeeze_blank "${tor_conf_tmp}" | tee "${tor_conf_tmp}".tmp >/dev/null && mv "${tor_conf_tmp}".tmp "${tor_conf_tmp}"
       notice "Disabled service: ${bold}${service}${magenta}${nocolor}"
     }
-    safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
+    safe_edit tmp tor_conf "${tor_conf}"
     loop_list delete_service "${service}"
     printf "\n"
     signal_tor
@@ -683,7 +686,7 @@ case "${main}" in
     fi
 
     ## backup torrc
-    safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
+    safe_edit tmp tor_conf "${tor_conf}"
     notice "Including Hidden Service configuration to ${tor_conf_tmp}"
     printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\n" | tee -a "${tor_conf_tmp}"
 
@@ -938,8 +941,9 @@ case "${main}" in
             onion_hostaname_without_onion="${onion%.onion}"
             [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "Onion domain is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#onion}" = "56" ] || error_msg "Onion domain is invalid, LENGTH=${#onion} is different than 56 characters (<56-char-base32>.onion)"
-            safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
+            safe_edit tmp tor_conf "${tor_conf}"
             read_tor_files
+            # shellcheck disable=SC2086
             grep -q "ClientOnionAuthDir" ${tor_config_files} && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | tee -a "${tor_conf_tmp}"; }
             "${su_cmd}" -u "${tor_user}" mkdir -p "${tor_data_dir_auth}"
             if [ -z "${client_priv_key}" ]; then
@@ -1376,7 +1380,7 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
     [ -z "${python_path}" ] && error_msg "Python is not installed and it is needed for Vanguards."
 
     vanguards_config(){
-      safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
+      safe_edit tmp tor_conf "${tor_conf}"
       ## Keep config with the torrc and torsocks.conf
       cp "${tor_data_dir}"/vanguards/vanguards-example.conf "${tor_conf_dir}"/vanguards.conf
       sed -i'' "s|tor_control_port =.*|tor_control_port = ${tor_control_port}|g" "${tor_conf_dir}"/vanguards.conf
@@ -1384,13 +1388,17 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       ## Control and Authentication methods are needed. Use the easiest to configure if the manual ones are not present, else do nothing.
       ## Control methods are Port (default: 9051) and Socket (default: /run/tor/control). Prefer port because socket path may differ on different systems https://github.com/mikeperry-tor/vanguards/pull/54#issuecomment-812185302.
       read_tor_files
+      # shellcheck disable=SC2086
       if ! grep -q "ControlPort ${tor_control_port}" ${tor_config_files} && ! grep -q "ControlSocket" ${tor_config_files}; then
         sed -i'' "s/ControlPort .*/ControlPort ${tor_control_port}/" "${tor_conf_tmp}"
+        # shellcheck disable=SC2086
         grep -q "ControlPort ${tor_control_port}" ${tor_config_files} || printf %s"\nControlPort ${tor_control_port}\n\n" | tee -a "${tor_conf_tmp}" >/dev/null
       fi
       ## Authentication methods are Cookie (default: 0) and HashedPassword, to read the "control_auth_cookie". Prefer cookie because else a password is needed. If any method was already configured, use it.
+      # shellcheck disable=SC2086
       if ! grep -q "CookieAuthentication 1" ${tor_config_files} && ! grep -q "HashedControlPassword" ${tor_config_files}; then
         sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${tor_conf_tmp}"
+        # shellcheck disable=SC2086
         grep -q "CookieAuthentication" ${tor_config_files} || printf "\nCookieAuthentication 1\n\n" | tee -a "${tor_conf_tmp}" >/dev/null
       fi
       ## Generate Vanguards service
