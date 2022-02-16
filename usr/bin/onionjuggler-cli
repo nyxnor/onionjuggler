@@ -820,7 +820,7 @@ case "${main}" in
               ## save variables
               client_pub_key=$(cat /tmp/k1.pub.key)
               client_priv_key=$(cat /tmp/k1.prv.key)
-              onion_hostaname_without_onion="${onion_hostname%.onion}"
+              onion_hostname_without_onion="${onion_hostname%.onion}"
               client_priv_key_config="${onion_hostname%.onion}:descriptor:x25519:${client_priv_key}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
               # Server side configuration
@@ -934,8 +934,8 @@ case "${main}" in
             [ -z "${onion}" ] && usage
             ## removes protocol such as http(s)://, ssh:// and git:// from the front of the address and trailing / at the end of the onion to clean it and only show the hostname (address.onion)
             onion="$(printf %s"${onion}\n" | sed "s|.*://||" | sed "s|/$||")"
-            onion_hostaname_without_onion="${onion%.onion}"
-            [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "Onion domain is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
+            onion_hostname_without_onion="${onion%.onion}"
+            [ "${onion_hostname_without_onion%%*[^a-z2-7]*}" ] || error_msg "Onion domain is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#onion_hostname_without_onion}" = "56" ] || error_msg "Onion domain is invalid, LENGTH=${#onion} is different than 56 characters (<56-char-base32>.onion)"
             safe_edit tmp tor_conf
             read_tor_files
@@ -950,7 +950,7 @@ case "${main}" in
               ## save variables
               client_pub_key=$(cat /tmp/k1.pub.key)
               client_priv_key=$(cat /tmp/k1.prv.key)
-              client_priv_key_config="${onion_hostaname_without_onion}:descriptor:x25519:${client_priv_key}"
+              client_priv_key_config="${onion_hostname_without_onion}:descriptor:x25519:${client_priv_key}"
               client_pub_key_config="descriptor:x25519:${client_pub_key}"
               ## Delete pem and keys
               rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
@@ -966,7 +966,7 @@ case "${main}" in
               notice "client_pub_key=${client_pub_key}"
               notice "client_pub_key_config=descriptor:x25519:${client_pub_key}"
             else
-              client_priv_key_config="${onion_hostaname_without_onion}:descriptor:x25519:${client_priv_key}"
+              client_priv_key_config="${onion_hostname_without_onion}:descriptor:x25519:${client_priv_key}"
               printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}"/"${onion}".auth_private >/dev/null
               notice "\n${bold}Client side authorization configured${nocolor}"
               notice "As you inserted the private key manually, it ise expected that you have already sent/received the public key to/from the onion service operator"
