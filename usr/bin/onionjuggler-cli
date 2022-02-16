@@ -183,7 +183,7 @@ range_arg(){
       [ "${var%%*[^${tests}]*}" ] && success=1
     done
     ## if not withing range, fail and show the fixed range that can be used
-    [ ${success} -ne 1 ] && error_msg "Option '${opt_orig}'can not be '${var}'! It can only be: ${range}."
+    [ ${success} -ne 1 ] && error_msg "Option '${opt_orig}' can not be '${var}'! It can only be: ${range}."
   fi
 }
 
@@ -342,6 +342,20 @@ verify_config_tor(){
   ! ${su_tor_cmd} tor -f "${config}" --verify-config --hush && error_msg "aborting: configuration is invalid"
   notice "${green}Configuration OK${nocolor}"
   [ -n "${tor_conf_tmp}" ] && safe_edit save "${tor_conf}"
+}
+
+
+## TODO: vinculate with verify_config_tor()
+## TODO: parse this with the modified file and without the original one
+## get files tor will read
+read_tor_files(){
+  if test -f /lib/systemd/system/tor@default.service; then
+    tor_start_command="$(grep "ExecStart=" /lib/systemd/system/tor@default.service | sed "s/ExecStart=//")"
+  elif test -f /lib/systemd/system/tor.service; then
+    tor_start_command="$(grep "ExecStart=" /lib/systemd/system/tor.service | sed "s/ExecStart=//")"
+  fi
+  tor_verify_config_output="$(${tor_start_command:="tor"} --verify-config)"
+  tor_config_files="$(printf '%s\n' "${tor_verify_config_output}" |  grep -E " Read configuration file [^ ]*| Including configuration file [^ ]*" | awk '{print $NF}' | sed "s/\"//;s/\".//;s/\/\//\//" | tr "\n" " ")"
 }
 
 
@@ -925,7 +939,8 @@ case "${main}" in
             [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "Onion domain is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
             [ "${#onion}" = "56" ] || error_msg "Onion domain is invalid, LENGTH=${#onion} is different than 56 characters (<56-char-base32>.onion)"
             safe_edit tmp "${tor_conf}" && tor_conf_tmp="$(safe_edit getvar "${tor_conf}")"
-            grep -q "ClientOnionAuthDir" "${tor_conf_tmp}" && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | tee -a "${tor_conf_tmp}"; }
+            read_tor_files
+            grep -q "ClientOnionAuthDir" ${tor_config_files} && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | tee -a "${tor_conf_tmp}"; }
             "${su_cmd}" -u "${tor_user}" mkdir -p "${tor_data_dir_auth}"
             if [ -z "${client_priv_key}" ]; then
               ## Generate pem and derive pub and priv keys
@@ -1368,14 +1383,15 @@ server {\n\tlisten 443 ssl http2;\n\tadd_header Onion-Location http://""%s${onio
       sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${tor_conf_dir}"/vanguards.conf
       ## Control and Authentication methods are needed. Use the easiest to configure if the manual ones are not present, else do nothing.
       ## Control methods are Port (default: 9051) and Socket (default: /run/tor/control). Prefer port because socket path may differ on different systems https://github.com/mikeperry-tor/vanguards/pull/54#issuecomment-812185302.
-      if ! grep -q "ControlPort ${tor_control_port}" "${tor_conf_tmp}" && ! grep -q "ControlSocket" "${tor_conf_tmp}"; then
+      read_tor_files
+      if ! grep -q "ControlPort ${tor_control_port}" ${tor_config_files} && ! grep -q "ControlSocket" ${tor_config_files}; then
         sed -i'' "s/ControlPort .*/ControlPort ${tor_control_port}/" "${tor_conf_tmp}"
-        grep -q "ControlPort ${tor_control_port}" "${tor_conf_tmp}" || printf %s"\nControlPort ${tor_control_port}\n\n" | tee -a "${tor_conf_tmp}" >/dev/null
+        grep -q "ControlPort ${tor_control_port}" ${tor_config_files} || printf %s"\nControlPort ${tor_control_port}\n\n" | tee -a "${tor_conf_tmp}" >/dev/null
       fi
       ## Authentication methods are Cookie (default: 0) and HashedPassword, to read the "control_auth_cookie". Prefer cookie because else a password is needed. If any method was already configured, use it.
-      if ! grep -q "CookieAuthentication 1" "${tor_conf_tmp}" && ! grep -q "HashedControlPassword" "${tor_conf_tmp}"; then
+      if ! grep -q "CookieAuthentication 1" ${tor_config_files} && ! grep -q "HashedControlPassword" ${tor_config_files}; then
         sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${tor_conf_tmp}"
-        grep -q "CookieAuthentication" "${tor_conf_tmp}" || printf "\nCookieAuthentication 1\n\n" | tee -a "${tor_conf_tmp}"  >/dev/null
+        grep -q "CookieAuthentication" ${tor_config_files} || printf "\nCookieAuthentication 1\n\n" | tee -a "${tor_conf_tmp}" >/dev/null
       fi
       ## Generate Vanguards service
       printf %s"
