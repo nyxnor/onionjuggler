@@ -60,75 +60,75 @@ _@v'':i''L,'''''_{'_'y''kJu@6jjuuuujjjN@-
 ${nocolor}
 Usage: ${me} command [--option <ARGUMENT>]
 \nComplete options:
-  activate [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT [VIRTPORT2]>]
+  --activate [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT [VIRTPORT2]>]
                                                              enable a service listening with tcp sockets
-  deactivate [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[,TARGET] [,VIRTPORT2][,TARGET2]>]
+  --deactivate [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[,TARGET] [,VIRTPORT2][,TARGET2]>]
                                                              enable a service listening on unix sockets
-  deactivate [--purge] [--service <@all|SERV1,SERV2,...>     disable a service and optionally purge its directory
-  info [--quiet] [--service <@all|SERV1,SERV2,...>]          see credentials from indicated services
-  renew [--service <@all|SERV1,SERV2,...>]                   renew indicated services addresses
-  auth-server --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-key <CLIENT_PUB_KEY>]
+  --deactivate [--purge] [--service <@all|SERV1,SERV2,...>   disable a service and optionally purge its directory
+  --info [--quiet] [--service <@all|SERV1,SERV2,...>]        see credentials from indicated services
+  --renew [--service <@all|SERV1,SERV2,...>]                 renew indicated services addresses
+  --auth-server --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-key <CLIENT_PUB_KEY>]
                                                              add client authorization, optionally add client's public key
-  auth-server --on [--service <@all|SERV1,SERV2,...>] [--client <CLIENT1,CLIENT2,...>]
+  --auth-server --on [--service <@all|SERV1,SERV2,...>] [--client <CLIENT1,CLIENT2,...>]
                                                              add client authorization
-  auth-server --off [--service <@all|SERV1,SERV2,...>] [--client <@all|CLIENT1,CLIENT2,...>]
+  --auth-server --off [--service <@all|SERV1,SERV2,...>] [--client <@all|CLIENT1,CLIENT2,...>]
                                                              remove client authorization
-  auth-server --list [--service <@all|SERV1,SERV2,...>]      list authorized clients for indicated service
-  auth-client --on [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>]
+  --auth-server --list [--service <@all|SERV1,SERV2,...>]    list authorized clients for indicated service
+  --auth-client --on [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>]
                                                              add authorization of client access, optionally add client's private key
-  auth-client --off [--onion <ONION>]                        remove authorization of client access
-  auth-client --list                                         list your keys as a client
-  web --on [--service <SERVICE>] [--folder <SITE_PATH>]      start serving a website for certain service and its folder
-  web --off [--service <SERVICE>]                            stop serving a website for certain service and its folder
-  web --list                                                 list enabled websites
-  location [--nginx|--apache2|--html] [--service <SERVICE>]  onion-location guide, no execution
-  backup [--create|--integrate]                              backup onion services or integrate the backup
-  vanguards [--on|--list|--off]                              install or upgrade, remove or see logs for vanguards addon
+  --auth-client --off [--onion <ONION>]                      remove authorization of client access
+  --auth-client --list                                       list your keys as a client
+  --web --on [--service <SERVICE>] [--folder <SITE_PATH>]    start serving a website for certain service and its folder
+  --web --off [--service <SERVICE>]                          stop serving a website for certain service and its folder
+  --web --list                                               list enabled websites
+  --location [--nginx|--apache2|--html] [--service <SERVICE>]  onion-location guide, no execution
+  --backup [--create|--integrate]                            backup onion services or integrate the backup
+  --vanguards [--on|--list|--off]                            install or upgrade, remove or see logs for vanguards addon
   -h|--help                                                  display this help message
 
 Options:
   --getconf                                                  print configuration
   --getopt                                                   print options given by the command line
-  on                                                         activate an onion service
+  --on                                                       activate an onion service
     -s, --service <SERVICE>                                  service to activate
     -S, --socket <tcp|unix>                                  define a socket for the new onion service
     -v, --version 3                                          define a version for the new onion service
     -p, --port <VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>       define ports for the new onion service
     -g, --whonix-gateway                                     define target 127.0.0.1 (Whonix Gateway IP) (does not overwrite specified target)
-  off                                                        deactivate an onion service configuration
+  --off                                                      deactivate an onion service configuration
     -s, --service <SERV1,SERV2,...>                          service to deactivate
     -P, --purge                                              purge the onion service data
-  info                                                       list existing services and their configuration, clients
+  --info                                                     list existing services and their configuration, clients
     -s, --service <@all|SERV1,SERV2,...>                     list all services or a indicate them comma separated
     -q, --quiet                                              don't QR encode the hostname
-  auth-server                                                manage authorized_clients
+  --auth-server                                              manage authorized_clients
     -s, --service <@all|SERV1,SERV2,...>                     authorize or remove authorization to indicated services
     -n, --on                                                 authorized aclient
     -f, --off                                                remove authorization from a client
     -l, --list                                               list authorized clients
     -c, --client <CLIENT>                                    choose client
     -K, --client-pub-key <CLIENT_PUB_KEY>                    specify client pub key to authorize to one service
-  auth-client                                                manage your authorizations to an onion
+  --auth-client                                              manage your authorizations to an onion
     -n, --on                                                 add authorization
     -f, --off                                                remove authorization
     -l, --list                                               list current authorizations
     -o, --onion <ONION>                                      specify onion to authenticate
     -k, --client-priv-key <CLIENT_PRIV_KEY>                  specify your client private key
-  web                                                        manage web server configuration
+  --web                                                      manage web server configuration
     -s, --service <SERVICE>                                  service to enable or disable website
     -n, --on                                                 activate website to an onion service
     -f, --off                                                deactivate website to an onion service
     -l, --list                                               list active websites
     -w, --folder <SITE_PATH>                                 specify website files
-  location                                                   guide to add onion-location to redirect users to your onion domain
+  --location                                                 guide to add onion-location to redirect users to your onion domain
     -s, --service <SERVICE>                                  indicate service to see onion-location string
     --nginx                                                  Nginx webserver header for onion-location
     --apache2                                                Apache2 webserver header for onion-location
     --html                                                   HTML header for onion-location
-  backup                                                     complete backup of onion services
+  --backup                                                   complete backup of onion services
     -M, --make                                               make a backup
     -I, --integrate                                          integrate backup to your system
-  vanguards                                                  manage Vanguards protection
+  --vanguards                                                manage Vanguards protection
     -n, --on                                                 install Vanguards addon, if already installed, upgrade.
     -f, --off                                                remove Vanguards
     -l, --list                                               see Vanguards logs
@@ -936,11 +936,11 @@ case "${main}" in
             onion="$(printf %s"${onion}\n" | sed "s|.*://||" | sed "s|/$||")"
             onion_hostaname_without_onion="${onion%.onion}"
             [ "${onion_hostaname_without_onion%%*[^a-z2-7]*}" ] || error_msg "Onion domain is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
-            [ "${#onion}" = "56" ] || error_msg "Onion domain is invalid, LENGTH=${#onion} is different than 56 characters (<56-char-base32>.onion)"
+            [ "${#onion_hostname_without_onion}" = "56" ] || error_msg "Onion domain is invalid, LENGTH=${#onion} is different than 56 characters (<56-char-base32>.onion)"
             safe_edit tmp tor_conf
             read_tor_files
             # shellcheck disable=SC2086
-            grep -q "ClientOnionAuthDir" ${tor_config_files} && { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | tee -a "${tor_conf_tmp}"; }
+            grep -q "ClientOnionAuthDir" ${tor_config_files} || { printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | tee -a "${tor_conf_tmp}"; }
             "${su_cmd}" -u "${tor_user}" mkdir -p "${tor_data_dir_auth}"
             if [ -z "${client_priv_key}" ]; then
               ## Generate pem and derive pub and priv keys
