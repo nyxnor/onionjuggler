@@ -159,6 +159,7 @@ install_package(){
 
 
 make_shellcheck(){
+  command -v shellcheck >/dev/null || error_msg "Install shellcheck to review syntax"
   notice "${yellow}Checking shell syntax${nocolor}"
   ## Customize severity with -S [error|warning|info|style]
   if ! shellcheck configure.sh etc/onionjuggler/*.conf usr/bin/*; then
@@ -168,6 +169,7 @@ make_shellcheck(){
 
 
 make_man(){
+  command -v pandoc >/dev/null || error_msg "Install pandoc to create manuals"
   notice "${magenta}Creating manual pages${nocolor}"
   for man in "${topdir}"/man/*; do
     man="${man##*/}"
@@ -339,8 +341,8 @@ case "${command}" in
       Linux*)
         case "${distro}" in
           "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*) cp "${topdir}"/etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
-          "Tails"*) cp "${topdir}"/etc/onionjuggler/tails.conf "${conf_dir}"/etc/onionjuggler/onionjuggler.conf;;
-          "Whonix"*) cp "${topdir}"/etc/onionjuggler/whonix.conf "${conf_dir}"/etc/onionjuggler/onionjuggler.conf;;
+          "Tails"*) cp "${topdir}"/etc/onionjuggler/tails.conf "${conf_dir}/oionjuggler.conf";;
+          "Whonix"*) cp "${topdir}"/etc/onionjuggler/whonix.conf "${conf_dir}/onionjuggler.conf";;
           "Arch"*|"Artix"*|"ArcoLinux"*) cp "${topdir}"/etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
           "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") cp "${topdir}"/etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac
