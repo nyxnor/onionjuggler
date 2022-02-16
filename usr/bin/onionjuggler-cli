@@ -592,7 +592,7 @@ case "${dev}" in
   ## usefult to see if there is nothing messed up and if there is, can be checked before running the cli.
   getconf)
     for key in ONIONJUGGLER_CONF su_cmd openssl_cmd webserver webserver_conf website_dir vanguards_commit \
-    tor_daemon tor_user tor_conf_user_group tor_data_dir tor_data_dir_services tor_data_dir_auth tor_conf_dir \
+    tor_daemon tor_user tor_conf_dir tor_conf_user_group tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
     tor_control_port tor_backup_dir; do
       eval val='$'"${key}"
       [ -n "${val:-}" ] && printf '%s\n' "${key}=\"${val}\""
