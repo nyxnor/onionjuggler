@@ -726,8 +726,10 @@ EOF
           target_port="${target##*:}"
 
           ## Qubes-Whonix should have a different target for services aiming to the Workstation
-          command -v qubesdb-read >/dev/null && [ "${target_addr}" = "127.0.0.1" ] && [ "${gateway_service}" != "1" ] &&
-            error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr=WS_QUBE_IP' on /etc/onionjuggler/conf.d/user.conf"
+          if command -v qubesdb-read >/dev/null && [ "${target_addr}" = "127.0.0.1" ] && [ "${gateway_service}" != "1" ]; then
+            error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr' on /etc/onionjuggler/conf.d/user.conf"
+            echo "1" | tee -a "${fail_log}" >/dev/null
+          fi
           ## the first check is in case target was provided as an integer, not as a target
           ## the second check is for uniformity, convert localhost to target_ip_default
           { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="${target_ip_default}:${target_port}"
