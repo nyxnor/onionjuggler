@@ -502,6 +502,7 @@ service_block(){
   ## print the exact match HiddenServiceDir of the requested service that must end with the service name or with "/", also prit n lines below it
   match="HiddenServiceDir ${tor_data_dir_services}/${service}"
   hs_found=""
+  hs_lines_delete=""
   while IFS="$(printf '\n')" read -r line; do
     [ -z "${hs_found}" ] && printf '%s\n' "${line}" | grep -q -E "^${match}$|^${match}/$" && hs_found="1"
     if [ "${hs_found}" = "1" ]; then
