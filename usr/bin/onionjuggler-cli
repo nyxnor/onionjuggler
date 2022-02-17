@@ -312,7 +312,7 @@ safe_edit(){
       ## assign variable_tmp
       eval "${key}"_tmp="${file_name_tmp}"
       # shellcheck disable=SC2064
-      trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}" EXIT
+      trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}" EXIT INT TERM
     ;;
     save)
       ## get variable_tmp file
@@ -955,7 +955,7 @@ case "${main}" in
               ## Delete pem and keys
               rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
               # Client side configuration
-              printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}"/"${onion}".auth_private >/dev/null
+              printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}"/"${onion_hostname_without_onion}".auth_private >/dev/null
               notice "${bold}Client side authorization configured${nocolor}"
               notice "This is your private key, keep it safe, keep it hidden:"
               notice "client_priv_key=${client_priv_key}"
@@ -967,7 +967,7 @@ case "${main}" in
               notice "client_pub_key_config=descriptor:x25519:${client_pub_key}"
             else
               client_priv_key_config="${onion_hostname_without_onion}:descriptor:x25519:${client_priv_key}"
-              printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}"/"${onion}".auth_private >/dev/null
+              printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}"/"${onion_hostname_without_onion}".auth_private >/dev/null
               notice "\n${bold}Client side authorization configured${nocolor}"
               notice "As you inserted the private key manually, it ise expected that you have already sent/received the public key to/from the onion service operator"
               notice "client_priv_key_config=${client_priv_key_config}"
