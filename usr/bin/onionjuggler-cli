@@ -669,21 +669,6 @@ case "${main}" in
     : "${socket:=tcp}"
     [ -z "${port}" ] && error_msg "port can not be empty"
 
-    ## only valid for tcp targets, but the check is done here to avoid creating a temporary torrc for nothing
-    if test -f /usr/share/anon-gw-base-files/gateway; then ## Whonix Gateway
-      if [ "${gateway_service}" = "1" ]; then ## Service should use Gateway ip (127.0.0.1)
-        target_ip_default="127.0.0.1"
-      elif command -v qubesdb-read >/dev/null; then ## Qubes-Whonix
-          target_ip_default="${tor_hiddenserviceport_target_addr}"
-      else
-        target_ip_default=10.152.152.11 ## Non-Qubes-Whonix
-      fi
-    elif test -f /usr/share/anon-ws-base-files/workstation; then ## Whonix Workstation
-      error_msg "Create onion services on the Gateway, not on the Workstation"
-    else
-      target_ip_default="${tor_hiddenserviceport_target_addr:-127.0.0.1}" ## Common target
-    fi
-
     ## backup torrc
     safe_edit tmp tor_conf
     notice "Including Hidden Service configuration to ${tor_conf_tmp}"
@@ -710,7 +695,23 @@ case "${main}" in
         ## Because of that, this project lets the user leave target="" and write target as $target_ip_default:$virtport
         ## Also, substitutes localhost:port for $target_ip_default:$port to make exact math for target always, as localhost and target_ip_default mean the same thing
         ## This measures avoid using the same local port for different services
-        ## Sanity check
+        ## Sanity check        
+			  if test -f /usr/share/anon-gw-base-files/gateway; then ## Whonix Gateway
+      		if [ "${gateway_service}" = "1" ]; then ## Service should use Gateway ip (127.0.0.1)
+						target_ip_default="127.0.0.1"
+		      elif command -v qubesdb-read >/dev/null; then ## Qubes-Whonix
+					  target_ip_default="${tor_hiddenserviceport_target_addr}"
+		      else
+						target_ip_default=10.152.152.11 ## Non-Qubes-Whonix
+		      fi
+		    elif test -f /usr/share/anon-ws-base-files/workstation; then ## Whonix Workstation
+    		  error_msg "Create onion services on the Gateway, not on the Workstation"
+		    else
+      		target_ip_default="${tor_hiddenserviceport_target_addr:-127.0.0.1}" ## Common target
+		    fi
+        
+
+        ## get ports
         port="$(printf %s"${port}" | tr " " "\n" | tr "," " " | tr -s " ")"
 
         fail_log="$(mktemp)"
