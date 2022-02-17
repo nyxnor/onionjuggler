@@ -663,7 +663,7 @@ case "${main}" in
   activate)
     [ -z "${service}" ] && error_msg "service name can not be empty"
     check_service_name
-    grep -q -E "HiddenServiceDir ${tor_data_dir_services}|HiddenServiceDir ${tor_data_dir_services}/" && error_msg "service names '${service}' already exists, choose another name" "${tor_conf}"
+    grep -q -E "HiddenServiceDir ${tor_data_dir_services}|HiddenServiceDir ${tor_data_dir_services}/" "${tor_conf}" && error_msg "service names '${service}' already exists, choose another name"
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version ${version} is not available" ## wait for v4 to change this
     : "${socket:=tcp}"
     [ -z "${port}" ] && error_msg "port can not be empty"
