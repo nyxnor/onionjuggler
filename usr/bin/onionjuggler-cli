@@ -1132,24 +1132,24 @@ EOF
         { [ -z "${service}" ] || [ -z "${folder}" ]; } && usage
 
         if [ "${no_check_service}" = "1" ]; then
-		      is_service_dir_empty
-		      test_service_exists "${service}"
-		      port=$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | tail -n 1)
-		      only_ports=${port#* }
-		      virtport=${only_ports% *}
-		      target=${only_ports##* }
-		      target_addr="${target%%:*}"
-		      target_port="${target##*:}"
-		    else
-		    	[ -z "${port}" ] && error_msg "Missing onion service target port that the webserver will listen to"
-		    	is_integer "${port}" || is_addr_port "${port}"
-		    	target="${port}"
-		    	target_addr="${target%%:*}"
-		      target_port="${target##*:}"
-		      ## happens when user specified only the port without addr
-		      [ "${target_addr}" = "${target_port}" ] && target="127.0.0.1:${target_port}"
+          is_service_dir_empty
+          test_service_exists "${service}"
+	  port=$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | tail -n 1)
+          only_ports=${port#* }
+          virtport=${only_ports% *}
+          target=${only_ports##* }
+          target_addr="${target%%:*}"
+          target_port="${target##*:}"
+        else
+          [ -z "${port}" ] && error_msg "Missing onion service target port that the webserver will listen to"
+          is_integer "${port}" || is_addr_port "${port}"
+          target="${port}"
+          target_addr="${target%%:*}"
+          target_port="${target##*:}"
+          ## happens when user specified only the port without addr
+          [ "${target_addr}" = "${target_port}" ] && target="127.0.0.1:${target_port}"
         fi
-        
+
         case "${webserver}" in
           apache2|openbsd-httpd) printf %s"${target}" | grep -q "unix" && error_msg "Web server '${webserver}' does not accept listening on a unix domain socket." ;;
         esac
@@ -1213,7 +1213,7 @@ server \"${onion_hostname}\" {
         esac
         reload_webserver
         #rm -f /tmp/"${service}"-onion.conf
-        notice "\n# Address: ${magenta}${onion_hostname}:${virtport}${nocolor}"
+        [ -n "${onion_hostname}" ] && notice "\n# Address: ${magenta}${onion_hostname}:${virtport}${nocolor}"
       ;;
 
       f|off)
