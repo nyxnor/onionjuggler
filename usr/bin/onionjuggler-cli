@@ -134,9 +134,9 @@ Options:
     -l, --list                                               see Vanguards logs
 
 Advanced:
-  -C, --config                                             specify an alternative onionjuggler.conf to be parsed
-  -R, --restart                                            signal tor to restart when the daemon status is failed or inactive
-  -r, --reload                                             signal tor to reload (default option)
+  -C, --config                                               specify an alternative onionjuggler.conf to be parsed
+  -R, --restart                                              signal tor to restart when the daemon status is failed or inactive
+  -r, --reload                                               signal tor to reload (default option)
 
 Option names:
   main                                                       activate, deactivate, info, renew, auth-server, auth-client, web, location, vanguards
@@ -663,7 +663,7 @@ case "${main}" in
   activate)
     [ -z "${service}" ] && error_msg "service name can not be empty"
     check_service_name
-    grep -q -E "HiddenServiceDir ${tor_data_dir_services}|HiddenServiceDir ${tor_data_dir_services}/" "${tor_conf}" && error_msg "service '${service}' already exists, choose another name"
+    grep -q -E "^HiddenServiceDir ${tor_data_dir_services}/${service}$|^HiddenServiceDir ${tor_data_dir_services}/${service}/$" "${tor_conf}" && error_msg "service '${service}' already exists, choose another name"
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version ${version} is not available" ## wait for v4 to change this
     : "${socket:=tcp}"
     [ -z "${port}" ] && error_msg "port can not be empty"
