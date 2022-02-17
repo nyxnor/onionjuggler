@@ -673,8 +673,8 @@ case "${main}" in
       if [ "${gateway_service}" = "1" ]; then
         target_ip_default="127.0.0.1" ## Service should use Gateway ip (127.0.0.1)
       elif command -v qubesdb-read >/dev/null; then ## Qubes-Whonix
-        if [ "${tor_hiddenserviceport_target_addr}" = "127.0.0.1"; then
-          error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr=WS_QUBE_IP' on /etc/onionjuggler/conf.d/user.conf")}"
+        if [ "${tor_hiddenserviceport_target_addr}" = "127.0.0.1" ]; then
+          error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr=WS_QUBE_IP' on /etc/onionjuggler/conf.d/user.conf"
 	else
           target_ip_default="${tor_hiddenserviceport_target_addr}"
         fi
