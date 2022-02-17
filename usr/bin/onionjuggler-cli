@@ -284,7 +284,7 @@ for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}";
 : "${tor_conf:="${tor_conf_dir}/torrc"}"
 : "${tor_control_port:="9051"}" ## only the port, not the host
 : "${tor_backup_dir:="${HOME}/.onionjuggler/backup"}"; tor_backup_dir="${tor_backup_dir%*/}"
-
+: "${tor_hiddenserviceport_target_addr:="127.0.0.1"}"
 
 ###################
 #### FUNCTIONS ####
@@ -593,7 +593,7 @@ case "${dev}" in
   getconf)
     for key in ONIONJUGGLER_CONF su_cmd openssl_cmd webserver webserver_conf website_dir vanguards_commit \
     tor_daemon tor_user tor_conf_dir tor_conf_user_group tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
-    tor_control_port tor_backup_dir; do
+    tor_control_port tor_backup_dir tor_hiddenserviceport_target_addr; do
       eval val='$'"${key}"
       [ -n "${val:-}" ] && printf '%s\n' "${key}=\"${val}\""
     done
@@ -673,14 +673,14 @@ case "${main}" in
       if [ "${gateway_service}" = "1" ]; then
         target_ip_default="127.0.0.1" ## Service should use Gateway ip (127.0.0.1)
       elif command -v qubesdb-read >/dev/null; then
-        target_ip_default="$(qubesdb-read /qubes-ip)" ## Qubes-Whonix
+        target_ip_default="${tor_hiddenserviceport_target_addr:=$(error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr=WS_QUBE_IP' on /etc/onionjuggler/conf.d/user.conf")}" ## Qubes-Whonix
       else
         target_ip_default=10.152.152.11 ## Non-Qubes-Whonix
       fi
     elif test -f /usr/share/anon-ws-base-files/workstation; then ## Whonix Workstation
       error_msg "Create onion services on the Gateway, not on the Workstation"
     else
-      target_ip_default="127.0.0.1" ## Common target
+      target_ip_default="${tor_hiddenserviceport_target_addr:-127.0.0.1}" ## Common target
     fi
 
     ## backup torrc

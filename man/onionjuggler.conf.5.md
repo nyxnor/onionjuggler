@@ -101,6 +101,10 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 : Specify the local directory to save your backups. (Default: $HOME/.onionjuggler/backup)
 
+**tor_hiddenserviceport_target_addr**
+
+: Specify default HiddenServicePort target address. Useful for when the server is running on an external host related to the tor process. On Qubes-Whonix, you should set the Whonix Workstation Qubes IP address (Default: 127.0.0.1).
+
 
 # ENVIRONMENT
 

@@ -126,6 +126,13 @@ Specify the ControlPort to use with Vanguards.
 \f[B]tor_backup_dir\f[R]
 Specify the local directory to save your backups.
 (Default: $HOME/.onionjuggler/backup)
+.TP
+\f[B]tor_hiddenserviceport_target_addr\f[R]
+Specify default HiddenServicePort target address.
+Useful for when the server is running on an external host related to the
+tor process.
+On Qubes-Whonix, you should set the Whonix Workstation Qubes IP address
+(Default: 127.0.0.1).
 .SH ENVIRONMENT
 .TP
 \f[B]ONIONJUGGLER_CONF\f[R]
