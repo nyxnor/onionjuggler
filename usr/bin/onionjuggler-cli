@@ -79,6 +79,8 @@ Usage: ${me} command [--option <ARGUMENT>]
   --auth-client --off [--onion <ONION>]                      remove authorization of client access
   --auth-client --list                                       list your keys as a client
   --web --on [--service <SERVICE>] [--folder <SITE_PATH>]    start serving a website for certain service and its folder
+  --web --on [--service <SERVICE>] [--folder <SITE_PATH>] [--port <TARGET>] [--no-check-service]
+  																												   useful for workstations when the tor process is running on the gateway
   --web --off [--service <SERVICE>]                          stop serving a website for certain service and its folder
   --web --list                                               list enabled websites
   --location [--nginx|--apache2|--html] [--service <SERVICE>]  onion-location guide, no execution
@@ -242,6 +244,7 @@ while :; do
     k|client-priv-key|k=*|client-priv-key=*) get_arg client_priv_key;;
     K|client-pub-key|K=*|client-pub-key=*) get_arg client_pub_key;;
     C|config|C=*|config=*) get_arg ONIONJUGGLER_CONF;;
+    no-check-service) no_check_service=1;;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac
@@ -1126,15 +1129,27 @@ EOF
     case "${status}" in
 
       n|on)
-        is_service_dir_empty
         { [ -z "${service}" ] || [ -z "${folder}" ]; } && usage
-        test_service_exists "${service}"
-        port=$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | tail -n 1)
-        only_ports=${port#* }
-        virtport=${only_ports% *}
-        target=${only_ports##* }
-        target_addr="${target%%:*}"
-        target_port="${target##*:}"
+
+        if [ "${no_check_service}" = "1" ]; then
+		      is_service_dir_empty
+		      test_service_exists "${service}"
+		      port=$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | tail -n 1)
+		      only_ports=${port#* }
+		      virtport=${only_ports% *}
+		      target=${only_ports##* }
+		      target_addr="${target%%:*}"
+		      target_port="${target##*:}"
+		    else
+		    	[ -z "${port}" ] && error_msg "Missing onion service target port that the webserver will listen to"
+		    	is_integer "${port}" || is_addr_port "${port}"
+		    	target="${port}"
+		    	target_addr="${target%%:*}"
+		      target_port="${target##*:}"
+		      ## happens when user specified only the port without addr
+		      [ "${target_addr}" = "${target_port}" ] && target="127.0.0.1:${target_port}"
+        fi
+        
         case "${webserver}" in
           apache2|openbsd-httpd) printf %s"${target}" | grep -q "unix" && error_msg "Web server '${webserver}' does not accept listening on a unix domain socket." ;;
         esac
@@ -1147,7 +1162,7 @@ EOF
               ~/*|/*) :;;
               *) folder="${website_dir}/${folder}";;
             esac
-            [ ! -d "${folder}" ] && error_msg "Folder '${folder}' does not exist."
+            [ ! -d "${folder}" ] && error_msg "Website folder '${folder}' does not exist."
           ;;
           openbsd-httpd)
             ## TODO: website_dir is not being used here, the chroot dir is /var/www and the root expected is /htdocs
@@ -1165,7 +1180,7 @@ EOF
             printf %s"
 server {
         listen ${target};
-        server_name ${onion_hostname};
+        server_name ${onion_hostname:-"_"};
 
         server_tokens off;
         access_log /var/log/nginx/access_${service}.log;
@@ -1179,7 +1194,7 @@ server {
           apache2)
             printf %s"
 <VirtualHost ${target_addr}:${target_port}>
-        ServerName ${onion_hostname}
+        ServerName ${onion_hostname:-"_"}
         DocumentRoot ${folder}
         ErrorLog /var/log/${webserver}/${service}.log
         ServerTokens Prod
