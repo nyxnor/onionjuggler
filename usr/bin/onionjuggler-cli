@@ -1242,7 +1242,7 @@ server \"${onion_hostname}\" {
 
 
   ## guide to add onion-location to redirect tor users when using your plainnet site to the onion service address
-  ## https://matt.traudt.xyz/posts/website-setup/
+  ## https://matt.traudt.xyz/posts/2021-05-03-website-setup/
   location)
     is_service_dir_empty
     { [ -z "${action}" ] || [ -z "${service}" ]; } && usage

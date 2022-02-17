@@ -124,8 +124,8 @@ check_dir(){
 
 
 install_package(){
+	install_pkg=""
   for package in "${@}"; do
-    install_pkg=0
     case "${package}" in
       python-stem|python3-stem|security/py-stem|py-stem|py3-stem|py37-stem|stem)
         ## https://stem.torproject.org/download.html
@@ -134,27 +134,21 @@ install_package(){
           command -v python >/dev/null && python_path="$(command -v python)" && break
           notice "${red}Python is not installed and is required for Vanguards, skipping...\n${nocolor}" && break
         done
-        [ -n "${python_path}" ] && ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg=1
+        [ -n "${python_path}" ] && ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg="${install_pkg} ${package}"
       ;;
-      openssl)
-        if [ "${openssl_cmd}" != "openssl" ]; then
-          ! command -v "${openssl_cmd}" >/dev/null && package="openssl" && install_pkg=1
-        else
-          ! command -v openssl >/dev/null && package="openssl" && install_pkg=1
-        fi
-      ;;
-      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! "${package}" -v >/dev/null 2>&1 && install_pkg=1; fi;;
+      openssl) ! command -v "${openssl_cmd}" >/dev/null && package="${openssl_cmd}" && install_pkg="${install_pkg} ${package}";;
+      nginx|apache2) if ! command -v "${package}" >/dev/null; then ! "${package}" -v >/dev/null 2>&1 && install_pkg="${install_pkg} ${package}"; fi;;
       openbsd-httpd) :;;
-      libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg=1;;
-      *) ! command -v "${package}" >/dev/null && install_pkg=1;;
+      libqrencode|qrencode) ! command -v qrencode >/dev/null && install_pkg="${install_pkg} ${package}";;
+      *) ! command -v "${package}" >/dev/null && install_pkg="${install_pkg} ${package}";;
     esac
-
-    if [ "${install_pkg}" = 1 ]; then
-      notice "${nocolor}Installing ${package}"
-      # shellcheck disable=SC2086
-      ${pkg_mngr_install} "${package}"
-    fi
   done
+  
+  if [ -n "${install_pkg}" ]; then
+    notice "${nocolor}Installing package(s): ${install_pkg}"
+    # shellcheck disable=SC2086
+    ${pkg_mngr_install} ${install_pkg}
+  fi
 }
 
 
@@ -162,7 +156,7 @@ make_shellcheck(){
   command -v shellcheck >/dev/null || error_msg "Install shellcheck to review syntax"
   notice "${yellow}Checking shell syntax${nocolor}"
   ## Customize severity with -S [error|warning|info|style]
-  if ! shellcheck "${topdir}"/configure.sh "${topdir}"/etc/onionjuggler/*.conf "${topdir}"/usr/bin/*; then
+  if ! shellcheck "${topdir}"/configure.sh "${topdir}"/etc/onionjuggler/*.conf "${topdir}"/etc/onionjuggler/conf.d/*.conf "${topdir}"/usr/bin/*; then
     error_msg "Please fix the shellcheck warnings above before pushing!"
   fi
 }
@@ -177,6 +171,19 @@ make_man(){
   done
 }
 
+
+range_variable(){
+  name="${1}"
+  eval var='$'"${1}"
+  shift
+  if [ -n "${var:-}" ]; then
+    success=0
+    for tests in "${@}"; do
+      [ "${var}" = "${tests}" ] && success=1
+    done
+    [ ${success} -ne 1 ] && error_msg "${name} has an incorrect value of : ${var}! Check onionjuggler.conf for more details."
+  fi
+}
 
 get_os(){
   ## Source: pfetch -> https://github.com/dylanaraps/pfetch/blob/master/pfetch
@@ -217,19 +224,6 @@ get_os(){
   esac
 }
 
-
-range_variable(){
-  name="${1}"
-  eval var='$'"${1}"
-  shift
-  if [ -n "${var:-}" ]; then
-    success=0
-    for tests in "${@}"; do
-      [ "${var}" = "${tests}" ] && success=1
-    done
-    [ ${success} -ne 1 ] && error_msg "${name} has an incorrect value of : ${var}! Check onionjuggler.conf for more details."
-  fi
-}
 
 ###################
 #### VARIABLES ####
@@ -311,6 +305,7 @@ case "${command}" in
   i|install)
     check_repo
     check_dir
+    get_os
     get_vars
     requires_root
     notice "${magenta}Checking requirements${nocolor}"
@@ -334,7 +329,6 @@ case "${command}" in
     cp "${topdir}"/usr/bin/onionjuggler-cli "${topdir}"/usr/bin/onionjuggler-tui "${bin_dir}"
     [ ! -d "${conf_dir}/onionjuggler" ] && mkdir -p "${conf_dir}/conf.d"
     cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
-    get_os
     ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch/blob/master/neofetch
     case "${os}" in
       Linux*)
