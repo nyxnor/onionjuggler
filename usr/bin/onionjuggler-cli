@@ -669,15 +669,12 @@ case "${main}" in
     : "${socket:=tcp}"
     [ -z "${port}" ] && error_msg "port can not be empty"
 
+    ## only valid for tcp targets, but the check is done here to avoid creating a temporary torrc for nothing
     if test -f /usr/share/anon-gw-base-files/gateway; then ## Whonix Gateway
       if [ "${gateway_service}" = "1" ]; then
         target_ip_default="127.0.0.1" ## Service should use Gateway ip (127.0.0.1)
       elif command -v qubesdb-read >/dev/null; then ## Qubes-Whonix
-        if [ "${tor_hiddenserviceport_target_addr}" = "127.0.0.1" ]; then
-          error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr=WS_QUBE_IP' on /etc/onionjuggler/conf.d/user.conf"
-	else
           target_ip_default="${tor_hiddenserviceport_target_addr}"
-        fi
       else
         target_ip_default=10.152.152.11 ## Non-Qubes-Whonix
       fi
@@ -720,18 +717,23 @@ case "${main}" in
         printf '%s\n' "${port}" | while IFS="$(printf '\n')" read -r port_line; do
           IFS=" " read -r virtport target <<-EOF
             $(printf '%s\n' "${port_line}")
-					EOF
+EOF
           ## virtport is necessary
           [ -z "${virtport}" ] && break
-          ## target if empty will tcp local host on interface target_ip_default using the same port as virtport
+          ## target if empty, use tcp address on interface target_ip_default using the same port as virtport
           [ -z "${target}" ] && target="${target_ip_default}:${virtport}"
           target_addr="${target%%:*}"
           target_port="${target##*:}"
+
+          ## Qubes-Whonix should have a different target for services aiming to the Workstation
+          command -v qubesdb-read >/dev/null && [ "${target_addr}" = "127.0.0.1" ] && [ "${gateway_service}" != "1" ] &&
+            error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr=WS_QUBE_IP' on /etc/onionjuggler/conf.d/user.conf"
           ## the first check is in case target was provided as an integer, not as a target
           ## the second check is for uniformity, convert localhost to target_ip_default
           { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="${target_ip_default}:${target_port}"
           is_integer "${virtport}"
           is_addr_port "${target}"
+
           ## check if the tager is already used in the torrc
           ## the first part check if the target is present on the tor configuration file
           ## the second part checks if the target port is used on a hs port without a target, meaning using the same port from virtual port
