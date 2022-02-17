@@ -671,8 +671,8 @@ case "${main}" in
 
     ## only valid for tcp targets, but the check is done here to avoid creating a temporary torrc for nothing
     if test -f /usr/share/anon-gw-base-files/gateway; then ## Whonix Gateway
-      if [ "${gateway_service}" = "1" ]; then
-        target_ip_default="127.0.0.1" ## Service should use Gateway ip (127.0.0.1)
+      if [ "${gateway_service}" = "1" ]; then ## Service should use Gateway ip (127.0.0.1)
+        target_ip_default="127.0.0.1"
       elif command -v qubesdb-read >/dev/null; then ## Qubes-Whonix
           target_ip_default="${tor_hiddenserviceport_target_addr}"
       else
@@ -725,16 +725,17 @@ EOF
           target_addr="${target%%:*}"
           target_port="${target##*:}"
 
-          ## Qubes-Whonix should have a different target for services aiming to the Workstation
-          if command -v qubesdb-read >/dev/null && [ "${target_addr}" = "127.0.0.1" ] && [ "${gateway_service}" != "1" ]; then
-            error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr' on /etc/onionjuggler/conf.d/user.conf"
-            echo "1" | tee -a "${fail_log}" >/dev/null
-          fi
           ## the first check is in case target was provided as an integer, not as a target
           ## the second check is for uniformity, convert localhost to target_ip_default
           { [ "${target_addr}" = "${target_port}" ] || [ "${target_addr}" = "localhost" ]; } && target="${target_ip_default}:${target_port}"
           is_integer "${virtport}"
           is_addr_port "${target}"
+
+          ## Qubes-Whonix should have a different target for services aiming to the Workstation
+          if command -v qubesdb-read >/dev/null && [ "${target_addr}" = "127.0.0.1" ] && [ "${gateway_service}" != "1" ]; then
+            echo "1" | tee -a "${fail_log}" >/dev/null
+            error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr' on /etc/onionjuggler/conf.d/*.conf"
+          fi
 
           ## check if the tager is already used in the torrc
           ## the first part check if the target is present on the tor configuration file
