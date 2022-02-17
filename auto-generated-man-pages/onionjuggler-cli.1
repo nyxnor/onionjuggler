@@ -26,7 +26,7 @@ compliant shell
 <\f[I]SERVICE\f[R]>] [\f[B]--version\f[R] <\f[I]VERSION\f[R]>]
 [\f[B]--socket\f[R] <\f[I]tcp\f[R]>] [\f[B]--port\f[R]
 <\f[I]VIRTPORT\f[R] [,\f[I]TARGET\f[R]]
-[\f[I]VIRTPORT2\f[R]][,\f[I]TARGET2\f[R]]>] [\f[B]--whonix-gateway\f[R]]
+[\f[I]VIRTPORT2\f[R]][,\f[I]TARGET2\f[R]]>] [\f[B]--gateway\f[R]]
 .PD 0
 .P
 .PD
@@ -215,7 +215,7 @@ Print configuration in the format key=val.
 .PP
 \f[B]getopt\f[R]
 .TP
-\f[B]--activate\f[R] \f[B]--service\f[R] [\f[I]SERV\f[R]] \f[B]--version\f[R] \f[I]3\f[R] \f[B]--socket\f[R] \f[I]tcp\f[R] \f[B]--port\f[R] [\f[I]VIRTPORT\f[R],<\f[I]TARGET\f[R]>,<\f[I]VIRTPORT2\f[R]>,<\f[I]TARGET2\f[R]>] [\f[B]--whonix-gateway\f[R]]
+\f[B]--activate\f[R] \f[B]--service\f[R] [\f[I]SERV\f[R]] \f[B]--version\f[R] \f[I]3\f[R] \f[B]--socket\f[R] \f[I]tcp\f[R] \f[B]--port\f[R] [\f[I]VIRTPORT\f[R],<\f[I]TARGET\f[R]>,<\f[I]VIRTPORT2\f[R]>,<\f[I]TARGET2\f[R]>] [\f[B]--gateway\f[R]]
 Enable an onion service using TCP socket (addr:port) as target.
 If the TARGET is only the port of it TARGET was not provided, will use
 the same port as VIRTPORT and bind to 127.0.0.1.
@@ -241,11 +241,11 @@ the IP address 10.152.152.11.
 If you are on Whonix Gateway want to enforce the creation of a service
 to be running on the Whonix-Gateway (for itself), for example and onion
 service to ssh to the Gateway, and you haven\[aq]t set the target, just
-the virtual port, use the option \f[I]--whonix-gateway\f[R]:
+the virtual port, use the option \f[I]--gateway\f[R]:
 .IP
 .nf
 \f[C]
-onionjuggler-cli --activate --service ssh --socket tcp --port 22 --whonix-gateway
+onionjuggler-cli --activate --service ssh --socket tcp --port 22 --gateway
 \f[R]
 .fi
 .RE
