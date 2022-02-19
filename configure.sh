@@ -6,44 +6,28 @@
 
 onionjuggler_repo="${ONIONJUGGLER_GIT_ORIGIN:-"https://github.com/nyxnor/onionjuggler.git"}"
 
-me="${0##*/}"
-## colors
-nocolor="\033[0m"
-#bold="\033[1m"
-#nobold="\033[22m"
-#underline="\033[4m"
-#nounderline="\033[24m"
-red="\033[31m"
-green="\033[32m"
-yellow="\033[33m"
-blue="\033[34m"
-magenta="\033[35m"
-cyan="\033[36m"
-
-notice(){ printf %s"${me}: ${1}\n" 1>&2; }
-error_msg(){ notice "${red}error: ${1}${nocolor}"; exit 1; }
-
 topdir="$(git rev-parse --show-toplevel)"
-check_repo(){
-  if [ ! -f "${topdir}"/usr/bin/onionjuggler-cli ] || [ ! -f "${topdir}"/usr/bin/onionjuggler-tui ]; then
-    error_msg "This script must be run from inside the onionjuggler repository!"
-  fi
-}
+me="${0##*/}"
 
+onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
+[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
+[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
+[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
+. "${onionjuggler_defaults}"
 
 usage(){
-  printf "Configure the environment for OnionJuggler
-\nUsage: configure.sh command [option <ARG>]
+  printf %s"Configure the environment for OnionJuggler
+\nUsage: ${me} [--option <ARG>]
 \nOptions:
   -i, --install                               setup environment copying files to path
   -d, --uninstall [-P, --purge]               remove onionjuggler scripts and manual pages from path
   -h, --help                                  show this help message
 \nAdvanced options:
-  -i, --install [-b <DIR>|-c <DIR>|-m <DIR>]  setup environment with specified paths
-  -C, --config <ONIONJUGGLER_CONF>            specify alternative onionjuggler configuration file to be read
   -B, --bin-dir <DIR>                         script directory that is on path (Default: /usr/local/bin)
   -F, --conf-dir <DIR>                        configuration directory (Default: /etc)
   -M, --man-dir <DIR>                         manual directory (Default: /usr/local/man/man1)
+  -i, --install [-b <DIR>|-c <DIR>|-m <DIR>]  setup environment with specified paths
+  -G, --plugin <PLUGIN>                       if plugin is specified, only install selected plugins (e.g: vanguards,web)
   -k, --check                                 run pre-defined shellcheck
   -m, --man                                   build manual pages
   -r, --release                               prepare for commiting
@@ -53,48 +37,26 @@ usage(){
 }
 [ -z "${1}" ] && usage
 
-## if option requires argument, check if it was provided, if yes, assign the arg to the opt
-## $arg was already assigned, and if valid, will use it for the key value
-## usage: get_arg key
-get_arg(){
-  ## if argument is empty or starts with '-', fail as it possibly is an option
-  case "${arg}" in ""|-*) error_msg "Option '${opt_orig}' requires an argument.";; esac
-  ## assign
-  value="${arg}"
-  ## Escaping quotes is needed because else it will fail if the argument is quoted
-  # shellcheck disable=SC2140
-  eval "${1}"="\"${value}\""
 
-  ## shift positional argument two times, as this option demands argument, unless they are separated by equal sign '='
-  ## shift_n default value was assigned when trimming hifens '--' from the options
-  ## if shift_n is equal to zero, '--option arg'
-  ## if shift_n is not equal to zero, '--option=arg'
-  [ -z "${shift_n}" ] && shift_n=2
+check_repo(){
+  if [ ! -f "${topdir}"/usr/bin/onionjuggler-cli ] || [ ! -f "${topdir}"/usr/bin/onionjuggler-tui ]; then
+    error_msg "This script must be run from inside the onionjuggler repository!"
+  fi
 }
 
-## hacky getopts
-## accepts long (--option) and short (-o) options
-## accept argument assignment with space (--option arg | -o arg) or equal sign (--option=arg | -o=arg)
+
 while :; do
-  ## '--option=value' should shift once and '--option value' should shift twice
-  ## but at this point it is not possible to be sure if option requires an argument
-  ## reset shift to zero, at the end, if it is still 0, it will be assigned to one
-  ## has to be zero here so we can check later if option argument is separated by space ' ' or equal sign '='
   shift_n=""
+  # shellcheck disable=SC2034  
   opt_orig="${1}" ## save opt orig for error message to understand which opt failed
-  case "${opt_orig}" in
-    --) shift 1; break;; ## stop option parsing
-    --*=*) opt="${1%=*}"; opt="${opt#*--}"; arg="${1#*=}"; shift_n=1;; ## long option '--sleep=1'
-    -*=*) opt="${1%=*}"; opt="${opt#*-}"; arg="${1#*=}"; shift_n=1;; ## short option '-s=1'
-    --*) opt="${1#*--}"; arg="${2}";; ## long option '--sleep 1'
-    -*) opt="${1#*-}"; arg="${2}";; ## short option '-s 1'
-    "") break;; ## options ended
-    *) usage;; ## not an option
-  esac
+  # shellcheck disable=SC2034
+  arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
+  clean_opt "${1}" || break
+  # shellcheck disable=SC2034  
   case "${opt}" in
-    c|clone|i|install|u|update|d|uninstall|r|release|k|check|m|man) command="${opt}"; shift;;
-    P|purge) action="${opt}"; shift;;
-    C|config|C=*|confg=*) get_arg ONIONJUGGLER_CONF;;
+    c|clone|i|install|u|update|d|uninstall|r|release|k|check|m|man) command="${opt}";;
+    G|plugin|G=*|plugin=*) get_arg plugin;;
+    P|purge) action="${opt}";;
     B|bin-dir|B=*|bin-dir=*) get_arg bin_dir;;
     F|conf-dir|F=*|confi-dir=*) get_arg conf_dir;;
     M|man-dir|M=*|man-dir=*) get_arg man_dir;;
@@ -102,6 +64,8 @@ while :; do
     "") break;;
     *) error_msg "Invalid option: '${opt}'";;
   esac
+  shift "${shift_n:-1}"
+  [ -z "${1}" ] && break
 done
 
 
@@ -124,7 +88,7 @@ check_dir(){
 
 
 install_package(){
-	install_pkg=""
+  install_pkg=""
   for package in "${@}"; do
     case "${package}" in
       python-stem|python3-stem|security/py-stem|py-stem|py3-stem|py37-stem|stem)
@@ -156,7 +120,9 @@ make_shellcheck(){
   command -v shellcheck >/dev/null || error_msg "Install shellcheck to review syntax"
   notice "${yellow}Checking shell syntax${nocolor}"
   ## Customize severity with -S [error|warning|info|style]
-  if ! shellcheck "${topdir}"/configure.sh "${topdir}"/etc/onionjuggler/*.conf "${topdir}"/etc/onionjuggler/conf.d/*.conf "${topdir}"/usr/bin/*; then
+  if ! shellcheck "${topdir}"/configure.sh "${topdir}"/etc/onionjuggler/*.conf \
+  "${topdir}"/etc/onionjuggler/conf.d/*.conf "${topdir}"/usr/bin/* \
+  "${topdir}"/usr/share/onionjuggler/*; then
     error_msg "Please fix the shellcheck warnings above before pushing!"
   fi
 }
@@ -166,7 +132,7 @@ make_man(){
   command -v pandoc >/dev/null || error_msg "Install pandoc to create manuals"
   notice "${magenta}Creating manual pages${nocolor}"
   for man in "${topdir}"/man/*; do
-    man="${man##*/}"
+    man="${man##*/}" 
     pandoc -s -f markdown-smart -t man "${topdir}/man/${man}" -o "${topdir}/auto-generated-man-pages/${man%*.md}"
   done
 }
@@ -192,10 +158,10 @@ get_os(){
 
   case ${os} in
     Linux*)
-      if test -f /usr/share/anon-ws-base-files/workstation; then
-        error_msg "OnionJuggler is meant to be run on the Gateway, not Workstation"
-      elif test -f /usr/share/anon-gw-base-files/gateway; then
-        distro="Whonix"
+      if test -f /usr/share/anon-gw-base-files/gateway; then
+        distro="Whonix-Gateway"
+      elif test -f /usr/share/anon-ws-base-files/workstation; then
+        distro="Whonix-Workstation"
       elif command -v lsb_release >/dev/null; then
         distro=$(lsb_release -sd)
       elif [ -f /etc/os-release ]; then
@@ -230,7 +196,6 @@ get_os(){
 
 ## 1. source default configuration file first
 ## 2. source local (user made) configuration files to override the default values
-## 3. source the ONIONJUGGLER_CONF specified by the cli argument and if it empty, use the environment variable
 get_vars(){
   if [ ! -f /etc/onionjuggler/onionjuggler.conf ]; then
     get_os
@@ -238,8 +203,9 @@ get_vars(){
       Linux*)
         case "${distro}" in
           "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*) . "${topdir}"/etc/onionjuggler/debian.conf;;
-  	  "Tails"*) . "${topdir}"/etc/onionjuggler/tails.conf;;
-	  "Whonix"*) . "${topdir}"/etc/onionjuggler/whonix.conf;;
+          "Tails"*) . "${topdir}"/etc/onionjuggler/tails.conf;;
+          "Whonix-Gateway") . "${topdir}"/etc/onionjuggler/whonix-gateway.conf;;
+          "Whonix-Workstation") . "${topdir}"/etc/onionjuggler/whonix-workstation.conf;;
           "Arch"*|"Artix"*|"ArcoLinux"*) . "${topdir}"/etc/onionjuggler/arch.conf;;
           "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") . "${topdir}"/etc/onionjuggler/fedora.conf;;
         esac
@@ -253,7 +219,6 @@ get_vars(){
     [ -r /etc/onionjuggler/onionjuggler.conf ] && . /etc/onionjuggler/onionjuggler.conf
   fi
   for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}"; done
-  [ -r "${ONIONJUGGLER_CONF}" ] && . "${ONIONJUGGLER_CONF}"
 
   ## if any of the configurations are empty, use default ones
   : "${su_cmd:="sudo"}"
@@ -275,9 +240,9 @@ get_vars(){
   range_variable dialog_box dialog whiptail
 }
 
+
 ###################
 ###### MAIN #######
-
 
 case "${command}" in
 
@@ -288,7 +253,6 @@ case "${command}" in
       onionjuggler_dir="${onionjuggler_repo##*/}"
       if [ -d "${onionjuggler_dir}" ]; then
         cd "${onionjuggler_dir}" || error_msg "Couldn't change to directory ${onionjuggler_dir}"
-        "${0}" -i
       fi
     else
       error_msg "Can't clone when already in the repository."
@@ -326,16 +290,30 @@ case "${command}" in
       man_extension="${man##*.}"
       cp "${man}" "${man_dir}/man${man_extension}"
     done
-    cp "${topdir}"/usr/bin/onionjuggler-cli "${topdir}"/usr/bin/onionjuggler-tui "${bin_dir}"
+    if [ -n "${plugin}" ]; then
+      cp "${topdir}"/usr/bin/onionjuggler-tui "${topdir}"/usr/bin/onionjuggler-cli "${bin_dir}"
+      for pg in $(printf '%s\n' "${plugin}" | tr "," " "); do
+        pg="${pg##*onionjuggler-cli-}"
+        if test -f "${topdir}/usr/bin/onionjuggler-cli-${pg}"; then
+          cp "${topdir}/usr/bin/onionjuggler-cli-${pg}" "${bin_dir}"
+        else
+          error_msg "Plugin '${pg}' does not exist and is not going to be installed"
+        fi
+      done
+    else
+      cp "${topdir}"/usr/bin/* "${bin_dir}"
+    fi
+    
     [ ! -d "${conf_dir}/onionjuggler" ] && mkdir -p "${conf_dir}/conf.d"
     cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
-    ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch/blob/master/neofetch
+    ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch
     case "${os}" in
       Linux*)
         case "${distro}" in
           "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*) cp "${topdir}"/etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
           "Tails"*) cp "${topdir}"/etc/onionjuggler/tails.conf "${conf_dir}/oionjuggler.conf";;
-          "Whonix"*) cp "${topdir}"/etc/onionjuggler/whonix.conf "${conf_dir}/onionjuggler.conf";;
+          "Whonix-Gateway") cp "${topdir}"/etc/onionjuggler/whonix-gateway.conf "${conf_dir}/onionjuggler.conf";;
+          "Whonix-Workstation") cp "${topdir}"/etc/onionjuggler/whonix-workstation.conf "${conf_dir}/onionjuggler.conf";;
           "Arch"*|"Artix"*|"ArcoLinux"*) cp "${topdir}"/etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
           "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") cp "${topdir}"/etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac

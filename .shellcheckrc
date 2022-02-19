@@ -1,2 +1,5 @@
 shell=sh
 source=/dev/null
+## disabling 2154 is raw but the variables
+## are sourced from a non constant source
+disable=SC2154

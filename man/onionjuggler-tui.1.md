@@ -10,7 +10,6 @@ onionjuggler-tui - OnionJuggler Terminal User Interface, also known as the *onio
 # SYNOPSIS
 
 **onionjuggler-tui** **command** [**--option**<=*ARGUMENT*>]\
-**onionjuggler-tui** [**--config** *ONIONJUGGLER_CONF*]\
 **onionjuggler-tui** **--help**
 
 # DESCRIPTION
@@ -24,16 +23,7 @@ onionjuggler-tui - OnionJuggler Terminal User Interface, also known as the *onio
 
 : Display a short help message and exit.
 
-**-C**, **--config** *ONIONJUGGLER_CONF*
-
-: Specify and alternative configuration file to override default configuration.
-
-
 # FILES
-
-**/usr/local/bin/onionjuggler-cli**
-
-: OnionJuggler TUI will call the CLI to execute the tasks after the dialog options have been selected.
 
 **/etc/onionjuggler/dialogrc**
 
@@ -41,10 +31,6 @@ onionjuggler-tui - OnionJuggler Terminal User Interface, also known as the *onio
 
 
 # ENVIRONMENT
-
-**ONIONJUGGLER_CONF**
-
-: The environmental variable will override all previous options.
 
 **SUDO_EDITOR**, **DOAS_EDITOR**, **VISUAL**, **EDITOR**
 

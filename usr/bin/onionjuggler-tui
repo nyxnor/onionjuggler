@@ -10,23 +10,12 @@
 ## Lines that begin with "## " try to explain what's going on. Lines
 ## that begin with just "#" are disabled commands.
 
-me="${0##*/}"
-## colors
-nocolor="\033[0m"
-#bold="\033[1m"
-#nobold="\033[22m"
-underline="\033[4m"
-nounderline="\033[24m"
-red="\033[31m"
-#green="\033[32m"
-yellow="\033[33m"
-#blue="\033[34m"
-#magenta="\033[35m"
-#cyan="\033[36m"
+onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
+[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
+[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
+[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
+. "${onionjuggler_defaults}"
 
-## display error message with instructions to use the script correctly.
-notice(){ printf %s"${me}: ${1}\n" 1>&2; }
-error_msg(){ notice "${red}error: ${1}${nocolor}"; exit 1; }
 
 ###################
 #### VARIABLES ####
@@ -34,98 +23,40 @@ i=0
 
 usage(){
   printf "Configure the environment for OnionJuggler
-\nUsage: onionjuggler-tui [option <ARG>]
+\nUsage: onionjuggler-tui [--option <ARG>]
 \nOptions:
-  -C, --config <ONIONJUGGLER_CONF>            specify alternative onionjuggler configuration file to be read
   -h, --help                                  show this help message
 "
   exit 1
 }
 
-
-## if option requires argument, check if it was provided, if yes, assign the arg to the opt
-## $arg was already assigned, and if valid, will use it for the key value
-## usage: get_arg key
-get_arg(){
-  ## if argument is empty or starts with '-', fail as it possibly is an option
-  case "${arg}" in ""|-*) error_msg "Option '${opt_orig}' requires an argument.";; esac
-  ## assign
-  value="${arg}"
-  ## Escaping quotes is needed because else it will fail if the argument is quoted
-  # shellcheck disable=SC2140
-  eval "${1}"="\"${value}\""
-
-  ## shift positional argument two times, as this option demands argument, unless they are separated by equal sign '='
-  ## shift_n default value was assigned when trimming hifens '--' from the options
-  ## if shift_n is equal to zero, '--option arg'
-  ## if shift_n is not equal to zero, '--option=arg'
-  [ -z "${shift_n}" ] && shift_n=2
-}
-
-## hacky getopts
-## accepts long (--option) and short (-o) options
-## accept argument assignment with space (--option arg | -o arg) or equal sign (--option=arg | -o=arg)
 while :; do
-  ## '--option=value' should shift once and '--option value' should shift twice
-  ## but at this point it is not possible to be sure if option requires an argument
-  ## reset shift to zero, at the end, if it is still 0, it will be assigned to one
-  ## has to be zero here so we can check later if option argument is separated by space ' ' or equal sign '='
   shift_n=""
+  # shellcheck disable=SC2034
   opt_orig="${1}" ## save opt orig for error message to understand which opt failed
-  case "${opt_orig}" in
-    --) shift 1; break;; ## stop option parsing
-    --*=*) opt="${1%=*}"; opt="${opt#*--}"; arg="${1#*=}"; shift_n=1;; ## long option '--sleep=1'
-    -*=*) opt="${1%=*}"; opt="${opt#*-}"; arg="${1#*=}"; shift_n=1;; ## short option '-s=1'
-    --*) opt="${1#*--}"; arg="${2}";; ## long option '--sleep 1'
-    -*) opt="${1#*-}"; arg="${2}";; ## short option '-s 1'
-    "") break;; ## options ended
-    *) usage;; ## not an option
-  esac
+  # shellcheck disable=SC2034
+  arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
+  clean_opt "${1}" || break
   case "${1}" in
     -h|--help) usage;;
-    -C|--config|-C=*|--config=*) get_arg ONIONJUGGLER_CONF; export ONIONJUGGLER_CONF;; ## cli has to see the config argument, so export it
     "") break;;
     *) error_msg "Invalid option: ${opt}";;
   esac
   shift "${shift_n}"
 done
 
+
 [ "$(id -u)" -ne 0 ] && error_msg "run as root"
-
-## 1. source default configuration file first
-## 2. source local (user made) configuration files to override the default values
-## 3. source the ONIONJUGGLER_CONF specified by the cli argument and if it empty, use the environment variable
-[ ! -f /etc/onionjuggler/onionjuggler.conf ] && error_msg "Default configuration file not found: /etc/onionjuggler/onionjuggler.conf"
-[ -r /etc/onionjuggler/onionjuggler.conf ] && . /etc/onionjuggler/onionjuggler.conf
-for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}"; done
-[ -r "${ONIONJUGGLER_CONF}" ] && . "${ONIONJUGGLER_CONF}"
-
-## if any of the configurations are empty, use default ones
-## system
-: "${su_cmd:="sudo"}"
-: "${dialog_box:="dialog"}"
-: "${webserver:="nginx"}"
-: "${webserver_conf:="/etc/nginx/sites-enabled"}"
-: "${website_dir:="/var/www"}"
-## tor defaults
-: "${tor_user:="debian-tor"}"
-: "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
-: "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
-: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
-
 
 ## First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
 eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
 editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-vi}"}"}"
 
-###########################
-######## FUNCTIONS ########
-
-if ! command -v onionjuggler-cli >/dev/null && [ ! -f onionjuggler-cli ]; then
-  error_msg "onionjuggler-cli not found on PATH!"
+if ! has onionjuggler-cli || ! has onionjuggler-tui; then
+  error_msg "onionjuggler-cli and onionjuggler-tui must be installed"
 fi
 
-! command -v "${dialog_box}" >/dev/null && error_msg "dialog_box=${dialog_box} not found on PATH."
+has "${dialog_box}" || error_msg "${dialog_box} is not installed"
 
 case "${dialog_box}" in
   dialog)
@@ -147,8 +78,12 @@ case "${dialog_box}" in
   *) error_msg "dialog_box can be either 'dialog' or 'whiptail', not '${dialog_box}'"
 esac
 
+###########################
+######## FUNCTIONS ########
+
 ## clear the screen after exiting
 trap 'tput reset' EXIT
+trap 'tput reset; exit' INT
 
 return_to_tui(){
   notice "${yellow}Press ${underline}ENTER${nounderline}${yellow} to return to the TUI! ${nocolor}"
@@ -208,9 +143,9 @@ check_folder_is_not_empty(){
 title="OnionJuggler - Main Menu"
 menu="\nUse enter/spacebar to select:"
 backtitle="OnionJuggler - Onion Services Manager"
-if check_folder_is_not_empty "${tor_data_dir_services}"; then
+if ! check_folder_is_not_empty "${tor_data_dir_services}"; then
   choice_main="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-  "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 80 5 \
+  "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 65 5 \
   "QUIT" "Exit menu and clear the screen" \
   "ENABLE" "Enable a onion service" \
   "AUTH_CLIENT" "Manage your client keys of remote service" \
@@ -219,7 +154,7 @@ if check_folder_is_not_empty "${tor_data_dir_services}"; then
   3>&1 1>&2 2>&3)"
 else
   choice_main="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-  "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((19+whiptail_height))" 80 11 \
+  "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((18+whiptail_height))" 70 10 \
   "QUIT" "Exit menu and clear the screen" \
   "ENABLE" "Enable an onion service" \
   "DISABLE" "Disable chosen onion service" \
@@ -229,7 +164,6 @@ else
   "CREDENTIALS" "See credentials (onion address, authorized clients)" \
   "WEBSERVER" "Serve a website folder on onion domain" \
   "VANGUARDS" "Add to protect against traffic analysis" \
-  "LOCATION" "Guided steps to add onion-location to your plainnet website" \
   "BACKUP" "Create or integrate backup" \
   3>&1 1>&2 2>&3)"
 fi
@@ -327,35 +261,41 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
 
   AUTH_SERVER)
-    i=0
-    service_list=""
-    for service in "${tor_data_dir_services}"/*; do
-      service="${service##*/}"
-      ## only include services that have at least one client
-      if ! check_folder_is_not_empty "${tor_data_dir_services}/${service}/authorized_clients/"; then
-        i=$((i+1))
-        onion_hostname="$(grep ".onion" "${tor_data_dir_services}"/"${service}"/hostname 2>/dev/null)"
-        service_list_menu="$(printf "%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}")"
-        service_list_checklist="$(printf "%s\n%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}" 0)"
-      fi
-    done
-    title="Client Authorization - Server"
-    menu="\nManage client authorization of your services:"
-    if [ -z "${service_list_menu}" ]; then
-      auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-      "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((10+whiptail_height))" 60 2 \
-      "GEN" "Generate a new key pair (public and private key)" \
-      "PUB" "Register the client public key" \
-      3>&1 1>&2 2>&3)"
+    option_plugin="onionjuggler-cli-auth-server"
+    if ! has "${option_plugin}"; then
+      text="${option_plugin} is not installed"
+      "${dialog_box}" --backtitle "${backtitle}" --title "${title}" --msgbox "${text}" 10 50
     else
-      auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-      "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 60 5 \
-      "LIST" "List all clients for specific HiddenService" \
-      "EDIT" "Edit an existing authorization" \
-      "GEN" "Generate a new key pair (public and private key)" \
-      "PUB" "Register the client public key" \
-      "DEL" "Remove a client" \
-      3>&1 1>&2 2>&3)"
+      i=0
+      service_list=""
+      for service in "${tor_data_dir_services}"/*; do
+        service="${service##*/}"
+        ## only include services that have at least one client
+        if ! check_folder_is_not_empty "${tor_data_dir_services}/${service}/authorized_clients/"; then
+          i=$((i+1))
+          onion_hostname="$(grep ".onion" "${tor_data_dir_services}"/"${service}"/hostname 2>/dev/null)"
+          service_list_menu="$(printf "%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}")"
+          service_list_checklist="$(printf "%s\n%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}" 0)"
+        fi
+      done
+      title="Client Authorization - Server"
+      menu="\nManage client authorization of your services:"
+      if [ -z "${service_list_menu}" ]; then
+        auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((10+whiptail_height))" 60 2 \
+        "GEN" "Generate a new key pair (public and private key)" \
+        "PUB" "Register the client public key" \
+        3>&1 1>&2 2>&3)"
+      else
+        auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 60 5 \
+        "LIST" "List all clients for specific HiddenService" \
+        "EDIT" "Edit an existing authorization" \
+        "GEN" "Generate a new key pair (public and private key)" \
+        "PUB" "Register the client public key" \
+        "DEL" "Remove a client" \
+        3>&1 1>&2 2>&3)"
+      fi
     fi
 
     case "${auth_type}" in
@@ -489,30 +429,36 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
 
   AUTH_CLIENT)
-    i=0
-    for onion_auth in "${tor_data_dir_auth}"/*; do
-      onion_auth="${onion_auth##*/}"
-      onion_auth_name=${onion_auth%.auth_private}
-      i=$((i+1))
-      onion_auth_list="$(printf "%s\n%s\n%s\n" "${onion_auth_list}" "${onion_auth_name}" ".")"
-    done
-    title="Client Authorization - Client"
-    menu="\nAs the onion service client:"
-    if [ -z "${onion_auth_list}" ]; then
-      auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-      "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((10+whiptail_height))" 80 2 \
-      "GEN" "Generate a new key pair (public and private key)" \
-      "PRIV" "Register your private key" \
-      3>&1 1>&2 2>&3)"
+    option_plugin="onionjuggler-cli-auth-client"
+    if ! has "${option_plugin}"; then
+      text="${option_plugin} is not installed"
+      "${dialog_box}" --backtitle "${backtitle}" --title "${title}" --msgbox "${text}" 10 50
     else
-      auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-      "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 80 5 \
-      "LIST" "List all the authorizations inside ClientOnionAuthDir" \
-      "EDIT" "Edit your client authorizations" \
-      "GEN" "Generate a new key pair (public and private key)" \
-      "PRIV" "Register your private key" \
-      "DEL" "Remove expired authorization" \
-      3>&1 1>&2 2>&3)"
+      i=0
+      for onion_auth in "${tor_data_dir_auth}"/*; do
+        onion_auth="${onion_auth##*/}"
+        onion_auth_name=${onion_auth%.auth_private}
+        i=$((i+1))
+        onion_auth_list="$(printf "%s\n%s\n%s\n" "${onion_auth_list}" "${onion_auth_name}" ".")"
+      done
+      title="Client Authorization - Client"
+      menu="\nAs the onion service client:"
+      if [ -z "${onion_auth_list}" ]; then
+        auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((10+whiptail_height))" 80 2 \
+        "GEN" "Generate a new key pair (public and private key)" \
+        "PRIV" "Register your private key" \
+        3>&1 1>&2 2>&3)"
+      else
+        auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 80 5 \
+        "LIST" "List all the authorizations inside ClientOnionAuthDir" \
+        "EDIT" "Edit your client authorizations" \
+        "GEN" "Generate a new key pair (public and private key)" \
+        "PRIV" "Register your private key" \
+        "DEL" "Remove expired authorization" \
+        3>&1 1>&2 2>&3)"
+      fi
     fi
 
     case "${auth_type}" in
@@ -584,36 +530,22 @@ PURGE: Service will be permanently disabled, all the directory data, including h
   ;;
 
 
-  LOCATION)
-    service_menu menu "Location"
-    if [ -n "${service_name_list}" ]; then
-      title="Onion-Location"
-      choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-      "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 3 \
-      "NGINX" "Nginx web server header" \
-      "APACHE2" "Apache2 web server header" \
-      "HTML" "Html <meta> http-equiv attribute" \
-      3>&1 1>&2 2>&3)"
-      if [ -n "${choice_action}" ]; then
-        tput reset
-        action="$(printf %s"${choice_action}" | tr '[:upper:]' '[:lower:]')"
-        onionjuggler-cli --location "--${action}" --service "${service_name_list}"
-        return_to_tui
-      fi
-    fi
-  ;;
-
-
   WEBSERVER)
-    { [ "${webserver}" != "nginx" ] && [ "${webserver}" != "apache2" ]; } && error_msg "webserver can be either 'nginx' or 'apache2', not '${webserver}'"
-    title="Web server - Status"
-    menu="\nWould you like to enable or disable serving a website?"
-    status="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" --menu "${menu}" "$((12+whiptail_height))" 50 3 \
-    "LIST" "List enabled websites" \
-    "ON" "Serve website" \
-    "OFF" "Stop serving website" \
-    3>&1 1>&2 2>&3)"
-    status="$(printf %s"${status}" | tr '[:upper:]' '[:lower:]')"
+    option_plugin="onionjuggler-cli-web"
+    if ! has "${option_plugin}"; then
+      text="${option_plugin} is not installed"
+      "${dialog_box}" --backtitle "${backtitle}" --title "${title}" --msgbox "${text}" 10 50
+    else
+      { [ "${webserver}" != "nginx" ] && [ "${webserver}" != "apache2" ]; } && error_msg "webserver can be either 'nginx' or 'apache2', not '${webserver}'"
+      title="Web server - Status"
+      menu="\nWould you like to enable or disable serving a website?"
+      status="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" --menu "${menu}" "$((12+whiptail_height))" 50 3 \
+      "LIST" "List enabled websites" \
+      "ON" "Serve website" \
+      "OFF" "Stop serving website" \
+      3>&1 1>&2 2>&3)"
+      status="$(printf %s"${status}" | tr '[:upper:]' '[:lower:]')"
+    fi
     case "${status}" in
       list)
         tput reset
@@ -669,18 +601,24 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
 
   VANGUARDS)
-    title="Vanguards"
-    if test -d "${tor_data_dir}/vanguards"; then
-      choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-      "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((9+whiptail_height))" 50 1 \
-      "ON" "Use Vanguards protections" 3>&1 1>&2 2>&3)"
+    option_plugin="onionjuggler-cli-vanguards"
+    if ! has "${option_plugin}"; then
+      text="${option_plugin} is not installed"
+      "${dialog_box}" --backtitle "${backtitle}" --title "${title}" --msgbox "${text}" 10 50
     else
-      choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-      "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 3 \
-      "LIST" "Follow Vanguards logs" \
-      "ON" "Upgrade Vanguards configuration and repository" \
-      "OFF" "Delete the Vanguards directory" \
-      3>&1 1>&2 2>&3)"
+      title="Vanguards"
+      if test -d "${tor_data_dir}/vanguards"; then
+        choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+        "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((9+whiptail_height))" 50 1 \
+        "ON" "Use Vanguards protections" 3>&1 1>&2 2>&3)"
+      else
+        choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+        "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 3 \
+        "LIST" "Follow Vanguards logs" \
+        "ON" "Upgrade Vanguards configuration and repository" \
+        "OFF" "Delete the Vanguards directory" \
+        3>&1 1>&2 2>&3)"
+      fi
     fi
     if [ "${choice_action}" = "LOGS" ]; then
       tput reset
@@ -695,17 +633,23 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
 
   BACKUP)
-    title="Backup"
-    choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-    "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 2 \
-    "INTEGRATE" "Integrate backup to system" \
-    "CREATE" "Create backup" \
-    3>&1 1>&2 2>&3)"
-    if [ -n "${choice_action}" ]; then
-      action="$(printf %s"${choice_action}" | tr '[:upper:]' '[:lower:]')"
-      tput reset
-      onionjuggler-cli --backup --"${action}"
-      return_to_tui
+    option_plugin="onionjuggler-cli-backup"
+    if ! has "${option_plugin}"; then
+      text="${option_plugin} is not installed"
+      "${dialog_box}" --backtitle "${backtitle}" --title "${title}" --msgbox "${text}" 10 50
+    else
+      title="Backup"
+      choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+      "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 2 \
+      "INTEGRATE" "Integrate backup to system" \
+      "CREATE" "Create backup" \
+      3>&1 1>&2 2>&3)"
+      if [ -n "${choice_action}" ]; then
+        action="$(printf %s"${choice_action}" | tr '[:upper:]' '[:lower:]')"
+        tput reset
+        onionjuggler-cli --backup --"${action}"
+        return_to_tui
+      fi
     fi
   ;;
 

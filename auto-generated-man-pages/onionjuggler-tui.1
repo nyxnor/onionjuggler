@@ -14,11 +14,6 @@ Dinamically juggle with onion services with a POSIX compliant shell
 .PD 0
 .P
 .PD
-\f[B]onionjuggler-tui\f[R] [\f[B]--config\f[R]
-\f[I]ONIONJUGGLER_CONF\f[R]]
-.PD 0
-.P
-.PD
 \f[B]onionjuggler-tui\f[R] \f[B]--help\f[R]
 .SH DESCRIPTION
 .PP
@@ -31,22 +26,11 @@ a terminal dialog box.
 .TP
 \f[B]-h\f[R], \f[B]--help\f[R]
 Display a short help message and exit.
-.TP
-\f[B]-C\f[R], \f[B]--config\f[R] \f[I]ONIONJUGGLER_CONF\f[R]
-Specify and alternative configuration file to override default
-configuration.
 .SH FILES
-.TP
-\f[B]/usr/local/bin/onionjuggler-cli\f[R]
-OnionJuggler TUI will call the CLI to execute the tasks after the dialog
-options have been selected.
 .TP
 \f[B]/etc/onionjuggler/dialogrc\f[R]
 Default dialog run commands file.
 .SH ENVIRONMENT
-.TP
-\f[B]ONIONJUGGLER_CONF\f[R]
-The environmental variable will override all previous options.
 .TP
 \f[B]SUDO_EDITOR\f[R], \f[B]DOAS_EDITOR\f[R], \f[B]VISUAL\f[R], \f[B]EDITOR\f[R]
 Use environment variables in the above order to define the editor, in

@@ -1,0 +1,148 @@
+#!/usr/bin/env sh
+
+
+
+## This addon protects against guard discovery and related traffic analysis attacks.
+## A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service.
+## Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
+## TODO: hardening (as in $ systemctl cat tor@default), but got permission denied: unable to read '/run/tor/control.authcookie', also see $ systemd-analyze security vanguards@default.service
+## TODO -> Vanguards sample service configuration for other service managers
+
+## script name
+me="${0##*/}"
+
+onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
+[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
+[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
+[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
+. "${onionjuggler_defaults}"
+
+usage(){
+  printf %s"Usage: ${me} [--option <ARGUMENT>]
+Complete options:
+  --on                  install Vanguards addon, if already installed, upgrade
+  --off                 remove Vanguards
+  --list                see Vanguards logs
+"
+  exit 2
+}
+
+########################
+#### OPTION PARSING ####
+
+## hacky getopts
+## accepts long (--option) and short (-o) options
+## accept argument assignment with space (--option arg | -o arg) or equal sign (--option=arg | -o=arg)
+[ -z "${1}" ] && usage
+while :; do
+  shift_n=""
+  opt_orig="${1}" ## save opt orig for error message to understand which opt failed
+  # shellcheck disable=SC2034
+  arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
+  clean_opt "${1}" || break
+  case "${opt}" in
+    on|off|list|n|f|l) status="${opt}";;
+    h|help) usage;;
+    "") break;;
+    *) error_msg "Invalid option: '${opt_orig}'";;
+  esac
+  ## shift as many times as demanded
+  ## if empty, shift at least once to pass to next option
+  shift "${shift_n:-1}"
+  [ -z "${1}" ] && break
+done
+
+########################
+######### MAIN #########
+
+[ "${daemon_control}" != "systemctl" ] && error_msg "Unfortunately, OnionJuggler has only implemented Vanguards with Systemd (systemctl).\n Help improve this by submitting a merge request."
+
+while :; do
+  has python3 && python_path="$(command -v python3)" && break
+  has python && python_path="$(command -v python)" && break
+done
+[ -z "${python_path}" ] && error_msg "Python is not installed and it is needed for Vanguards."
+
+
+vanguards_config(){
+  safe_edit tmp tor_conf
+  ## Keep config with the torrc and torsocks.conf
+  cp "${tor_data_dir}"/vanguards/vanguards-example.conf "${tor_conf_dir}"/vanguards.conf
+  sed -i'' "s|tor_control_port =.*|tor_control_port = ${tor_control_port}|g" "${tor_conf_dir}"/vanguards.conf
+  sed -i'' "s|logfile = .*|logfile = /var/log/tor/vanguards.log|g" "${tor_conf_dir}"/vanguards.conf
+  ## Control and Authentication methods are needed. Use the easiest to configure if the manual ones are not present, else do nothing.
+  ## Control methods are Port (default: 9051) and Socket (default: /run/tor/control). Prefer port because socket path may differ on different systems https://github.com/mikeperry-tor/vanguards/pull/54#issuecomment-812185302.
+  read_tor_files
+  # shellcheck disable=SC2086
+  if ! grep -q "ControlPort ${tor_control_port}" ${tor_config_files} && ! grep -q "ControlSocket" ${tor_config_files}; then
+	sed -i'' "s/ControlPort .*/ControlPort ${tor_control_port}/" "${tor_conf_tmp}"
+	# shellcheck disable=SC2086
+	grep -q "ControlPort ${tor_control_port}" ${tor_config_files} || printf %s"\nControlPort ${tor_control_port}\n\n" | tee -a "${tor_conf_tmp}" >/dev/null
+  fi
+  ## Authentication methods are Cookie (default: 0) and HashedPassword, to read the "control_auth_cookie". Prefer cookie because else a password is needed. If any method was already configured, use it.
+  # shellcheck disable=SC2086
+  if ! grep -q "CookieAuthentication 1" ${tor_config_files} && ! grep -q "HashedControlPassword" ${tor_config_files}; then
+	sed -i'' "s/CookieAuthentication .*/CookieAuthentication 1/" "${tor_conf_tmp}"
+	# shellcheck disable=SC2086
+	grep -q "CookieAuthentication" ${tor_config_files} || printf "\nCookieAuthentication 1\n\n" | tee -a "${tor_conf_tmp}" >/dev/null
+  fi
+  ## Generate Vanguards service
+  printf %s"
+[Unit]
+Description=Additional protections for Tor onion services
+Wants=${tor_daemon}
+After=network.target nss-lookup.target
+
+[Service]
+WorkingDirectory=${tor_data_dir}/vanguards
+ExecStart=${python_path} src/vanguards.py --config ${tor_conf_dir}/vanguards.conf
+User=${tor_user}
+Group=${tor_user}
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+" | tee /tmp/vanguards@default.service
+  cp /tmp/vanguards@default.service /etc/systemd/system/
+  printf "\n<><><><><><><><><><>\n"
+  cat /tmp/vanguards@default.service
+  printf "\n<><><><><><><><><><>\n"
+  signal_tor
+  systemctl daemon-reload
+  systemctl enable vanguards@default.service
+  systemctl restart vanguards@default.service
+  systemctl status vanguards@default.service --no-pager
+}
+
+
+## user option
+[ "$(id -u)" -ne 0 ] && error_msg "run as root"
+case "${status}" in
+  n|on)
+	if [ ! -d "${tor_data_dir}/vanguards" ]; then
+	  notice "${cyan}Installing Vanguards${nocolor}\n"
+	  git clone https://github.com/mikeperry-tor/vanguards.git "${tor_data_dir}/vanguards"
+	else
+	  notice "${cyan}Upgrading Vanguards${nocolor}\n"
+	  git -C "${tor_data_dir}"/vanguards pull -p --rebase=false
+	fi
+	git -C "${tor_data_dir}"/vanguards reset --hard "${vanguards_commit}"
+	git -C "${tor_data_dir}"/vanguards show
+	vanguards_version="$(grep "__version__ = " src/vanguards/__init__.py | tr "\"" " " | sed "s/__version__ =  //")"
+	notice "Installed Vanguards v${vanguards_version}"
+	cp "${tor_data_dir}"/vanguards/vanguards.1 /usr/local/man/man1/
+	vanguards_config
+  ;;
+
+  f|off)
+	notice "${red}Removing Vanguards${nocolor}\n"
+	rm -rfv "${tor_data_dir}"/vanguards
+  ;;
+
+  l|list)
+	tail -f -n 25 /var/log/tor/vanguards.log
+  ;;
+
+  *) usage;;
+esac
