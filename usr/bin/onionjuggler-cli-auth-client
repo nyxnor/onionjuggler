@@ -7,6 +7,7 @@ onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 [ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
 [ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
+source_conf
 
 usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]

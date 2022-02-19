@@ -22,12 +22,9 @@ cyan="\033[36m"
 ## signals
 get_intr="$(stty -a | sed -n '/.*intr = / {s///;s/;.*$//;p;}')"
 
-## 1. source default configuration file first
-## 2. source local (user made) configuration files to override the default values
-[ ! -f /etc/onionjuggler/onionjuggler.conf ] && error_msg "Default configuration file not found: /etc/onionjuggler/onionjuggler.conf"
-for file in /etc/onionjuggler/onionjuggler.conf /etc/onionjuggler/conf.d/*.conf; do
-  [ -r "${file}" ] && . "${file}"
-done
+## display error message with instructions to use the script correctly.
+notice(){ printf %s"${1}\n"; }
+error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
 
 ## : ${var:="value"} -> initialize the variable (SC2154) and if empty or unset, use default values
 ## var=${var%*/} -> removes the trailing slash "/" at the end of directories variables
@@ -55,31 +52,11 @@ done
 : "${tor_hiddenserviceport_target_addr:="127.0.0.1"}"
 
 
-###################
-#### FUNCTIONS ####
-
-## display error message with instructions to use the script correctly.
-#notice(){ printf %s"${me}: ${1}\n" 1>&2; }
-notice(){ printf %s"${1}\n" 1>&2; }
-error_msg(){ notice "${red}error: ${1}${nocolor}"; exit 1; }
-
-
-## This is just a simple wrapper around 'command -v' to avoid
-## spamming '>/dev/null' throughout this function. This also guards
-## against aliases and functions.
-## https://github.com/dylanaraps/pfetch/blob/pfetch#L53
-has() {
-  _cmd="$(command -v "${1}")" 2>/dev/null || return 1
-  [ -x "${_cmd}" ] || return 1
-}
-
-
 ###############################
 ########### getopt ############
 
 ## this getopts might seem complex, so check this template
 ##  https://github.com/nyxnor/scripts/blob/master/getopts.sh
-
 
 ## check if argument is within range
 ## usage:
@@ -138,7 +115,27 @@ clean_opt(){
   esac
 }
 
-###############################
+
+###################
+#### FUNCTIONS ####
+
+## 1. source default configuration file first
+## 2. source local (user made) configuration files to override the default values
+source_conf(){
+  test -f /etc/onionjuggler/onionjuggler.conf || error_msg "Default configuration file not found: /etc/onionjuggler/onionjuggler.conf"
+  for file in /etc/onionjuggler/onionjuggler.conf /etc/onionjuggler/conf.d/*.conf; do
+    test -r "${file}" && . "${file}"
+  done
+}
+
+## This is just a simple wrapper around 'command -v' to avoid
+## spamming '>/dev/null' throughout this function. This also guards
+## against aliases and functions.
+## https://github.com/dylanaraps/pfetch/blob/pfetch#L53
+has() {
+  _cmd="$(command -v "${1}")" 2>/dev/null || return 1
+  [ -x "${_cmd}" ] || return 1
+}
 
 
 ## http://sed.sourceforge.net/local/docs/emulating_unix.txt

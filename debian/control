@@ -14,7 +14,8 @@ Rules-Requires-Root: no
 
 Package: onionjuggler
 Architecture: all
-Depends: tor, sudo, grep, sed, tar, openssl, basez, git, python3-stem, qrencode, whiptail, ${misc:Depends}
+Depends: tor, sudo, grep, sed, tar, openssl, basez,
+  git, python3-stem, qrencode, whiptail, ${misc:Depends}
 Description: Onionjuggler to sanitize tor configuration files
   Feature-rich onion service manager for UNIX-like operating
   systems written in POSIX compliant shellscript.

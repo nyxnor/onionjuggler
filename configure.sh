@@ -6,14 +6,9 @@
 
 onionjuggler_repo="${ONIONJUGGLER_GIT_ORIGIN:-"https://github.com/nyxnor/onionjuggler.git"}"
 
+command -v git >/dev/null || { printf '%s\n' "Missing dependency, please install git"; exit 1; }
 topdir="$(git rev-parse --show-toplevel)"
 me="${0##*/}"
-
-onionjuggler_defaults="${topdir}/usr/share/onionjuggler/defaults.sh"
-[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
-[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
-[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
-. "${onionjuggler_defaults}"
 
 usage(){
   printf %s"Configure the environment for OnionJuggler
@@ -38,39 +33,14 @@ usage(){
 [ -z "${1}" ] && usage
 
 
+###################
+#### FUNCTIONS ####
+
 check_repo(){
   if [ ! -f "${topdir}"/usr/bin/onionjuggler-cli ] || [ ! -f "${topdir}"/usr/bin/onionjuggler-tui ]; then
     error_msg "This script must be run from inside the onionjuggler repository!"
   fi
 }
-
-
-while :; do
-  shift_n=""
-  # shellcheck disable=SC2034  
-  opt_orig="${1}" ## save opt orig for error message to understand which opt failed
-  # shellcheck disable=SC2034
-  arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
-  clean_opt "${1}" || break
-  # shellcheck disable=SC2034  
-  case "${opt}" in
-    c|clone|i|install|u|update|d|uninstall|r|release|k|check|m|man) command="${opt}";;
-    G|plugin|G=*|plugin=*) get_arg plugin;;
-    P|purge) action="${opt}";;
-    B|bin-dir|B=*|bin-dir=*) get_arg bin_dir;;
-    F|conf-dir|F=*|confi-dir=*) get_arg conf_dir;;
-    M|man-dir|M=*|man-dir=*) get_arg man_dir;;
-    h|help) usage;;
-    "") break;;
-    *) error_msg "Invalid option: '${opt}'";;
-  esac
-  shift "${shift_n:-1}"
-  [ -z "${1}" ] && break
-done
-
-
-###################
-#### FUNCTIONS ####
 
 requires_root(){ [ "$(id -u)" -ne 0 ] && error_msg "run as root"; }
 
@@ -197,7 +167,16 @@ get_os(){
 ## 1. source default configuration file first
 ## 2. source local (user made) configuration files to override the default values
 get_vars(){
-  if [ ! -f /etc/onionjuggler/onionjuggler.conf ]; then
+  ## get default values and functions
+  onionjuggler_defaults="${topdir}/usr/share/onionjuggler/defaults.sh"
+  if ! test -f "${onionjuggler_defaults}" || ! test -r "${onionjuggler_defaults}"; then
+    printf '%s\n' "${onionjuggler_defaults} does not exist, or is not a regular file or can not be read"
+    exit 1
+  fi
+  . "${onionjuggler_defaults}"
+    
+  ## if main conf does not exist, source one from the repo relative to your system
+  if ! test -f /etc/onionjuggler/onionjuggler.conf; then
     get_os
     case "${os}" in
       Linux*)
@@ -215,34 +194,50 @@ get_vars(){
       "FreeBSD"*|"HardenedBSD"*|"DragonFly"*) . "${topdir}"/etc/onionjuggler/freebsd.conf;;
       *) error_msg "Unsupported system: ${os} ${kernel} ${distro}"
     esac
-  else
-    [ -r /etc/onionjuggler/onionjuggler.conf ] && . /etc/onionjuggler/onionjuggler.conf
   fi
-  for file in /etc/onionjuggler/conf.d/*.conf; do [ -f "${file}" ] && . "${file}"; done
-
-  ## if any of the configurations are empty, use default ones
-  : "${su_cmd:="sudo"}"
-  : "${tor_user:="debian-tor"}"
-  : "${pkg_mngr_install:="apt install -y"}"
-  : "${dialog_box:="dialog"}"
-  : "${webserver:="nginx"}"
-  : "${requirements:="tor grep sed tar openssl basez git python3-stem qrencode ${dialog_box} ${webserver}"}"
-  : "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
-  : "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
-  : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
-  : "${openssl_cmd:="openssl"}"
+  ## just in case user conf exists, source it at last to override previous configs
+  for file in /etc/onionjuggler/conf.d/*.conf; do
+    test -r "${file}" && . "${file}"
+  done
 
   ## sanity check
-  printf %d "${tor_control_port:=9051}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
-
-  range_variable su_cmd sudo doas
-  range_variable webserver nginx apache2 openbsd-httpd
-  range_variable dialog_box dialog whiptail
+  #printf %d "${tor_control_port:=9051}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
+  #range_variable su_cmd sudo doas
+  #range_variable webserver nginx apache2 openbsd-httpd
+  #range_variable dialog_box dialog whiptail
 }
 
 
 ###################
 ###### MAIN #######
+
+get_os
+get_vars
+
+
+while :; do
+  shift_n=""
+  # shellcheck disable=SC2034  
+  opt_orig="${1}" ## save opt orig for error message to understand which opt failed
+  # shellcheck disable=SC2034
+  arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
+  clean_opt "${1}" || break
+  # shellcheck disable=SC2034  
+  case "${opt}" in
+    c|clone|i|install|u|update|d|uninstall|r|release|k|check|m|man) command="${opt}";;
+    G|plugin|G=*|plugin=*) get_arg plugin;;
+    P|purge) action="${opt}";;
+    B|bin-dir|B=*|bin-dir=*) get_arg bin_dir;;
+    F|conf-dir|F=*|confi-dir=*) get_arg conf_dir;;
+    M|man-dir|M=*|man-dir=*) get_arg man_dir;;
+    h|help) usage;;
+    "") break;;
+    *) error_msg "Invalid option: '${opt}'";;
+  esac
+  shift "${shift_n:-1}"
+  [ -z "${1}" ] && break
+done
+
 
 case "${command}" in
 
@@ -269,8 +264,6 @@ case "${command}" in
   i|install)
     check_repo
     check_dir
-    get_os
-    get_vars
     requires_root
     notice "${magenta}Checking requirements${nocolor}"
     # shellcheck disable=SC2086
@@ -279,6 +272,8 @@ case "${command}" in
     ## see https://github.com/nyxnor/onionjuggler/issues/29 about usermod not appending with -a
     #notice "${cyan}Appending ${USER} to the ${tor_user} group${nocolor}"
     #/usr/sbin/usermod -G "${tor_user}" "${USER}"
+    
+    ## manuals
     notice "${yellow}Creating tor directories${nocolor}"
     [ ! -d "${tor_data_dir_services}" ] && mkdir -p "${tor_data_dir_services}"
     [ ! -d "${tor_data_dir_auth}" ] && mkdir -p "${tor_data_dir_auth}"
@@ -290,6 +285,8 @@ case "${command}" in
       man_extension="${man##*.}"
       cp "${man}" "${man_dir}/man${man_extension}"
     done
+    
+    ## plugins
     if [ -n "${plugin}" ] || [ -n "${onionjuggler_plugin}" ]; then
       ## overwrite default plugins with the ones specified on the cli, else use conf
       { [ -n "${onionjuggler_plugin}" ] && [ -z "${plugin}" ]; } && plugin="${onionjuggler_plugin}"
@@ -305,10 +302,15 @@ case "${command}" in
     else
       cp "${topdir}"/usr/bin/* "${bin_dir}"
     fi
-    mkdir /usr/share/onionjuggler
+    
+    ## make helper dirs
+    test -d /usr/share/onionjuggler || mkdir -p /usr/share/onionjuggler
     cp  "${topdir}"/usr/share/onionjuggler/* /usr/share/onionjuggler/
-    [ ! -d "${conf_dir}/onionjuggler" ] && mkdir -p "${conf_dir}/conf.d"
+    test -d "${conf_dir}/onionjuggler" || mkdir -p "${conf_dir}/conf.d"
+    cp "${topdir}"/etc/onionjuggler/conf.d/* "${conf_dir}/conf.d"
     cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
+    
+    ## configuration
     ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch
     case "${os}" in
       Linux*)
