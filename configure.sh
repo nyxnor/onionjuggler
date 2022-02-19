@@ -9,7 +9,7 @@ onionjuggler_repo="${ONIONJUGGLER_GIT_ORIGIN:-"https://github.com/nyxnor/onionju
 topdir="$(git rev-parse --show-toplevel)"
 me="${0##*/}"
 
-onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
+onionjuggler_defaults="${topdir}/usr/share/onionjuggler/defaults.sh"
 [ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
 [ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
 [ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
@@ -305,7 +305,8 @@ case "${command}" in
     else
       cp "${topdir}"/usr/bin/* "${bin_dir}"
     fi
-    
+    mkdir /usr/share/onionjuggler
+    cp  "${topdir}"/usr/share/onionjuggler/* /usr/share/onionjuggler/
     [ ! -d "${conf_dir}/onionjuggler" ] && mkdir -p "${conf_dir}/conf.d"
     cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
     ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch
