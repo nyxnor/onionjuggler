@@ -20,6 +20,10 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 ## SYSTEM
 
+**onionjuggler_plugin**
+
+: Only install specified plugins, else install everything. (Default: all plugins).
+
 **su_cmd**
 
 : Command to run as another user, use to run as the root and the tor user. Compatible with *doas* and *sudo*. (Default: sudo).

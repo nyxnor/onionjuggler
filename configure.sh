@@ -290,7 +290,9 @@ case "${command}" in
       man_extension="${man##*.}"
       cp "${man}" "${man_dir}/man${man_extension}"
     done
-    if [ -n "${plugin}" ]; then
+    if [ -n "${plugin}" ] || [ -n "${pnionjuggler_plugin}" ]; then
+      ## overwrite default plugins with the ones specified on the cli, else use conf
+      { [ -n "${pnionjuggler_plugin}" ] && [ -z "${plugin}" ]; } && plugin="${onionjuggler_plugin}"
       cp "${topdir}"/usr/bin/onionjuggler-tui "${topdir}"/usr/bin/onionjuggler-cli "${bin_dir}"
       for pg in $(printf '%s\n' "${plugin}" | tr "," " "); do
         pg="${pg##*onionjuggler-cli-}"
