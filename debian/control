@@ -14,12 +14,24 @@ Rules-Requires-Root: no
 
 Package: onionjuggler
 Architecture: all
-Depends: tor, sudo, grep, sed, tar, openssl, basez,
-  git, python3-stem, qrencode, whiptail, ${misc:Depends}
-Description: Onionjuggler to sanitize tor configuration files
+Depends: tor, sudo, grep, sed,
+  whiptail,
+  openssl, basez
+  tar,
+  git, python3, python3-stem,
+  nginx | apache2 | dummy-dependency-webserver,
+Recomments: qrencode,
+Description: Onionjuggler onion services management
   Feature-rich onion service manager for UNIX-like operating
   systems written in POSIX compliant shellscript.
   .
   OnionJuggler is a minimal requirement, portable collection
   of scripts and documentation to help the service operator
   juggle (manage) his onion(s).
+  .
+  It allows the juggler to easily create and delete serivces,
+  authorize, deauthorize and list clients of your onions,
+  add, remove and list client-side authentication credentials,
+  install, uninstall Vanguards Onion Services addon,
+  backup your onion service private keys and configuration,
+  spin up webserver with minimal configuration for static pages

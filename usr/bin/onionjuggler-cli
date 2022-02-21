@@ -232,6 +232,10 @@ esac
 if [ -n "${plugin}" ]; then
   plugin="${plugin##*onionjuggler-cli-}"
   script_plugin="onionjuggler-cli-${plugin}"
+  if [ -n "${onionjuggler_plugin}" ]; then
+    printf '%s\n' "${onionjuggler_plugin}" | tr "," " " | tr -s " " | tr " " "\n" | grep -q -- "^${plugin}$" \
+    || error_msg "Plugin '${plugin}' is disabled in settings"
+  fi
   ## check if plugin is installed
   has "${script_plugin}" || error_msg "${script_plugin} is not installed"
   ## clean uncessary options to parse on plugin
@@ -289,7 +293,7 @@ case "${main}" in
         ## Because of that, this project lets the user leave target="" and write target as $target_ip_default:$virtport
         ## Also, substitutes localhost:port for $target_ip_default:$port to make exact math for target always, as localhost and target_ip_default mean the same thing
         ## This measures avoid using the same local port for different services
-        ## Sanity check        
+        ## Sanity check
         if test -f /usr/share/anon-gw-base-files/gateway; then ## Whonix Gateway
           if [ "${gateway_service}" = "1" ]; then ## Service should use Gateway ip (127.0.0.1)
             target_ip_default="127.0.0.1"

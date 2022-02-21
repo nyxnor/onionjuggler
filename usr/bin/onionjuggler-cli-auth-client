@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-## manage client authorization server side (HiddenServiceDir/authorized_clients/) or client side (ClientOnionAuthDir)
+## manage client authorization client side (ClientOnionAuthDir)
 
 onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 [ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
@@ -8,6 +8,9 @@ onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 [ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
 source_conf
+
+me="${0##*/}"
+check_plugin_enabled "${me}"
 
 usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]
@@ -17,7 +20,7 @@ Complete options:
   --off [--onion <ONION>]   remove client-side credential
   --list                    list client-side credentials
 "
-  exit 2
+  exit 1
 }
 
 ########################

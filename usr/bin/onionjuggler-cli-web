@@ -2,19 +2,15 @@
 
 ## Webserver management
 
-## WEB: start serving files with a webserver for a specific onion service and specific website folder
-## LOCATION: guide to add onion-location to redirect tor users when using your plainnet site to the onion service address
-## https://matt.traudt.xyz/posts/2021-05-03-website-setup/
-
-## script name
-me="${0##*/}"
-
 onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 [ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
 [ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
 [ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
 source_conf
+
+me="${0##*/}"
+check_plugin_enabled "${me}"
 
 usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]
@@ -26,7 +22,7 @@ Complete options:
   --off [--service <SERVICE>]   stop serving a website for certain service and its folder
   --list                        list enabled websites
 "
-  exit 2
+  exit 1
 }
 
 ########################

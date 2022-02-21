@@ -10,13 +10,16 @@ onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 . "${onionjuggler_defaults}"
 source_conf
 
+me="${0##*/}"
+check_plugin_enabled "${me}"
+
 usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]
 Complete options:
   -M, --make                make a backup
   -I, --integrate           integrate latest backup
 "
-  exit 2
+  exit 1
 }
 
 ########################

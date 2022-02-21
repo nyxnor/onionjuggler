@@ -128,6 +128,15 @@ source_conf(){
   done
 }
 
+## block plugins that are not enabled if any is configured
+check_plugin_enabled(){
+  if [ -n "${onionjuggler_plugin}" ]; then
+    plugin="${1##*onionjuggler-cli-}"
+    printf '%s\n' "${onionjuggler_plugin}" | tr "," " " | tr -s " " | tr " " "\n" | grep -q -- "^${plugin}$" \
+    || error_msg "Plugin '${plugin}' is disabled in settings"
+  fi
+}
+
 ## This is just a simple wrapper around 'command -v' to avoid
 ## spamming '>/dev/null' throughout this function. This also guards
 ## against aliases and functions.
@@ -166,7 +175,6 @@ check_service_name(){
   }
 }
 
-
 ## Elegantly modify files on a temporary directory. Test the configuration with another function.
 ## If correct, then save file back to its original location. This avoids running with an invalid
 ## configuration that can make a daemon fail to reload or even start
@@ -186,7 +194,8 @@ safe_edit(){
       file_name_tmp="$(mktemp "${TMPDIR}/${file##*/}.XXXXXX")"
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       chown "${tor_conf_user_group}" "${file_name_tmp}"
-      cp "${file}" "${file_name_tmp}"
+      ## copy preserving mode
+      cp -p "${file}" "${file_name_tmp}"
       ## assign variable_tmp
       eval "${key}"_tmp="${file_name_tmp}"
       # shellcheck disable=SC2064
@@ -247,7 +256,6 @@ set_owner_permission(){
   chown -R "${tor_conf_user_group}" "${tor_conf_dir}"
   find "${tor_conf_dir}" -type d -exec chmod 755 {} \;
   find "${tor_conf_dir}" -type f -exec chmod 644 {} \;
-
 }
 
 
