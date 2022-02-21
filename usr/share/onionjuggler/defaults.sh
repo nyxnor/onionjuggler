@@ -131,9 +131,8 @@ source_conf(){
 ## block plugins that are not enabled if any is configured
 check_plugin_enabled(){
   if [ -n "${onionjuggler_plugin}" ]; then
-    plugin="${1##*onionjuggler-cli-}"
-    printf '%s\n' "${onionjuggler_plugin}" | tr "," " " | tr -s " " | tr " " "\n" | grep -q -- "^${plugin}$" \
-    || error_msg "Plugin '${plugin}' is disabled in settings"
+    printf '%s\n' "${onionjuggler_plugin}" | tr "," " " | tr -s " " | tr " " "\n" | \
+    grep -q -- "^${1##*onionjuggler-cli-}$" || return 1
   fi
 }
 

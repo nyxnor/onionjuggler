@@ -14,7 +14,7 @@ onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 source_conf
 
 me="${0##*/}"
-check_plugin_enabled "${me}"
+check_plugin_enabled "${me}" || error_msg "Plugin '${me}' is disabled in settings"
 
 usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]
