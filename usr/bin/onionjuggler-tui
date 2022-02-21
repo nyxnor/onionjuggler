@@ -144,6 +144,7 @@ title="OnionJuggler - Main Menu"
 menu="\nUse enter/spacebar to select:"
 backtitle="OnionJuggler - Onion Services Manager"
 if check_folder_is_not_empty "${tor_data_dir_services}"; then
+  # shellcheck disable=SC2046
   choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
   "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 65 5 \
   "QUIT" "Exit menu and clear the screen" \
@@ -160,6 +161,7 @@ if check_folder_is_not_empty "${tor_data_dir_services}"; then
   echo "${string}"
   done) 3>&1 1>&2 2>&3)
 else
+  # shellcheck disable=SC2046
   choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
   "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((19+whiptail_height))" 70 10 \
   "QUIT" "Exit menu and clear the screen" \
