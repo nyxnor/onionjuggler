@@ -16,11 +16,11 @@ Package: onionjuggler
 Architecture: all
 Depends: tor, sudo, grep, sed,
   whiptail,
-  openssl, basez
+  openssl, basez,
   tar,
   git, python3, python3-stem,
   nginx | apache2 | dummy-dependency-webserver,
-Recomments: qrencode,
+Recommends: qrencode,
 Description: Onionjuggler onion services management
   Feature-rich onion service manager for UNIX-like operating
   systems written in POSIX compliant shellscript.
