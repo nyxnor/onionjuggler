@@ -223,10 +223,10 @@ case "${choice_main}" in
 
     if [ -n "${service_name}" ]; then
       # shellcheck disable=SC2034
-      unix_socket_text="\nYou are able to configure up to two virtual ports. Insert them separated by space. (e.g.: 80 8080)"
+      unix_socket_text="\nInsert the virtual ports separated by space. (e.g.: 80 8080)"
       # shellcheck disable=SC2034
-      tcp_socket_text="\nYou are able to configure up to two virtual ports and targets, being only one virtual port required to create a service.
-      \nInsert them separated by space in the following order:\nVIRPORT TARGET VIRTPORT2 TARGET2\n(e.g.: 80 50000 8080 50001) (e.g.: 80 192.168.5.10:50000 8080 192.168.5.10:50001)"
+      tcp_socket_text="\nInsert the virtual ports and targets. Only one virtual port required to create a service/
+      \nInsert the ports in the following format:\nVIRPORT,TARGET VIRTPORTn,TARGETn\n(e.g.: 80,50000 8080,50001) (e.g.: 80,192.168.5.10:50000 8080,192.168.5.10:50001)"
 
       if test -f /usr/share/anon-gw-base-files/gateway; then
         ## whonix has an internal network between hosts, unix socket not viable and tcp socket does
@@ -243,7 +243,7 @@ case "${choice_main}" in
       if [ -n "${socket}" ]; then
         eval socket_text='$'"${socket}_socket_text"
         service_ports="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-        --inputbox "${socket_text}" 10 60 3>&1 1>&2 2>&3)"
+        --inputbox "${socket_text}" 15 70 3>&1 1>&2 2>&3)"
         if [ -n "${service_ports}" ]; then
           tput reset
           onionjuggler-cli --activate --service "${service_name}" --socket "${socket}" --port "${service_ports}"
