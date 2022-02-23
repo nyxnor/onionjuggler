@@ -77,7 +77,7 @@ install_package(){
       *) ! command -v "${package}" >/dev/null && install_pkg="${install_pkg} ${package}";;
     esac
   done
-  
+
   if [ -n "${install_pkg}" ]; then
     notice "${nocolor}Installing package(s): ${install_pkg}"
     # shellcheck disable=SC2086
@@ -102,7 +102,7 @@ make_man(){
   command -v pandoc >/dev/null || error_msg "Install pandoc to create manuals"
   notice "${magenta}Creating manual pages${nocolor}"
   for man in "${topdir}"/man/*; do
-    man="${man##*/}" 
+    man="${man##*/}"
     pandoc -s -f markdown-smart -t man "${topdir}/man/${man}" -o "${topdir}/auto-generated-man-pages/${man%*.md}"
   done
 }
@@ -174,7 +174,7 @@ get_vars(){
     exit 1
   fi
   . "${onionjuggler_defaults}"
-    
+
   ## if main conf does not exist, source one from the repo relative to your system
   if ! test -f /etc/onionjuggler/onionjuggler.conf; then
     get_os
@@ -217,12 +217,12 @@ get_vars
 
 while :; do
   shift_n=""
-  # shellcheck disable=SC2034  
+  # shellcheck disable=SC2034
   opt_orig="${1}" ## save opt orig for error message to understand which opt failed
   # shellcheck disable=SC2034
   arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
   clean_opt "${1}" || break
-  # shellcheck disable=SC2034  
+  # shellcheck disable=SC2034
   case "${opt}" in
     c|clone|i|install|u|update|d|uninstall|r|release|k|check|m|man) command="${opt}";;
     G|plugin|G=*|plugin=*) get_arg plugin;;
@@ -272,7 +272,7 @@ case "${command}" in
     ## see https://github.com/nyxnor/onionjuggler/issues/29 about usermod not appending with -a
     #notice "${cyan}Appending ${USER} to the ${tor_user} group${nocolor}"
     #/usr/sbin/usermod -G "${tor_user}" "${USER}"
-    
+
     ## manuals
     notice "${yellow}Creating tor directories${nocolor}"
     [ ! -d "${tor_data_dir_services}" ] && mkdir -p "${tor_data_dir_services}"
@@ -285,7 +285,7 @@ case "${command}" in
       man_extension="${man##*.}"
       cp "${man}" "${man_dir}/man${man_extension}"
     done
-    
+
     ## plugins
     if [ -n "${plugin}" ] || [ -n "${onionjuggler_plugin}" ]; then
       ## overwrite default plugins with the ones specified on the cli, else use conf
@@ -302,14 +302,15 @@ case "${command}" in
     else
       cp "${topdir}"/usr/bin/* "${bin_dir}"
     fi
-    
+
     ## make helper dirs
+    test -d "${tor_backup_dir}" || mkdir -p "${tor_backup_dir}"
     test -d /usr/share/onionjuggler || mkdir -p /usr/share/onionjuggler
     cp  "${topdir}"/usr/share/onionjuggler/* /usr/share/onionjuggler/
     test -d "${conf_dir}/onionjuggler" || mkdir -p "${conf_dir}/conf.d"
     cp "${topdir}"/etc/onionjuggler/conf.d/* "${conf_dir}/conf.d"
     cp "${topdir}"/etc/onionjuggler/dialogrc "${conf_dir}"
-    
+
     ## configuration
     ## Source of distro names: neofetch -> https://github.com/dylanaraps/neofetch
     case "${os}" in

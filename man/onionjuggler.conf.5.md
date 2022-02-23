@@ -104,7 +104,7 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 **tor_backup_dir**
 
-: Specify the local directory to save your backups. (Default: $HOME/.onionjuggler/backup)
+: Specify the local directory to save your backups. (Default: /var/lib/onionjuggler/backup)
 
 **tor_hiddenserviceport_target_addr**
 

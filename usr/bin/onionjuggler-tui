@@ -48,9 +48,13 @@ done
 
 [ "$(id -u)" -ne 0 ] && error_msg "run as root"
 
-## First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
-eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
-editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-vi}"}"}"
+#if has vitor; then
+#  editor="vitor"
+#else
+  ## First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
+  eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
+  editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-vi}"}"}"
+#fi
 
 if ! has onionjuggler-cli || ! has onionjuggler-tui; then
   error_msg "onionjuggler-cli and onionjuggler-tui must be installed"
