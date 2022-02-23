@@ -217,7 +217,7 @@ case "${choice_main}" in
     title="Onion Service - Activation"
     menu="Choose socket type:"
 
-    service_text="\nName your service directory in one string and no space.\n(e.g.: )"
+    service_text="\nName your service directory in one string and no space.\n(e.g.: ssh)"
     service_name="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
     --inputbox "${service_text}" 10 60 3>&1 1>&2 2>&3)"
 
@@ -231,7 +231,7 @@ case "${choice_main}" in
       if test -f /usr/share/anon-gw-base-files/gateway; then
         ## whonix has an internal network between hosts, unix socket not viable and tcp socket does
         ## not leak address to the local network as it is only possible to connect to whonix via tor
-        choice_socket="tcp"
+        socket="tcp"
       else
         choice_socket="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
         --menu "${menu}" "$((9+whiptail_height))" 70 2 \
