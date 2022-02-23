@@ -146,29 +146,45 @@ check_folder_is_not_empty(){
 ##  [ -n "${choice_service}" ] && printf "Do something here\n"
 
 ## clear the screen after exiting
-trap 'tput reset' EXIT
-trap 'tput reset; exit' INT
+#trap 'tput reset' EXIT
+#trap 'tput reset; exit' INT
 
 title="OnionJuggler - Main Menu"
 menu="\nUse enter/spacebar to select:"
 backtitle="OnionJuggler - Onion Services Manager"
 if check_folder_is_not_empty "${tor_data_dir_services}"; then
-  # shellcheck disable=SC2046
-  choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-  "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 65 5 \
-  "QUIT" "Exit menu and clear the screen" \
-  "ENABLE" "Enable a onion service" \
-  $(for item in onionjuggler-cli-auth-client onionjuggler-cli-vanguards onionjuggler-cli-backup; do
+  if test -f /usr/share/anon-ws-base-files/workstation; then
+    # shellcheck disable=SC2046
+    choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+    "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 65 5 \
+    "QUIT" "Exit menu and clear the screen" \
+    $(for item in onionjuggler-cli-web; do
     command -v "${item}" >/dev/null || return 0
     check_plugin_enabled "${item##*onionjuggler-cli-}" || return 0
     string=""
     case "${item##*onionjuggler-cli-}" in
-      auth-client) string="AUTH_CLIENT client_side_onion_credentials";;
-      vanguards) string="VANGUARDS protection_against_traffic_analysis";;
-      backup) string="BACKUP better_be_safe_than_sorry";;
+      web) string="WEB webserver_management";;
     esac
-  echo "${string}"
-  done) 3>&1 1>&2 2>&3)
+    echo "${string}"
+    done) 3>&1 1>&2 2>&3)
+  else
+    # shellcheck disable=SC2046
+    choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+    "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 65 5 \
+    "QUIT" "Exit menu and clear the screen" \
+    "ENABLE" "Enable a onion service" \
+    $(for item in onionjuggler-cli-auth-client onionjuggler-cli-vanguards onionjuggler-cli-backup; do
+      command -v "${item}" >/dev/null || return 0
+      check_plugin_enabled "${item##*onionjuggler-cli-}" || return 0
+      string=""
+      case "${item##*onionjuggler-cli-}" in
+        auth-client) string="AUTH_CLIENT client_side_onion_credentials";;
+        vanguards) string="VANGUARDS protection_against_traffic_analysis";;
+        backup) string="BACKUP better_be_safe_than_sorry";;
+      esac
+    echo "${string}"
+    done) 3>&1 1>&2 2>&3)
+  fi
 else
   # shellcheck disable=SC2046
   choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
@@ -191,7 +207,6 @@ else
     esac
   echo "${string}"
   done) 3>&1 1>&2 2>&3)
-
 fi
 
 
@@ -201,47 +216,39 @@ case "${choice_main}" in
 
     title="Onion Service - Activation"
     menu="Choose socket type:"
-    choice_socket="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-    --menu "${menu}" "$((9+whiptail_height))" 70 2 \
-    "UNIX" "unix:path (more secure)" \
-    "TCP" "addr:port (leak onion address to the local network)" \
-    3>&1 1>&2 2>&3)"
 
-    SERVICE_MSG="\nName your service directory in one string and no space.\n(e.g.: torbox.ch)"
-    UNIX_PORT_MSG="\nYou are able to configure up to two virtual ports. Insert them separated by space. (e.g.: 80 443)"
-    TCP_PORT_MSG="\nYou are able to configure up to two virtual ports and targets, being only one virtual port required to create a service.
-    \nInsert them separated by space in the following order:\nVIRPORT TARGET VIRTPORT2 TARGET2\n(e.g.: 80 5000 443 5001) (e.g.: 80 192.168.5.10:5000 443 192.168.5.10:5001)"
+    service_text="\nName your service directory in one string and no space.\n(e.g.: )"
+    unix_socket_text="\nYou are able to configure up to two virtual ports. Insert them separated by space. (e.g.: 80 8080)"
+    tcp_socket_text="\nYou are able to configure up to two virtual ports and targets, being only one virtual port required to create a service.
+    \nInsert them separated by space in the following order:\nVIRPORT TARGET VIRTPORT2 TARGET2\n(e.g.: 80 50000 8080 50001) (e.g.: 80 192.168.5.10:50000 8080 192.168.5.10:50001)"
 
-    case "${choice_socket}" in
+    service_name="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+    --inputbox "${service_text}" 10 60 3>&1 1>&2 2>&3)"
 
-      UNIX)
-        service_name="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-        --inputbox "${SERVICE_MSG}" 10 60 3>&1 1>&2 2>&3)"
-        if [ -n "${service_name}" ]; then
-          service_ports="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-          --inputbox "${UNIX_PORT_MSG}" 10 60 3>&1 1>&2 2>&3)"
-          if [ -n "${service_ports}" ]; then
-            tput reset
-            onionjuggler-cli --activate --service "${service_name}" --socket unix --port "${service_ports}"
-            return_to_tui
-          fi
+    if [ -n "${service_name}" ]; then
+      if test -f /usr/share/anon-gw-base-files/gateway; then
+        ## whonix has an internal network between hosts, unix socket not viable and tcp socket does
+        ## not leak address to the local network as it is only possible to connect to whonix via tor
+        choice_socket="tcp"
+      else
+        choice_socket="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+        --menu "${menu}" "$((9+whiptail_height))" 70 2 \
+        "UNIX" "unix:path (more secure)" \
+        "TCP" "addr:port (leak onion address to the local network)" \
+        3>&1 1>&2 2>&3)"
+        socket="$(printf '%s\n' "${choice_socket}" | tr '[:upper:]' '[:lower:]')"
+      fi
+      if [ -n "${socket}" ]; then
+        eval socket_text='$'"${socket}_socket_text"
+        service_ports="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+        --inputbox "${socket_text}" 10 60 3>&1 1>&2 2>&3)"
+        if [ -n "${service_ports}" ]; then
+          tput reset
+          onionjuggler-cli --activate --service "${service_name}" --socket "${socket}" --port "${service_ports}"
+          return_to_tui
         fi
-      ;;
-
-      TCP)
-        service_name="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-        --inputbox "${SERVICE_MSG}" 10 60 3>&1 1>&2 2>&3)"
-        if [ -n "${service_name}" ]; then
-          service_ports="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-          --inputbox "${TCP_PORT_MSG}" 13 80 3>&1 1>&2 2>&3)"
-          if [ -n "${service_ports}" ]; then
-            onionjuggler-cli --activate --service "${service_name}" --socket tcp --port "${service_ports}"
-            return_to_tui
-          fi
-        fi
-      ;;
-
-    esac
+      fi
+    fi
   ;;
 
 
