@@ -192,6 +192,8 @@ safe_edit(){
       file_name_tmp="$(mktemp "${TMPDIR}/${file##*/}.XXXXXX")"
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       chown "${tor_conf_user_group}" "${file_name_tmp}"
+      ## create an empty file if not existent
+      test -f "${file}" || touch "${file}"
       ## copy preserving mode
       cp -p "${file}" "${file_name_tmp}"
       ## assign variable_tmp
