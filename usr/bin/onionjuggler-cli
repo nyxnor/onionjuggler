@@ -196,13 +196,6 @@ done
 ###########################
 ########## MAIN ###########
 
-## need at least an empty configuration file to be analyzed
-if ! test -f "${tor_conf}"; then
-  touch "${tor_conf}"
-  chmod "${tor_conf}" 644
-  chown "${tor_conf_user_group}" "${tor_conf}"
-fi
-
 ## development options
 case "${dev}" in
   ## execute or modify nothing, just print the configuration values
@@ -232,6 +225,14 @@ esac
 
 ## user option
 [ "$(id -u)" -ne 0 ] && error_msg "run as root"
+
+## need at least an empty configuration file to be analyzed
+if ! test -f "${tor_conf}"; then
+  touch "${tor_conf}"
+  chmod "${tor_conf}" 644
+  chown "${tor_conf_user_group}" "${tor_conf}"
+fi
+
 
 ## plugins
 ## requires script named "onionjuggler-cli-*"
