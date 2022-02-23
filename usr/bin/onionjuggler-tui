@@ -232,6 +232,12 @@ case "${choice_main}" in
         ## whonix has an internal network between hosts, unix socket not viable and tcp socket does
         ## not leak address to the local network as it is only possible to connect to whonix via tor
         socket="tcp"
+        choice_anon_target="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+        --menu "${menu}" "$((9+whiptail_height))" 70 2 \
+        "WORKSTATION" "service targeting the Workstation" \
+        "GATEWAY" "service targeting the Gateway" \
+        3>&1 1>&2 2>&3)"
+        [ "${choice_anon_target}" = "GATEWAY" ] && gateway="--gateway"
       else
         choice_socket="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
         --menu "${menu}" "$((9+whiptail_height))" 70 2 \
@@ -246,7 +252,7 @@ case "${choice_main}" in
         --inputbox "${socket_text}" 15 70 3>&1 1>&2 2>&3)"
         if [ -n "${service_ports}" ]; then
           tput reset
-          onionjuggler-cli --activate --service "${service_name}" --socket "${socket}" --port "${service_ports}"
+          onionjuggler-cli --activate --service "${service_name}" --socket "${socket}" --port "${service_ports}" ${gateway}
           return_to_tui
         fi
       fi
