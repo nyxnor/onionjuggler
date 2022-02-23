@@ -91,7 +91,6 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 
 * Required programs:
   * **sh** - any POSIX shell: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `yash` 2.29+, busybox `ash` 1.1.3+,  `zsh` 3.1.9+ (`zsh --emulate sh`) etc.
-
   * **tor** >= 0.3.5.7
   * **grep** >=0.9
   * **sed**
@@ -99,6 +98,7 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * **openssl** >= 1.1 (Client Authorization - requires algorithm x25519, so it can't be LibreSSL)
   * **basez** >= 1.6.2 (Client Authorization)
   * **git** (Vanguards)
+  * **python3** (Vanguards)
   * **python(3)-stem** >=1.8.0 (Vanguards)
   * **dialog**/**whiptail** (TUI)
   * **nginx**/**apache2** (Web server)
@@ -157,17 +157,17 @@ Run from inside the cloned repository to create the tor directories, create manu
 
 Install:
 ```sh
-configure.sh --install ## -i
+configure.sh -i
 ```
 
 Uninstall:
 ```sh
-configure.sh --uninstall ## -d
+configure.sh -d
 ```
 
-Update:
+Update (development only):
 ```sh
-configure.sh --update ## -u
+configure.sh -u
 ```
 
 #### tui
