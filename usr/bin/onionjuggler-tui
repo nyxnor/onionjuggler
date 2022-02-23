@@ -154,7 +154,7 @@ menu="\nUse enter/spacebar to select:"
 backtitle="OnionJuggler - Onion Services Manager"
 if check_folder_is_not_empty "${tor_data_dir_services}"; then
   if test -f /usr/share/anon-ws-base-files/workstation; then
-    # shellcheck disable=SC2046
+    # shellcheck disable=SC2046,SC2043
     choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
     "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 65 5 \
     "QUIT" "Exit menu and clear the screen" \
@@ -218,14 +218,16 @@ case "${choice_main}" in
     menu="Choose socket type:"
 
     service_text="\nName your service directory in one string and no space.\n(e.g.: )"
-    unix_socket_text="\nYou are able to configure up to two virtual ports. Insert them separated by space. (e.g.: 80 8080)"
-    tcp_socket_text="\nYou are able to configure up to two virtual ports and targets, being only one virtual port required to create a service.
-    \nInsert them separated by space in the following order:\nVIRPORT TARGET VIRTPORT2 TARGET2\n(e.g.: 80 50000 8080 50001) (e.g.: 80 192.168.5.10:50000 8080 192.168.5.10:50001)"
-
     service_name="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
     --inputbox "${service_text}" 10 60 3>&1 1>&2 2>&3)"
 
     if [ -n "${service_name}" ]; then
+      # shellcheck disable=SC2034
+      unix_socket_text="\nYou are able to configure up to two virtual ports. Insert them separated by space. (e.g.: 80 8080)"
+      # shellcheck disable=SC2034
+      tcp_socket_text="\nYou are able to configure up to two virtual ports and targets, being only one virtual port required to create a service.
+      \nInsert them separated by space in the following order:\nVIRPORT TARGET VIRTPORT2 TARGET2\n(e.g.: 80 50000 8080 50001) (e.g.: 80 192.168.5.10:50000 8080 192.168.5.10:50001)"
+
       if test -f /usr/share/anon-gw-base-files/gateway; then
         ## whonix has an internal network between hosts, unix socket not viable and tcp socket does
         ## not leak address to the local network as it is only possible to connect to whonix via tor
