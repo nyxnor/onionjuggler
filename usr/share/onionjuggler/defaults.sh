@@ -30,7 +30,6 @@ error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
 ## var=${var%*/} -> removes the trailing slash "/" at the end of directories variables
 
 ## system
-: "${su_cmd:="sudo"}"
 : "${openssl_cmd:="openssl"}"
 : "${webserver:="nginx"}"
 : "${webserver_conf:="/etc/nginx/sites-enabled"}"
@@ -219,12 +218,8 @@ safe_edit(){
 ## Verify tor configuration of the temporary file and if variable is empty, use the main configuration, if wrong, exit.
 verify_config_tor(){
   config="${tor_conf_tmp:-"${tor_conf}"}"
-  ## if User is set on the config, then run tor as root
-  grep -q "^User" "${config}" && su_tor_cmd="${su_cmd}"
-  ## user may not be on this config, but on another, so run tor as its user if $su_tor_cmd is empty
-  : "${su_tor_cmd:="${su_cmd} -u ${tor_user}"}"
   notice "Verifying tor configuration file ${config}"
-  ! ${su_tor_cmd} tor -f "${config}" --verify-config --hush && error_msg "aborting: configuration is invalid"
+  ! ${su_tor_cmd} tor --User "${tor_user}" --DataDirectory "${tor_data_dir}" -f "${config}" --verify-config --hush && error_msg "aborting: configuration is invalid"
   notice "${green}Configuration OK${nocolor}"
   [ -n "${tor_conf_tmp}" ] && safe_edit save tor_conf
 }

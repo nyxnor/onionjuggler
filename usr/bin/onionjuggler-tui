@@ -52,7 +52,12 @@ done
 #  editor="vitor"
 #else
   ## First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
-  eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
+  if [ -n "${SUDO_USER}" ]; then
+    su_cmd="sudo"
+  elif [ -n "${DOAS_USER}" ]; then
+    su_cmd="doas"
+  fi
+  [ -n "${su_cmd}" ] && eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
   editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-vi}"}"}"
 #fi
 

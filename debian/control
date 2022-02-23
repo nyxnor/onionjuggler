@@ -14,7 +14,7 @@ Rules-Requires-Root: no
 
 Package: onionjuggler
 Architecture: all
-Depends: tor, sudo, grep, sed,
+Depends: tor, grep, sed,
   whiptail,
   openssl, basez,
   tar,

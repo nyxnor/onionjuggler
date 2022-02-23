@@ -202,7 +202,6 @@ get_vars(){
 
   ## sanity check
   #printf %d "${tor_control_port:=9051}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
-  #range_variable su_cmd sudo doas
   #range_variable webserver nginx apache2 openbsd-httpd
   #range_variable dialog_box dialog whiptail
 }

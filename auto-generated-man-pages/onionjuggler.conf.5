@@ -33,11 +33,6 @@ Variables set to and empty string, either \f[I]var=\f[R] or
 Only install specified plugins, else install everything.
 (Default: all plugins).
 .TP
-\f[B]su_cmd\f[R]
-Command to run as another user, use to run as the root and the tor user.
-Compatible with \f[I]doas\f[R] and \f[I]sudo\f[R].
-(Default: sudo).
-.TP
 \f[B]pkg_mngr_install\f[R]
 Install the required packages via package manager.
 (Default: apt install -y).
@@ -130,7 +125,7 @@ Specify the ControlPort to use with Vanguards.
 .TP
 \f[B]tor_backup_dir\f[R]
 Specify the local directory to save your backups.
-(Default: $HOME/.onionjuggler/backup)
+(Default: /var/lib/onionjuggler/backup)
 .TP
 \f[B]tor_hiddenserviceport_target_addr\f[R]
 Specify default HiddenServicePort target address.
@@ -143,8 +138,6 @@ On Qubes-Whonix, you should set the Whonix Workstation Qubes IP address
 \f[B]/etc/onionjuggler/onionjuggler.conf\f[R]
 Default system configuration file.
 .SH EXAMPLES
-.IP \[bu] 2
-\f[B]su_cmd\f[R]=doas
 .IP \[bu] 2
 \f[B]tor_user\f[R]=tor
 .IP \[bu] 2

@@ -24,10 +24,6 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 : Only install specified plugins, else install everything. (Default: all plugins).
 
-**su_cmd**
-
-: Command to run as another user, use to run as the root and the tor user. Compatible with *doas* and *sudo*. (Default: sudo).
-
 **pkg_mngr_install**
 
 : Install the required packages via package manager. (Default: apt install -y).
@@ -118,8 +114,6 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 : Default system configuration file.
 
 # EXAMPLES
-
-* **su_cmd**=doas
 
 * **tor_user**=tor
 

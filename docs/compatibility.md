@@ -185,7 +185,7 @@ sudo /usr/sbin/usermod -aG debian-tor "${USER}
 
 ```sh
 printf "https://cdn.openbsd.org/pub/OpenBSD\n" > /etc/installurl
-doas pkg_add tor
+pkg_add tor
 rcctl enable tor
 rcctl start tor
 ```

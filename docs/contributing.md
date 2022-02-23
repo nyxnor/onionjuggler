@@ -52,8 +52,6 @@ Commands used by this project:
   * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
 
 * Installation:
-  * Pre-configured (won't be installed by the project):
-    * [sudo](https://www.sudo.ws/docs/man/1.9.8/sudo.conf.man/)/[doas](https://man.openbsd.org/doas.conf.5)
   * Required:
     * [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
     * [tar](https://linux.die.net/man/1/tar)
@@ -118,7 +116,7 @@ Some checks are not needed for certain files and are cherry picked to be disable
 * Applicable to the entire file: [specify the line after the shebang](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-one-specific-instance-in-a-file)
 * Applicable to certain lines: [specify on the line above the occurence](https://github.com/koalaman/shellcheck/wiki/Ignore#ignoring-all-instances-in-a-file-044)
 
-Some pitfalls can occur when writing that shellcheck won't recognize, as it doesn't warn about [SC2045](https://github.com/koalaman/shellcheck/wiki/SC2045), even though it should (we need to find a way to circumvent that as `DataDir` is owned by the tor user, not by your normal login user. This is way checking with `-d DIR` or ` -f FILE` doesn't work. A possiblle solution is `"${su_cmd}" -u "${tor_user} find ${tor_data_dir_services} -maxdepth 1 -type d | tail -n +2`)
+Some pitfalls can occur when writing that shellcheck won't recognize, as it doesn't warn about [SC2045](https://github.com/koalaman/shellcheck/wiki/SC2045), even though it should (we need to find a way to circumvent that as `DataDir` is owned by the tor user, not by your normal login user. This is way checking with `-d DIR` or ` -f FILE` doesn't work. A possiblle solution is `# find ${tor_data_dir_services} -maxdepth 1 -type d | tail -n +2`)
 
 Read [Bash Pitfalls](http://mywiki.wooledge.org/BashPitfalls) (some rules are applicable to POSIX shells).
 

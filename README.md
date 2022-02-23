@@ -87,11 +87,11 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 
 * General:
   * Unix-like system.
-  * superuser privileges to call commands as root and the tor user, with `doas` or `sudo`.
+  * superuser privileges to call commands as root and the tor user
 
 * Required programs:
   * **sh** - any POSIX shell: `dash` 0.5.4+, `bash` 2.03+, `ksh` 88+, `mksh` R28+, `yash` 2.29+, busybox `ash` 1.1.3+,  `zsh` 3.1.9+ (`zsh --emulate sh`) etc.
-  * **doas**/**sudo** (must be already configured)
+
   * **tor** >= 0.3.5.7
   * **grep** >=0.9
   * **sed**
@@ -134,12 +134,12 @@ To assign values to the variables, yyou can either:
 
 * or insert configuration to the end of the file with tee:
 ```sh
-printf "su_cmd=\"sudo\"\n" | tee -a /etc/onionjuggler/cond.d/local.conf
+printf "tor_conf_dir=\"/etc/tor\"\n" | tee -a /etc/onionjuggler/cond.d/local.conf
 ```
 
 * or edit with sed:
 ```sh
-sed -i'' "s|^su_cmd=.*|su_cmd=\"doas\"|" /etc/onionjuggler/cond.d/local.conf
+sed -i'' "s|^tor_conf_dir=.*|tor_conf_dir=\"/etc/tor\"|" /etc/onionjuggler/cond.d/local.conf
 ```
 
 ### Setup the enviroment
