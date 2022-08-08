@@ -66,7 +66,7 @@ install_package(){
         while :; do
           command -v python3 >/dev/null && python_path="$(command -v python3)" && break
           command -v python >/dev/null && python_path="$(command -v python)" && break
-          notice "${red}Python is not installed and is required for Vanguards, skipping...\n${nocolor}" && break
+          error_msg "Python is not installed and is required for Vanguards, skipping...\n"
         done
         [ -n "${python_path}" ] && ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg="${install_pkg} ${package}"
       ;;
