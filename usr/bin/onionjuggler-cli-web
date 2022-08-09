@@ -65,8 +65,22 @@ fi
 reload_webserver(){
   notice "\nReloading web server to apply new configuration"
   case "${webserver}" in
-    nginx) nginx -t && nginx -s reload;;
-    apache2) apache2 -t && apache2 -k graceful;;
+    nginx)
+      if nginx -t; then
+        nginx -s reload
+      else
+        rm -f "${webserver_conf}/${service}-onion.conf"
+        error_msg "Webserver configuration failed, aborting"
+      fi
+    ;;
+    apache2)
+      if apache2 -t; then
+        apache2 -k graceful
+      else
+        rm -f "${webserver_conf}/${service}-onion.conf"
+        error_msg "Webserver configuration failed, aborting"
+      fi
+    ;;
     openbsd-httpd)
       openbsd_httpd_test="$(httpd -n -f "${webserver_conf}" 2>&1)"
       if [ "${openbsd_httpd_test}" = "no actions, nothing to do" ] || [ "${openbsd_httpd_test}" = "configuration OK" ]; then
@@ -74,7 +88,9 @@ reload_webserver(){
       fi
     ;;
   esac
-  [ "${?}" -eq 1 ] && error_msg "Failed to reload ${webserver}, you must restart it manually before running this script again."
+  if [ "${?}" -eq 1 ]; then
+    error_msg "Failed to reload ${webserver}, you must restart it manually before running this script again."
+  fi
 }
 
 ## user option
@@ -109,7 +125,7 @@ case "${status}" in
     case "${webserver}" in
       apache2|openbsd-httpd) printf %s"${target}" | grep -q "unix" && error_msg "Web server '${webserver}' does not accept listening on a unix domain socket." ;;
     esac
-    notice "${cyan}Activating web server for the onion service: ${service}${nocolor}\n"
+    notice "${cyan}Activating web server for the service: ${service}${nocolor}\n"
     case "${webserver}" in
       nginx|apache2)
         [ ! -d "${webserver_conf}" ] && error_msg "webserver_conf=${webserver_conf} directory does not exist"
@@ -135,15 +151,14 @@ case "${status}" in
       nginx)
         printf %s"
 server {
-    listen ${target};
-    server_name ${onion_hostname:-"_"};
+    listen ${target} default_server;
 
     server_tokens off;
     access_log /var/log/nginx/access_${service}.log;
     error_log /var/log/nginx/error_${service}.log;
 
     root ${folder};
-    index index.html index.htm index.php;
+    index index.html index.htm index.nginx-debian.html index.php;
 }
 " | tee "${webserver_conf}/${service}-onion.conf"
       ;;
@@ -173,10 +188,34 @@ server \"${onion_hostname}\" {
       notice "\n# Address: ${magenta}${onion_hostname}:${virtport}${nocolor}"
       has qrencode && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}:${virtport}"
     fi
+
+    if test -f /usr/share/anon-ws-base-files/workstation; then
+      printf '\n'
+      ## create whonix firewall folder, allow port via config file, reload firewall
+      notice "Open firewall port ${target_port}"
+      mkdir -p /usr/local/etc/whonix_firewall.d/
+      echo "EXTERNAL_OPEN_PORTS+=\" ${target_port} \"" | sudo tee -a /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf
+      whonix_firewall
+      ## information to activate the service
+      printf '\n'
+      notice "${magenta}Activate the onion service on the Gateway with the following options:${nocolor}"
+      has qubesdb-read && target_addr_remote="$(qubesdb-read /qubes-ip)"
+      printf '%s\n' "  -s ${service} -p ${virtport} ${target_addr_remote:-${target_addr}}:${target_port}"
+    fi
   ;;
 
   f|off)
     [ -z "${service}" ] && usage
+    if test -f /usr/share/anon-ws-base-files/workstation; then
+      ## block WS firewall based on webserver listening port
+      target="$(grep "listen " "${webserver_conf}/${service}-onion.conf" | sed "s/.*listen //;s/\;//")"
+      target_addr="${target%%:*}"
+      target_port="${target##*:}"
+      printf '\n'
+      notice "Firewalling port ${target_port}"
+      sed -i'' "/EXTERNAL_OPEN_PORTS+=\" ${target_port} \"/d" /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf
+      whonix_firewall
+    fi
     disable_site(){
       service="${1}"
       notice "\nStopping website of the service: ${service}"
