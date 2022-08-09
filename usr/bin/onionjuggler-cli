@@ -229,7 +229,7 @@ esac
 ## need at least an empty configuration file to be analyzed
 if ! test -f "${tor_conf}"; then
   touch "${tor_conf}"
-  chmod "${tor_conf}" 644
+  chmod 644 "${tor_conf}"
   chown "${tor_conf_user_group}" "${tor_conf}"
 fi
 
