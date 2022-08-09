@@ -109,7 +109,7 @@ case "${status}" in
     case "${webserver}" in
       apache2|openbsd-httpd) printf %s"${target}" | grep -q "unix" && error_msg "Web server '${webserver}' does not accept listening on a unix domain socket." ;;
     esac
-    notice "${cyan}Activating web server for the onion service: ${service}${nocolor}\n"
+    notice "${cyan}Activating web server for the service: ${service}${nocolor}\n"
     case "${webserver}" in
       nginx|apache2)
         [ ! -d "${webserver_conf}" ] && error_msg "webserver_conf=${webserver_conf} directory does not exist"
@@ -136,14 +136,14 @@ case "${status}" in
         printf %s"
 server {
     listen ${target};
-    server_name ${onion_hostname:-"_"};
+    #server_name ${onion_hostname:-"_"};
 
     server_tokens off;
     access_log /var/log/nginx/access_${service}.log;
     error_log /var/log/nginx/error_${service}.log;
 
     root ${folder};
-    index index.html index.htm index.php;
+    index index.html index.htm index.nginx-debian.html index.php;
 }
 " | tee "${webserver_conf}/${service}-onion.conf"
       ;;
@@ -174,16 +174,33 @@ server \"${onion_hostname}\" {
       has qrencode && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}:${virtport}"
     fi
 
-    if has qubesdb-read && test -f /usr/share/anon-ws-base-files/workstation; then
+    if test -f /usr/share/anon-ws-base-files/workstation; then
+      printf '\n'
+      ## create whonix firewall folder, allow port via config file, reload firewall
+      notice "Open firewall port ${target_port}"
+      mkdir -p /usr/local/etc/whonix_firewall.d/
+      echo "EXTERNAL_OPEN_PORTS+=\" ${target_port} \"" | sudo tee -a /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf
+      whonix_firewall
+      ## information to activate the service
       printf '\n'
       notice "${magenta}Activate the onion service on the Gateway with the following options:${nocolor}"
-      printf '%s\n' "  -s ${service} -p ${virtport} $(qubesdb-read /qubes-ip):${target_port}"
+      has qubesdb-read && target_addr_remote="$(qubesdb-read /qubes-ip)"
+      printf '%s\n' "  -s ${service} -p ${virtport} ${target_addr_remote:-${target_addr}}:${target_port}"
     fi
-
   ;;
 
   f|off)
     [ -z "${service}" ] && usage
+    if test -f /usr/share/anon-ws-base-files/workstation; then
+      ## block WS firewall based on webserver listening port
+      target="$(grep "listen " "${webserver_conf}/${service}-onion.conf" | sed "s/.*listen //;s/\;//")"
+      target_addr="${target%%:*}"
+      target_port="${target##*:}"
+      printf '\n'
+      notice "Firewalling port ${target_port}"
+      sed -i'' "/EXTERNAL_OPEN_PORTS+=\" ${target_port} \"/d" /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf
+      whonix_firewall
+    fi
     disable_site(){
       service="${1}"
       notice "\nStopping website of the service: ${service}"
