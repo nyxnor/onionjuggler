@@ -183,13 +183,14 @@ check_service_name(){
 ## use the daemon option to verify config -f "${tor_conf_tmp}"
 ## $ safe_edit save tor_conf
 safe_edit(){
-  [ -w "${TMPDIR:="/tmp"}" ] || export TMPDIR="~"
-  TMPDIR="${TMPDIR%*/}"
+  #[ -w "${TMPDIR:="/tmp"}" ] || export TMPDIR="~"
+  #TMPDIR="${TMPDIR%*/}"
   key="${2}"
   eval file="$(printf '%s\n' '$'"${key}")"
   case "${1}" in
     tmp)
-      file_name_tmp="$(mktemp "${TMPDIR}/${file##*/}.XXXXXX")"
+      file_name_tmp="$(mktemp "${file}.XXXXXX")"
+      #file_name_tmp="$(mktemp "${TMPDIR}/${file##*/}.XXXXXX")"
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       chown "${tor_conf_user_group}" "${file_name_tmp}"
       ## create an empty file if not existent
