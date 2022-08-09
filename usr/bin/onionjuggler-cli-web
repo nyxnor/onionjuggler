@@ -84,16 +84,8 @@ case "${status}" in
   n|on)
     { [ -z "${service}" ] || [ -z "${folder}" ]; } && usage
 
+    ## Don't check if service exists. Useful for Workstations
     if [ "${no_check_service}" = "1" ]; then
-      is_service_dir_empty
-      test_service_exists "${service}"
-      port=$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | tail -n 1)
-      only_ports=${port#* }
-      virtport=${only_ports% *}
-      target=${only_ports##* }
-      target_addr="${target%%:*}"
-      target_port="${target##*:}"
-    else
       [ -z "${port}" ] && error_msg "Missing onion service target port that the webserver will listen to"
       port="$(printf '%s\n' "${port}" | tr "," " ")"
       virtport="${port% *}"
@@ -103,6 +95,15 @@ case "${status}" in
       ## happens when user specified only the port without addr
       [ "${target_addr}" = "${target_port}" ] && target="127.0.0.1:${target_port}"
       is_addr_port "${target}"
+    else
+      is_service_dir_empty
+      test_service_exists "${service}"
+      port=$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | tail -n 1)
+      only_ports=${port#* }
+      virtport=${only_ports% *}
+      target=${only_ports##* }
+      target_addr="${target%%:*}"
+      target_port="${target##*:}"
     fi
 
     case "${webserver}" in
