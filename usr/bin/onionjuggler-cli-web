@@ -172,6 +172,13 @@ server \"${onion_hostname}\" {
       notice "\n# Address: ${magenta}${onion_hostname}:${virtport}${nocolor}"
       has qrencode && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}:${virtport}"
     fi
+
+    if has qubesdb-read && test -f /usr/share/anon-ws-base-files/workstation; then
+      printf '\n'
+      notice "${magenta}Activate the onion service on the Gateway with the following options:${nocolor}"
+      printf '%s\n' "  -s ${service} -p ${virtport} $(qubesdb-read /qubes-ip):${target_port}"
+    fi
+
   ;;
 
   f|off)
