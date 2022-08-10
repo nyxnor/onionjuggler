@@ -444,7 +444,6 @@ EOF
   ## @all will read through all services folders and execute the commands
   info)
     is_service_dir_empty
-    [ -z "${service}" ] && usage
     get_service_info(){
       service="${1}"
       test_service_exists "${service}"
@@ -466,7 +465,9 @@ EOF
       printf "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>\n"
     }
     j=0
-    [ "${service}" = "@all" ] && { create_service_list; service="${service_name_list}"; }
+    if [ -z "${service}" ] || [ "${service}" = "@all" ]; then
+      create_service_list; service="${service_name_list}"
+    fi
     loop_list get_service_info "${service}"
   ;;
 
