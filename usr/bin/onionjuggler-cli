@@ -267,12 +267,12 @@ case "${main}" in
   ##  if target only contains the port number and not the address, will bind to localhost.
   ## virtport2 and target 2 are optional
   activate)
-    [ -z "${service}" ] && error_msg "service name can not be empty"
-    check_service_name
+    check_opt_filled service
+    check_name service
     grep -q -E "^HiddenServiceDir ${tor_data_dir_services}/${service}$|^HiddenServiceDir ${tor_data_dir_services}/${service}/$" "${tor_conf}" && error_msg "service '${service}' already exists, choose another name"
     : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version ${version} is not available" ## wait for v4 to change this
     : "${socket:=tcp}"
-    [ -z "${port}" ] && error_msg "port can not be empty"
+    check_opt_filled port
 
     ## backup torrc
     safe_edit tmp tor_conf
@@ -298,7 +298,7 @@ case "${main}" in
       tcp)
         ## tor-manual: By default, this option maps the virtual port to the same port on target_ip_default over TCP
         ## Because of that, this project lets the user leave target="" and write target as $target_ip_default:$virtport
-        ## Also, substitutes localhost:port for $target_ip_default:$port to make exact math for target always, as localhost and target_ip_default mean the same thing
+        ## Also, substitutes localhost:port for $target_ip_default:$port to make exact match for target always, as localhost and target_ip_default mean the same thing
         ## This measures avoid using the same local port for different services
         ## Sanity check
         if test -f /usr/share/anon-gw-base-files/gateway; then ## Whonix Gateway
@@ -342,10 +342,10 @@ EOF
             error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr' on /etc/onionjuggler/conf.d/*.conf"
           fi
 
-          ## check if the tager is already used in the torrc
+          ## check if the target is already used in the torrc
           ## the first part check if the target is present on the tor configuration file
           ## the second part checks if the target port is used on a hs port without a target, meaning using the same port from virtual port
-          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf}"; then
+          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_dot_tmp}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf_dot_tmp}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
@@ -380,7 +380,7 @@ EOF
           target="${unix_path}-${virtport}-onion.sock"
           is_integer "${virtport}"
           ## check wheter target is already in use on the tor configuration file
-          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf}"; then
+          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_dot_tmp}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
@@ -412,7 +412,7 @@ EOF
   ## will not check if folder or configuration exist, this is cleanup mode
   ## will not use '@all'. Purge is dangerous, purging all service is even more dangerous. Always backup.
   deactivate)
-    [ -z "${service}" ] && usage
+    check_opt_filled service
     delete_service(){
       service="${1}"
       printf "\n"
@@ -435,7 +435,7 @@ EOF
     loop_list delete_service "${service}"
     printf "\n"
     signal_tor
-    notice "${green}done!${nocolor}"
+    notice "${green}Done!${nocolor}"
   ;;
 
 
@@ -476,8 +476,8 @@ EOF
   ## <HiddenServiceDir>/authorized_clients/ because the would need to update their '.auth_private' file with the new onion address anyway and for security reasons.
   ## @all will read through all services folders and execute the commands.
   renew)
-    [ -z "${service}" ] && usage
-    [ "${service}" != "@all" ] && check_service_name
+    check_opt_filled service
+    [ "${service}" != "@all" ] && check_name service
     is_service_dir_empty
 
     renew_delete_old(){

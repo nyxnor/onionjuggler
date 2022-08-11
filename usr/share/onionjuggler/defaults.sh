@@ -163,14 +163,21 @@ cat_squeeze_blank(){
   sed '1s/^$//p;/./,/^$/!d' ${files}
 }
 
-## error_msg self explanatory, tor breaks with special chars on the dir name
-check_service_name(){
-  [ "${service%%*[^a-zA-Z0-9_.-]*}" ] || {
-  error_msg "Service name \"${service}\" is invalid\nIt must only contain the characters that are:
-  - letters (a-z A-Z)
-  - numbers (0-9)
-  - punctuations limited to hifen (-), underscore (_), dot (.)"
-  }
+## block names with special characters
+## usage: check_name service
+## where service is a variable with a value already assigned
+check_name(){
+  key="${1}"
+  eval val='$'"${key}"
+  [ "${val%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "${key}=\"${val}\" is invalid, must only contain letters, numbers, hifen, underscore and dot"
+}
+
+## check if option has value, if not, error out
+## this is intended to be used with required options
+check_opt_filled(){
+  key="${1}"
+  eval val='$'"${key}"
+  test -n "${val}" || error_msg "${key} is missing"
 }
 
 ## Elegantly modify files on a temporary directory. Test the configuration with another function.
@@ -189,7 +196,10 @@ safe_edit(){
   eval file="$(printf '%s\n' '$'"${key}")"
   case "${1}" in
     tmp)
-      file_name_tmp="$(mktemp "${file}.XXXXXX")"
+      file_dir="${file%/*}"
+      file_name="${file##*/}"
+      file_dot_tmp="${file_dir}/.${file_name}"
+      file_name_tmp="$(mktemp "${file}.XXXXXX.conf")"
       #file_name_tmp="$(mktemp "${TMPDIR}/${file##*/}.XXXXXX")"
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       chown "${tor_conf_user_group}" "${file_name_tmp}"
@@ -197,21 +207,31 @@ safe_edit(){
       test -f "${file}" || touch "${file}"
       ## copy preserving mode
       cp -p "${file}" "${file_name_tmp}"
+      ## tor won't parse a hidden file
+      notice "Moving original file ${file} to ${file_dot_tmp}"
+      mv "${file}" "${file_dot_tmp}"
       ## assign variable_tmp
       eval "${key}"_tmp="${file_name_tmp}"
+      eval "${key}"_dot_tmp="${file_dot_tmp}"
+      ## delete temp file. Also, if the hidden file still exists, means it wasn't saved,
+      ## so move it back to original location.
       # shellcheck disable=SC2064
-      trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}" EXIT INT TERM
+      trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}; test -f ${file_dot_tmp} && mv ${file_dot_tmp} ${file}" EXIT INT TERM
     ;;
     save)
       ## get variable_tmp file
       eval file_name_tmp='$'"${key}_tmp"
-      if cmp -s "${file_name_tmp}" "${file}"; then
-        notice "File ${file_name_tmp} do not differ from ${file}"
-        notice "Not writing back to original location.${nocolor}"
+      if cmp -s "${file_name_tmp}" "${file_dot_tmp}"; then
+        notice "File ${file_name_tmp} does not differ from ${file_dot_tmp}"
+        notice "Not writing back tmp file to original location${nocolor}"
         rm -f "${file_name_tmp}"
+        notice "Restoring original file that was mde hidden ${file_dot_tmp} to ${file}"
+        mv "${file_dot_tmp}" "${file}"
       else
         notice "Moving ${file_name_tmp} back to its original location ${file}"
         mv "${file_name_tmp}" "${file}"
+        notice "Removing original file that was made hidden ${file_dot_tmp}"
+        rm -f "${file_dot_tmp}"
       fi
     ;;
   esac
@@ -220,16 +240,16 @@ safe_edit(){
 
 ## Verify tor configuration of the temporary file and if variable is empty, use the main configuration, if wrong, exit.
 verify_config_tor(){
-  config="${tor_conf_tmp:-"${tor_conf}"}"
-  notice "Verifying tor configuration file ${config}"
-  ! ${su_tor_cmd} tor --User "${tor_user}" --DataDirectory "${tor_data_dir}" -f "${config}" --verify-config --hush && error_msg "aborting: configuration is invalid"
+  read_tor_files
+  #config="${tor_conf_tmp:-"${tor_conf}"}"
+  notice "Verifying tor configuration"
+  #! tor --User "${tor_user}" --DataDirectory "${tor_data_dir}" -f "${config}" --verify-config --hush && error_msg "aborting: configuration is invalid"
+  ! ${tor_start_command:="tor"} --verify-config --hush && error_msg "aborting: configuration is invalid"
   notice "${green}Configuration OK${nocolor}"
   [ -n "${tor_conf_tmp}" ] && safe_edit save tor_conf
 }
 
 
-## TODO: vinculate with verify_config_tor()
-## TODO: parse this with the modified file and without the original one
 ## get files tor will read
 read_tor_files(){
   if test -f /lib/systemd/system/tor@default.service; then
@@ -237,6 +257,7 @@ read_tor_files(){
   elif test -f /lib/systemd/system/tor.service; then
     tor_start_command="$(grep "ExecStart=" /lib/systemd/system/tor.service | sed "s/ExecStart=//")"
   fi
+  ## verify tor confgiuration just to grep which files were included
   tor_verify_config_output="$(${tor_start_command:="tor"} --verify-config)"
   tor_config_files="$(printf '%s\n' "${tor_verify_config_output}" |  grep -E " Read configuration file [^ ]*| Including configuration file [^ ]*" | awk '{print $NF}' | sed "s/\"//;s/\".//;s/\/\//\//" | tr "\n" " ")"
 }
@@ -304,12 +325,13 @@ is_addr_port(){
 }
 
 
-## returns 1 if is not empty
+## returns 1 if not empty
+## returns 0 if empty
 ## no better way to do with posix utilities
 check_folder_is_not_empty(){
   dir="${1}"
   if [ -d "${dir}" ] && files=$(ls -qAH -- "${dir}") && [ -z "${files}" ]; then
-   return 1
+    return 1
   else
     return 0
   fi
@@ -325,7 +347,7 @@ is_service_dir_empty(){
 ## if the service exists, will save the hostname for when requested.
 test_service_exists(){
   service="${1}"
-  onion_hostname=$(grep ".onion" "${tor_data_dir_services}"/"${service}"/hostname 2>/dev/null)
+  onion_hostname=$(grep -F ".onion" "${tor_data_dir_services}/${service}/hostname" 2>/dev/null)
   [ -z "${onion_hostname}" ] && error_msg "Service does not exist: ${service}"
 }
 
@@ -340,7 +362,7 @@ create_client_list(){
     client_listed="${client_listed%*.auth}"
     client_name_list="$(printf '%s\n%s\n' "${client_name_list}" "${client_listed}")"
   done
-  [ -n "${client_name_list}" ] && client_name_list="$(printf '%s\n' "${client_name_list}" | tr "\n" "," | sed "s/\,$//" | sed "s/^,//")"
+  [ -n "${client_name_list}" ] && client_name_list="$(printf '%s\n' "${client_name_list}" | tr "\n" "," | sed "s/\,$//;s/^,//")"
   client_count=""
   # shellcheck disable=SC2086
   [ -n "${client_name_list}" ] && client_count="$(IFS=','; set -f -- ${client_name_list}; printf %s"${#}")"
@@ -436,4 +458,20 @@ httpd_service_block(){
     escape_printf_percent "${line}" | grep -q "^}" && break
   done
   cat_squeeze_blank "${file}"
+}
+
+
+## generate key pairs for client authorization
+gen_auth_key_pair(){
+  ## Generate pem and derive pub and priv keys
+  "${openssl_cmd}" genpkey -algorithm x25519 -out /tmp/k1.prv.pem
+  grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail -c 32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
+  "${openssl_cmd}" pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail -c 32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
+  ## save variables
+  client_pub_key=$(cat /tmp/k1.pub.key)
+  client_priv_key=$(cat /tmp/k1.prv.key)
+  client_priv_key_config="${onion_hostname%.onion}:descriptor:x25519:${client_priv_key}"
+  client_pub_key_config="descriptor:x25519:${client_pub_key}"
+  ## Delete pem and keys
+  rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
 }
