@@ -14,7 +14,10 @@ check_plugin_enabled "${me}" || error_msg "Plugin '${me}' is disabled by configu
 
 usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]
+Description: server side onion authorization
 Complete options:
+  --on [--service <SERVICE>] [--client-pub-file <FILE>]
+                                    import '.auth' file to HiddenServiceDir/authorized_clients dir
   --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-key <CLIENT_PUB_KEY>]
                                     add client authorization, optionally add client's public key
   --off [--service <@all|SERV1,SERV2,...>] [--client <@all|CLIENT1,CLIENT2,...>]
@@ -43,6 +46,7 @@ while :; do
     on|off|list|n|f|l) status="${opt}";;
     s|service|s=*|service=*) get_arg service;;
     c|client|c=*|client=*) get_arg client;;
+    client-pub-file|client-pub-file=*) get_arg client_pub_file;;
     client-pub-key|client-pub-key=*) get_arg client_pub_key;;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
@@ -54,8 +58,6 @@ while :; do
 done
 
 [ "$(id -u)" -ne 0 ] && error_msg "run as root"
-[ -z "${service}" ] && usage
-[ "${service}" != "@all" ] && check_service_name
 is_service_dir_empty
 
 case "${status}" in
@@ -65,45 +67,41 @@ case "${status}" in
   ## the client private key is shown in the screen and the key file deleted
   ## the onion service operator should send the private key for the desired client
   n|on)
-    [ -z "${client}" ] && usage
     #printf "\n# Generating keys to access onion service (Client Authorization) ...\n"
     auth_server_add(){
       service="${1}"
       client="${2}"
       test_service_exists "${service}"
-      ## Generate pem and derive pub and priv keys
-      "${openssl_cmd}" genpkey -algorithm x25519 -out /tmp/k1.prv.pem
-      grep -v " PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail -c 32 | base32 | sed "s/=//g" > /tmp/k1.prv.key
-      "${openssl_cmd}" pkey -in /tmp/k1.prv.pem -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail -c 32 | base32 | sed "s/=//g" > /tmp/k1.pub.key
-      ## save variables
-      client_pub_key=$(cat /tmp/k1.pub.key)
-      client_priv_key=$(cat /tmp/k1.prv.key)
-      client_priv_key_config="${onion_hostname%.onion}:descriptor:x25519:${client_priv_key}"
-      client_pub_key_config="descriptor:x25519:${client_pub_key}"
+      gen_auth_key_pair
       # Server side configuration
-      printf %s"${client_pub_key_config}\n" | tee "${tor_data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
+      printf %s"${client_pub_key_config}\n" | tee "${tor_data_dir_services}/${service}/authorized_clients/${client}.auth" >/dev/null
+      printf %s"Client public key config saved to ${tor_data_dir_services}/${service}/authorized_clients/${client}.auth\n"
+      printf %s"${bold}- Client pub conf:${nocolor} ${client_pub_key_config}\n"
       ## Client side configuration
-      printf "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>\n"
-      printf %s"service=${bold}${service}${nocolor}\n"
-      printf %s"client=${bold}${client}${nocolor}\n"
-      printf %s"onion_hostname=${bold}${magenta}${onion_hostname}${nocolor}\n"
-      printf %s"client_pub_key=${bold}${client_pub_key}${nocolor}\n"
-      printf %s"client_pub_key_config=${bold}${client_pub_key_config}${nocolor}\n"
-      printf %s"client_priv_key=${bold}${client_priv_key}${nocolor}\n"
-      printf %s"client_priv_key_config=${bold}${client_priv_key_config}${nocolor}\n"
-      printf "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>\n"
-      ## Delete pem and keys
-      rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
+      printf "Share with the client the onion address and the client's private key config:\n"
+      printf %s"${bold}- Onion:${nocolor} ${magenta}${onion_hostname}${nocolor}\n"
+      printf %s"${bold}- Client priv conf:${nocolor} ${client_priv_key_config}\n"
+      printf "\n"
     }
+
+    check_opt_filled service
+    [ "${service}" != "@all" ] && check_name service
     [ "${service}" = "@all" ] && { create_service_list ; service="${service_name_list}" ; }
-    [ "${client}" = "@all" ] && error_msg "Client name cannot be @all, it is a restricted wildcard for referring to all clients, not a name per se."
-    if [ -n "${client_pub_key}" ]; then
+    check_opt_filled client
+    [ "${client}" = "@all" ] && error_msg "Client name cannot be @all, it is a restricted wildcard referring to all clients"
+    check_name client
+
+    if test -n "${client_pub_key}" || test -n "${client_pub_file}"; then
       test_service_exists "${service}"
-      client_pub_key_config="descriptor:x25519:${client_pub_key}"
-      printf %s"${client_pub_key_config}" | tee "${tor_data_dir_services}"/"${service}"/authorized_clients/"${client}".auth >/dev/null
+      if test -n "${client_pub_file}"; then
+        client_pub_key_config="$(cat "${client_pub_file}")"
+      elif test -n "${client_pub_key}"; then
+        client_pub_key_config="descriptor:x25519:${client_pub_key}"
+      fi
+      printf %s"${client_pub_key_config}" | tee "${tor_data_dir_services}/${service}/authorized_clients/${client}.auth" >/dev/null
       notice "\nServer side authorization configured\n"
-      printf %s" client_pub_key_config=${client_pub_key_config}\n"
-      notice "\nAs you inserted the public key manually, we expect that the client already has the private key"
+      printf %s"- Client pub conf: ${client_pub_key_config}\n"
+      notice "\nAs you inserted the public key manually, it is expected that the client already has the private key"
     else
       loop_list auth_server_add "${service}" "${client}"
     fi
@@ -113,28 +111,30 @@ case "${status}" in
   ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
   ## if no clients are present, the service will be available to anyone that has the onion service address
   f|off)
-
     auth_server_remove_clients(){
       service="${1}"
       client="${2}"
       #notice "Service: ${service}"
       if [ "${client}" = "@all" ]; then
-        rm -fv "${tor_data_dir_services}"/"${service}"/authorized_clients/*.auth
+        rm -fv "${tor_data_dir_services}/${service}/authorized_clients"/*.auth
       else
-        rm -fv "${tor_data_dir_services}"/"${service}"/authorized_clients/"${client}".auth
+        rm -fv "${tor_data_dir_services}/${service}/authorized_clients/${client}.auth"
+      fi
+      if ! ls "${tor_data_dir_services}/${service}/authorized_clients"/*.auth 2>/dev/null; then
+        notice "Service '${service}' does not have clients, it is accessible by anyone with the onion address"
       fi
     }
 
-    [ -z "${client}" ] && usage
-    [ -z "${service}" ] && error_msg "service is missing"
+    check_opt_filled service
     [ "${service}" != "@all" ] && check_service_name
+    check_opt_filled client
 
     if [ "${service}" = "@all" ]; then
-      notice "Removing client authorization for:"
-      notice "Service: @all"
+      notice "${bold}Removing client authorization for:${nocolor}"
+      notice "${bold}Service:${nocolor} @all - ALL SERVICES"
       create_service_list; service="${service_name_list}"
       if [ "${client}" = "@all" ]; then
-        notice "Clients: @all.\nThe service is now accessible for anyone with the onion address.\n"
+        notice "${bold}Clients:${nocolor} @all - ALL CLIENTS\n"
       else
         notice "If any client remains, the service will still be authenticated."
       fi
@@ -157,19 +157,22 @@ case "${status}" in
       service="${1}"
       test_service_exists "${service}"
       create_client_list "${service}"
-      notice "\nService: ${service}"
+      notice "\n${bold}Service:${nocolor} ${service}"
       if [ -n "${client_count}" ]; then
-        [ -n "${client_name_list}" ] && printf %s"Clients: ${client_name_list} (${client_count})\n"
+        [ -n "${client_name_list}" ] && printf %s"${bold}Clients:${nocolor} ${client_name_list} (${client_count})\n"
         for auth in "${tor_data_dir_services}/${service}/authorized_clients"/*; do
           auth="${auth##*/}"
-          notice "${auth}: $(grep "descriptor:x25519:" "${tor_data_dir_services}"/"${service}"/authorized_clients/"${auth}")${nocolor}"
+          notice "${bold}- ${auth}:${nocolor} $(grep "descriptor:x25519:" "${tor_data_dir_services}/${service}/authorized_clients/${auth}")${nocolor}"
         done
       else
-        notice "Clients: NONE (0)"
+        notice "${bold}Clients:${nocolor} NONE (0)"
       fi
     }
-    notice "${blue}Authorized clients for Hidden Services${nocolor}"
-    [ "${service}" = "@all" ] && { create_service_list; service="${service_name_list}"; }
+
+    notice "${bold}Authorized clients for Onion Services${nocolor}"
+    if [ -z "${service}" ] || [ "${service}" = "@all" ]; then
+      create_service_list; service="${service_name_list}"
+    fi
     loop_list auth_server_list "${service}"
   ;;
 
