@@ -102,7 +102,7 @@ case "${status}" in
 
     ## Don't check if service exists. Useful for Workstations
     if [ "${no_check_service}" = "1" ]; then
-      [ -z "${port}" ] && error_msg "Missing onion service target port that the webserver will listen to"
+      check_opt_filled port
       port="$(printf '%s\n' "${port}" | tr "," " ")"
       virtport="${port% *}"
       target="${port#* }"
