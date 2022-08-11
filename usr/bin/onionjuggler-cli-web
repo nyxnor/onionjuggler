@@ -192,7 +192,7 @@ server \"${onion_hostname}\" {
     if test -f /usr/share/anon-ws-base-files/workstation; then
       printf '\n'
       ## create whonix firewall folder, allow port via config file, reload firewall
-      notice "Open firewall port ${target_port}"
+      notice "Allow port ${target_port} on firewall /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf"
       mkdir -p /usr/local/etc/whonix_firewall.d/
       echo "EXTERNAL_OPEN_PORTS+=\" ${target_port} \"" | sudo tee -a /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf
       whonix_firewall
@@ -212,7 +212,7 @@ server \"${onion_hostname}\" {
       target_addr="${target%%:*}"
       target_port="${target##*:}"
       printf '\n'
-      notice "Firewalling port ${target_port}"
+      notice "Closing port ${target_port} on firewall /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf"
       sed -i'' "/EXTERNAL_OPEN_PORTS+=\" ${target_port} \"/d" /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf
       whonix_firewall
     fi
