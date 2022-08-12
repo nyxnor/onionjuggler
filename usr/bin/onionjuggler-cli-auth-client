@@ -14,17 +14,18 @@ check_plugin_enabled "${me}" || error_msg "Plugin '${me}' is disabled by configu
 
 usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]
-Description: client side onion authorization
+Description: client side onion authorization on ClientOnionAuthDir
 Complete options:
   --on [--client-priv-file <FILE>] [--replace-file]
-                            import '<FILE>.auth_private' content to ClientOnionAuthDir
+                            import '<FILE>.auth_private' contents
   --on [--client <CLIENT>] [--client-priv-config <CONFIG>] [--replace-file]
-                            import client side configuration to ClientOnionAuthDir
+                            import client private configuration
   --on [--client <CLIENT>] [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>] [--replace-file]
-                            generate keys for client authorization, optionally add define client's private key
+                            generate client keys and import priv key, else use existent client's priv key
   --off [--client <CLIENT1,CLIENT2,...>]
-                            remove client-side credential based on client name
-  --list                    list client-side credentials
+                            remove client side credential based on client name
+  --list [--client <@all|CLIENT1,CLIENT2,...>]
+                            list client side credentials, optionally specify client names
 "
   exit 1
 }
@@ -74,6 +75,7 @@ case "${status}" in
       test -f "${client_priv_file}" || error_msg "file ${client_priv_file} does not exist or is not a regular file"
       client_priv_file_name="${client_priv_file##*/}"
       [ "${client_priv_file_name%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "file name can only contain letters, numbers, hifen, underscore and dot"
+      echo "${client_priv_file_name}" | cut -c 1 | grep -qF "." && error_msg "file name can not start with dot"
       ## avoid copying wrong file to the auth dir
       echo "${client_priv_file_name}" | grep -q ".auth_private$" || error_msg "file name does not end with '.auth_private'"
       wc -c "${client_priv_file}" | grep -q "^128 " || error_msg "file size '$(wc -c "${client_priv_file}" | cut -d " " -f1)' is different than 128 bytes"
@@ -208,17 +210,26 @@ case "${status}" in
 
 
   l|list)
-    if check_folder_is_not_empty "${tor_data_dir_auth}"; then
-      notice "${bold}ClientOnionAuthDir ${tor_data_dir_auth}${nocolor}"
-      for auth in "${tor_data_dir_auth}"/*; do
-        auth="${auth##*/}"
-        notice "\n${bold}File name:${nocolor} ${auth}"
-        notice "${bold}Content:${nocolor} $(grep "descriptor:x25519:" "${tor_data_dir_auth}"/"${auth}")"
-      done
-      printf "\n"
-    else
-      error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
+    check_folder_is_not_empty "${tor_data_dir_auth}" || error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
+#    notice "${bold}ClientOnionAuthDir ${tor_data_dir_auth}${nocolor}"
+#    for auth in "${tor_data_dir_auth}"/*; do
+#      auth="${auth##*/}"
+#      notice "\n${bold}File name:${nocolor} ${auth}"
+#      notice "${bold}Content:${nocolor} $(grep "descriptor:x25519:" "${tor_data_dir_auth}/${auth}")"
+#    done
+
+    auth_client_list(){
+      auth="${1}"
+      auth="${auth##*/}"
+      notice "\n${bold}File name:${nocolor} ${auth}.auth_private"
+      notice "${bold}Content:${nocolor} $(grep "descriptor:x25519:" "${tor_data_dir_auth}/${auth}.auth_private")"
+    }
+
+    notice "${bold}ClientOnionAuthDir ${tor_data_dir_auth}${nocolor}"
+    if [ -z "${client}" ] || [ "${client}" = "@all" ]; then
+      create_client_priv_list; client="${client_name_priv_list}"
     fi
+    loop_list auth_client_list "${client}"
   ;;
 
 

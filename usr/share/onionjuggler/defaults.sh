@@ -170,6 +170,7 @@ check_name(){
   key="${1}"
   eval val='$'"${key}"
   [ "${val%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "${key}=\"${val}\" is invalid, must only contain letters, numbers, hifen, underscore and dot"
+  echo "${val}" | cut -c 1 | grep -qF "${key} can not start with dot"
 }
 
 ## check if option has value, if not, error out
@@ -366,6 +367,21 @@ create_client_list(){
   client_count=""
   # shellcheck disable=SC2086
   [ -n "${client_name_list}" ] && client_count="$(IFS=','; set -f -- ${client_name_list}; printf %s"${#}")"
+}
+
+## save <ClientOnionAuthDir> files in list format (CLIENT1,CLIENT2,...)
+create_client_priv_list(){
+  client_name_priv_list=""
+  for client_listed in "${tor_data_dir_auth}"/*; do
+    client_listed="${client_listed##*/}"
+    [ "${client_listed}" = "*" ] && break
+    client_listed="${client_listed%*.auth_private}"
+    client_name_priv_list="$(printf '%s\n%s\n' "${client_name_priv_list}" "${client_listed}")"
+  done
+  [ -n "${client_name_priv_list}" ] && client_name_priv_list="$(printf '%s\n' "${client_name_priv_list}" | tr "\n" "," | sed "s/\,$//;s/^,//")"
+  client_count=""
+  # shellcheck disable=SC2086
+  [ -n "${client_name_priv_list}" ] && client_priv_count="$(IFS=','; set -f -- ${client_name_priv_list}; printf %s"${#}")"
 }
 
 
