@@ -18,6 +18,8 @@ Description: client side onion authorization
 Complete options:
   --on [--client-priv-file <FILE>] [--replace-file]
                             import '.auth_private' file to ClientOnionAuthDir
+  --on [--client <CLIENT>] [--client-priv-config <CONFIG>] [--replace-file]
+                            import client side configuration to ClientOnionAuthDir
   --on [--client <CLIENT>] [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>] [--replace-file]
                             generate keys for client authorization, optionally add define client's private key
   --off [--client <CLIENT1,CLIENT2,...>]
@@ -42,10 +44,11 @@ while :; do
   clean_opt "${1}" || break
   case "${opt}" in
     on|off|list|n|f|l) status="${opt}";;
-    client-priv-file|client-priv-file=*) get_arg client_priv_file;;
     replace-file) replace_file="${opt}";;
-    o|onion|o=*|onion=*) get_arg onion_hostname;;
+    client-priv-file|client-priv-file=*) get_arg client_priv_file;;
+    client-priv-config|client-priv-config=*) get_arg client_priv_config;;
     client-priv-key|client-priv-key=*) get_arg client_priv_key;;
+    o|onion|o=*|onion=*) get_arg onion_hostname;;
     client|client=*) get_arg client;;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
@@ -77,27 +80,17 @@ case "${status}" in
     }
 
     auth_client_check_replace(){
-      file_type="${1}" # stdin|file
-      client_priv_file="${2}"
+      client_priv_file="${1}"
       client_priv_file_name="${client_priv_file##*/}"
       if test -f "${tor_data_dir_auth}/${client_priv_file_name}"; then
         test -n "${replace_file}" || error_msg "file named ${client_priv_file_name} already exist on ${tor_data_dir_auth}, to replace it, use the option '--replace-file'"
       fi
-      ## multiple files with the same contents leads to a tor error
-      ## file case if it already exists, else stdin to compare key that is not in a file
+      ## multiple files with the same onion address leads to a tor error
       for auth in "${tor_data_dir_auth}"/*; do
-        case "${file_type}" in
-          file)
-            if cmp -s "${auth}" "${client_priv_file}"; then
-              [ "${auth##*/}" != "${client_priv_file_name}" ] && error_msg "file with the same contents already present on ${auth}"
-            fi
-          ;;
-          stdin)
-            if echo "${client_priv_key_config}" | cmp -s "${auth}"; then
-              [ "${auth##*/}" != "${client_priv_file_name}" ] && error_msg "file with the same contents already present on ${auth}"
-            fi
-          ;;
-        esac
+        if [ "${auth##*/}" != "${client_priv_file_name}" ]; then
+          ## compare onion address, the first field
+          [ "${client_priv_key_config%%:*}" = "$(cut -d ":" -f1 "${auth}")" ] && error_msg "file with the same onion address already present on ${auth}"
+        fi
       done
     }
 
@@ -135,13 +128,34 @@ case "${status}" in
       [ "${#onion_hostname_without_onion}" = "56" ] || error_msg "onion domain '${onion_hostname}' has length of ${#onion_hostname}, different than 56 characters (<56-char-base32>.onion)"
     }
 
+    auth_client_finish(){
+      printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}/${client}.auth_private" >/dev/null
+      notice "Client side authorization configured"
+      notice "\nClient private key config saved to ${tor_data_dir_auth}/${client}.auth_private"
+      notice "${bold}- Client priv conf:${nocolor} ${client_priv_key_config}"
+      notice "\nNow it depends on the service operator to authorize your client public key"
+    }
+
+
+    ## main
     create_clientonionauthdir
     if test -n "${client_priv_file}"; then
+      client="${client_priv_file##*/}"
+      client="${client%.auth_private}"
       auth_client_check_file
-      auth_client_check_content "$(cat "${client_priv_file}")"
-      auth_client_check_replace file "${client_priv_file}"
-      notice "Copying file ${client_priv_file} to ${tor_data_dir_auth}/${client_priv_file_name}"
-      cp "${client_priv_file}" "${tor_data_dir_auth}"
+      client_priv_key_config="$(cat "${client_priv_file}")"
+      auth_client_check_content "${client_priv_key_config}"
+      auth_client_check_replace "${client_priv_file}"
+      auth_client_finish
+
+    elif test -n "${client_priv_config}"; then
+      check_opt_filled client
+      client="${client##*/}"
+      check_name client
+      client_priv_key_config="${client_priv_config}"
+      auth_client_check_content "${client_priv_key_config}"
+      auth_client_check_replace "${client}.auth_private"
+      auth_client_finish
 
     elif test -n "${client_priv_key}"; then
       check_opt_filled client
@@ -150,14 +164,8 @@ case "${status}" in
       clean_onion
       client_priv_key_config="${onion_hostname_without_onion}:descriptor:x25519:${client_priv_key}"
       auth_client_check_content "${client_priv_key_config}"
-      client_priv_file_name="${client}.auth_private"
-      auth_client_check_replace stdin "${client}.auth_private"
-      printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}/${client}.auth_private" >/dev/null
-      notice "Client private key config saved to ${tor_data_dir_auth}/${client}.auth_private"
-      notice "\nClient side authorization configured"
-      notice "${bold}- Client priv conf:${nocolor} ${client_priv_key_config}"
-      notice "\nNow it depends on the service operator to authorize your client public key"
-      printf '\n'
+      auth_client_check_replace "${client}.auth_private"
+      auth_client_finish
 
     else
       check_opt_filled client
@@ -165,17 +173,13 @@ case "${status}" in
       check_name client
       clean_onion
       gen_auth_key_pair
-      auth_client_check_replace stdin "${client}.auth_private"
-      printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}/${client}.auth_private" >/dev/null
-      notice "Client private key config saved to ${tor_data_dir_auth}/${client}.auth_private"
-      notice "This is your private key config, keep it safe, keep it hidden:"
-      notice "${bold}- Client priv conf:${nocolor} ${client_priv_key_config}"
-      notice "\nNow it depends on the service operator to authorize your client public key"
-      notice "Send the public key and instructions to the onion service operator of ${onion_hostname}"
+      auth_client_check_replace "${client}.auth_private"
+      auth_client_finish
+      notice "Send the public key config to the onion service operator of ${onion_hostname}.onion"
       notice "${bold}- Client pub conf:${nocolor} ${client_pub_key_config}"
-      printf '\n'
     fi
 
+    printf '\n'
     signal_tor
   ;;
 
