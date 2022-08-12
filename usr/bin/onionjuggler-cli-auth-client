@@ -18,11 +18,10 @@ Description: client side onion authorization
 Complete options:
   --on [--client-priv-file <FILE>] [--replace-file]
                             import '.auth_private' file to ClientOnionAuthDir
-                            optionally replace file if it already exist under the same name
-  --on [--client <CLIENT>] [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>]
-                            create or add client-side authorization, optionally add client's private key
+  --on [--client <CLIENT>] [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>] [--replace-file]
+                            generate keys for client authorization, optionally add define client's private key
   --off [--client <CLIENT1,CLIENT2,...>]
-                            remove client-side credential based on client file name
+                            remove client-side credential based on client name
   --list                    list client-side credentials
 "
   exit 1
@@ -69,37 +68,49 @@ case "${status}" in
   n|on)
 
     auth_client_check_file(){
-      test -f "${client_priv_file}" || error_msg "File ${client_priv_file} does not exist or is not a regular file"
+      test -f "${client_priv_file}" || error_msg "file ${client_priv_file} does not exist or is not a regular file"
       client_priv_file_name="${client_priv_file##*/}"
-      [ "${client_priv_file_name%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "File name can only contain letters, numbers, hifen, underscore and dot"
+      [ "${client_priv_file_name%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "file name can only contain letters, numbers, hifen, underscore and dot"
+      ## avoid copying wrong file to the auth dir
+      echo "${client_priv_file_name}" | grep -q ".auth_private$" || error_msg "file name does not end with '.auth_private'"
+      wc -c "${client_priv_file}" | grep -q "^128 " || error_msg "file size '$(wc -c "${client_priv_file}" | cut -d " " -f1)' is different than 128 bytes"
+    }
+
+    auth_client_check_replace(){
+      file_type="${1}" # stdin|file
+      client_priv_file="${2}"
+      client_priv_file_name="${client_priv_file##*/}"
       if test -f "${tor_data_dir_auth}/${client_priv_file_name}"; then
-        test -n "${replace_file}" || error_msg "File named ${client_priv_file_name} already exist on ${tor_data_dir_auth}, to replace it, use the option '--replace-file'"
+        test -n "${replace_file}" || error_msg "file named ${client_priv_file_name} already exist on ${tor_data_dir_auth}, to replace it, use the option '--replace-file'"
       fi
       ## multiple files with the same contents leads to a tor error
+      ## file case if it already exists, else stdin to compare key that is not in a file
       for auth in "${tor_data_dir_auth}"/*; do
-        if cmp -s "${auth}" "${client_priv_file}"; then
-          if test -n "${replace_file}" && [ "${auth##*/}" = "${client_priv_file_name}" ]; then
-            : ## don't block substituting file if user specified to replace it
-          else
-            error_msg "File with the same contents but using a different name already present on ${auth}"
-          fi
-        fi
+        case "${file_type}" in
+          file)
+            if cmp -s "${auth}" "${client_priv_file}"; then
+              [ "${auth##*/}" != "${client_priv_file_name}" ] && error_msg "file with the same contents already present on ${auth}"
+            fi
+          ;;
+          stdin)
+            if echo "${client_priv_key_config}" | cmp -s "${auth}"; then
+              [ "${auth##*/}" != "${client_priv_file_name}" ] && error_msg "file with the same contents already present on ${auth}"
+            fi
+          ;;
+        esac
       done
-      ## avoid copying wrong file to the auth dir
-      echo "${client_priv_file_name}" | grep -q ".auth_private$" || error_msg "File name does not end with '.auth_private'"
-      wc -c "${client_priv_file}" | grep -q "^128 " || error_msg "File size '$(wc -c "${client_priv_file}" | cut -d " " -f1)' is different than 128 bytes"
     }
 
     auth_client_check_content(){
       client_priv_file_content="${1}"
-      echo "${client_priv_file_content}" | grep -q ":descriptor:x25519:" || error_msg "invalid file, contents does not containt pattern ':descriptor:x25519:"
-      [ "${client_priv_file_content%%*[^a-zA-Z0-9:]*}" ] || error_msg "invalid file, it contains special characters"
+      echo "${client_priv_file_content}" | grep -q ":descriptor:x25519:" || error_msg "file contents does not contain pattern ':descriptor:x25519:"
+      [ "${client_priv_file_content%%*[^a-zA-Z0-9:]*}" ] || error_msg "file contains special characters"
       client_priv_file_onion_found="$(echo "${client_priv_file_content}" | cut -d ":" -f1)"
-      [ "${client_priv_file_onion_found%%*[^a-z2-7]*}" ] || error_msg "invalid file, onion='${client_priv_file_onion_found}' is not within base32 alphabet lower-case encoding [a-z][2-7]"
-      echo "${client_priv_file_content}" | cut -d ":" -f2 | grep -q "descriptor" || error_msg "invalid file, descriptor reference not found"
-      echo "${client_priv_file_content}" | cut -d ":" -f3 | grep -q "x25519" || error_msg "invalid file, descriptor name not found"
-      client_priv_file_pub_found="$(echo "${client_priv_file_content}" | cut -d ":" -f4)"
-      [ "${client_priv_file_pub_found%%*[^A-Z2-7]*}" ] || error_msg "invalid file, client public key '${client_priv_file_pub_found}' is not within base32 alphabet upper-case encoding [A-Z][2-7]"
+      [ "${client_priv_file_onion_found%%*[^a-z2-7]*}" ] || error_msg "file's onion '${client_priv_file_onion_found}' is not within base32 alphabet lower-case encoding [a-z][2-7]"
+      echo "${client_priv_file_content}" | cut -d ":" -f2 | grep -q "descriptor" || error_msg "file's descriptor reference not found in the 2nd field"
+      echo "${client_priv_file_content}" | cut -d ":" -f3 | grep -q "x25519" || error_msg "file's descriptor type not found in the 3rd field"
+      client_priv_file_priv_found="$(echo "${client_priv_file_content}" | cut -d ":" -f4)"
+      [ "${client_priv_file_priv_found%%*[^A-Z2-7]*}" ] || error_msg "file's client private key '${client_priv_file_priv_found}' is not within base32 alphabet upper-case encoding [A-Z][2-7]"
     }
 
     create_clientonionauthdir(){
@@ -120,14 +131,15 @@ case "${status}" in
       ##  http://www.dds6qkxpwdeubwucdiaord2xgbbeyds25rbsgr73tbfpqpt4a6vjwsyd.onion/wiki/Remote_Administration
       onion_hostname="$(printf %s"${onion_hostname}\n" | sed "s|.*://||;s|/.*||" | tail -c 63)"
       onion_hostname_without_onion="${onion_hostname%.onion}"
-      [ "${onion_hostname_without_onion%%*[^a-z2-7]*}" ] || error_msg "Onion domain '${onion_hostname}' is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
-      [ "${#onion_hostname_without_onion}" = "56" ] || error_msg "Onion domain '${onion_hostname}' is invalid, has length of ${#onion_hostname}, different than 56 characters (<56-char-base32>.onion)"
+      [ "${onion_hostname_without_onion%%*[^a-z2-7]*}" ] || error_msg "onion domain '${onion_hostname}' is not within base32 alphabet lower-case encoding [a-z][2-7]"
+      [ "${#onion_hostname_without_onion}" = "56" ] || error_msg "onion domain '${onion_hostname}' has length of ${#onion_hostname}, different than 56 characters (<56-char-base32>.onion)"
     }
 
     create_clientonionauthdir
     if test -n "${client_priv_file}"; then
       auth_client_check_file
       auth_client_check_content "$(cat "${client_priv_file}")"
+      auth_client_check_replace file "${client_priv_file}"
       notice "Copying file ${client_priv_file} to ${tor_data_dir_auth}/${client_priv_file_name}"
       cp "${client_priv_file}" "${tor_data_dir_auth}"
 
@@ -138,6 +150,8 @@ case "${status}" in
       clean_onion
       client_priv_key_config="${onion_hostname_without_onion}:descriptor:x25519:${client_priv_key}"
       auth_client_check_content "${client_priv_key_config}"
+      client_priv_file_name="${client}.auth_private"
+      auth_client_check_replace stdin "${client}.auth_private"
       printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}/${client}.auth_private" >/dev/null
       notice "Client private key config saved to ${tor_data_dir_auth}/${client}.auth_private"
       notice "\nClient side authorization configured"
@@ -151,13 +165,12 @@ case "${status}" in
       check_name client
       clean_onion
       gen_auth_key_pair
-      # Client side configuration
+      auth_client_check_replace stdin "${client}.auth_private"
       printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}/${client}.auth_private" >/dev/null
       notice "Client private key config saved to ${tor_data_dir_auth}/${client}.auth_private"
       notice "This is your private key config, keep it safe, keep it hidden:"
       notice "${bold}- Client priv conf:${nocolor} ${client_priv_key_config}"
       notice "\nNow it depends on the service operator to authorize your client public key"
-      ## Server side configuration
       notice "Send the public key and instructions to the onion service operator of ${onion_hostname}"
       notice "${bold}- Client pub conf:${nocolor} ${client_pub_key_config}"
       printf '\n'
