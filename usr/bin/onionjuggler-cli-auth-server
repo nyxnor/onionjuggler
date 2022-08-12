@@ -14,16 +14,18 @@ check_plugin_enabled "${me}" || error_msg "Plugin '${me}' is disabled by configu
 
 usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]
-Description: server side onion authorization
+Description: server side onion authorization on HiddenServiceDir/authorized_clients
 Complete options:
-  --on [--service <SERVICE>] [--client-pub-file <FILE>]
-                                    import '.auth' file to HiddenServiceDir/authorized_clients dir
-  --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-key <CLIENT_PUB_KEY>]
-                                    add client authorization, optionally add client's public key
+  --on [--service <SERVICE>] [--client-pub-file <FILE>] [--replace-file]
+                            import '<FILE>.auth' file
+  --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-config <CONFIG>] [--replace-file]
+                            import client public configuration
+  --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-key <CLIENT_PUB_KEY>] [--replace-file]
+                            generate client keys and import pub key, else use existent client's pub key
   --off [--service <@all|SERV1,SERV2,...>] [--client <@all|CLIENT1,CLIENT2,...>]
-                                    remove client authorization
+                            remove client authorization
   --list [--service <@all|SERV1,SERV2,...>]
-                                    list authorized clients for indicated service
+                            list authorized clients for indicated service
 "
   exit 1
 }
@@ -47,6 +49,7 @@ while :; do
     s|service|s=*|service=*) get_arg service;;
     c|client|c=*|client=*) get_arg client;;
     client-pub-file|client-pub-file=*) get_arg client_pub_file;;
+    replace-file) replace_file="${opt}";;
     client-pub-key|client-pub-key=*) get_arg client_pub_key;;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
@@ -67,21 +70,47 @@ case "${status}" in
   ## the client private key is shown in the screen and the key file deleted
   ## the onion service operator should send the private key for the desired client
   n|on)
-    #printf "\n# Generating keys to access onion service (Client Authorization) ...\n"
-    auth_server_add(){
-      service="${1}"
-      client="${2}"
-      test_service_exists "${service}"
-      gen_auth_key_pair
-      # Server side configuration
+
+    auth_server_check_file(){
+      test -f "${client_pub_file}" || error_msg "file ${client_pub_file} does not exist or is not a regular file"
+      client_pub_file_name="${client_pub_file##*/}"
+      [ "${client_pub_file_name%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "file name can only contain letters, numbers, hifen, underscore and dot"
+      echo "${client_pub_file_name}" | cut -c 1 | grep -qF "." && error_msg "file name can not start with dot"
+      ## avoid copying wrong file to the auth dir
+      echo "${client_pub_file_name}" | grep -q ".auth$" || error_msg "file name does not end with '.auth'"
+      wc -c "${client_pub_file}" | grep -q "^71 " || error_msg "file size '$(wc -c "${client_pub_file}" | cut -d " " -f1)' is different than 71 bytes"
+    }
+
+    auth_server_check_replace(){
+      client_pub_file="${1}"
+      client_pub_file_name="${client_pub_file##*/}"
+      if test -f "${tor_data_dir_services}/${service}/authorized_clients/${client_pub_file_name}"; then
+        test -n "${replace_file}" || error_msg "file named ${client_pub_file_name} already exist on ${tor_data_dir_services}/${service}/authorized_clients, to replace it, use the option '--replace-file'"
+      fi
+      ## multiple files with the same pub key leads to a tor error
+      for auth in "${tor_data_dir_services}/${service}/authorized_clients"/*; do
+        [ "${auth##*/}" = "*" ] && break
+        if [ "${auth##*/}" != "${client_pub_file_name}" ]; then
+          ## compare onion address, the first field
+          [ "${client_pub_key_config%%:*}" = "$(cut -d ":" -f3 "${auth}")" ] && error_msg "file with the same onion address already present on ${auth}"
+        fi
+      done
+    }
+
+    auth_server_check_content(){
+      client_pub_file_content="${1}"
+      echo "${client_pub_file_content}" | grep -q "^descriptor:x25519:" || error_msg "configuration does not start with pattern 'descriptor:x25519:"
+      [ "${client_pub_file_content%%*[^a-zA-Z0-9:]*}" ] || error_msg "configuration has special characters"
+      client_pub_file_pub_found="$(echo "${client_pub_file_content}" | cut -d ":" -f3)"
+      [ "${client_pub_file_pub_found%%*[^A-Z2-7]*}" ] || error_msg "client public key '${client_pub_file_pub_found}' is not within base32 alphabet upper-case encoding [A-Z][2-7]"
+    }
+
+    auth_server_finish(){
       printf %s"${client_pub_key_config}\n" | tee "${tor_data_dir_services}/${service}/authorized_clients/${client}.auth" >/dev/null
-      printf %s"Client public key config saved to ${tor_data_dir_services}/${service}/authorized_clients/${client}.auth\n"
+      printf %s"${bold}Server side authorization configured${nocolor}\n"
+      printf %s"\nClient public key config saved to ${tor_data_dir_services}/${service}/authorized_clients/${client}.auth\n"
       printf %s"${bold}- Client pub conf:${nocolor} ${client_pub_key_config}\n"
-      ## Client side configuration
-      printf "Share with the client the onion address and the client's private key config:\n"
-      printf %s"${bold}- Onion:${nocolor} ${magenta}${onion_hostname}${nocolor}\n"
-      printf %s"${bold}- Client priv conf:${nocolor} ${client_priv_key_config}\n"
-      printf "\n"
+      printf '\n'
     }
 
     check_opt_filled service
@@ -91,22 +120,45 @@ case "${status}" in
     [ "${client}" = "@all" ] && error_msg "Client name cannot be @all, it is a restricted wildcard referring to all clients"
     check_name client
 
-    if test -n "${client_pub_key}" || test -n "${client_pub_file}"; then
-      test_service_exists "${service}"
-      if test -n "${client_pub_file}"; then
-        client_pub_key_config="$(cat "${client_pub_file}")"
-      elif test -n "${client_pub_key}"; then
-        client_pub_key_config="descriptor:x25519:${client_pub_key}"
-      fi
-      printf %s"${client_pub_key_config}" | tee "${tor_data_dir_services}/${service}/authorized_clients/${client}.auth" >/dev/null
-      notice "\nServer side authorization configured\n"
-      printf %s"- Client pub conf: ${client_pub_key_config}\n"
-      notice "\nAs you inserted the public key manually, it is expected that the client already has the private key"
+    test_service_exists "${service}"
+    if test -n "${client_pub_file}"; then
+      client="${client_pub_file##*/}"
+      client="${client%.auth}"
+      auth_server_check_file
+      client_pub_key_config="$(cat "${client_pub_file}")"
+      auth_server_check_content "${client_pub_key_config}"
+      auth_server_check_replace "${client}.auth"
+      auth_server_finish
+
+    elif test -n "${client_pub_config}"; then
+      check_opt_filled client
+      check_name client
+      client_pub_key_config="${client_pub_config}"
+      auth_server_check_content "${client_pub_key_config}"
+      auth_server_check_replace "${client}.auth"
+      auth_server_finish
+
+    elif test -n "${client_pub_key}"; then
+      check_opt_filled client
+      check_name client
+      client_pub_key_config="descriptor:x25519:${client_pub_key}"
+      auth_server_check_content "${client_pub_key_config}"
+      auth_server_check_replace "${client}.auth"
+      auth_server_finish
+
     else
-      loop_list auth_server_add "${service}" "${client}"
+      check_opt_filled client
+      check_name client
+      gen_auth_key_pair
+      auth_server_check_replace "${client}.auth"
+      auth_server_finish
+      printf %s"Send the private key to the client of ${onion_hostname}\n"
+      printf %s"${bold}- Client priv conf:${nocolor} ${client_priv_key_config}\n\n"
     fi
+
     signal_tor
   ;;
+
 
   ## as the onion service operator, after making your onion service authenticated, you can also remove a specific client authorization
   ## if no clients are present, the service will be available to anyone that has the onion service address
@@ -114,6 +166,7 @@ case "${status}" in
     auth_server_remove_clients(){
       service="${1}"
       client="${2}"
+      test_service_exists "${service}"
       #notice "Service: ${service}"
       if [ "${client}" = "@all" ]; then
         rm -fv "${tor_data_dir_services}/${service}/authorized_clients"/*.auth
@@ -126,7 +179,7 @@ case "${status}" in
     }
 
     check_opt_filled service
-    [ "${service}" != "@all" ] && check_service_name
+    [ "${service}" != "@all" ] && check_name service
     check_opt_filled client
 
     if [ "${service}" = "@all" ]; then
@@ -147,10 +200,12 @@ case "${status}" in
         notice "If any client remains, the service will still be authenticated."
       fi
     fi
+
     loop_list auth_server_remove_clients "${service}" "${client}"
     printf "\n"
     signal_tor
   ;;
+
 
   l|list)
     auth_server_list(){
@@ -169,12 +224,13 @@ case "${status}" in
       fi
     }
 
-    notice "${bold}Authorized clients for Onion Services${nocolor}"
+    notice "${bold}Authorized clients for Onion Services in ${tor_data_dir_services}${nocolor}"
     if [ -z "${service}" ] || [ "${service}" = "@all" ]; then
       create_service_list; service="${service_name_list}"
     fi
     loop_list auth_server_list "${service}"
   ;;
+
 
   *) usage
 esac
