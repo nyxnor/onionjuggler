@@ -96,14 +96,14 @@ case "${status}" in
 
     auth_client_check_content(){
       client_priv_file_content="${1}"
-      echo "${client_priv_file_content}" | grep -q ":descriptor:x25519:" || error_msg "file contents does not contain pattern ':descriptor:x25519:"
-      [ "${client_priv_file_content%%*[^a-zA-Z0-9:]*}" ] || error_msg "file contains special characters"
+      echo "${client_priv_file_content}" | grep -q ":descriptor:x25519:" || error_msg "configuraiton does not contain pattern ':descriptor:x25519:"
+      [ "${client_priv_file_content%%*[^a-zA-Z0-9:]*}" ] || error_msg "configuration has special characters"
       client_priv_file_onion_found="$(echo "${client_priv_file_content}" | cut -d ":" -f1)"
-      [ "${client_priv_file_onion_found%%*[^a-z2-7]*}" ] || error_msg "file's onion '${client_priv_file_onion_found}' is not within base32 alphabet lower-case encoding [a-z][2-7]"
-      echo "${client_priv_file_content}" | cut -d ":" -f2 | grep -q "descriptor" || error_msg "file's descriptor reference not found in the 2nd field"
-      echo "${client_priv_file_content}" | cut -d ":" -f3 | grep -q "x25519" || error_msg "file's descriptor type not found in the 3rd field"
+      [ "${client_priv_file_onion_found%%*[^a-z2-7]*}" ] || error_msg "onion '${client_priv_file_onion_found}' is not within base32 alphabet lower-case encoding [a-z][2-7]"
+      echo "${client_priv_file_content}" | cut -d ":" -f2 | grep -q "descriptor" || error_msg "descriptor reference not found in the 2nd field"
+      echo "${client_priv_file_content}" | cut -d ":" -f3 | grep -q "x25519" || error_msg "descriptor type not found in the 3rd field"
       client_priv_file_priv_found="$(echo "${client_priv_file_content}" | cut -d ":" -f4)"
-      [ "${client_priv_file_priv_found%%*[^A-Z2-7]*}" ] || error_msg "file's client private key '${client_priv_file_priv_found}' is not within base32 alphabet upper-case encoding [A-Z][2-7]"
+      [ "${client_priv_file_priv_found%%*[^A-Z2-7]*}" ] || error_msg "client private key '${client_priv_file_priv_found}' is not within base32 alphabet upper-case encoding [A-Z][2-7]"
     }
 
     create_clientonionauthdir(){
