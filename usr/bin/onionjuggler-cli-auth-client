@@ -17,7 +17,7 @@ usage(){
 Description: client side onion authorization
 Complete options:
   --on [--client-priv-file <FILE>] [--replace-file]
-                            import '.auth_private' file to ClientOnionAuthDir
+                            import '<FILE>.auth_private' content to ClientOnionAuthDir
   --on [--client <CLIENT>] [--client-priv-config <CONFIG>] [--replace-file]
                             import client side configuration to ClientOnionAuthDir
   --on [--client <CLIENT>] [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>] [--replace-file]
