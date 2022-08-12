@@ -89,6 +89,7 @@ case "${status}" in
       fi
       ## multiple files with the same onion address leads to a tor error
       for auth in "${tor_data_dir_auth}"/*; do
+        [ "${auth##*/}" = "*" ] && break
         if [ "${auth##*/}" != "${client_priv_file_name}" ]; then
           ## compare onion address, the first field
           [ "${client_priv_key_config%%:*}" = "$(cut -d ":" -f1 "${auth}")" ] && error_msg "file with the same onion address already present on ${auth}"
