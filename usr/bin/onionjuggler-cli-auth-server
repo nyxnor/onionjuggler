@@ -49,6 +49,7 @@ while :; do
     s|service|s=*|service=*) get_arg service;;
     c|client|c=*|client=*) get_arg client;;
     client-pub-file|client-pub-file=*) get_arg client_pub_file;;
+    client-pub-config|client-pub-config=*) get_arg client_pub_config;;
     replace-file) replace_file="${opt}";;
     client-pub-key|client-pub-key=*) get_arg client_pub_key;;
     h|help) usage;;
@@ -78,7 +79,6 @@ case "${status}" in
       echo "${client_pub_file_name}" | cut -c 1 | grep -qF "." && error_msg "file name can not start with dot"
       ## avoid copying wrong file to the auth dir
       echo "${client_pub_file_name}" | grep -q ".auth$" || error_msg "file name does not end with '.auth'"
-      wc -c "${client_pub_file}" | grep -q "^71 " || error_msg "file size '$(wc -c "${client_pub_file}" | cut -d " " -f1)' is different than 71 bytes"
     }
 
     auth_server_check_replace(){
@@ -103,6 +103,10 @@ case "${status}" in
       [ "${client_pub_file_content%%*[^a-zA-Z0-9:]*}" ] || error_msg "configuration has special characters"
       client_pub_file_pub_found="$(echo "${client_pub_file_content}" | cut -d ":" -f3)"
       [ "${client_pub_file_pub_found%%*[^A-Z2-7]*}" ] || error_msg "client public key '${client_pub_file_pub_found}' is not within base32 alphabet upper-case encoding [A-Z][2-7]"
+      [ "${#client_pub_file_pub_found}" = "52" ] || error_msg "client public key '${client_pub_file_pub_found}' has size of '${#client_pub_file_pub_found}', but expected 52 chars"
+       ## this check is last in the list because it doesn't indicate where the problem is, just that the size doesn't match
+      [ "${#client_pub_file_content}" = "70" ] || error_msg "config '${client_pub_file_content}' has size '${#client_pub_file_content}', but expected     70 chars"
+
     }
 
     auth_server_finish(){
@@ -116,9 +120,7 @@ case "${status}" in
     check_opt_filled service
     [ "${service}" != "@all" ] && check_name service
     [ "${service}" = "@all" ] && { create_service_list ; service="${service_name_list}" ; }
-    check_opt_filled client
     [ "${client}" = "@all" ] && error_msg "Client name cannot be @all, it is a restricted wildcard referring to all clients"
-    check_name client
 
     test_service_exists "${service}"
     if test -n "${client_pub_file}"; then
@@ -192,10 +194,10 @@ case "${status}" in
         notice "If any client remains, the service will still be authenticated."
       fi
     else
-      notice "Removing client authorization for:"
-      notice "Service: ${service}"
+      notice "${bold}Removing client authorization for:${nocolor}"
+      notice "${bold}Service:${nocolor} ${service}"
       if [ "${client}" = "@all" ]; then
-        notice "Clients: @all.\nThe service is now accessible for anyone with the onion address.\n"
+        notice "${bold}Clients: @all${nocolor}\nThe service is now accessible for anyone with the onion address.\n"
       else
         notice "If any client remains, the service will still be authenticated."
       fi

@@ -78,7 +78,6 @@ case "${status}" in
       echo "${client_priv_file_name}" | cut -c 1 | grep -qF "." && error_msg "file name can not start with dot"
       ## avoid copying wrong file to the auth dir
       echo "${client_priv_file_name}" | grep -q ".auth_private$" || error_msg "file name does not end with '.auth_private'"
-      wc -c "${client_priv_file}" | grep -q "^128 " || error_msg "file size '$(wc -c "${client_priv_file}" | cut -d " " -f1)' is different than 128 bytes"
     }
 
     auth_client_check_replace(){
@@ -100,13 +99,17 @@ case "${status}" in
     auth_client_check_content(){
       client_priv_file_content="${1}"
       echo "${client_priv_file_content}" | grep -q ":descriptor:x25519:" || error_msg "configuraiton does not contain pattern ':descriptor:x25519:"
-      [ "${client_priv_file_content%%*[^a-zA-Z0-9:]*}" ] || error_msg "configuration has special characters"
+      [ "${client_priv_file_content%%*[^a-zA-Z0-9:]*}" ] || error_msg "configuration has special characters, perhaps extra spaces?"
       client_priv_file_onion_found="$(echo "${client_priv_file_content}" | cut -d ":" -f1)"
       [ "${client_priv_file_onion_found%%*[^a-z2-7]*}" ] || error_msg "onion '${client_priv_file_onion_found}' is not within base32 alphabet lower-case encoding [a-z][2-7]"
+      [ "${#client_priv_file_onion_found}" = "56" ] || error_msg "onion '${client_priv_file_onion_found}' has size '${#client_priv_file_onion_found}', but expected 56 chars"
       echo "${client_priv_file_content}" | cut -d ":" -f2 | grep -q "descriptor" || error_msg "descriptor reference not found in the 2nd field"
       echo "${client_priv_file_content}" | cut -d ":" -f3 | grep -q "x25519" || error_msg "descriptor type not found in the 3rd field"
       client_priv_file_priv_found="$(echo "${client_priv_file_content}" | cut -d ":" -f4)"
       [ "${client_priv_file_priv_found%%*[^A-Z2-7]*}" ] || error_msg "client private key '${client_priv_file_priv_found}' is not within base32 alphabet upper-case encoding [A-Z][2-7]"
+      [ "${#client_priv_file_priv_found}" = "52" ] || error_msg "client private key '${client_priv_file_priv_found}' has size of '${#client_priv_file_priv_found}', but expected 52 chars"
+      ## this check is last in the list because it doesn't indicate where the problem is, just that the size doesn't match
+      [ "${#client_priv_file_content}" = "127" ] || error_msg "config '${client_priv_file_content}' has size '${#client_priv_file_content}', but expected 127 chars"
     }
 
     create_clientonionauthdir(){
@@ -127,8 +130,6 @@ case "${status}" in
       ##  http://www.dds6qkxpwdeubwucdiaord2xgbbeyds25rbsgr73tbfpqpt4a6vjwsyd.onion/wiki/Remote_Administration
       onion_hostname="$(printf %s"${onion_hostname}\n" | sed "s|.*://||;s|/.*||" | tail -c 63)"
       onion_hostname_without_onion="${onion_hostname%.onion}"
-      [ "${onion_hostname_without_onion%%*[^a-z2-7]*}" ] || error_msg "onion domain '${onion_hostname}' is not within base32 alphabet lower-case encoding [a-z][2-7]"
-      [ "${#onion_hostname_without_onion}" = "56" ] || error_msg "onion domain '${onion_hostname}' has length of ${#onion_hostname}, different than 56 characters (<56-char-base32>.onion)"
     }
 
     auth_client_finish(){
@@ -211,14 +212,6 @@ case "${status}" in
 
 
   l|list)
-    check_folder_is_not_empty "${tor_data_dir_auth}" || error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
-#    notice "${bold}ClientOnionAuthDir ${tor_data_dir_auth}${nocolor}"
-#    for auth in "${tor_data_dir_auth}"/*; do
-#      auth="${auth##*/}"
-#      notice "\n${bold}File name:${nocolor} ${auth}"
-#      notice "${bold}Content:${nocolor} $(grep "descriptor:x25519:" "${tor_data_dir_auth}/${auth}")"
-#    done
-
     auth_client_list(){
       auth="${1}"
       auth="${auth##*/}"
@@ -226,6 +219,7 @@ case "${status}" in
       notice "${bold}Content:${nocolor} $(grep "descriptor:x25519:" "${tor_data_dir_auth}/${auth}.auth_private")"
     }
 
+    check_folder_is_not_empty "${tor_data_dir_auth}" || error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
     notice "${bold}ClientOnionAuthDir ${tor_data_dir_auth}${nocolor}"
     if [ -z "${client}" ] || [ "${client}" = "@all" ]; then
       create_client_priv_list; client="${client_name_priv_list}"

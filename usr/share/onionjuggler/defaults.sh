@@ -170,7 +170,7 @@ check_name(){
   key="${1}"
   eval val='$'"${key}"
   [ "${val%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "${key}=\"${val}\" is invalid, must only contain letters, numbers, hifen, underscore and dot"
-  echo "${val}" | cut -c 1 | grep -qF "${key} can not start with dot"
+  echo "${val}" | cut -c 1 | grep -qF "." && error_msg "${key} can not start with dot"
 }
 
 ## check if option has value, if not, error out
@@ -181,10 +181,12 @@ check_opt_filled(){
   test -n "${val}" || error_msg "${key} is missing"
 }
 
-## Elegantly modify files on a temporary directory. Test the configuration with another function.
-## If correct, then save file back to its original location. This avoids running with an invalid
+## Elegantly modify files. Test the configuration with another function.
+## Original file will be hidden with a preceding dot in its name.
+## Temporary file will have a temporary name to be easily identified.
+## If parsing is correct, then save file back to its original location.
+## This avoids running with an invalid
 ## configuration that can make a daemon fail to reload or even start
-## Limitation is file name cannot start with a number.
 ## $ safe_edit tmp variable
 ## $ safe_edit tmp tor_conf
 ## modify the "${tor_conf_tmp}"
@@ -199,9 +201,10 @@ safe_edit(){
     tmp)
       file_dir="${file%/*}"
       file_name="${file##*/}"
-      file_dot_tmp="${file_dir}/.${file_name}"
+      file_suffix="${file_name##*.}"
+      file_dot_tmp="${file_dir}/.${file_name}-orig"
+####   file_tmp_patte
       file_name_tmp="$(mktemp "${file}.XXXXXX.conf")"
-      #file_name_tmp="$(mktemp "${TMPDIR}/${file##*/}.XXXXXX")"
       notice "Saving a copy of ${file} to ${file_name_tmp}"
       chown "${tor_conf_user_group}" "${file_name_tmp}"
       ## create an empty file if not existent
@@ -217,7 +220,9 @@ safe_edit(){
       ## delete temp file. Also, if the hidden file still exists, means it wasn't saved,
       ## so move it back to original location.
       # shellcheck disable=SC2064
-      trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}; test -f ${file_dot_tmp} && mv ${file_dot_tmp} ${file}" EXIT INT TERM
+      exit_trap remove-tmp "${file_name_tmp}"
+      exit_trap restore-orig "${file_dot_tmp}" "${file}"
+      #trap "printf %s\"Exiting script ${me}\nDeleting ${file_name_tmp}\n\"; rm -f ${file_name_tmp}; test -f ${file_dot_tmp} && mv ${file_dot_tmp} ${file}" EXIT INT TERM
     ;;
     save)
       ## get variable_tmp file
@@ -238,13 +243,34 @@ safe_edit(){
   esac
 }
 
+## Cleaning: remove temporary files
+## Restoring: mv original file back to its original location without (.dot) in front
+exit_trap(){
+  action="${1}" # remove-tmp|restore-orig
+  shift
+  file="${*}" ## catch all args after the first
+  case "${action}" in
+    remove-tmp) exit_remove_file="${exit_remove_file} ${file}";;
+    restore-orig) exit_restore_file="${exit_restore_file} ${file}";;
+  esac
+
+  trap 'set -x; rm -f ${exit_remove}; exit_restore ${exit_restore_file}' EXIT INT QUIT TERM
+}
+
+exit_restore(){
+  while test -n "${1}" && test -n "${2}"; do
+    orig_file="${1}"
+    orig_place="${2}"
+    test -f "${orig_file}" && mv "${orig_file}" "${orig_place}"
+    shift
+  done
+}
+
 
 ## Verify tor configuration of the temporary file and if variable is empty, use the main configuration, if wrong, exit.
 verify_config_tor(){
-  read_tor_files
-  #config="${tor_conf_tmp:-"${tor_conf}"}"
   notice "Verifying tor configuration"
-  #! tor --User "${tor_user}" --DataDirectory "${tor_data_dir}" -f "${config}" --verify-config --hush && error_msg "aborting: configuration is invalid"
+  read_tor_files
   ! ${tor_start_command:="tor"} --verify-config --hush && error_msg "aborting: configuration is invalid"
   notice "${green}Configuration OK${nocolor}"
   [ -n "${tor_conf_tmp}" ] && safe_edit save tor_conf
