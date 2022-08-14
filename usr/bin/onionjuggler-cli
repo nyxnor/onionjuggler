@@ -49,9 +49,9 @@ _@v'':i''L,'''''_{'_'y''kJu@6jjuuuujjjN@-
 ${nocolor}
 Usage: ${me} [--option <ARGUMENT>]
 \nComplete options:
-  --activate [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT [VIRTPORT2]>]
+  --activate [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT,[VIRTPORT2]>]
                                                              enable a service listening with tcp sockets
-  --deactivate [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[,TARGET] [,VIRTPORT2][,TARGET2]>]
+  --deactivate [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[:TARGET][,VIRTPORT2][:TARGET2]>]
                                                              enable a service listening on unix sockets
   --deactivate [--purge] [--service <@all|SERV1,SERV2,...>   disable a service and optionally purge its directory
   --info [--quiet] [--service <@all|SERV1,SERV2,...>]        see credentials from indicated services
@@ -283,7 +283,7 @@ case "${main}" in
       ## remove double empty lines
       cat_squeeze_blank "${tor_conf_tmp}" | tee "${tor_conf_tmp}".tmp >/dev/null && mv "${tor_conf_tmp}".tmp "${tor_conf_tmp}"
       signal_tor
-      virtport="$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | sed "s/HiddenServicePort //;s/ .*//" | tr "\n" "," | sed "s/\,$//")"
+      virtport="$(service_block print "${service}" "${tor_conf}" | grep "HiddenServicePort" | sed "s/HiddenServicePort //;s/ .*//" | tr "\n" "," | sed "s/\,$//;s/\,/\, /")"
       ## show the Hidden Service address
       test_service_exists "${service}"
       notice "Hidden Service information:"
@@ -316,7 +316,10 @@ case "${main}" in
         fi
 
         ## get ports
-        port="$(printf %s"${port}" | tr " " "\n" | tr "," " " | tr -s " ")"
+        ## translate commas to spaces, truncate spaces, translate spaces to new lines,
+        ##  and substitute the first semicolon to space.
+        ## 80:127.0.0.1:80,443:127.0.0.1:443 becomes: 80 127.0.0.1:80\n443 127.0.0.1:443
+        port="$(printf %s"${port}" | tr "," " " | tr -s " " | tr " " "\n" | sed "s|:| |")"
 
         fail_log="$(mktemp)"
         printf '%s\n' "${port}" | while IFS="$(printf '\n')" read -r port_line; do
@@ -339,7 +342,7 @@ EOF
           ## Qubes-Whonix should have a different target for services aiming to the Workstation
           if has qubesdb-read && [ "${target_addr}" = "127.0.0.1" ] && [ "${gateway_service}" != "1" ]; then
             echo "1" | tee -a "${fail_log}" >/dev/null
-            error_msg "Please set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr' on /etc/onionjuggler/conf.d/*.conf"
+            error_msg "Option '--gateway' was not specified but target was set to 127.0.0.1. Either set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr' on /etc/onionjuggler/conf.d/*.conf to target a WS or use the gateway option to enforce a service to be run on the GW"
           fi
 
           ## check if the target is already used in the torrc
@@ -366,7 +369,7 @@ EOF
       ;;
 
       unix)
-        port="$(printf %s"${port}" | tr "," " " | tr " " "\n" | tr -s " ")"
+        port="$(printf %s"${port}" | tr "," " " | tr -s " " | tr " " "\n")"
         ## /var/run/ because it exists on Debian and OpenBSD, so respecting standards
         unix_path="unix:/var/run/${service}"
 
