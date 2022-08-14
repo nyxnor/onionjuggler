@@ -119,28 +119,28 @@ WantedBy=multi-user.target
 [ "$(id -u)" -ne 0 ] && error_msg "run as root"
 case "${status}" in
   n|on)
-	if [ ! -d "${tor_data_dir}/vanguards" ]; then
-	  notice "${cyan}Installing Vanguards${nocolor}\n"
-	  git clone https://github.com/mikeperry-tor/vanguards.git "${tor_data_dir}/vanguards"
-	else
-	  notice "${cyan}Upgrading Vanguards${nocolor}\n"
-	  git -C "${tor_data_dir}"/vanguards pull -p --rebase=false
-	fi
-	git -C "${tor_data_dir}"/vanguards reset --hard "${vanguards_commit}"
-	git -C "${tor_data_dir}"/vanguards show
-	vanguards_version="$(grep "__version__ = " src/vanguards/__init__.py | tr "\"" " " | sed "s/__version__ =  //")"
-	notice "Installed Vanguards v${vanguards_version}"
-	cp "${tor_data_dir}"/vanguards/vanguards.1 /usr/local/man/man1/
-	vanguards_config
+    if [ ! -d "${tor_data_dir}/vanguards" ]; then
+      notice "${cyan}Installing Vanguards${nocolor}\n"
+      git clone https://github.com/mikeperry-tor/vanguards.git "${tor_data_dir}/vanguards"
+    else
+      notice "${cyan}Upgrading Vanguards${nocolor}\n"
+      git -C "${tor_data_dir}"/vanguards pull -p --rebase=false
+    fi
+    git -C "${tor_data_dir}"/vanguards reset --hard "${vanguards_commit}"
+    git -C "${tor_data_dir}"/vanguards show
+    vanguards_version="$(grep "__version__ = " src/vanguards/__init__.py | tr "\"" " " | sed "s/__version__ =  //")"
+    notice "Installed Vanguards v${vanguards_version}"
+    cp "${tor_data_dir}"/vanguards/vanguards.1 /usr/local/man/man1/
+    vanguards_config
   ;;
 
   f|off)
-	notice "${red}Removing Vanguards${nocolor}\n"
-	rm -rfv "${tor_data_dir}"/vanguards
+    notice "${red}Removing Vanguards${nocolor}\n"
+    rm -rfv "${tor_data_dir}"/vanguards
   ;;
 
   l|list)
-	tail -f -n 25 /var/log/tor/vanguards.log
+    tail -f -n 25 /var/log/tor/vanguards.log
   ;;
 
   *) usage;;
