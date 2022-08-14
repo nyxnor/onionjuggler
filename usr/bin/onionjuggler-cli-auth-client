@@ -50,7 +50,7 @@ while :; do
     client-priv-key|client-priv-key=*) get_arg client_priv_key;;
     o|onion|o=*|onion=*) get_arg onion_hostname;;
     client|client=*) get_arg client;;
-    replace-file) replace_file="1"
+    replace-file) replace_file="1";;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac
