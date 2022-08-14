@@ -17,7 +17,7 @@ usage(){
 Complete options:
   --on [--service <SERVICE>] [--folder <SITE_PATH>]
                                 start serving a website for certain service and its folder
-  --on [--service <SERVICE>] [--folder <SITE_PATH>] [--no-check-service] [--port <VIRTPORT,TARGET>]
+  --on [--service <SERVICE>] [--folder <SITE_PATH>] [--no-check-service] [--port <VIRTPORT[:TARGET]>]
                                 useful for workstations when the tor process is running on the gateway
   --off [--service <SERVICE>]   stop serving a website for certain service and its folder
   --list                        list enabled websites
@@ -103,6 +103,7 @@ case "${status}" in
     ## Don't check if service exists. Useful for Workstations
     if [ "${no_check_service}" = "1" ]; then
       check_opt_filled port
+      port="$(printf %s"${port}" | tr "," " " | tr -s " " | tr " " "\n" | sed "s|:| |")"
       port="$(printf '%s\n' "${port}" | tr "," " ")"
       virtport="${port% *}"
       target="${port#* }"
