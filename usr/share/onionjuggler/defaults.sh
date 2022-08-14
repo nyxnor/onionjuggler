@@ -194,6 +194,7 @@ check_opt_filled(){
 ## $ safe_edit save tor_conf
 safe_edit(){
   key="${2}"
+  safe_edit_keys_parsed="${safe_edit_keys_parsed} ${key}"
   eval file="$(printf '%s\n' '$'"${key}")"
   case "${1}" in
     tmp)
@@ -215,53 +216,50 @@ safe_edit(){
       mv "${file}" "${file_dot_tmp}"
       ## delete temp file. Also, if the hidden file still exists, means it wasn't saved,
       ## so move it back to original location.
-      exit_trap remove-tmp "${file_name_tmp}"
-      exit_trap restore-orig "${file_dot_tmp}" "${file_dir}/${file_name}"
+      exit_remove_file="${exit_remove_file} ${file_name_tmp}"
+      exit_restore_file="${exit_restore_file} ${file_dot_tmp} ${file_dir}/${file_name}"
       ## assign variable_tmp
       eval "${key}"_tmp="${file_name_tmp}"
       eval "${key}"_dot_tmp="${file_dot_tmp}"
     ;;
     save)
-      ## get variable_tmp file
-      eval file_name_tmp='$'"${key}_tmp"
-      if cmp -s "${file_name_tmp}" "${file_dot_tmp}"; then
-        notice "File ${file_name_tmp} does not differ from ${file_dot_tmp}"
-        notice "Not writing back tmp file to original location${nocolor}"
-        rm -f "${file_name_tmp}"
-        notice "Restoring original file that was mde hidden ${file_dot_tmp} to ${file}"
-        mv "${file_dot_tmp}" "${file}"
-      else
-        notice "Moving temporary ${file_name_tmp} back to its original location ${file}"
-        mv "${file_name_tmp}" "${file}"
-        notice "Removing original file that was made hidden ${file_dot_tmp}"
-        rm -f "${file_dot_tmp}"
-      fi
+      for key in ${safe_edit_keys_parsed}; do
+        eval file="$(printf '%s\n' '$'"${key}")"
+        eval file_name_tmp='$'"${key}_tmp"
+        if cmp -s "${file_name_tmp}" "${file_dot_tmp}"; then
+          notice "File ${file_name_tmp} does not differ from ${file_dot_tmp}"
+          notice "Not writing back tmp file to original location${nocolor}"
+          rm -f "${file_name_tmp}"
+          notice "Restoring original file that was mde hidden ${file_dot_tmp} to ${file}"
+          mv "${file_dot_tmp}" "${file}"
+        else
+          notice "File ${file_name_tmp} differs from ${file_dot_tmp}"
+          notice "Moving temporary ${file_name_tmp} back to its original location ${file}"
+          mv "${file_name_tmp}" "${file}"
+          notice "Removing original file that was made hidden ${file_dot_tmp}"
+          rm -f "${file_dot_tmp}"
+        fi
+      done
     ;;
   esac
+
+  trap 'trap_exit_all' EXIT INT QUIT TERM
 }
 
 
-## exit trap to fail safely, do cleanup, restore files back to their original location
-## Cleaning: remove temporary files
-## Restoring: mv original file back to its original location without (.dot) in front
-exit_trap(){
-  action="${1}" # remove-tmp|restore-orig
-  shift
-  file=""
-  file="${*}" ## catch all args after the first
-  case "${action}" in
-    remove-tmp) exit_remove_file="${exit_remove_file} ${file}";;
-    restore-orig) exit_restore_file="${exit_restore_file} ${file}";;
-  esac
-
-  trap 'rm -f ${exit_remove}; exit_restore ${exit_restore_file}' EXIT INT QUIT TERM
+# shellcheck disable=SC2086
+trap_exit_all(){
+  trap_exit_restore ${exit_restore_file}
+  rm -fv ${exit_remove_file}
 }
 
-exit_restore(){
+
+## helper for restoring files
+trap_exit_restore(){
   while test -n "${1}" && test -n "${2}"; do
     orig_copy="${1}"
     orig_place="${2}"
-    test -f "${orig_copy}" && mv "${orig_copy}" "${orig_place}"
+    test -f "${orig_copy}" && notice "Restoring ${orig_copy} to ${orig_place}" && mv "${orig_copy}" "${orig_place}"
     shift
   done
 }
@@ -273,7 +271,9 @@ verify_config_tor(){
   read_tor_files
   ! ${tor_start_command:="tor"} --verify-config --hush && error_msg "aborting: configuration is invalid"
   notice "${green}Configuration OK${nocolor}"
-  [ -n "${tor_conf_tmp}" ] && safe_edit save tor_conf
+  ## as configuration is ok, move modified file with temp name to correct original name
+  ## remove original hidden file
+  safe_edit save
 }
 
 
