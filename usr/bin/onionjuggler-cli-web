@@ -104,7 +104,6 @@ case "${status}" in
     if [ "${no_check_service}" = "1" ]; then
       check_opt_filled port
       port="$(printf %s"${port}" | tr "," " " | tr -s " " | tr " " "\n" | sed "s|:| |")"
-      port="$(printf '%s\n' "${port}" | tr "," " ")"
       virtport="${port% *}"
       target="${port#* }"
       target_addr="${target%%:*}"
