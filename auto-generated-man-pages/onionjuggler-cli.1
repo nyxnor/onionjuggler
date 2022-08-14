@@ -22,16 +22,17 @@ compliant shell
 .P
 .PD
 \f[B]onionjuggler-cli --activate\f[R] [\f[B]--service\f[R]
-<\f[I]SERVICE\f[R]>] [\f[B]--socket\f[R] <\f[I]tcp\f[R]>]
-[\f[B]--port\f[R] <\f[I]VIRTPORT\f[R][,\f[I]TARGET\f[R]]
-[\f[I]VIRTPORTn\f[R]][,\f[I]TARGETn\f[R]]>] [\f[B]--gateway\f[R]]
+<\f[I]SERVICE\f[R]>] [\f[B]--version\f[R] <\f[I]VERSION\f[R]>]
+[\f[B]--socket\f[R] <\f[I]tcp\f[R]>] [\f[B]--port\f[R]
+<\f[I]VIRTPORT\f[R][:\f[I]TARGET\f[R]],[\f[I]VIRTPORTn\f[R]][:\f[I]TARGETn\f[R]]>]
+[\f[B]--gateway\f[R]]
 .PD 0
 .P
 .PD
 \f[B]onionjuggler-cli --activate\f[R] [\f[B]--service\f[R]
 <\f[I]SERVICE\f[R]>] [\f[B]--version\f[R] <\f[I]VERSION\f[R]>]
 [\f[B]--socket\f[R] <\f[I]unix\f[R]>] [\f[B]--port\f[R]
-[\f[I]VIRTPORT\f[R] [\f[I]VIRTPORT2\f[R]]>]
+[\f[I]VIRTPORT\f[R],[\f[I]VIRTPORT2\f[R]]>]
 .PD 0
 .P
 .PD
@@ -52,16 +53,22 @@ compliant shell
 .P
 .PD
 \f[B]onionjuggler-cli --auth-server\f[R] [\f[B]--on\f[R]]
-[\f[B]--service\f[R] <\f[I]SERVICE\f[R]>] [\f[B]--client\f[R]
-<\f[I]CLIENT\f[R]>] [\f[B]--client-pub-key\f[R]
-<\f[I]CLIENT_PUB_KEY\f[R]>]
+[\f[B]--service\f[R] <\f[I]SERVICE\f[R]>] [\f[B]--client-pub-file\f[R]
+<\f[I]CLIENT_PUB_FILE\f[R]>]
 .PD 0
 .P
 .PD
 \f[B]onionjuggler-cli --auth-server\f[R] [\f[B]--on\f[R]]
-[\f[B]--service\f[R]
-<\f[I]\[at]all\f[R]|\f[I]SERV1\f[R],\f[I]SERV2\f[R],\f[I]...\f[R]>]
-[\f[B]--client\f[R] <\f[I]CLIENT1\f[R],\f[I]CLIENT2\f[R],\f[I]...\f[R]>]
+[\f[B]--service\f[R] <\f[I]SERVICE\f[R]>] [\f[B]--client\f[R]
+<\f[I]CLIENT\f[R]>] [\f[B]--client-pub-config\f[R]
+<\f[I]CLIENT_PUB_CONFIG\f[R]>]
+.PD 0
+.P
+.PD
+\f[B]onionjuggler-cli --auth-server\f[R] [\f[B]--on\f[R]]
+[\f[B]--service\f[R] <\f[I]SERVICE\f[R]>] [\f[B]--client\f[R]
+<\f[I]CLIENT\f[R]>] [\f[B]--client-pub-key\f[R]
+<\f[I]CLIENT_PUB_KEY\f[R]>]
 .PD 0
 .P
 .PD
@@ -80,13 +87,26 @@ compliant shell
 .P
 .PD
 \f[B]onionjuggler-cli --auth-client\f[R] [\f[B]--on\f[R]]
-[\f[B]--onion\f[R] <\f[I]ONION\f[R]>] [\f[B]--client-priv-key\f[R]
-<\f[I]CLIENT_PRIV_KEY\f[R]>]
+[\f[B]--client-priv-file\f[R] <\f[I]CLIENT_PRIV_FILE\f[R]>]
+[\f[B]--replace-file\f[R]]
+.PD 0
+.P
+.PD
+\f[B]onionjuggler-cli --auth-client\f[R] [\f[B]--on\f[R]]
+[\f[B]--client\f[R] <\f[I]CLIENT\f[R]>] [\f[B]--client-priv-config\f[R]
+<\f[I]CLIENT_PRIV_CONFIG\f[R]>] [\f[B]--replace-file\f[R]]
+.PD 0
+.P
+.PD
+\f[B]onionjuggler-cli --auth-client\f[R] [\f[B]--on\f[R]]
+[\f[B]--client\f[R] <\f[I]CLIENT\f[R]>] [\f[B]--client-priv-key\f[R]
+<\f[I]CLIENT_PRIV_KEY\f[R]>] [\f[B]--onion\f[R] <\f[I]ONION\f[R]>]
+[\f[B]--replace-file\f[R]]
 .PD 0
 .P
 .PD
 \f[B]onionjuggler-cli --auth-client\f[R] [\f[B]--off\f[R]]
-[\f[B]--onion\f[R] <\f[I]ONION1\f[R],\f[I]ONION2\f[R],\f[I]...\f[R]>]
+[\f[B]--client\f[R] <\f[I]CLIENT\f[R]>]
 .PD 0
 .P
 .PD
@@ -213,7 +233,7 @@ Print configuration in the format \f[B]key\f[R]=\[dq]\f[I]val\f[R]\[dq].
 \f[B]--getopt\f[R]
 Print option parsing results.
 .TP
-\f[B]--activate\f[R] \f[B]--service\f[R] <\f[I]SERV\f[R]> \f[B]--version\f[R] \f[I]3\f[R] \f[B]--socket\f[R] \f[I]tcp\f[R] \f[B]--port\f[R] <\f[I]VIRTPORT\f[R],<\f[I]TARGET\f[R]>,<\f[I]VIRTPORT2\f[R]>,<\f[I]TARGET2\f[R]>> \f[B]--gateway\f[R]
+\f[B]--activate\f[R] \f[B]--service\f[R] <\f[I]SERV\f[R]> \f[B]--version\f[R] \f[I]3\f[R] \f[B]--socket\f[R] \f[I]tcp\f[R] \f[B]--port\f[R] <\f[I]VIRTPORT\f[R]:<\f[I]TARGET\f[R]>,<\f[I]VIRTPORTn\f[R]>:<\f[I]TARGETn\f[R]>> \f[B]--gateway\f[R]
 Enable an onion service using TCP socket (addr:port) as target.
 If the TARGET is only the port of it TARGET was not provided, will use
 the same port as VIRTPORT and bind to 127.0.0.1.
@@ -224,12 +244,10 @@ File(s) modified: torrc.
 .nf
 \f[C]
 onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port 22
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port \[dq]22,22\[dq]
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port=\[dq]22,22 80\[dq]
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port=\[dq]22 80\[dq]
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port \[dq]22,127.0.0.1:22\[dq]
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port \[dq]22,127.0.0.1:22 80\[dq]
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port \[dq]22,127.0.0.1:22 80,127.0.0.1:80\[dq]
+onionjuggler-cli --activate --service ssh --port 22:127.0.1:22
+onionjuggler-cli --activate --service ssh --port \[dq]80:127.0.0.1:80 443:127.0.0.1:443\[dq]
+onionjuggler-cli --activate --service ssh --port \[dq]80:127.0.0.1:80,443:127.0.0.1:443\[dq]
+onionjuggler-cli --activate --service ssh --port=\[dq]80,443\[dq]
 \f[R]
 .fi
 .PP
@@ -258,9 +276,8 @@ File(s) modified: torrc.
 .IP
 .nf
 \f[C]
-onionjuggler-cli --activate --service web
-onionjuggler-cli --activate --service ssh --socket unix --port 22
-onionjuggler-cli --activate --service ssh --version 3--socket unix --port 22,80
+onionjuggler-cli --activate --service ssh --version 3 --socket unix --port 22
+onionjuggler-cli --activate --service ssh --version 3 --socket unix --port 22,80
 \f[R]
 .fi
 .RE
@@ -316,42 +333,42 @@ onionjuggler-cli --renew --service \[at]all
 \f[R]
 .fi
 .RE
+.PP
+\f[B]--auth-server --on\f[R] \f[B]--service\f[R] <\f[I]SERVICE\f[R]>
+\f[B]--client-pub-file\f[R] <\f[I]CLIENT_PUB_FILE\f[R]>
+\f[B]--replace-file\f[R]
+.PD 0
+.P
+.PD
+\f[B]--auth-server --on\f[R] \f[B]--service\f[R] <\f[I]SERVICE\f[R]>
+\f[B]--client-pub-config\f[R] <\f[I]CLIENT_PUB_CONFIG\f[R]>
+\f[B]--client\f[R] \f[B]--replace-file\f[R]
+.PD 0
+.P
+.PD
+\f[B]--auth-server --on\f[R] \f[B]--service\f[R] <\f[I]SERVICE\f[R]>
+\f[B]--client\f[R] <\f[I]CLIENT\f[R]> \f[B]--client-pub-key\f[R]
+<\f[I]CLIENT_PUB_KEY\f[R]> \f[B]--replace-file\f[R]
+.PD 0
+.P
+.PD
 .TP
-\f[B]--auth-server --on\f[R] \f[B]--service\f[R] <\f[I]SERV\f[R]> \f[B]--client\f[R] <\f[I]CLIENT\f[R]> \f[B]--client-pub-key\f[R] <\f[I]CLIENT_PUB_KEY\f[R]>
-Authorize to your service a client.
-If the client public key is not provided, a new key pair of public and
-private keys will be generated, keys are sent to stdout and you should
-send to the client.
-A $CLIENT.auth file will be created on
-HiddenServiceDir/authorized_clients folder.
-File(s) modified: HiddenServiceDir/authorized_clients/
-.RS
-.IP
-.nf
-\f[C]
-onionjuggler-cli --auth-server --on --service ssh --client alice
-onionjuggler-cli --auth-server --on --service ssh --client alice --client-pub-key ABVCL52QL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
-\f[R]
-.fi
-.RE
-.TP
-\f[B]--auth-server --on\f[R] \f[B]--service\f[R] <\f[I]\[at]all\f[R]|\f[I]SERV1\f[R],\f[I]SERV2\f[R],\f[I]...\f[R]> \f[B]--client\f[R] <\f[I]CLIENT1\f[R],\f[I]CLIENT2\f[R],\f[I]...\f[R]>
-Authorize to your service a client.
+\f[B]--auth-server --on\f[R] \f[B]--service\f[R] <\f[I]SERVICE\f[R]> \f[B]--client\f[R] <\f[I]CLIENT\f[R]>
+Authorize a client to your service.
 A key pair of public and private keys will be generated, keys are sent
 to stdout and you should send to the client.
-A $CLIENT.auth file will be created on
+A CLIENT.auth file will be created on
 HiddenServiceDir/authorized_clients folder.
-File(s) modified: HiddenServiceDir/authorized_clients/
+If no key is specified, then a key pair will be generated.File(s)
+modified: HiddenServiceDir/authorized_clients/
 .RS
 .IP
 .nf
 \f[C]
-onionjuggler-cli --auth-server --on --service ssh --client alice
-onionjuggler-cli --auth-server --on -service ssh --client alice,bob
-onionjuggler-cli --auth-server --on -service ssh,xmpp --client alice
-onionjuggler-cli --auth-server --on -service ssh,xmpp --client alice,bob
-onionjuggler-cli --auth-server --on -service \[at]all --client alice,bob
-onionjuggler-cli --auth-server --on -service \[at]all --client \[at]all
+onionjuggler-cli --auth-server --on --service ssh --client-pub-file /home/user/bob.auth
+onionjuggler-cli --auth-server --on --service ssh --client bob --client-pub-config descriptor:x25519:UQYM2MJ4CKZU25JABR3Z5L2QP3552EH2BUOIZC2XVULY2QRGXUVQ
+onionjuggler-cli --auth-server --on --service ssh --client bob --client-pub-key UQYM2MJ4CKZU25JABR3Z5L2QP3552EH2BUOIZC2XVULY2QRGXUVQ
+onionjuggler-cli --auth-server --on --service ssh --client bob
 \f[R]
 .fi
 .RE
@@ -388,9 +405,21 @@ onionjuggler-cli --auth-server --list --service \[at]all
 \f[R]
 .fi
 .RE
+.PP
+\f[B]--auth-client --on\f[R] \f[B]--client-priv-file\f[R]
+<\f[I]CLIENT_PRIV_FILE\f[R]> \f[B]--replace-file\f[R]
+.PD 0
+.P
+.PD
+\f[B]--auth-client --on\f[R] \f[B]--client\f[R] <\f[I]CLIENT\f[R]>
+\f[B]--client-priv-config\f[R] <\f[I]CLIENT_PRIV_CONFIG\f[R]>
+\f[B]--replace-file\f[R]
+.PD 0
+.P
+.PD
 .TP
-\f[B]--auth-client --on\f[R] \f[B]--onion\f[R] <\f[I]ONION\f[R]> \f[B]--client-priv-key\f[R] <\f[I]CLIENT_PRIV_KEY\f[R]>
-Authenticate as a client to a remote onion serivce.
+\f[B]--auth-client --on\f[R] \f[B]--client\f[R] <\f[I]CLIENT\f[R]> \f[B]--onion\f[R] <\f[I]ONION\f[R]> \f[B]--client-priv-key\f[R] <\f[I]CLIENT_PRIV_KEY\f[R]> \f[B]--replace-file\f[R]
+Authenticate as a client to an onion serivce.
 If the client private keys is not provided, a new key pair of public and
 private keys will be generated, keys are sent to stdout and you should
 send to the onion service operator.
@@ -400,13 +429,15 @@ File(s) modified: ClientOnionAuthDir.
 .IP
 .nf
 \f[C]
-onionjuggler-cli --auth-client --on --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
-onionjuggler-cli --auth-client --on --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion --client-priv-key UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
+onionjuggler-cli --auth-client --on --client-priv-file /home/user/alice.auth_private
+onionjuggler-cli --auth-client --on --client alice --client-priv-config fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd:descriptor:x25519:UBVCL52FL6IRYIOLEAYUVTZY3AIOM
+onionjuggler-cli --auth-client --on --client alice --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion --client-priv-key UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
+onionjuggler-cli --auth-client --on --client alice --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
 \f[R]
 .fi
 .RE
 .TP
-\f[B]--auth-client --off\f[R] \f[B]--onion\f[R] <\f[I]ONION1\f[R],\f[I]ONION2\f[R],\f[I]...\f[R]>
+\f[B]--auth-client --off\f[R] \f[B]--client\f[R] <\f[I]CLIENT1,CLIENT2,...\f[R]>
 Deauthenticate from a remote onion serivce.
 Remove the $ONION.auth_private file from ClientOnionAuthDir.
 File(s) modified: ClientOnionAuthDir/.

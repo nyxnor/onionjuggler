@@ -12,17 +12,20 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 **onionjuggler-cli** [**--option**<=*ARGUMENT*>]\
 **onionjuggler-cli [--getconf]**\
 **onionjuggler-cli [--getopt]** [**--service** <*SERVICE*>]\
-**onionjuggler-cli --activate** [**--service** <*SERVICE*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT*[,*TARGET*] [*VIRTPORTn*][,*TARGETn*]>] [**--gateway**]\
-**onionjuggler-cli --activate**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*>] [**--port** [*VIRTPORT* [*VIRTPORT2*]>]\
+**onionjuggler-cli --activate** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT*[:*TARGET*],[*VIRTPORTn*][:*TARGETn*]>] [**--gateway**]\
+**onionjuggler-cli --activate**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*>] [**--port** [*VIRTPORT*,[*VIRTPORT2*]>]\
 **onionjuggler-cli --deactivate** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
 **onionjuggler-cli --list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
 **onionjuggler-cli --renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli --auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client-pub-file** <*CLIENT_PUB_FILE*>]\
+**onionjuggler-cli --auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-config** <*CLIENT_PUB_CONFIG*>]\
 **onionjuggler-cli --auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
-**onionjuggler-cli --auth-server** [**--on**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*CLIENT1*,*CLIENT2*,*...*>]\
 **onionjuggler-cli --auth-server** [**--off**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
 **onionjuggler-cli --auth-server** [**--list**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
-**onionjuggler-cli --auth-client** [**--on**] [**--onion** <*ONION*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>]\
-**onionjuggler-cli --auth-client** [**--off**] [**--onion** <*ONION1*,*ONION2*,*...*>]\
+**onionjuggler-cli --auth-client** [**--on**] [**--client-priv-file** <*CLIENT_PRIV_FILE*>] [**--replace-file**]\
+**onionjuggler-cli --auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-config** <*CLIENT_PRIV_CONFIG*>] [**--replace-file**]\
+**onionjuggler-cli --auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>] [**--onion** <*ONION*>] [**--replace-file**]\
+**onionjuggler-cli --auth-client** [**--off**] [**--client** <*CLIENT*>]\
 **onionjuggler-cli --auth-client** [**--list**]\
 **onionjuggler-cli --web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>]\
 **onionjuggler-cli --web** [**--off**] [**--service** <*SERVICE*>]\
@@ -114,17 +117,15 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 
 : Print option parsing results.
 
-**--activate** **--service** <*SERV*> **--version** *3* **--socket** *tcp* **--port** <*VIRTPORT*,<*TARGET*>,<*VIRTPORT2*>,<*TARGET2*>> **--gateway**
+**--activate** **--service** <*SERV*> **--version** *3* **--socket** *tcp* **--port** <*VIRTPORT*:<*TARGET*>,<*VIRTPORTn*>:<*TARGETn*>> **--gateway**
 
 : Enable an onion service using TCP socket (addr:port) as target. If the TARGET is only the port of it TARGET was not provided, will use the same port as VIRTPORT and bind to 127.0.0.1. TARGET examples: 127.0.0.1:80, 192.168.1.100:80. File(s) modified: torrc.
 ```
 onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port 22
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,22"
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port="22,22 80"
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port="22 80"
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22"
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80"
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port "22,127.0.0.1:22 80,127.0.0.1:80"
+onionjuggler-cli --activate --service ssh --port 22:127.0.1:22
+onionjuggler-cli --activate --service ssh --port "80:127.0.0.1:80 443:127.0.0.1:443"
+onionjuggler-cli --activate --service ssh --port "80:127.0.0.1:80,443:127.0.0.1:443"
+onionjuggler-cli --activate --service ssh --port="80,443"
 ```
 By default, services created on a Qubes-Whonix Gateway uses the Whonix Workstation qube IP address, services created on a Non-Qubes-Whonix uses the IP address 10.152.152.11. If you are on Whonix Gateway want to enforce the creation of a service to be running on the Whonix-Gateway (for itself), for example and onion service to ssh to the Gateway, and you haven't set the target, just the virtual port, use the option *--gateway*:
 ```
@@ -135,9 +136,8 @@ onionjuggler-cli --activate --service ssh --socket tcp --port 22 --gateway
 
 : Enable an onion service using UNIX socket (unix:path) as target. The TARGET is handled automatically by the script. This method avoids leaking the onion service address to the local network. File(s) modified: torrc.
 ```
-onionjuggler-cli --activate --service web
-onionjuggler-cli --activate --service ssh --socket unix --port 22
-onionjuggler-cli --activate --service ssh --version 3--socket unix --port 22,80
+onionjuggler-cli --activate --service ssh --version 3 --socket unix --port 22
+onionjuggler-cli --activate --service ssh --version 3 --socket unix --port 22,80
 ```
 
 **--deactivate** **--service** <*SERV1*,*SERV2*,*...*> <*--purge*>
@@ -168,24 +168,18 @@ onionjuggler-cli --renew --service ssh,xmpp
 onionjuggler-cli --renew --service @all
 ```
 
-**--auth-server --on** **--service** <*SERV*> **--client** <*CLIENT*> **--client-pub-key** <*CLIENT_PUB_KEY*>
+**--auth-server --on** **--service** <*SERVICE*> **--client-pub-file** <*CLIENT_PUB_FILE*> **--replace-file**\
+**--auth-server --on** **--service** <*SERVICE*> **--client-pub-config** <*CLIENT_PUB_CONFIG*> **--client** **--replace-file**\
+**--auth-server --on** **--service** <*SERVICE*> **--client** <*CLIENT*> **--client-pub-key** <*CLIENT_PUB_KEY*> **--replace-file**\
 
-: Authorize to your service a client. If the client public key is not provided, a new key pair of public and private keys will be generated, keys are sent to stdout and you should send to the client. A $CLIENT.auth file will be created on HiddenServiceDir/authorized_clients folder. File(s) modified: HiddenServiceDir/authorized_clients/
-```
-onionjuggler-cli --auth-server --on --service ssh --client alice
-onionjuggler-cli --auth-server --on --service ssh --client alice --client-pub-key ABVCL52QL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
-```
+**--auth-server --on** **--service** <*SERVICE*> **--client** <*CLIENT*>
 
-**--auth-server --on** **--service** <*@all*|*SERV1*,*SERV2*,*...*> **--client** <*CLIENT1*,*CLIENT2*,*...*>
-
-: Authorize to your service a client. A key pair of public and private keys will be generated, keys are sent to stdout and you should send to the client. A $CLIENT.auth file will be created on HiddenServiceDir/authorized_clients folder. File(s) modified: HiddenServiceDir/authorized_clients/
+: Authorize a client to your service. A key pair of public and private keys will be generated, keys are sent to stdout and you should send to the client. A CLIENT.auth file will be created on HiddenServiceDir/authorized_clients folder. If no key is specified, then a key pair will be generated.File(s) modified: HiddenServiceDir/authorized_clients/
 ```
-onionjuggler-cli --auth-server --on --service ssh --client alice
-onionjuggler-cli --auth-server --on -service ssh --client alice,bob
-onionjuggler-cli --auth-server --on -service ssh,xmpp --client alice
-onionjuggler-cli --auth-server --on -service ssh,xmpp --client alice,bob
-onionjuggler-cli --auth-server --on -service @all --client alice,bob
-onionjuggler-cli --auth-server --on -service @all --client @all
+onionjuggler-cli --auth-server --on --service ssh --client-pub-file /home/user/bob.auth
+onionjuggler-cli --auth-server --on --service ssh --client bob --client-pub-config descriptor:x25519:UQYM2MJ4CKZU25JABR3Z5L2QP3552EH2BUOIZC2XVULY2QRGXUVQ
+onionjuggler-cli --auth-server --on --service ssh --client bob --client-pub-key UQYM2MJ4CKZU25JABR3Z5L2QP3552EH2BUOIZC2XVULY2QRGXUVQ
+onionjuggler-cli --auth-server --on --service ssh --client bob
 ```
 
 **--auth-server --off** **--service** <*@all*|*SERV1*,*SERV2*,*...*> **--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>
@@ -209,15 +203,20 @@ onionjuggler-cli --auth-server --list --service ssh,xmpp
 onionjuggler-cli --auth-server --list --service @all
 ```
 
-**--auth-client --on** **--onion** <*ONION*> **--client-priv-key** <*CLIENT_PRIV_KEY*>
+**--auth-client --on** **--client-priv-file** <*CLIENT_PRIV_FILE*> **--replace-file**\
+**--auth-client --on** **--client** <*CLIENT*> **--client-priv-config** <*CLIENT_PRIV_CONFIG*> **--replace-file**\
 
-: Authenticate as a client to a remote onion serivce. If the client private keys is not provided, a new key pair of public and private keys will be generated, keys are sent to stdout and you should send to the onion service operator. Add a $ONION.auth_private to ClientOnionAuthDir. File(s) modified: ClientOnionAuthDir.
+**--auth-client --on** **--client** <*CLIENT*> **--onion** <*ONION*> **--client-priv-key** <*CLIENT_PRIV_KEY*> **--replace-file**
+
+: Authenticate as a client to an onion serivce. If the client private keys is not provided, a new key pair of public and private keys will be generated, keys are sent to stdout and you should send to the onion service operator. Add a $ONION.auth_private to ClientOnionAuthDir. File(s) modified: ClientOnionAuthDir.
 ```
-onionjuggler-cli --auth-client --on --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
-onionjuggler-cli --auth-client --on --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion --client-priv-key UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
+onionjuggler-cli --auth-client --on --client-priv-file /home/user/alice.auth_private
+onionjuggler-cli --auth-client --on --client alice --client-priv-config fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd:descriptor:x25519:UBVCL52FL6IRYIOLEAYUVTZY3AIOM
+onionjuggler-cli --auth-client --on --client alice --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion --client-priv-key UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
+onionjuggler-cli --auth-client --on --client alice --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
 ```
 
-**--auth-client --off** **--onion** <*ONION1*,*ONION2*,*...*>
+**--auth-client --off** **--client** <*CLIENT1,CLIENT2,...*>
 
 : Deauthenticate from a remote onion serivce. Remove the $ONION.auth_private file from ClientOnionAuthDir. File(s) modified: ClientOnionAuthDir/.
 ```
