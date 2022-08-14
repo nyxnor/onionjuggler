@@ -8,3 +8,5 @@ debian/debhelper-build-stamp
 debian/onionjuggler
 debian/tmp
 *.deb
+*.swp
+**/*.swp
