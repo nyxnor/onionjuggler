@@ -226,7 +226,7 @@ case "${choice_main}" in
       unix_socket_text="\nInsert the virtual ports separated by space. (e.g.: 80 8080)"
       # shellcheck disable=SC2034
       tcp_socket_text="\nInsert the virtual ports and targets. Only one virtual port required to create a service/
-      \nInsert the ports in the following format:\nVIRPORT,TARGET VIRTPORTn,TARGETn\n(e.g.: 80,50000 8080,50001) (e.g.: 80,192.168.5.10:50000 8080,192.168.5.10:50001)"
+      \nInsert the ports in the following format:\nVIRPORT:TARGET VIRTPORTn:TARGETn\n(e.g.: 80:50000 8080:50001) (e.g.: 80:192.168.5.10:50000 8080:192.168.5.10:50001)"
 
       if test -f /usr/share/anon-gw-base-files/gateway; then
         ## whonix has an internal network between hosts, unix socket not viable and tcp socket does
@@ -242,7 +242,7 @@ case "${choice_main}" in
         choice_socket="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
         --menu "${menu}" "$((9+whiptail_height))" 70 2 \
         "UNIX" "unix:path (more secure)" \
-        "TCP" "addr:port (leak onion address to the local network)" \
+        "TCP" "addr:port (leaks onion address to the local network)" \
         3>&1 1>&2 2>&3)"
         socket="$(printf '%s\n' "${choice_socket}" | tr '[:upper:]' '[:lower:]')"
       fi
@@ -326,17 +326,19 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       menu="\nManage client authorization of your services:"
       if [ -z "${service_list_menu}" ]; then
         auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((10+whiptail_height))" 60 2 \
+        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((10+whiptail_height))" 60 3 \
         "GEN" "Generate a new key pair (public and private key)" \
         "PUB" "Register the client public key" \
+        "IMP" "Import client public config from file" \
         3>&1 1>&2 2>&3)"
       else
         auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 60 5 \
+        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 60 6 \
         "LIST" "List all clients for specific HiddenService" \
         "EDIT" "Edit an existing authorization" \
         "GEN" "Generate a new key pair (public and private key)" \
         "PUB" "Register the client public key" \
+        "IMP" "Import client public config from file" \
         "DEL" "Remove a client" \
         3>&1 1>&2 2>&3)"
       fi
@@ -355,7 +357,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | sed "s/ /,/g")"
         if [ -n "${service_name_list}" ]; then
           tput reset
-          onionjuggler-cli --auth-server --list --service "${service_name_list}"
+          onionjuggler-cli-auth-server --list --service "${service_name_list}"
           return_to_tui
         fi
       ;;
@@ -380,7 +382,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           # shellcheck disable=SC2086
           choice_client="$("${dialog_box}" --backtitle "${backtitle}" --title "${title}" --menu "${menu}" \
           "$((i+8+whiptail_height))" 50 "${i}" ${client_list} 3>&1 1>&2 2>&3)"
-          [ -n "${choice_client}" ] && "${editor}" "${tor_data_dir_services}"/"${service}"/authorized_clients/"${choice_client}".auth
+          [ -n "${choice_client}" ] && "${editor}" "${tor_data_dir_services}/${service}/authorized_clients/${choice_client}.auth"
         fi
       ;;
 
@@ -394,7 +396,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           client_name_list="$(printf %s"${client_name_list}" | tr -s ' ' ',' | tr -s ',' ',')"
           if { [ -n "${service_name_list}" ] && [ -n "${client_name_list}" ]; }; then
             tput reset
-            onionjuggler-cli --auth-server --on --service "${service_name_list}" --client "${client_name_list}"
+            onionjuggler-cli-auth-server --on --service "${service_name_list}" --client "${client_name_list}"
             return_to_tui
           fi
         fi
@@ -414,9 +416,24 @@ PURGE: Service will be permanently disabled, all the directory data, including h
             --inputbox "${menu}" 9 50 3>&1 1>&2 2>&3)"
             if [ -n "${client_pub_key}" ]; then
               tput reset
-              onionjuggler-cli --auth-server --on --service "${service_name_list}" --client "${client_name_list}" --client-pub-key "${client_pub_key}"
+              onionjuggler-cli-auth-server --on --service "${service_name_list}" --client "${client_name_list}" --client-pub-key "${client_pub_key}"
               return_to_tui
             fi
+          fi
+        fi
+      ;;
+
+      IMP)
+        service_menu menu "Auth Server Import"
+        if [ -n "${service_name_list}" ]; then
+          title="Client Authorization - Server - Import"
+          menu="\nClient public configuration file:"
+          client_pub_file="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+          --inputbox "${menu}" 9 50 3>&1 1>&2 2>&3)"
+          if [ -n "${client_pub_file}" ]; then
+            tput reset
+            onionjuggler-cli-auth-server --on --service "${service_name_list}" --client-pub-file "${client_pub_file}"
+            return_to_tui
           fi
         fi
       ;;
@@ -463,7 +480,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         fi
         if [ -n "${client_name_list}" ]; then
           tput reset
-          onionjuggler-cli --auth-server --off --service "${service_name_list}" --client "${client_name_list}"
+          onionjuggler-cli-auth-server --off --service "${service_name_list}" --client "${client_name_list}"
           return_to_tui
         fi
       ;;
@@ -492,17 +509,19 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       menu="\nAs the onion service client:"
       if [ -z "${onion_auth_list}" ]; then
         auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((10+whiptail_height))" 80 2 \
+        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((10+whiptail_height))" 80 3 \
         "GEN" "Generate a new key pair (public and private key)" \
         "PRIV" "Register your private key" \
+        "IMP" "Import private configuration file" \
         3>&1 1>&2 2>&3)"
       else
         auth_type="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 80 5 \
+        "${ok_flag}" "Select" "${cancel_flag}" "Cancel" --menu "${menu}" "$((13+whiptail_height))" 80 6 \
         "LIST" "List all the authorizations inside ClientOnionAuthDir" \
         "EDIT" "Edit your client authorizations" \
         "GEN" "Generate a new key pair (public and private key)" \
         "PRIV" "Register your private key" \
+        "IMP" "Import private configuration file" \
         "DEL" "Remove expired authorization" \
         3>&1 1>&2 2>&3)"
       fi
@@ -511,7 +530,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     case "${auth_type}" in
 
       LIST)
-        onionjuggler-cli --auth-client --list
+        onionjuggler-cli-auth-client --list
         return_to_tui
       ;;
 
@@ -530,7 +549,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         --inputbox "${menu}" 9 80 3>&1 1>&2 2>&3)"
         if [ -n "${onion_hostname}" ]; then
           tput reset
-          onionjuggler-cli --auth-client --on --onion "${onion_hostname}"
+          onionjuggler-cli-auth-client --on --onion "${onion_hostname}"
           return_to_tui
         fi
       ;;
@@ -544,8 +563,23 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         --inputbox "${menu}" 9 80 3>&1 1>&2 2>&3)"
         if { [ -n "${onion_hostname}" ] && [ -n "${client_priv_key}" ]; }; then
           tput reset
-          onionjuggler-cli --auth-client --on --onion "${onion_hostname}" --client-priv-key "${client_priv_key}"
+          onionjuggler-cli-auth-client --on --onion "${onion_hostname}" --client-priv-key "${client_priv_key}"
           return_to_tui
+        fi
+      ;;
+
+      IMP)
+        service_menu menu "Auth Client Import"
+        if [ -n "${service_name_list}" ]; then
+          title="Client Authorization - Client - Import"
+          menu="\nClient private configuration file:"
+          client_priv_file="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+          --inputbox "${menu}" 9 50 3>&1 1>&2 2>&3)"
+          if [ -n "${client_priv_file}" ]; then
+            tput reset
+            onionjuggler-cli-auth-server --on --client-priv-file "${client_priv_file}"
+            return_to_tui
+          fi
         fi
       ;;
 
@@ -558,7 +592,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_onion_auth}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
         if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
           tput reset
-          onionjuggler-cli --auth-client --off --onion "${ONION_AUTH_NAME_LIST}"
+          onionjuggler-cli-auth-client --off --onion "${ONION_AUTH_NAME_LIST}"
           return_to_tui
         fi
       ;;
@@ -597,11 +631,13 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       status="$(printf %s"${status}" | tr '[:upper:]' '[:lower:]')"
     fi
     case "${status}" in
+
       list)
         tput reset
-        onionjuggler-cli --"${webserver}" "${status}"
+        onionjuggler-cli-web "${status}"
         return_to_tui
       ;;
+
       on)
         service_menu menu "Web server "
         if [ -n "${service_name_list}" ]; then
@@ -620,11 +656,12 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           [ -n "${choice_folder}" ] && folder_name_list="$(printf %s"${choice_folder}" | sed "s/ /,/g")"
           if [ -n "${folder_name_list}" ]; then
             tput reset
-            onionjuggler-cli --web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}"
+            onionjuggler-cli-web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}"
             return_to_tui
           fi
         fi
       ;;
+
       off)
         i=0
         for service in "${webserver_conf}"/*; do
@@ -642,11 +679,13 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         [ -n "${choice_service}" ] && service_name_list="$(printf %s"${choice_service}" | sed "s/ /,/g")"
         if [ -n "${service_name_list}" ]; then
           tput reset
-          onionjuggler-cli --web "--${status}" --service "${service_name_list}"
+          onionjuggler-cli-web "--${status}" --service "${service_name_list}"
           return_to_tui
         fi
       ;;
+
     esac
+
   ;;
 
 
@@ -679,7 +718,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       tail -f -n 25 /var/log/tor/vanguards.log
     elif [ -n "${choice_action}" ]; then
       tput reset
-      onionjuggler-cli --vanguards "--${choice_action}"
+      onionjuggler-cli-vanguards "--${choice_action}"
       return_to_tui
     fi
   ;;
@@ -703,7 +742,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       if [ -n "${choice_action}" ]; then
         action="$(printf %s"${choice_action}" | tr '[:upper:]' '[:lower:]')"
         tput reset
-        onionjuggler-cli --backup --"${action}"
+        onionjuggler-cli-backup --"${action}"
         return_to_tui
       fi
     fi
