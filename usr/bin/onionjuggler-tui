@@ -98,6 +98,9 @@ return_to_tui(){
 ## $1 [checklist|menu]
 ## $2 complementary title
 service_menu(){
+  ## safeguard, WS should not run this function anyway
+  test -f /usr/share/anon-ws-base-files/workstation && return 0
+
   dialog_type="${1}"
   compl_title="${2}"
   i=0
@@ -610,7 +613,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
   ;;
 
 
-  WEBSERVER)
+  WEB)
     option_plugin="onionjuggler-cli-web"
     if ! check_plugin_enabled "${option_plugin}"; then
       text="${option_plugin} is disabled by configuration"
@@ -633,12 +636,20 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
       list)
         tput reset
-        onionjuggler-cli-web "${status}"
+        onionjuggler-cli-web "--${status}"
         return_to_tui
       ;;
 
       on)
-        service_menu menu "Web server "
+        if test -f /usr/share/anon-ws-base-files/workstation; then
+          title="Onion Service - Web - Activation"
+          menu="Service name:"
+          service_text="\nName your service directory in one string and no space.\n(e.g.: ssh)"
+          service_name_list="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+          --inputbox "${service_text}" 10 60 3>&1 1>&2 2>&3)"
+        else
+          service_menu menu "Web server "
+        fi
         if [ -n "${service_name_list}" ]; then
           i=0
           for folder in "${website_dir}"/*; do
@@ -646,7 +657,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
             i=$((i+1))
             folder_list="$(printf "%s\n%s\n%s\n" "${folder_list}" "${folder}" ".")"
           done
-          title="Folder"
+          title="Folder ${website_dir}"
           menu="\nUse spacebar to select:"
           [ "${i}" -gt 11 ] && i="11"
           # shellcheck disable=SC2086
@@ -654,9 +665,22 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           "$((i+8+whiptail_height))" 50 "${i}" ${folder_list} 3>&1 1>&2 2>&3)"
           [ -n "${choice_folder}" ] && folder_name_list="$(printf %s"${choice_folder}" | sed "s/ /,/g")"
           if [ -n "${folder_name_list}" ]; then
-            tput reset
-            onionjuggler-cli-web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}"
-            return_to_tui
+            if test -f /usr/share/anon-ws-base-files/workstation; then
+              title="Web server port selection"
+              tcp_socket_text="\nInsert the virtual ports and targets. Only one virtual port required to create a service/
+              \nInsert the ports in the following format:\nVIRPORT:TARGET (e.g.: 80:127.0.0.1:80)"
+              service_ports="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
+              --inputbox "${tcp_socket_text}" 15 70 3>&1 1>&2 2>&3)"
+              if [ -n "${service_ports}" ]; then
+                tput reset
+                onionjuggler-cli-web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}" --no-check-service --port "${service_ports}"
+                return_to_tui
+              fi
+            else
+              tput reset
+              onionjuggler-cli-web "--${status}" --service "${service_name_list}" --folder "${folder_name_list}"
+              return_to_tui
+            fi
           fi
         fi
       ;;
