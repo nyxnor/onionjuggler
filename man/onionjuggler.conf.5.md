@@ -54,11 +54,8 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 **requirements**
 
-: Necessary packages to fully control OnionJuggler. They will be checked first if installed already, if not, will install via using the *$pkg_mngr_install*. (Default: tor grep sed openssl basez git qrencode tar python3-stem dialog nginx")
+: Necessary packages to fully control OnionJuggler. They will be checked first if installed already, if not, will install via using the *$pkg_mngr_install*. (Default: tor grep sed openssl basez qrencode dialog nginx")
 
-**vanguards_commit**
-
-: Specify the wanted commit from Vanguards repository. (Default: 10942de93f6578f8303f60014f34de2fca345545).
 
 ## TOR DAEMON
 
@@ -97,14 +94,6 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 **tor_data_dir_auth**
 
 : Specify the ClientOnionAuthDir. (Default: /var/lib/tor/onion_auth).
-
-**tor_control_port**
-
-: Specify the ControlPort to use with Vanguards. (Default: 9051).
-
-**tor_backup_dir**
-
-: Specify the local directory to save your backups. (Default: /var/lib/onionjuggler/backup)
 
 **tor_hiddenserviceport_target_addr**
 

@@ -105,9 +105,9 @@ error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
 
 ## helper for --getconf
 get_conf_values(){
-  for key in openssl_cmd webserver webserver_conf website_dir vanguards_commit requirements \
+  for key in openssl_cmd webserver webserver_conf website_dir requirements \
   tor_daemon tor_user tor_conf_dir tor_conf_user_group tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
-  tor_control_port tor_backup_dir tor_hiddenserviceport_target_addr; do
+  tor_hiddenserviceport_target_addr; do
     eval val='$'"${key}"
     test -n "${val}" && printf '%s\n' "${key}=\"${val}\""
   done
@@ -123,7 +123,6 @@ set_default_conf_values(){
   : "${webserver:="nginx"}"
   : "${webserver_conf:="/etc/nginx/sites-enabled"}"
   : "${website_dir:="/var/www"}"; website_dir="${website_dir%*/}"
-  : "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}"
 
   ## tor defaults
   : "${daemon_control:="systemctl"}"; daemon_control="${daemon_control%*/}"
@@ -135,8 +134,6 @@ set_default_conf_values(){
   : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
   : "${tor_conf_dir:="/etc/tor"}"; tor_conf_dir="${tor_conf_dir%*/}"
   : "${tor_conf:="${tor_conf_dir}/torrc"}"
-  : "${tor_control_port:="9051"}" ## only the port, not the host
-  : "${tor_backup_dir:="/var/lib/onionjuggler/backup"}"; tor_backup_dir="${tor_backup_dir%*/}"
   : "${tor_hiddenserviceport_target_addr:="127.0.0.1"}"
 }
 

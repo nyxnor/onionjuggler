@@ -22,7 +22,7 @@ usage(){
   -F, --conf-dir <DIR>                        configuration directory (Default: /etc)
   -M, --man-dir <DIR>                         manual directory (Default: /usr/local/man/man1)
   -i, --install [-b <DIR>|-c <DIR>|-m <DIR>]  setup environment with specified paths
-  -G, --plugin <PLUGIN>                       if plugin is specified, only install selected plugins (e.g: vanguards,web)
+  -G, --plugin <PLUGIN>                       if plugin is specified, only install selected plugins (e.g: auth-client,web)
   -k, --check                                 run pre-defined shellcheck
   -m, --man                                   build manual pages
   -r, --release                               prepare for commiting
@@ -61,15 +61,6 @@ install_package(){
   install_pkg=""
   for package in "${@}"; do
     case "${package}" in
-      python-stem|python3-stem|security/py-stem|py-stem|py3-stem|py37-stem|stem)
-        ## https://stem.torproject.org/download.html
-        while :; do
-          command -v python3 >/dev/null && python_path="$(command -v python3)" && break
-          command -v python >/dev/null && python_path="$(command -v python)" && break
-          error_msg "Python is not installed and is required for Vanguards, skipping...\n"
-        done
-        [ -n "${python_path}" ] && ! "${python_path}" -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('stem') else 1)" && install_pkg="${install_pkg} ${package}"
-      ;;
       openssl) ! command -v "${openssl_cmd}" >/dev/null && package="${openssl_cmd}" && install_pkg="${install_pkg} ${package}";;
       nginx|apache2) if ! command -v "${package}" >/dev/null; then ! "${package}" -v >/dev/null 2>&1 && install_pkg="${install_pkg} ${package}"; fi;;
       openbsd-httpd) :;;
@@ -201,7 +192,6 @@ get_vars(){
   done
 
   ## sanity check
-  #printf %d "${tor_control_port:=9051}" >/dev/null 2>&1 || error_msg "tor_control_port must be an integer, not ${tor_control_port}"
   #range_variable webserver nginx apache2 openbsd-httpd
   #range_variable dialog_box dialog whiptail
 }
@@ -230,7 +220,7 @@ while :; do
     M|man-dir|M=*|man-dir=*) get_arg man_dir;;
     h|help) usage;;
     "") break;;
-    *) error_msg "Invalid option: '${opt}'";;
+    *) error_msg "Invalid option: '${opt_orig}'";;
   esac
   shift "${shift_n:-1}"
   [ -z "${1}" ] && break
@@ -301,7 +291,6 @@ case "${command}" in
     fi
 
     ## make helper dirs
-    test -d "${tor_backup_dir}" || mkdir -p "${tor_backup_dir}"
     test -d /usr/share/onionjuggler || mkdir -p /usr/share/onionjuggler
     cp  "${topdir}"/usr/share/onionjuggler/* /usr/share/onionjuggler/
     test -d "${conf_dir}/onionjuggler" || mkdir -p "${conf_dir}/conf.d"

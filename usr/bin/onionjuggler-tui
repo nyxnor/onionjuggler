@@ -171,19 +171,17 @@ if check_folder_is_not_empty "${tor_data_dir_services}"; then
     echo "${string}"
     done) 3>&1 1>&2 2>&3)
   else
-    # shellcheck disable=SC2046
+    # shellcheck disable=SC2046,SC2043
     choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
     "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 65 5 \
     "QUIT" "Exit menu and clear the screen" \
     "ENABLE" "Enable a onion service" \
-    $(for item in onionjuggler-cli-auth-client onionjuggler-cli-vanguards onionjuggler-cli-backup; do
+    $(for item in onionjuggler-cli-auth-client; do
       command -v "${item}" >/dev/null || return 0
       check_plugin_enabled "${item##*onionjuggler-cli-}" || return 0
       string=""
       case "${item##*onionjuggler-cli-}" in
         auth-client) string="AUTH_CLIENT client_side_onion_credentials";;
-        vanguards) string="VANGUARDS protection_against_traffic_analysis";;
-        backup) string="BACKUP better_be_safe_than_sorry";;
       esac
     echo "${string}"
     done) 3>&1 1>&2 2>&3)
@@ -197,7 +195,7 @@ else
   "ENABLE" "Enable a onion service" \
   "DISABLE" "Disable chosen onion service" \
   "RENEW" "Renew onion service address" \
-  $(for item in onionjuggler-cli-auth-client onionjuggler-cli-auth-server onionjuggler-cli-web onionjuggler-cli-vanguards onionjuggler-cli-backup; do
+  $(for item in onionjuggler-cli-auth-client onionjuggler-cli-auth-server onionjuggler-cli-web ; do
     command -v "${item}" >/dev/null || return 0
     check_plugin_enabled "${item##*onionjuggler-cli-}" || return 0
     string=""
@@ -205,8 +203,6 @@ else
       auth-client) string="AUTH_CLIENT client_side_onion_credentials";;
       auth-server) string="AUTH_SERVER control_your_onion_clients";;
       web) string="WEB webserver_management";;
-      vanguards) string="VANGUARDS protection_against_traffic_analysis";;
-      backup) string="BACKUP better_be_safe_than_sorry";;
     esac
   echo "${string}"
   done) 3>&1 1>&2 2>&3)
@@ -255,7 +251,7 @@ case "${choice_main}" in
         --inputbox "${socket_text}" 15 70 3>&1 1>&2 2>&3)"
         if [ -n "${service_ports}" ]; then
           tput reset
-          onionjuggler-cli --activate --service "${service_name}" --socket "${socket}" --port "${service_ports}" ${gateway}
+          onionjuggler-cli --on --service "${service_name}" --socket "${socket}" --port "${service_ports}" ${gateway}
           return_to_tui
         fi
       fi
@@ -279,7 +275,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       if [ -n "${choice_disable}" ]; then
         [ "${choice_disable}" = "PURGE" ] && purge="--purge"
         tput reset
-        onionjuggler-cli --deactivate --service "${service_name_list}" "${purge}"
+        onionjuggler-cli --off --service "${service_name_list}" "${purge}"
         return_to_tui
       else
         text="\nOperation canceled, nothing was executed."
@@ -608,7 +604,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
     service_menu checklist "Info"
     if [ -n "${service_name_list}" ]; then
       tput reset
-      onionjuggler-cli --info --service "${service_name_list}"
+      onionjuggler-cli --list --service "${service_name_list}"
       return_to_tui
     fi
   ;;
@@ -710,66 +706,6 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
     esac
 
-  ;;
-
-
-  VANGUARDS)
-    option_plugin="onionjuggler-cli-vanguards"
-    if ! check_plugin_enabled "${option_plugin}"; then
-      text="${option_plugin} is disabled by configuration"
-      "${dialog_box}" --backtitle "${backtitle}" --title "${title}" --msgbox "${text}" 10 50
-    elif ! has "${option_plugin}"; then
-      text="${option_plugin} is not installed"
-      "${dialog_box}" --backtitle "${backtitle}" --title "${title}" --msgbox "${text}" 10 50
-    else
-      title="Vanguards"
-      if test -d "${tor_data_dir}/vanguards"; then
-        choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-        "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((9+whiptail_height))" 50 1 \
-        "ON" "Use Vanguards protections" 3>&1 1>&2 2>&3)"
-      else
-        choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-        "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 3 \
-        "LIST" "Follow Vanguards logs" \
-        "ON" "Upgrade Vanguards configuration and repository" \
-        "OFF" "Delete the Vanguards directory" \
-        3>&1 1>&2 2>&3)"
-      fi
-    fi
-    if [ "${choice_action}" = "LOGS" ]; then
-      tput reset
-      trap 'onionjuggler-tui; exit 0' INT
-      tail -f -n 25 /var/log/tor/vanguards.log
-    elif [ -n "${choice_action}" ]; then
-      tput reset
-      onionjuggler-cli-vanguards "--${choice_action}"
-      return_to_tui
-    fi
-  ;;
-
-
-  BACKUP)
-    option_plugin="onionjuggler-cli-backup"
-    if ! check_plugin_enabled "${option_plugin}"; then
-      text="${option_plugin} is disabled by configuration"
-      "${dialog_box}" --backtitle "${backtitle}" --title "${title}" --msgbox "${text}" 10 50
-    elif ! has "${option_plugin}"; then
-      text="${option_plugin} is not installed"
-      "${dialog_box}" --backtitle "${backtitle}" --title "${title}" --msgbox "${text}" 10 50
-    else
-      title="Backup"
-      choice_action="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
-      "${ok_flag}" "Select" "${cancel_flag}" "Exit" --menu "${menu}" "$((11+whiptail_height))" 50 2 \
-      "INTEGRATE" "Integrate backup to system" \
-      "CREATE" "Create backup" \
-      3>&1 1>&2 2>&3)"
-      if [ -n "${choice_action}" ]; then
-        action="$(printf %s"${choice_action}" | tr '[:upper:]' '[:lower:]')"
-        tput reset
-        onionjuggler-cli-backup --"${action}"
-        return_to_tui
-      fi
-    fi
   ;;
 
 

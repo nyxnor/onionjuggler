@@ -72,11 +72,7 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * **Server** - Generate key pair or add public part, list client names and their public keys from `<HiddenServiceDir>/authorized_clients/<client>.auth`. If any client is configured, the service will not be acessible without authentication.
   * **Client** - Generate key pair or add public part, list your `<ClientOnionAuthDir>/<SOME_ONION>.auth_private`.
 * [**Onion-Location**](https://community.torproject.org/onion-services/advanced/onion-location/) - For public onion services You can redirect your plainnet users to your onion service with this guide for nginx, apache2 and html header attributes.
-* **Backup** - Better be safe.
-  * **Create** -  Backup of your `torrc` lines containing hidden service configuration, all of your directories of `HiddenServiceDir` and `ClientOnionAuthDir`.
-  * **Integrate** - Integrate hidden serivces lines configuration from `torrc` and the directories `HiddenServiceDir` and `ClientOnionAuthDir` to your current system. This option should be used after creating a backup and importing to the current host.
 * [**OpSec**](https://community.torproject.org/onion-services/advanced/opsec/) - Operation Security
-  * [**Vanguards**](https://github.com/mikeperry-tor/vanguards) - This addon protects against guard discovery and related traffic analysis attacks. A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
   * [**Unix socket**](https://riseup.net/en/security/network-security/tor/onionservices-best-practices) - Support for enabling an onion service over unix socket to avoid localhost bypasses.
 * **Web server** - Serve files with your hidden service using Nginx or Apache2 web server.
 * **Usability** - There are two dialog boxes compatible with the project, `dialog` and `whiptail`.
@@ -94,12 +90,9 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * **tor** >= 0.3.5.7
   * **grep** >=0.9
   * **sed**
-  * **tar** (Backup)
   * **openssl** >= 1.1 (Client Authorization - requires algorithm x25519, so it can't be LibreSSL)
   * **basez** >= 1.6.2 (Client Authorization)
-  * **git** (Vanguards)
-  * **python3** (Vanguards)
-  * **python(3)-stem** >=1.8.0 (Vanguards)
+  * **git** (Build)
   * **dialog**/**whiptail** (TUI)
   * **nginx**/**apache2** (Web server)
 
@@ -109,8 +102,6 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
 * Development programs:
   * **pandoc** (Manual)
   * **shellcheck** (Review)
-
-If using Vanguards, `python2.6` is the minimal required for [Stem](https://stem.torproject.org/faq.html#what-python-versions-is-stem-compatible-with), but it is not going to be installed by default.
 
 ## Instructions
 
@@ -197,11 +188,11 @@ man onionjuggler.conf
 
 To create a service named `terminator`, it is as easy as possible:
 ```sh
-onionjuggler-cli --activate -s terminator -p 80
+onionjuggler-cli --on -s terminator -p 80
 ```
 But can be as advanced as specifying all the parameters:
 ```sh
-onionjuggler-cli --activate --service terminator --socket unix --version 3 --port "80,127.0.0.1:80 443,127.0.0.1:443"
+onionjuggler-cli --on --service terminator --socket unix --version 3 --port "80,127.0.0.1:80 443,127.0.0.1:443"
 ```
 
 ## Featured on

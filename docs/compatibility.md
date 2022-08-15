@@ -3,7 +3,7 @@
 **Warning**: OnionJuggler has only been tested on Debian and OpenBSD (almost complete). Contributions to improve current system or make it compatible with other systems is greatly appreciated.
 
 The code works perfectly on Debian.
-The code is not complete on OpenBSD because of missing packages, will be shortly as it is resolved. (missing basez and service configuration file for vanguards and httpd integration.
+The code is not complete on OpenBSD because of missing packages, will be shortly as it is resolved. (missing basez and service configuration file for httpd integration.
 
 After setup, your operating system distro configuration file will be on /etc/onionjuggler/onionjuggler.conf. If it is not there of if there is an invalid value to your system, please open an issue on github. You can also override the default configuration file by adding *.conf files inside /etc/onionjuggler/conf.d.
 

@@ -11,7 +11,7 @@
 #     COMPREPLY=()
 #     cur="${COMP_WORDS[COMP_CWORD]}"
 #     prev="${COMP_WORDS[COMP_CWORD-1]}"
-#     opts="auth backup credentials on onion-location off renew vanguards"
+#     opts="auth credentials on onion-location off renew "
 
 #     if [[ ${cur} == * ]] ; then
 #         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
@@ -34,7 +34,7 @@
 #     cur="${COMP_WORDS[COMP_CWORD]}"
 #     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-#     opts="auth backup credentials on onion-location off renew vanguards"
+#     opts="auth backup credentials on onion-location off renew "
 
 #     if [[ ${cur} == * ]] ; then
 #         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
@@ -75,10 +75,6 @@
 #             COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
 #         ;;
 
-#         vanguards)
-#             local opts="install upgrade logs remove"
-#             COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
-#         ;;
 #     esac
 
 # } &&
