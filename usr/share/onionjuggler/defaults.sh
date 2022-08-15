@@ -155,6 +155,7 @@ source_conf(){
        test -n "${key}" && eval "${key}"="${val}"
     done < "${conf_filtered}"
   done
+  rm -f "${conf_filtered}"
   set_default_conf_values
 }
 
