@@ -7,6 +7,7 @@ onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 [ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} is not a regular file"; exit 1; }
 [ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
+source_conf
 
 me="${0##*/}"
 check_plugin_enabled "${me}" || error_msg "Plugin '${me}' is disabled by configuration"

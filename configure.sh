@@ -7,7 +7,7 @@
 onionjuggler_repo="${ONIONJUGGLER_GIT_ORIGIN:-"https://github.com/nyxnor/onionjuggler.git"}"
 
 command -v git >/dev/null || { printf '%s\n' "Missing dependency, please install git"; exit 1; }
-topdir="$(git rev-parse --show-toplevel)"
+topdir="$(git rev-parse --show-toplevel || exit 1)"
 me="${0##*/}"
 
 usage(){
@@ -37,7 +37,7 @@ usage(){
 #### FUNCTIONS ####
 
 check_repo(){
-  if [ ! -f "${topdir}"/usr/bin/onionjuggler-cli ] || [ ! -f "${topdir}"/usr/bin/onionjuggler-tui ]; then
+  if [ "${PWD}" != "${topdir}" ]; then
     error_msg "This script must be run from inside the onionjuggler repository!"
   fi
 }
@@ -134,9 +134,9 @@ get_os(){
         distro="Whonix-Workstation"
       elif command -v lsb_release >/dev/null; then
         distro=$(lsb_release -sd)
-      elif [ -f /etc/os-release ]; then
+      elif test -f /etc/os-release; then
         while IFS='=' read -r key val; do
-          case $key in (PRETTY_NAME) distro=${val};; esac
+          case "${key}" in (PRETTY_NAME) distro=${val};; esac
         done < /etc/os-release
       else
         command -v crux >/dev/null && distro=$(crux)
@@ -183,8 +183,8 @@ get_vars(){
         case "${distro}" in
           "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*) . "${topdir}"/etc/onionjuggler/debian.conf;;
           "Tails"*) . "${topdir}"/etc/onionjuggler/tails.conf;;
-          "Whonix-Gateway") . "${topdir}"/etc/onionjuggler/whonix-gateway.conf;;
-          "Whonix-Workstation") . "${topdir}"/etc/onionjuggler/whonix-workstation.conf;;
+          "Whonix-Gateway") . "${topdir}"/etc/onionjuggler/anon-gw.conf;;
+          "Whonix-Workstation") . "${topdir}"/etc/onionjuggler/anon-ws.conf;;
           "Arch"*|"Artix"*|"ArcoLinux"*) . "${topdir}"/etc/onionjuggler/arch.conf;;
           "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") . "${topdir}"/etc/onionjuggler/fedora.conf;;
         esac
@@ -213,7 +213,6 @@ get_vars(){
 get_os
 get_vars
 
-
 while :; do
   shift_n=""
   # shellcheck disable=SC2034
@@ -236,7 +235,6 @@ while :; do
   shift "${shift_n:-1}"
   [ -z "${1}" ] && break
 done
-
 
 case "${command}" in
 
@@ -317,8 +315,8 @@ case "${command}" in
         case "${distro}" in
           "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*) cp "${topdir}"/etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
           "Tails"*) cp "${topdir}"/etc/onionjuggler/tails.conf "${conf_dir}/oionjuggler.conf";;
-          "Whonix-Gateway") cp "${topdir}"/etc/onionjuggler/whonix-gateway.conf "${conf_dir}/onionjuggler.conf";;
-          "Whonix-Workstation") cp "${topdir}"/etc/onionjuggler/whonix-workstation.conf "${conf_dir}/onionjuggler.conf";;
+          "Whonix-Gateway") cp "${topdir}"/etc/onionjuggler/anon-gw.conf "${conf_dir}/onionjuggler.conf";;
+          "Whonix-Workstation") cp "${topdir}"/etc/onionjuggler/anon-ws.conf "${conf_dir}/onionjuggler.conf";;
           "Arch"*|"Artix"*|"ArcoLinux"*) cp "${topdir}"/etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
           "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") cp "${topdir}"/etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac
@@ -335,7 +333,8 @@ case "${command}" in
     requires_root
     notice "${red}Removing OnionJuggler scripts from your system.${nocolor}"
     rm -f "${man_dir}/man1/onionjuggler-cli.1" "${man_dir}/man1/onionjuggler-tui.1" "${man_dir}/man5/onionjuggler.conf.5"
-    rm -f "${bin_dir}/onionjuggler-cli" "${bin_dir}/onionjuggler-tui"
+    #find "${man_dir}" -name "onionjuggler*" -delete
+    rm -f "${bin_dir}/onionjuggler-cli"* "${bin_dir}/onionjuggler-tui"
     if [ "${action}" = "-P" ] || [ "${action}" = "--purge" ]; then
       notice "${red}Purging OnionJuggler configuration from your system.${nocolor}"
       rm -f "${conf_dir}/onionjuggler"

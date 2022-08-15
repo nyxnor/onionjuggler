@@ -553,5 +553,6 @@ gen_auth_key_pair(){
 
 ###############################
 ############ main #############
-source_conf
+#source_conf
+set_default_conf_values
 

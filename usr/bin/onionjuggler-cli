@@ -13,6 +13,7 @@ onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 [ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} is not a regular file"; exit 1; }
 [ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
+source_conf
 
 usage(){
   printf %s"${magenta}
@@ -287,7 +288,7 @@ case "${main}" in
         ## Also, substitutes localhost:port for $target_ip_default:$port to make exact match for target always, as localhost and target_ip_default mean the same thing
         ## This measures avoid using the same local port for different services
         ## Sanity check
-        if test -f /usr/share/anon-gw-base-files/gateway; then ## Whonix Gateway
+        if [ "${operating_system}" = "anon-gw" ]; then ## Gateway
           if [ "${gateway_service}" = "1" ]; then ## Service should use Gateway ip (127.0.0.1)
             target_ip_default="127.0.0.1"
           elif has qubesdb-read; then ## Qubes-Whonix
@@ -295,7 +296,7 @@ case "${main}" in
           else
             target_ip_default="10.152.152.11" ## Non-Qubes-Whonix
           fi
-        elif test -f /usr/share/anon-ws-base-files/workstation; then ## Whonix Workstation
+        elif [ "${operating_system}" = "anon-ws" ]; then ## Workstation
           error_msg "Create onion services on the Gateway, not on the Workstation"
         else
           target_ip_default="${tor_hiddenserviceport_target_addr:-127.0.0.1}" ## Common target

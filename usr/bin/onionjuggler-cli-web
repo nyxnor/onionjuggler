@@ -7,6 +7,7 @@ onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 [ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} is not a regular file"; exit 1; }
 [ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
+source_conf
 
 me="${0##*/}"
 check_plugin_enabled "${me}" || error_msg "Plugin '${me}' is disabled by configuration"
@@ -197,7 +198,7 @@ server \"${onion_hostname}\" {
       has qrencode && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}:${virtport}"
     fi
 
-    if test -f /usr/share/anon-ws-base-files/workstation; then
+    if [ "${operating_system}" = "anon-ws" ]; then
       printf '\n'
       ## create whonix firewall folder, allow port via config file, reload firewall
       notice "Allow port ${target_port} on firewall /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf"
@@ -214,7 +215,7 @@ server \"${onion_hostname}\" {
 
   f|off)
     [ -z "${service}" ] && usage
-    if test -f /usr/share/anon-ws-base-files/workstation; then
+    if [ "${operating_system}" = "anon-ws" ]; then
       ## block WS firewall based on webserver listening port
       target="$(grep "listen " "${webserver_conf}/${service}-onion.conf" | sed "s/.*listen //;s/\;//")"
       target_addr="${target%%:*}"

@@ -15,6 +15,7 @@ onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 [ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} is not a regular file"; exit 1; }
 [ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
+source_conf
 
 ###################
 #### VARIABLES ####
@@ -99,7 +100,7 @@ return_to_tui(){
 ## $2 complementary title
 service_menu(){
   ## safeguard, WS should not run this function anyway
-  test -f /usr/share/anon-ws-base-files/workstation && return 0
+  [ "${operating_system}" = "anon-ws" ] && return 0
 
   dialog_type="${1}"
   compl_title="${2}"
@@ -155,7 +156,7 @@ title="OnionJuggler - Main Menu"
 menu="\nUse enter/spacebar to select:"
 backtitle="OnionJuggler - Onion Services Manager"
 if check_folder_is_not_empty "${tor_data_dir_services}"; then
-  if test -f /usr/share/anon-ws-base-files/workstation; then
+  if [ "${operating_system}" = "anon-ws" ]; then
     # shellcheck disable=SC2046,SC2043
     choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
     "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 65 5 \
@@ -230,9 +231,9 @@ case "${choice_main}" in
       tcp_socket_text="\nInsert the virtual ports and targets. Only one virtual port required to create a service/
       \nInsert the ports in the following format:\nVIRPORT:TARGET VIRTPORTn:TARGETn\n(e.g.: 80:50000 8080:50001) (e.g.: 80:192.168.5.10:50000 8080:192.168.5.10:50001)"
 
-      if test -f /usr/share/anon-gw-base-files/gateway; then
-        ## whonix has an internal network between hosts, unix socket not viable and tcp socket does
-        ## not leak address to the local network as it is only possible to connect to whonix via tor
+      if [ "${operating_system}" = "anon-gw" ]; then
+        ## GW has an internal network between hosts, unix socket not viable and tcp socket does
+        ## not leak address to the local network as it is only possible to connect to it via tor
         socket="tcp"
         choice_anon_target="$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
         --menu "${menu}" "$((9+whiptail_height))" 70 2 \
@@ -641,7 +642,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       ;;
 
       on)
-        if test -f /usr/share/anon-ws-base-files/workstation; then
+        if [ "${operating_system}" = "anon-ws" ]; then
           title="Onion Service - Web - Activation"
           menu="Service name:"
           service_text="\nName your service directory in one string and no space.\n(e.g.: ssh)"
@@ -665,7 +666,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
           "$((i+8+whiptail_height))" 50 "${i}" ${folder_list} 3>&1 1>&2 2>&3)"
           [ -n "${choice_folder}" ] && folder_name_list="$(printf %s"${choice_folder}" | sed "s/ /,/g")"
           if [ -n "${folder_name_list}" ]; then
-            if test -f /usr/share/anon-ws-base-files/workstation; then
+            if [ "${operating_system}" = "anon-ws" ]; then
               title="Web server port selection"
               tcp_socket_text="\nInsert the virtual ports and targets. Only one virtual port required to create a service/
               \nInsert the ports in the following format:\nVIRPORT:TARGET (e.g.: 80:127.0.0.1:80)"
