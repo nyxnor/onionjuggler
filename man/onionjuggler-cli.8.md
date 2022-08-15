@@ -1,4 +1,4 @@
-% onionjuggler-cli(1) Dinamically juggle with onion services with a POSIX compliant shell
+% onionjuggler-cli(8) Dinamically juggle with onion services with a POSIX compliant shell
 % Written by nyxnor (nyxnor@protonmail.com)
 % September 2069
 
@@ -176,7 +176,7 @@ Bugs you may find. First search for related issues on https://github.com/nyxnor/
 
 # SEE ALSO
 
-onionjuggler-tui(1), onionjuggler.conf(5), vitor(8), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
+onionjuggler-tui(8), onionjuggler.conf(5), vitor(8), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
 
 
 # COPYRIGHT
