@@ -39,7 +39,7 @@ while :; do
   case "${1}" in
     -h|--help) usage;;
     "") break;;
-    *) error_msg "Invalid option: ${opt}";;
+    *) error_msg "Invalid option: ${opt_orig}";;
   esac
   shift "${shift_n}"
 done
