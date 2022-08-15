@@ -20,6 +20,10 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 ## SYSTEM
 
+**operating_system**
+
+: Set operating system.
+
 **onionjuggler_plugin**
 
 : Only install specified plugins, else install everything. (Default: all plugins).

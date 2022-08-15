@@ -49,100 +49,58 @@ _@v'':i''L,'''''_{'_'y''kJu@6jjuuuujjjN@-
 ${nocolor}
 Usage: ${me} [--option <ARGUMENT>]
 \nComplete options:
-  --activate [--service <SERVICE>] [--socket <unix>] [--version <3>] [--port <VIRTPORT,[VIRTPORT2]>]
-                                                             enable a service listening with tcp sockets
-  --deactivate [--service <SERVICE>] [--socket <tcp>] [--version <3>] [--port <VIRTPORT[:TARGET][,VIRTPORT2][:TARGET2]>]
-                                                             enable a service listening on unix sockets
-  --deactivate [--purge] [--service <@all|SERV1,SERV2,...>   disable a service and optionally purge its directory
-  --info [--quiet] [--service <@all|SERV1,SERV2,...>]        see credentials from indicated services
-  --renew [--service <@all|SERV1,SERV2,...>]                 renew indicated services addresses
-  --auth-server --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-key <CLIENT_PUB_KEY>]
-                                                             add client authorization, optionally add client's public key
-  --auth-server --on [--service <@all|SERV1,SERV2,...>] [--client <CLIENT1,CLIENT2,...>]
-                                                             add client authorization
-  --auth-server --off [--service <@all|SERV1,SERV2,...>] [--client <@all|CLIENT1,CLIENT2,...>]
-                                                             remove client authorization
-  --auth-server --list [--service <@all|SERV1,SERV2,...>]    list authorized clients for indicated service
-  --auth-client --on [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>]
-                                                             add authorization of client access, optionally add client's private key
-  --auth-client --off [--onion <ONION>]                      remove authorization of client access
-  --auth-client --list                                       list your keys as a client
-  --web --on [--service <SERVICE>] [--folder <SITE_PATH>]    start serving a website for certain service and its folder
-  --web --on [--service <SERVICE>] [--folder <SITE_PATH>] [--port <TARGET>] [--no-check-service]
-                                                             useful for workstations when the tor process is running on the gateway
-  --web --off [--service <SERVICE>]                          stop serving a website for certain service and its folder
-  --web --list                                               list enabled websites
-  --location [--nginx|--apache2|--html] [--service <SERVICE>]  onion-location guide, no execution
-  --backup [--create|--integrate]                            backup onion services or integrate the backup
-  --vanguards [--on|--list|--off]                            install or upgrade, remove or see logs for vanguards addon
-  -h|--help                                                  display this help message
+  --on [--service <SERVICE>] [--socket <unix>] [--port <VIRTPORT,[VIRTPORT2]>]
+                             enable a service listening with tcp sockets
+
+  --on [--service <SERVICE>] [--port <VIRTPORT[:TARGET][,VIRTPORT2][:TARGET2]>]
+                             enable a service listening on unix sockets
+
+  --off [--purge] [--service <@all|SERV1,SERV2,...>
+                             disable a service and optionally purge its dir
+
+  --list [--quiet] [--service <@all|SERV1,SERV2,...>]
+                             see credentials from indicated services
+
+  --renew [--service <@all|SERV1,SERV2,...>]
+                             renew indicated services addresses
+
+  -h|--help                  display this help message
 
 Options:
-  --getconf                                                  print configuration
-  --getopt                                                   print options given by the command line
-  --on                                                       activate an onion service
-    -s, --service <SERVICE>                                  service to activate
-    -S, --socket <tcp|unix>                                  define a socket for the new onion service
-    -v, --version 3                                          define a version for the new onion service
-    -p, --port <VIRTPORT[,TARGET],VIRTPORT2[,TARGET2]>       define ports for the new onion service
-    -g, --gateway                                            define target 127.0.0.1 (Gateway local IP) (does not overwrite specified target)
-  --off                                                      deactivate an onion service configuration
-    -s, --service <SERV1,SERV2,...>                          service to deactivate
-    -P, --purge                                              purge the onion service data
-  --info                                                     list existing services and their configuration, clients
-    -s, --service <@all|SERV1,SERV2,...>                     list all services or a indicate them comma separated
-    -q, --quiet                                              don't QR encode the hostname
-  --auth-server                                              manage authorized_clients
-    -s, --service <@all|SERV1,SERV2,...>                     authorize or remove authorization to indicated services
-    -n, --on                                                 authorized aclient
-    -f, --off                                                remove authorization from a client
-    -l, --list                                               list authorized clients
-    -c, --client <CLIENT>                                    choose client
-    -K, --client-pub-key <CLIENT_PUB_KEY>                    specify client pub key to authorize to one service
-  --auth-client                                              manage your authorizations to an onion
-    -n, --on                                                 add authorization
-    -f, --off                                                remove authorization
-    -l, --list                                               list current authorizations
-    -o, --onion <ONION>                                      specify onion to authenticate
-    -k, --client-priv-key <CLIENT_PRIV_KEY>                  specify your client private key
-  --web                                                      manage web server configuration
-    -s, --service <SERVICE>                                  service to enable or disable website
-    -n, --on                                                 activate website to an onion service
-    -f, --off                                                deactivate website to an onion service
-    -l, --list                                               list active websites
-    -w, --folder <SITE_PATH>                                 specify website files
-    -p, --port <TARGET_PORT>                                 use specified port. Useful for Workstations
-    --no-check-service                                       don't check if service exists. Useful for Workstations
-  --backup                                                   complete backup of onion services
-    -M, --make                                               make a backup
-    -I, --integrate                                          integrate backup to your system
-  --vanguards                                                manage Vanguards protection
-    -n, --on                                                 install Vanguards addon, if already installed, upgrade
-    -f, --off                                                remove Vanguards
-    -l, --list                                               see Vanguards logs
+  --getconf                  print configuration
+  --getopt                   print options given by the command line
+  --on                       activate an onion service
+    -s, --service <SERVICE>  service to activate
+    -S, --socket <tcp|unix>  define a socket, default tcp
+    -v, --version 3          define a version, default 3
+    -p, --port <VIRTPORT[:TARGET],VIRTPORT2[:TARGET2]>
+                             define ports for the new onion service
+    -g, --gateway            define target 127.0.0.1 (doesn't override target)
+  --off                      deactivate an onion service configuration
+    -s, --service <SERV1,SERV2,...>
+                             service to deactivate
+    -P, --purge              purge the onion service data
+  --list                     list existing services data
+    -s, --service <@all|SERV1,SERV2,...>
+                             list all services or indicate them comma separated
+    -q, --quiet              don't QR encode the hostname
 
 Advanced:
-  -G, --plugin <PLUGIN>                                      specify a plugin (onionjuggler-cli-*) to be parsed, example: web
-  -R, --restart                                              signal tor to restart if the option ever signal tor
-  -r, --reload                                               signal tor to reload (default option) if the option ever signal tor
+  -R, --restart              signal tor to restart if needed
+  -r, --reload               signal tor to reload (default option) if needed
 
 Option names:
-  main                                                       activate, deactivate, info, renew, auth-server, auth-client, web, vanguards
-  plugin                                                     auth-server, auth-client, web, vanguards
-  status                                                     --on, --off, --list
-  action                                                     --purge, --quiet, --nginx, --apache2, --html, --make, --integrate
-  signal                                                     --restart, --reload
+  status                     --on, --off, --list, --renew
+  action                     --purge, --quiet
+  signal                     --restart, --reload
 
 Positional arguments:
-  TARGET                                                     [addr:]port
-  @all                                                       all services or clients available
-  SERV1,SERV2...                                             specify services
-  CLIENT1,CLIENT2,...                                        specify clients
+  TARGET                     [addr:]port
+  @all                       all services or clients available
+  SERV1,SERV2...             specify services comma separated
 
-'# Done': You should always see it at the end, else something unexpected occured.
-It does not imply the code worked, you should always pay attention for errors in the logs.
 If your services are unreacheable, restart tor.
-\nReport bugs to: https://github.com/nyxnor/onionsjuggler/issues\n"
+Report bugs to: https://github.com/nyxnor/onionsjuggler/issues\n"
 
   exit 1
 }
@@ -166,29 +124,15 @@ while :; do
   clean_opt "${1}" || break
   # shellcheck disable=SC2034
   case "${opt}" in
-    activate|deactivate|info|renew) set_arg main "${opt}";;
-    auth-server|auth-client|web|location|backup|vanguards) set_arg plugin "${opt}";;
-    G|plugin|G=*|plugin=*) get_arg plugin;;
     getopt|getopts|getconf) set_arg dev "${opt}";;
-    on|off|list|n|f|l) set_arg status "${opt}";;
+    on|off|list|n|f|l|renew) set_arg status "${opt}";;
     R|restart|r|reload) set_arg signal "${opt}";;
-    P|purge|q|quiet|M|make|I|integrate) set_arg action "${opt}";;
+    P|purge|q|quiet) set_arg action "${opt}";;
     s|service|s=*|service=*) get_arg service;;
-    c|client|c=*|client=*) get_arg client;;
-    o|onion|o=*|onion=*) get_arg onion;;
     v|version|v=*|version=*) get_arg version;;
     S|socket|S=*|socket=*) get_arg socket;;
     p|port|p=*|port=*) get_arg port;;
     g|gateway) set_arg gateway_service 1;;
-    w|folder|w=*|folder=*) get_arg folder;;
-    k|client-priv-key|k=*|client-priv-key=*) get_arg client_priv_key;;
-    client-priv-config|client-priv-config=*) get_arg client_priv_config;;
-    client-priv-file|client-priv-file=*) get_arg client_priv_file;;
-    K|client-pub-key|K=*|client-pub-key=*) get_arg client_pub_key;;
-    client-pub-config|client-pub-config=*) get_arg client_pub_config;;
-    client-pub-file|client-pub-file=*) get_arg client_pub_file;;
-    replace-file) set_arg replace_file 1;;
-    no-check-service) set_arg no_check_service 1;;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac
@@ -221,27 +165,8 @@ if ! test -f "${tor_conf}"; then
 fi
 
 
-## plugins
-## requires script named "onionjuggler-cli-*"
-if [ -n "${plugin}" ]; then
-  plugin="${plugin##*onionjuggler-cli-}"
-  script_plugin="onionjuggler-cli-${plugin}"
-  if [ -n "${onionjuggler_plugin}" ]; then
-    printf '%s\n' "${onionjuggler_plugin}" | tr "," " " | tr -s " " | tr " " "\n" | grep -q -- "^${plugin}$" \
-    || error_msg "Plugin '${plugin}' is disabled by configuration"
-  fi
-  ## check if plugin is installed
-  has "${script_plugin}" || error_msg "${script_plugin} is not installed"
-  ## clean uncessary options to parse on plugin
-  args_plugin_clean="$(printf '%s\n' "${args_full}" | sed "s|--plugin [^ ]*||;s|-G [^ ]*||" | tr " " "\n" | sed "s|^--plugin=.*$||;s|^-G=.*$||;s|^--${plugin}$||" | tr "\n" " " | tr -s " ")"
-  # shellcheck disable=SC2086
-  "${script_plugin}" ${args_plugin_clean}
-  ## exit with the same exit code from the plugin script
-  exit "${?}"
-fi
-
 ## main options
-case "${main}" in
+case "${status}" in
 
   ## enable a service by configure its own torrc's block, consequentially the <HiddenServiceDir> will be created.
   ## tcp-socket uses addr:port, which can be remote or localhost. It leaks onion address to the local network
@@ -253,7 +178,7 @@ case "${main}" in
   ##  if target is not specified, will use the same port from virtport and bind to localhost.
   ##  if target only contains the port number and not the address, will bind to localhost.
   ## virtport2 and target 2 are optional
-  activate)
+  on)
     check_opt_filled service
     check_name service
     grep -q -E "^HiddenServiceDir ${tor_data_dir_services}/${service}$|^HiddenServiceDir ${tor_data_dir_services}/${service}/$" "${tor_conf}" && error_msg "service '${service}' already exists, choose another name"
@@ -401,7 +326,7 @@ EOF
   ## purge is optional, it deletes the <HiddenServiceDir>
   ## will not check if folder or configuration exist, this is cleanup mode
   ## will not use '@all'. Purge is dangerous, purging all service is even more dangerous. Always backup.
-  deactivate)
+  off)
     check_opt_filled service
     delete_service(){
       service="${1}"
@@ -432,7 +357,7 @@ EOF
   ## show all the necessary information to access the service such as the hostname and the QR encoded hostname to scan for Tor Browser Mobile
   ## show the clients names and quantity, as well as the service torrc's block
   ## @all will read through all services folders and execute the commands
-  info)
+  list)
     is_service_dir_empty
     get_service_info(){
       service="${1}"

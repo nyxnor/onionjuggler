@@ -12,27 +12,26 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 **onionjuggler-cli** [**--option**<=*ARGUMENT*>]\
 **onionjuggler-cli [--getconf]**\
 **onionjuggler-cli [--getopt]** [**--service** <*SERVICE*>]\
-**onionjuggler-cli --activate** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT*[:*TARGET*],[*VIRTPORTn*][:*TARGETn*]>] [**--gateway**]\
-**onionjuggler-cli --activate**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*>] [**--port** [*VIRTPORT*,[*VIRTPORT2*]>]\
-**onionjuggler-cli --deactivate** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
+**onionjuggler-cli --on** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT*[:*TARGET*],[*VIRTPORTn*][:*TARGETn*]>] [**--gateway**]\
+**onionjuggler-cli --on**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*>] [**--port** [*VIRTPORT*,[*VIRTPORT2*]>]\
+**onionjuggler-cli --off** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
 **onionjuggler-cli --list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
 **onionjuggler-cli --renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
-**onionjuggler-cli --auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client-pub-file** <*CLIENT_PUB_FILE*>]\
-**onionjuggler-cli --auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-config** <*CLIENT_PUB_CONFIG*>]\
-**onionjuggler-cli --auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
-**onionjuggler-cli --auth-server** [**--off**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
-**onionjuggler-cli --auth-server** [**--list**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
-**onionjuggler-cli --auth-client** [**--on**] [**--client-priv-file** <*CLIENT_PRIV_FILE*>] [**--replace-file**]\
-**onionjuggler-cli --auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-config** <*CLIENT_PRIV_CONFIG*>] [**--replace-file**]\
-**onionjuggler-cli --auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>] [**--onion** <*ONION*>] [**--replace-file**]\
-**onionjuggler-cli --auth-client** [**--off**] [**--client** <*CLIENT*>]\
-**onionjuggler-cli --auth-client** [**--list**]\
-**onionjuggler-cli --web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>]\
-**onionjuggler-cli --web** [**--off**] [**--service** <*SERVICE*>]\
-**onionjuggler-cli --web** [**--list**]\
-**onionjuggler-cli --backup** [**--create**|**--integrate**]\
-**onionjuggler-cli --vanguards** [**--on**|**--list**|**--upgrade**|**--off**]\
-**onionjuggler-cli** [**--plugin** <*auth-server*|*auth-client*|*web*|*vanguards*|*backup*>]\
+**onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client-pub-file** <*CLIENT_PUB_FILE*>]\
+**onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-config** <*CLIENT_PUB_CONFIG*>]\
+**onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
+**onionjuggler-cli-auth-server** [**--off**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
+**onionjuggler-cli-auth-server** [**--list**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli-auth-client** [**--on**] [**--client-priv-file** <*CLIENT_PRIV_FILE*>] [**--replace-file**]\
+**onionjuggler-cli-auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-config** <*CLIENT_PRIV_CONFIG*>] [**--replace-file**]\
+**onionjuggler-cli-auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>] [**--onion** <*ONION*>] [**--replace-file**]\
+**onionjuggler-cli-auth-client** [**--off**] [**--client** <*CLIENT*>]\
+**onionjuggler-cli-auth-client** [**--list**]\
+**onionjuggler-cli-web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>]\
+**onionjuggler-cli-web** [**--off**] [**--service** <*SERVICE*>]\
+**onionjuggler-cli-web** [**--list**]\
+**onionjuggler-cli-backup** [**--create**|**--integrate**]\
+**onionjuggler-cli-vanguards** [**--on**|**--list**|**--upgrade**|**--off**]\
 **onionjuggler-cli** [**-h**|**-help**|**--help**|**help**]
 
 
@@ -117,46 +116,46 @@ The script tries its best to avoid inserting incorrect lines to torrc, that woul
 
 : Print option parsing results.
 
-**--activate** **--service** <*SERV*> **--version** *3* **--socket** *tcp* **--port** <*VIRTPORT*:<*TARGET*>,<*VIRTPORTn*>:<*TARGETn*>> **--gateway**
+**--on** **--service** <*SERV*> **--version** *3* **--socket** *tcp* **--port** <*VIRTPORT*:<*TARGET*>,<*VIRTPORTn*>:<*TARGETn*>> **--gateway**
 
 : Enable an onion service using TCP socket (addr:port) as target. If the TARGET is only the port of it TARGET was not provided, will use the same port as VIRTPORT and bind to 127.0.0.1. TARGET examples: 127.0.0.1:80, 192.168.1.100:80. File(s) modified: torrc.
 ```
-onionjuggler-cli --activate --service ssh --version 3 --socket tcp --port 22
-onionjuggler-cli --activate --service ssh --port 22:127.0.1:22
-onionjuggler-cli --activate --service ssh --port "80:127.0.0.1:80 443:127.0.0.1:443"
-onionjuggler-cli --activate --service ssh --port "80:127.0.0.1:80,443:127.0.0.1:443"
-onionjuggler-cli --activate --service ssh --port="80,443"
+onionjuggler-cli --on --service ssh --version 3 --socket tcp --port 22
+onionjuggler-cli --on --service ssh --port 22:127.0.1:22
+onionjuggler-cli --on --service ssh --port "80:127.0.0.1:80 443:127.0.0.1:443"
+onionjuggler-cli --on --service ssh --port "80:127.0.0.1:80,443:127.0.0.1:443"
+onionjuggler-cli --on --service ssh --port="80,443"
 ```
 By default, services created on a Qubes-Whonix Gateway uses the Whonix Workstation qube IP address, services created on a Non-Qubes-Whonix uses the IP address 10.152.152.11. If you are on Whonix Gateway want to enforce the creation of a service to be running on the Whonix-Gateway (for itself), for example and onion service to ssh to the Gateway, and you haven't set the target, just the virtual port, use the option *--gateway*:
 ```
-onionjuggler-cli --activate --service ssh --socket tcp --port 22 --gateway
+onionjuggler-cli --on --service ssh --socket tcp --port 22 --gateway
 ```
 
-**--activate** **--service** <*SERV*> **--version** *3* **--socket** *unix* **--port** <*VIRTPORT*,<*VIRTPORT2*>>
+**--on** **--service** <*SERV*> **--version** *3* **--socket** *unix* **--port** <*VIRTPORT*,<*VIRTPORT2*>>
 
 : Enable an onion service using UNIX socket (unix:path) as target. The TARGET is handled automatically by the script. This method avoids leaking the onion service address to the local network. File(s) modified: torrc.
 ```
-onionjuggler-cli --activate --service ssh --version 3 --socket unix --port 22
-onionjuggler-cli --activate --service ssh --version 3 --socket unix --port 22,80
+onionjuggler-cli --on --service ssh --version 3 --socket unix --port 22
+onionjuggler-cli --on --service ssh --version 3 --socket unix --port 22,80
 ```
 
-**--deactivate** **--service** <*SERV1*,*SERV2*,*...*> <*--purge*>
+**--off** **--service** <*SERV1*,*SERV2*,*...*> <*--purge*>
 
 : Disable an onion service by removing it configuration lines (HiddenService) from the torrc. Optionally purge its data directory, which will delete permanently the onion service folder (HiddenServiceDir). File(s) modified: torrc and optionally HiddenServiceDir.
 ```
-onionjuggler-cli --deactivate --service ssh
-onionjuggler-cli --deactivate --service ssh,xmpp
-onionjuggler-cli --deactivate --service ssh,xmpp --purge
+onionjuggler-cli --off --service ssh
+onionjuggler-cli --off --service ssh,xmpp
+onionjuggler-cli --off --service ssh,xmpp --purge
 ```
 
-**--info** **--service** <*@all*|*SERV1*,*SERV2*,*...*> <*--quiet*>
+**--list** **--service** <*@all*|*SERV1*,*SERV2*,*...*> <*--quiet*>
 
-: List onion service information: hostname (address) and in QR encoded format, clients names and quantity, status if service is active or inactive regarding the torrc lines (un)present and the HiddenServiceDir presence, the torrc block. File(s) modified: none.
+ List onion service information: hostname (address) and in QR encoded format, clients names and quantity, status if service is active or inactive regarding the torrc lines (un)present and the HiddenServiceDir presence, the torrc block. File(s) modified: none.
 ```
-onionjuggler-cli --info --service ssh
-onionjuggler-cli --info --service ssh,xmpp
-onionjuggler-cli --info --service @all
-onionjuggler-cli --info --service @all --quiet
+onionjuggler-cli --list --service ssh
+onionjuggler-cli --list --service ssh,xmpp
+onionjuggler-cli --list --service @all
+onionjuggler-cli --list --service @all --quiet
 ```
 
 **--renew** **--service** <*@all*|*SERV1*,*SERV2*,*...*>
