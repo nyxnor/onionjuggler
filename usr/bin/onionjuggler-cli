@@ -109,6 +109,7 @@ Report bugs to: https://github.com/nyxnor/onionsjuggler/issues\n"
 #### OPTION PARSING ####
 
 ## Save all options
+# shellcheck disable=SC2034
 args_full="${*}"
 
 ## hacky getopts
