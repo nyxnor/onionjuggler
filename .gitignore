@@ -6,12 +6,17 @@ debian/.debhelper
 debian/files
 debian/debhelper-build-stamp
 debian/onionjuggler
+debian/onionjuggler-cli
 debian/onionjuggler-lib
 debian/onionjuggler-tui
 debian/onionjuggler-auth
+debian/onionjuggler-cli-auth
 debian/onionjuggler-auth-server
+debian/onionjuggler-cli-auth-server
 debian/onionjuggler-auth-client
+debian/onionjuggler-cli-auth-client
 debian/onionjuggler-web
+debian/onionjuggler-cli-web
 debian/tmp
 *.deb
 *.swp

@@ -9,7 +9,7 @@ Vcs-Git: https://github.com/nyxnor/onionjuggler.git
 Standards-Version: 4.5.1
 Rules-Requires-Root: no
 
-Package: onionjuggler
+Package: onionjuggler-cli
 Architecture: all
 Depends: onionjuggler-lib, tor
 Recommends: qrencode
@@ -25,17 +25,17 @@ Description: Library for OnionJuggler
 
 Package: onionjuggler-tui
 Architecture: all
-Depends: onionjuggler, whiptail
+Depends: onionjuggler-cli, whiptail
 Recommends:
 Description: Dialog boxes for OnionJuggler
 
-Package: onionjuggler-auth
+Package: onionjuggler-cli-auth
 Architecture: all
 Depends: onionjuggler-lib, openssl, basez
 Recommends:
 Description: Authentication scripts for OnionJuggler
 
-Package: onionjuggler-web
+Package: onionjuggler-cli-web
 Architecture: all
 Depends: onionjuggler-lib, nginx
 Recommends:
