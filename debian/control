@@ -1,6 +1,3 @@
-## Copyright (C) 2012 - 2020 ENCRYPTED SUPPORT LP <adrelanos@riseup.net>
-## See the file COPYING for copying conditions.
-
 Source: onionjuggler
 Section: misc
 Priority: optional
@@ -14,24 +11,33 @@ Rules-Requires-Root: no
 
 Package: onionjuggler
 Architecture: all
-Depends: tor, grep, sed,
-  whiptail,
-  openssl, basez,
-  tar,
-  git, python3, python3-stem,
-  nginx | apache2 | dummy-dependency-webserver,
-Recommends: qrencode,
-Description: Onionjuggler onion services management
-  Feature-rich onion service manager for UNIX-like operating
-  systems written in POSIX compliant shellscript.
-  .
-  OnionJuggler is a minimal requirement, portable collection
-  of scripts and documentation to help the service operator
-  juggle (manage) his onion(s).
-  .
-  It allows the juggler to easily create and delete serivces,
-  authorize, deauthorize and list clients of your onions,
-  add, remove and list client-side authentication credentials,
-  install, uninstall Vanguards Onion Services addon,
-  backup your onion service private keys and configuration,
-  spin up webserver with minimal configuration for static pages
+Depends: onionjuggler-lib, tor
+Recommends: qrencode
+Suggests: onionjuggler-auth-server, onionjuggler-auth-client,
+ onionjuggler-web, onionjuggler-tui
+Description: Onion service management
+
+Package: onionjuggler-lib
+Architecture: all
+Depends: tor, grep, sed
+Recommends: qrencode
+Description: Library for OnionJuggler
+
+Package: onionjuggler-tui
+Architecture: all
+Depends: onionjuggler, whiptail
+Recommends:
+Description: Dialog boxes for OnionJuggler
+
+Package: onionjuggler-auth
+Architecture: all
+Depends: onionjuggler-lib, openssl, basez
+Recommends:
+Description: Authentication scripts for OnionJuggler
+
+Package: onionjuggler-web
+Architecture: all
+Depends: onionjuggler-lib, nginx
+Recommends:
+Description: Webserver management by OnionJuggler
+

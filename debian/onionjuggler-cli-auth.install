@@ -1,0 +1,4 @@
+#!/usr/bin/dh-exec
+
+usr/bin/onionjuggler-cli-auth-server
+usr/bin/onionjuggler-cli-auth-client
