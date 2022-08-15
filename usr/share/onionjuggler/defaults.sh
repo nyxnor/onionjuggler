@@ -22,34 +22,6 @@ cyan="\033[36m"
 ## signals
 get_intr="$(stty -a | sed -n '/.*intr = / {s///;s/;.*$//;p;}')"
 
-## display error message with instructions to use the script correctly.
-notice(){ printf %s"${1}\n"; }
-error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
-
-## : ${var:="value"} -> initialize the variable (SC2154) and if empty or unset, use default values
-## var=${var%*/} -> removes the trailing slash "/" at the end of directories variables
-
-## system
-: "${openssl_cmd:="openssl"}"
-: "${webserver:="nginx"}"
-: "${webserver_conf:="/etc/nginx/sites-enabled"}"
-: "${website_dir:="/var/www"}"; website_dir="${website_dir%*/}"
-: "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}"
-
-## tor defaults
-: "${daemon_control:="systemctl"}"; daemon_control="${daemon_control%*/}"
-: "${tor_daemon:="tor@default"}"
-: "${tor_user:="debian-tor"}"
-: "${tor_conf_user_group:="root:root"}"
-: "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
-: "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
-: "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
-: "${tor_conf_dir:="/etc/tor"}"; tor_conf_dir="${tor_conf_dir%*/}"
-: "${tor_conf:="${tor_conf_dir}/torrc"}"
-: "${tor_control_port:="9051"}" ## only the port, not the host
-: "${tor_backup_dir:="/var/lib/onionjuggler/backup"}"; tor_backup_dir="${tor_backup_dir%*/}"
-: "${tor_hiddenserviceport_target_addr:="127.0.0.1"}"
-
 
 ###############################
 ########### getopt ############
@@ -127,13 +99,63 @@ clean_opt(){
 ###################
 #### FUNCTIONS ####
 
+## display error message with instructions to use the script correctly.
+notice(){ printf %s"${1}\n"; }
+error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
+
+## helper for --getconf
+get_conf_values(){
+  for key in openssl_cmd webserver webserver_conf website_dir vanguards_commit requirements \
+  tor_daemon tor_user tor_conf_dir tor_conf_user_group tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
+  tor_control_port tor_backup_dir tor_hiddenserviceport_target_addr; do
+    eval val='$'"${key}"
+    test -n "${val}" && printf '%s\n' "${key}=\"${val}\""
+  done
+}
+
+## only called after source_conf
+set_default_conf_values(){
+  ## : ${var:="value"} -> initialize the variable (SC2154) and if empty or unset, use default values
+  ## var=${var%*/} -> removes the trailing slash "/" at the end of directories variables
+
+  ## system
+  : "${openssl_cmd:="openssl"}"
+  : "${webserver:="nginx"}"
+  : "${webserver_conf:="/etc/nginx/sites-enabled"}"
+  : "${website_dir:="/var/www"}"; website_dir="${website_dir%*/}"
+  : "${vanguards_commit:="10942de93f6578f8303f60014f34de2fca345545"}"
+
+  ## tor defaults
+  : "${daemon_control:="systemctl"}"; daemon_control="${daemon_control%*/}"
+  : "${tor_daemon:="tor@default"}"
+  : "${tor_user:="debian-tor"}"
+  : "${tor_conf_user_group:="root:root"}"
+  : "${tor_data_dir:="/var/lib/tor"}"; tor_data_dir="${tor_data_dir%*/}"
+  : "${tor_data_dir_services:="${tor_data_dir}/services"}"; tor_data_dir_services="${tor_data_dir_services%*/}"
+  : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
+  : "${tor_conf_dir:="/etc/tor"}"; tor_conf_dir="${tor_conf_dir%*/}"
+  : "${tor_conf:="${tor_conf_dir}/torrc"}"
+  : "${tor_control_port:="9051"}" ## only the port, not the host
+  : "${tor_backup_dir:="/var/lib/onionjuggler/backup"}"; tor_backup_dir="${tor_backup_dir%*/}"
+  : "${tor_hiddenserviceport_target_addr:="127.0.0.1"}"
+}
+
 ## 1. source default configuration file first
 ## 2. source local (user made) configuration files to override the default values
+## 3. set default values for empty variables
 source_conf(){
   test -f /etc/onionjuggler/onionjuggler.conf || error_msg "Default configuration file not found: /etc/onionjuggler/onionjuggler.conf"
   for file in /etc/onionjuggler/onionjuggler.conf /etc/onionjuggler/conf.d/*.conf; do
-    test -r "${file}" && . "${file}"
+    ## not sourcing file directly to avoid running commands
+    ## also us"eful to save variables to a list to be later printed
+    conf_filtered="/tmp/onionjuggler.conf.read"
+    grep -v -e "^[[:space:]]*\#" -e "^[[:space:]]*$" "${file}" | tee "${conf_filtered}" >/dev/null
+    #printf '%s\n' "${conf_read}" | while IFS='=' read -r key val; do
+    while IFS='=' read -r key val; do
+       test -n "${key}" && eval "${key}"="${val}"
+    done < "${conf_filtered}"
   done
+  set_default_conf_values
 }
 
 ## block plugins that are not enabled if any is configured
@@ -526,3 +548,9 @@ gen_auth_key_pair(){
   ## Delete pem and keys
   rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
 }
+
+
+###############################
+############ main #############
+source_conf
+

@@ -9,11 +9,10 @@
 me="${0##*/}"
 
 onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
-[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
-[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
-[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
+[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} does not exist"; exit 1; }
+[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} is not a regular file"; exit 1; }
+[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
-source_conf
 
 usage(){
   printf %s"${magenta}
@@ -202,25 +201,11 @@ done
 ########## MAIN ###########
 
 ## development options
+## no file is changed
+## useful to see if the command is correct before running it
 case "${dev}" in
-  ## execute or modify nothing, just print the configuration values
-  ## usefult to see if there is nothing messed up and if there is, can be checked before running the cli.
-  getconf)
-    for key in openssl_cmd webserver webserver_conf website_dir vanguards_commit \
-    tor_daemon tor_user tor_conf_dir tor_conf_user_group tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
-    tor_control_port tor_backup_dir tor_hiddenserviceport_target_addr; do
-      eval val='$'"${key}"
-      [ -n "${val:-}" ] && printf '%s\n' "${key}=\"${val}\""
-    done
-    exit 0
-  ;;
-
-  ## only print the options given on the command line, mostly for development purposes to check the argument
-  ## but can be useful to see if the command is correct before running it.
-  getopt|getopts)
-    printf %s"${arg_saved}\n"
-    exit 0
-  ;;
+  getconf) get_conf_values; exit 0;;
+  getopt) printf %s"${arg_saved}\n"; exit 0;;
 esac
 
 

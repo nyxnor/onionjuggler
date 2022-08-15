@@ -3,11 +3,10 @@
 ## manage client authorization client side (ClientOnionAuthDir)
 
 onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
-[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
-[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
-[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
+[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} does not exist"; exit 1; }
+[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} is not a regular file"; exit 1; }
+[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
-source_conf
 
 me="${0##*/}"
 check_plugin_enabled "${me}" || error_msg "Plugin '${me}' is disabled by configuration"
@@ -26,6 +25,8 @@ Complete options:
                             remove client side credential based on client name
   --list [--client <@all|CLIENT1,CLIENT2,...>]
                             list client side credentials, optionally specify client names
+  --getopt                  print options parsed
+  --getconf                 print configuration values
 "
   exit 1
 }
@@ -51,6 +52,7 @@ while :; do
     o|onion|o=*|onion=*) get_arg onion_hostname;;
     client|client=*) get_arg client;;
     replace-file) set_arg replace_file "1";;
+    getopt|getconf) set_arg dev "${opt}";;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac
@@ -59,6 +61,11 @@ while :; do
   shift "${shift_n:-1}"
   [ -z "${1}" ] && break
 done
+
+case "${dev}" in
+  getconf) get_conf_values; exit 0;;
+  getopt) printf %s"${arg_saved}\n"; exit 0;;
+esac
 
 [ "$(id -u)" -ne 0 ] && error_msg "run as root"
 case "${status}" in

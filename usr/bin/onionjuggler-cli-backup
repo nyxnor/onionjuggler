@@ -4,11 +4,10 @@
 me="${0##*/}"
 
 onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
-[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} does not exist"; exit 1; }
-[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} is not a regular file"; exit 1; }
-[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "${onionjuggler_defaults} can not be read"; exit 1; }
+[ -e "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} does not exist"; exit 1; }
+[ -f "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} is not a regular file"; exit 1; }
+[ -r "${onionjuggler_defaults}" ] || { printf '%s\n' "library ${onionjuggler_defaults} can not be read"; exit 1; }
 . "${onionjuggler_defaults}"
-source_conf
 
 me="${0##*/}"
 check_plugin_enabled "${me}" || error_msg "Plugin '${me}' is disabled by configuration"
@@ -18,6 +17,8 @@ usage(){
 Complete options:
   -M, --make                make a backup
   -I, --integrate           integrate latest backup
+  --getopt                  print options parsed
+  --getconf                 print configuration values
 "
   exit 1
 }
@@ -37,6 +38,7 @@ while :; do
   clean_opt "${1}" || break
   case "${opt}" in
     M|make|I|integrate) set_arg status "${opt}";;
+    getconf|getopt) set_arg dev "${opt}";;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac
@@ -48,6 +50,11 @@ done
 
 ########################
 ######### MAIN #########
+
+case "${dev}" in
+  getconf) get_conf_values; exit 0;;
+  getopt) printf %s"${arg_saved}\n"; exit 0;;
+esac
 
 [ "$(id -u)" -ne 0 ] && error_msg "run as root"
 case "${status}" in
