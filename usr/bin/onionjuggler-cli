@@ -166,20 +166,20 @@ while :; do
   clean_opt "${1}" || break
   # shellcheck disable=SC2034
   case "${opt}" in
-    activate|deactivate|info|renew) main="${opt}";;
-    auth-server|auth-client|web|location|backup|vanguards) plugin="${opt}";;
+    activate|deactivate|info|renew) set_arg main "${opt}";;
+    auth-server|auth-client|web|location|backup|vanguards) set_arg plugin "${opt}";;
     G|plugin|G=*|plugin=*) get_arg plugin;;
-    getopt|getopts|getconf) dev="${opt}";;
-    on|off|list|n|f|l) status="${opt}";;
-    R|restart|r|reload) signal="${opt}";;
-    P|purge|q|quiet|M|make|I|integrate) action="${opt}";;
+    getopt|getopts|getconf) set_arg dev "${opt}";;
+    on|off|list|n|f|l) set_arg status "${opt}";;
+    R|restart|r|reload) set_arg signal "${opt}";;
+    P|purge|q|quiet|M|make|I|integrate) set_arg action "${opt}";;
     s|service|s=*|service=*) get_arg service;;
     c|client|c=*|client=*) get_arg client;;
     o|onion|o=*|onion=*) get_arg onion;;
     v|version|v=*|version=*) get_arg version;;
     S|socket|S=*|socket=*) get_arg socket;;
     p|port|p=*|port=*) get_arg port;;
-    g|gateway) gateway_service=1;;
+    g|gateway) set_arg gateway_service 1;;
     w|folder|w=*|folder=*) get_arg folder;;
     k|client-priv-key|k=*|client-priv-key=*) get_arg client_priv_key;;
     client-priv-config|client-priv-config=*) get_arg client_priv_config;;
@@ -187,8 +187,8 @@ while :; do
     K|client-pub-key|K=*|client-pub-key=*) get_arg client_pub_key;;
     client-pub-config|client-pub-config=*) get_arg client_pub_config;;
     client-pub-file|client-pub-file=*) get_arg client_pub_file;;
-    replace-file) replace_file=1;;
-    no-check-service) no_check_service=1;;
+    replace-file) set_arg replace_file 1;;
+    no-check-service) set_arg no_check_service 1;;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac
@@ -218,11 +218,7 @@ case "${dev}" in
   ## only print the options given on the command line, mostly for development purposes to check the argument
   ## but can be useful to see if the command is correct before running it.
   getopt|getopts)
-    for key in signal main plugin service client onion status action version socket port folder \
-    client_priv_key client_pub_key gateway_service; do
-      eval val='$'"${key}"
-      [ -n "${val}" ] && printf '%s\n' "${key}=\"${val}\""
-    done
+    printf %s"${arg_saved}\n"
     exit 0
   ;;
 esac

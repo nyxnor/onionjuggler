@@ -45,13 +45,13 @@ while :; do
   arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
   clean_opt "${1}" || break
   case "${opt}" in
-    on|off|list|n|f|l) status="${opt}";;
+    on|off|list|n|f|l) set_arg status "${opt}";;
     s|service|s=*|service=*) get_arg service;;
     c|client|c=*|client=*) get_arg client;;
     client-pub-file|client-pub-file=*) get_arg client_pub_file;;
     client-pub-config|client-pub-config=*) get_arg client_pub_config;;
     client-pub-key|client-pub-key=*) get_arg client_pub_key;;
-    replace-file) replace_file="1";;
+    replace-file) set_arg replace_file "1";;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac

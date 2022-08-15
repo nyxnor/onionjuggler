@@ -85,17 +85,26 @@ range_arg(){
 get_arg(){
   ## if argument is empty or starts with '-', fail as it possibly is an option
   case "${arg}" in ""|-*) error_msg "Option '${opt_orig}' requires an argument.";; esac
-  ## assign
-  value="${arg}"
-  ## Escaping quotes is needed because else it will fail if the argument is quoted
-  # shellcheck disable=SC2140
-  eval "${1}"="\"${value}\""
+  set_arg "${1}" "${arg}"
 
   ## shift positional argument two times, as this option demands argument, unless they are separated by equal sign '='
   ## shift_n default value was assigned when trimming hifens '--' from the options
   ## if shift_n is equal to zero, '--option arg'
   ## if shift_n is not equal to zero, '--option=arg'
   [ -z "${shift_n}" ] && shift_n=2
+}
+
+## single source to set getopts so it can later be used to print the options parsed
+set_arg(){
+  ## Escaping quotes is needed because else it will fail if the argument is quoted
+  # shellcheck disable=SC2140
+  eval "${1}"="\"${2}\""
+  ## variable used for --getopt
+  if test -z "${arg_saved}"; then
+    arg_saved="${1}=\"${2}\""
+  else
+    arg_saved="${arg_saved}\n${1}=\"${2}\""
+  fi
 }
 
 ## '--option=value' should shift once and '--option value' should shift twice

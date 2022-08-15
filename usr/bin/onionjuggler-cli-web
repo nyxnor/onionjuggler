@@ -39,12 +39,12 @@ while :; do
   arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
   clean_opt "${1}" || break
   case "${opt}" in
-    on|off|list|n|f|l) status="${opt}";;
+    on|off|list|n|f|l) set_arg status "${opt}";;
     s|service|s=*|service=*) get_arg service;;
     o|onion|o=*|onion=*) get_arg onion;;
     p|port|p=*|port=*) get_arg port;;
     w|folder|w=*|folder=*) get_arg folder;;
-    no-check-service) no_check_service=1;;
+    no-check-service) set_arg no_check_service 1;;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac

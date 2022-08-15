@@ -36,7 +36,7 @@ while :; do
   arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
   clean_opt "${1}" || break
   case "${opt}" in
-    M|make|I|integrate) status="${opt}";;
+    M|make|I|integrate) set_arg status "${opt}";;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac
