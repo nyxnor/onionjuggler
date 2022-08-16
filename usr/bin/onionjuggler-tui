@@ -40,7 +40,7 @@ while :; do
   arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
   clean_opt "${1}" || break
   case "${1}" in
-    -V|--versio) printf '%s\n' "${me} ${version}"; exit 0;;
+    -V|--version) printf '%s\n' "${me} ${version}"; exit 0;;
     -h|--help) usage;;
     "") break;;
     *) error_msg "Invalid option: ${opt_orig}";;
@@ -64,8 +64,11 @@ done
   editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-vi}"}"}"
 #fi
 
-if ! has onionjuggler-cli || ! has onionjuggler-tui; then
-  error_msg "onionjuggler-cli and onionjuggler-tui must be installed"
+has onionjuggler-tui || error_msg "onionjuggler-tui must be installed"
+
+if ! has onionjuggler-cli && ! has onionjuggler-cli-web \
+ && ! has onionjuggler-cli-auth-client && ! has onionjuggle-cli-auth-server; then
+  error_msg "onionjuggler-tui must be complemented by any onionjuggler script, it can not work standalone. Neither onionjuggler-cli, onionjuggler-cli-web, onionjuggler-cli-auth-client, onionjuggler-cli-auth-server is installed"
 fi
 
 has "${dialog_box}" || error_msg "${dialog_box} is not installed"
@@ -179,7 +182,7 @@ if check_folder_is_not_empty "${tor_data_dir_services}"; then
     "${ok_flag}" "Select" "${no_cancel_flag}" --menu "${menu}" "$((13+whiptail_height))" 65 5 \
     "QUIT" "Exit menu and clear the screen" \
     "ENABLE" "Enable a onion service" \
-    $(for item in onionjuggler-cli-auth-client; do
+    $(for item in onionjuggler-cli-auth-client onionjuggler-cli-web; do
       command -v "${item}" >/dev/null || return 0
       check_plugin_enabled "${item##*onionjuggler-cli-}" || return 0
       string=""
