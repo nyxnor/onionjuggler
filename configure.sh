@@ -367,7 +367,7 @@ case "${command}" in
       debian/*.debhelper.log debian/*.substvars \
       debian/.debhelper debian/files \
       debian/debhelper-build-stamp debian/tmp
-    find debian/ -type d -name "onionjuggler*" -exec rm -r {} +;
+    find debian/ -type d -name "onionjuggler*" -exec rm -r {} + 2>/dev/null
     rm -f -- ../onionjuggler_*.deb ../onionjuggler_*.buildinfo ../onionjuggler_*.changes
   ;;
 
