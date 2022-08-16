@@ -550,9 +550,3 @@ gen_auth_key_pair(){
   rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
 }
 
-
-###############################
-############ main #############
-#source_conf
-set_default_conf_values
-
