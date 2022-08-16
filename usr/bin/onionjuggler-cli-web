@@ -200,7 +200,7 @@ server \"${onion_hostname}\" {
       has qrencode && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}:${virtport}"
     fi
 
-    if [ "${operating_system}" = "anon-ws" ]; then
+    if [ "${operating_system}" = "anon-workstation" ]; then
       printf '\n'
       ## create whonix firewall folder, allow port via config file, reload firewall
       notice "Allow port ${target_port} on firewall /usr/local/etc/whonix_firewall.d/40_onionjuggler.conf"
@@ -217,7 +217,7 @@ server \"${onion_hostname}\" {
 
   f|off)
     [ -z "${service}" ] && usage
-    if [ "${operating_system}" = "anon-ws" ]; then
+    if [ "${operating_system}" = "anon-workstation" ]; then
       ## block WS firewall based on webserver listening port
       target="$(grep "listen " "${webserver_conf}/${service}-onion.conf" | sed "s/.*listen //;s/\;//")"
       target_addr="${target%%:*}"

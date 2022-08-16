@@ -128,9 +128,9 @@ get_os(){
   case ${os} in
     Linux*)
       if test -f /usr/share/anon-gw-base-files/gateway; then
-        distro="Whonix-Gateway"
+        distro="Anon-Gateway"
       elif test -f /usr/share/anon-ws-base-files/workstation; then
-        distro="Whonix-Workstation"
+        distro="Anon-Workstation"
       elif command -v lsb_release >/dev/null; then
         distro=$(lsb_release -sd)
       elif test -f /etc/os-release; then
@@ -182,8 +182,8 @@ get_vars(){
         case "${distro}" in
           "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*) . "${topdir}"/etc/onionjuggler/debian.conf;;
           "Tails"*) . "${topdir}"/etc/onionjuggler/tails.conf;;
-          "Whonix-Gateway") . "${topdir}"/etc/onionjuggler/anon-gw.conf;;
-          "Whonix-Workstation") . "${topdir}"/etc/onionjuggler/anon-ws.conf;;
+          "Anon-Gateway") . "${topdir}"/etc/onionjuggler/anon-gateway.conf;;
+          "Anon-Workstation") . "${topdir}"/etc/onionjuggler/anon-workstation.conf;;
           "Arch"*|"Artix"*|"ArcoLinux"*) . "${topdir}"/etc/onionjuggler/arch.conf;;
           "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") . "${topdir}"/etc/onionjuggler/fedora.conf;;
         esac
@@ -312,8 +312,8 @@ case "${command}" in
         case "${distro}" in
           "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*) cp "${topdir}"/etc/onionjuggler/debian.conf "${conf_dir}/onionjuggler.conf";;
           "Tails"*) cp "${topdir}"/etc/onionjuggler/tails.conf "${conf_dir}/oionjuggler.conf";;
-          "Whonix-Gateway") cp "${topdir}"/etc/onionjuggler/anon-gw.conf "${conf_dir}/onionjuggler.conf";;
-          "Whonix-Workstation") cp "${topdir}"/etc/onionjuggler/anon-ws.conf "${conf_dir}/onionjuggler.conf";;
+          "Anon-Gateway") cp "${topdir}"/etc/onionjuggler/anon-gateway.conf "${conf_dir}/onionjuggler.conf";;
+          "Anon-Workstation") cp "${topdir}"/etc/onionjuggler/anon-workstation.conf "${conf_dir}/onionjuggler.conf";;
           "Arch"*|"Artix"*|"ArcoLinux"*) cp "${topdir}"/etc/onionjuggler/arch.conf "${conf_dir}/onionjuggler.conf";;
           "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat") cp "${topdir}"/etc/onionjuggler/fedora.conf "${conf_dir}/onionjuggler.conf";;
         esac
@@ -360,8 +360,8 @@ case "${command}" in
   m|man) check_repo; not_as_root; make_man;;
 
   S|clean)
-    notice "Cleaning directory..."
     requires_root
+    notice "Cleaning directory..."
     cd "${topdir}" || error_msg "Failed to change directory to ${topdir}"
     rm -rf -- *-build-deps_*.buildinfo *-build-deps_*.changes \
       debian/*.debhelper.log debian/*.substvars \
