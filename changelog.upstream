@@ -1,0 +1,3578 @@
+commit fb9d5144e1ff5e80ad37aaced87928ccb105bd75
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 16 14:59:22 2022 +0000
+
+    remove awk as dependency
+    
+    #68
+
+commit 6e6f345e2e3ce0299c4cd04b5f194a91d6311e23
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 16 14:30:12 2022 +0000
+
+    fix debian/control deps, recs, sugs
+    
+    #68
+
+commit 694cbdf7fc64a8f8782860404077ddf0efb42918
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 16 14:15:30 2022 +0000
+
+    correct deb package names
+    
+    #68, drawback is that tui depends is not correct but necessary like this for whonix, to mv packages to suggests
+
+commit 07dc73f23052d43fe61fc8ec9840093b2c337565
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 16 14:04:33 2022 +0000
+
+    add script version to man pages
+    
+    #68
+
+commit 08e394d217ccb2eb8945f01dbfe770dcc52949e0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 22:27:51 2022 +0000
+
+    fix deb manpages
+    
+    #68
+
+commit 3a69b4ee0cf69aa397e87940f7ea6c81a7686d00
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 21:48:26 2022 +0000
+
+    start separating deb packages, missing sep man pages
+    
+    #68
+
+commit 6a2786d7545f9810c5bd75a36cc3f0932ee18790
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 21:46:41 2022 +0000
+
+    update man pages from 1 to 8
+
+commit 8971bac42c0955a799cee178c6cdf67b69b5506f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 19:18:40 2022 +0000
+
+    sunset vanguards and backup
+    
+    #72
+
+commit 34ef543254062e4ec109d3356d0cde05731b2e60
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 18:43:33 2022 +0000
+
+    separate man pages
+    
+    #68
+
+commit dab9c05fab5d4ad639c8d828b73285d5e4443cb2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 17:23:10 2022 +0000
+
+    separate scripts
+    
+    #67
+
+commit d56b6316566dbfa2c0f606f4ce44c0367977d7bd
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 16:43:28 2022 +0000
+
+    fix build, set os
+    
+    #71 , misc setting whonix to anon
+
+commit 9c96519aa9dc879c4ce61817f90e532a6c49a5c1
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 15:05:36 2022 +0000
+
+    fix -tui for WS
+    
+    #54
+
+commit 23f9c9c8e923e059889b1c7a79559c234a3556ca
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 14:21:03 2022 +0000
+
+    fix outdated var on -tui
+
+commit 566d445579ffea6f2a55c819843e1d5e6b2c2640
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 14:17:31 2022 +0000
+
+    remove source_conf tmp file
+    
+    #70
+
+commit 1fbce9a613824838e8ff0265cc539c3d69c1f9f3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 14:06:59 2022 +0000
+
+    source_conf safely and helper for --getconf portability
+    
+    #70
+
+commit 1e7e5cdb902aadc5b047b9f930b1162739d21c71
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 09:56:06 2022 +0000
+
+    -s tabs spaces (backup)
+
+commit bc8a7f970fcd1b8a6e06f120726773a00aa868cf
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 15 09:54:17 2022 +0000
+
+    make --getopt work without hardcoding and be portable to any script
+    
+    #69
+
+commit 2a37e8096a0eb70ac7c8b8a63ce064294aa3d24d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 23:40:45 2022 +0000
+
+    fix improper case statement
+    
+    #48
+
+commit e9a9d1336ace94bbb979186d633f9c9a5a87a8c6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 23:37:38 2022 +0000
+
+    correct -cli options for auth
+    
+    #48
+
+commit ee43bca66df75b645699288617c98e1ba177ca04
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 23:36:36 2022 +0000
+
+    fix -vanguards spacing
+
+commit bbe82b02cb8daa3383bc3e1789e352865773d405
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 23:36:06 2022 +0000
+
+    org -auth
+    
+    #48
+
+commit c8c66b70781af715067ced9d7fc43480f1df5443
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 23:34:31 2022 +0000
+
+    fix -tui with auth options
+
+commit 461dff1175fa50da54c339bf2e2428f98a3e6d62
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 22:35:14 2022 +0000
+
+    fix --web --port
+
+commit 9492061d025d978d169b0fcd3e865a4fc3e0add9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 22:33:48 2022 +0000
+
+    -web --port improvements
+
+commit 79e75a84b18cf94b8ed40406824ece63eb432f7c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 22:30:21 2022 +0000
+
+    faciliate --port specification on main
+
+commit 7ef4986dfffed554665c25db5a9fbcd880e42b5f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 22:29:41 2022 +0000
+
+    improve exit trap
+
+commit cf363ec6a1218ead6b76b7e51ee5a0717fed95be
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 22:29:04 2022 +0000
+
+    update man pages
+
+commit a0b7974d2728cf6cfe69c8b6963c6b34b9d0d8ca
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Aug 14 22:28:48 2022 +0000
+
+    add .swp files to gitignore
+
+commit 42945d5e65f997ba9cfb8a6e63caf2e49b0e17bc
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Aug 13 22:55:14 2022 +0000
+
+    improve safe_edit handling file suffix
+    
+    #66
+
+commit 6dc2eb1fb9dc2098c00b5cf80feed9c3cf8dd8db
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Aug 13 21:35:21 2022 +0000
+
+    fix -auth- chekcs
+    
+    #48
+
+commit d586df23d0ba05e28c7ddd963b7ad790edcf0cc1
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Aug 12 23:24:46 2022 +0000
+
+    -auth-server major improvements to activation
+    
+    #48
+
+commit bf272931aeab6287604a678ba475e0d73112fce9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Aug 12 23:24:01 2022 +0000
+
+    -auth-client correct break loop when there is no files
+    
+    #48
+
+commit 56e56595fb48f809a9989bab87b9179dd496c95d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Aug 12 22:27:01 2022 +0000
+
+    -auth-client list loop client names
+    
+    https://github.com/nyxnor/onionjuggler/issues/48
+
+commit 4d3f85129e388d0be70a189e64d6ab8a15b57ff6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Aug 12 21:17:38 2022 +0000
+
+    correct file wording
+    
+    https://github.com/nyxnor/onionjuggler/issues/48
+
+commit 4eeb7039fefc28502be117467756993627be769e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Aug 12 20:28:18 2022 +0000
+
+    misc wording
+    
+    #48
+
+commit 271f9107a4c153e09ae6ab10c378781f71fcce9d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Aug 12 20:24:54 2022 +0000
+
+    improve -auth-client add --client-priv-config
+    
+    https://github.com/nyxnor/onionjuggler/issues/48
+
+commit 8462259262c1ca9bb3bff2372a75abebbc6ebd26
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Aug 12 15:06:44 2022 +0000
+
+    improve -auth-client --replace-file option
+    
+    https://github.com/nyxnor/onionjuggler/issues/48
+
+commit 0f09dfcff9684648bcfcb6e8f0987f479e5137e7
+Merge: 38f3847 85437c3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Aug 11 23:08:20 2022 +0000
+
+    Merge branch 'main' of https://github.com/nyxnor/onionjuggler
+
+commit 38f38470bb3dd7482ddaac3746b22a9746e1b11e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Aug 11 23:07:42 2022 +0000
+
+    -auth-server import file pt1
+    
+    https://github.com/nyxnor/onionjuggler/issues/48
+
+commit 07f0205981feb9a6244137af93ce316686dfb59d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Aug 11 23:07:19 2022 +0000
+
+    -auth-client import file pt1
+    
+    https://github.com/nyxnor/onionjuggler/issues/48
+
+commit c809dd01a04b16cb2e60168841bcb8c47c4978a0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Aug 11 23:04:53 2022 +0000
+
+    improve verify_config_tor parsing
+    
+    fix https://github.com/nyxnor/onionjuggler/issues/66
+
+commit 2c1c381678178cbd7aca3545201fcdfe536c1d11
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Aug 11 23:04:14 2022 +0000
+
+    misc -web
+
+commit 2c004166efdabfec7f027e3714dd69c4577ace3a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Aug 10 21:25:08 2022 +0000
+
+    misc usage
+
+commit 85437c3b385e0e4d20c0df9cc1b3d5de14db6834
+Merge: f3a1d75 f609e8d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Aug 10 21:24:22 2022 +0000
+
+    Merge branch 'main' of https://github.com/nyxnor/onionjuggler
+
+commit f3a1d75b53a61f6de43a3220b3b6abbc49d0065f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Aug 10 21:22:45 2022 +0000
+
+    whonix firewall info
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit f609e8dd0210f47762c603372bc01e67cc46b024
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Aug 10 07:22:25 2022 +0000
+
+    fix https://github.com/nyxnor/onionjuggler/issues/64
+
+commit 0ab0702c1599b5c01753385106770700316e4432
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 9 20:45:12 2022 +0000
+
+    number whonix gw torrc to 40. issue https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 866684cec804de9d66e2134b6c31cf0b9b5dde44
+Merge: c50f013 2c8b32f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 9 20:36:31 2022 +0000
+
+    Merge branch 'main' of https://github.com/nyxnor/onionjuggler
+
+commit c50f01342aba3823c95769ab44827e59abc3e35f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 9 20:36:22 2022 +0000
+
+    fix https://github.com/nyxnor/onionjuggler/issues/60
+
+commit 2c8b32f60fa1f970660cc0236562fc372d6c173f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 9 20:02:42 2022 +0000
+
+    abort webserver configuration and remove file if it fails
+
+commit cdad16d081c23f511e81414e6f170e36639d8d48
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 9 18:41:50 2022 +0000
+
+    whonix firewalling for cli script
+    issue: https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 762094edb853dae0e051d2192ac93cf3193d7850
+Merge: 08d0dc3 bf01fd0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 9 15:45:54 2022 +0000
+
+    Merge branch 'main' of https://github.com/nyxnor/onionjuggler
+
+commit 08d0dc35640747fb74df9939e9185d6ba9e2902e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 9 15:45:06 2022 +0000
+
+    add instruction web script to target ws port from gw service
+
+commit bf01fd0ac559fcc3eec73b5f8cf41f618270d60e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 9 15:17:37 2022 +0000
+
+    fix no_check_service for web script
+
+commit b3b3f2ddefbee2da50b8e7f55903d684a45e3f8f
+Merge: 78152d7 b050591
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 8 13:48:34 2022 +0000
+
+    Merge branch 'main' of https://github.com/nyxnor/onionjuggler
+
+commit 78152d7ba8a7b0550e31b87d5d57fdf954cfa799
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Aug 8 13:48:21 2022 +0000
+
+    correct chmod cmd
+
+commit b0505910707b88893aa4f8d09a3110c204f6e2b5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Feb 28 22:56:19 2022 +0000
+
+    update readme
+
+commit edd5051d047c652ede9c72d5af355756755e0618
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 14:50:02 2022 +0000
+
+    correct confs to add python3
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 9a6291a5ababce44b29bdd6b9e40cc85d3ee6e7c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 14:38:24 2022 +0000
+
+    target gateway on tui
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 26313181b51bb07c8db76a219b03ec86e635c6b8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 14:32:33 2022 +0000
+
+    typos and resize tui ports
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 7b9e70c114512394345502e6234ee1de98503c80
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 14:26:20 2022 +0000
+
+    socket typo
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit f5b3506a398eabda34feeff7e68e711e405facc5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 14:21:29 2022 +0000
+
+    tui
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit ff6069e16c6f66b8ca919a2b162cd4e7a4d3f418
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 14:17:24 2022 +0000
+
+    correct tui for whonix
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 285a8c1da05fd2f1db666d456834701c9c897920
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 01:47:42 2022 +0000
+
+    move file creation after privilege
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 63ca7d547e52faa37e3073dbbe52f97b95f94c1c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 01:45:09 2022 +0000
+
+    fix grepping no file
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 1986e2c1220dffadf3262b2e71ec86117d1404d7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 01:27:26 2022 +0000
+
+    remove sudo/doas dependency
+    
+    you still need to execute as superuser, but just to call the script, the command does not appear anymore inside the script. https://github.com/nyxnor/onionjuggler/issues/52
+
+commit d317e7dd2c4c9c91238cda6fb9b05949bf4a2d10
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 23 01:14:13 2022 +0000
+
+    fix backup dir
+    
+    https://github.com/nyxnor/onionjuggler/issues/52
+
+commit aae9549be997683064ac3e4400f99c43203bbe62
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Feb 21 23:43:08 2022 +0000
+
+    fix shellcheck warnings
+
+commit 6b371343d2b0ac54e3baca3ebcc2e60208e2d0b0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Feb 21 23:37:59 2022 +0000
+
+    dynamic tui
+    
+    not perfect but it does the job for now, https://github.com/nyxnor/onionjuggler/issues/59
+
+commit f7345488127f06f4e848a2e389ad4f494b86a191
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Feb 21 22:59:44 2022 +0000
+
+    wording
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 137b4e159bc53f75e7eda07ae816d7addaaf74fb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Feb 21 22:58:06 2022 +0000
+
+    change plugin check method
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 52be93ff71427366f1644dbd3160ff0a470f52c4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Feb 21 20:55:16 2022 +0000
+
+    fix debian control
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit 242bb7caae64da341e5735d8ca61aad0a548548b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Feb 21 20:19:25 2022 +0000
+
+    enable plugin block mode
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit b8ca76c1f79d21adf844ab646ea3dbe5b223b02b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 19 16:43:51 2022 +0000
+
+    fix installation
+
+commit 159eba5507f318298309eec663fc05ea34a93f66
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 19 02:09:45 2022 +0000
+
+    fix /usr/share installation
+
+commit 3d71915c50caee0384eddedd48d655d51a962cb9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 19 02:04:30 2022 +0000
+
+    fix plugin selection
+
+commit 3930f2f2f9ca1e2f2fb78dff8262190c97109419
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 19 02:00:14 2022 +0000
+
+    fix plugin specific installation
+
+commit eac796782bef6f2d1780ad8267a66ba93ef2ffdb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 19 01:49:54 2022 +0000
+
+    massive changes to dissipate scripts
+    
+    - removed location, best to look on TPO site for that
+    - scripts separated
+    - functions on /usr/share
+    - you can run your own onionjuggler-cli-plugin
+    - Whonix WS and GW requirements are different
+    - improved manual pages
+
+commit c10a8deea3927435e0801ca1758d1b8d746b4fbf
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 22:16:34 2022 +0000
+
+    don't show hostname for --web option
+    
+    happens when there is workstation and gateway
+
+commit f06183d5423eda5e6d7306a841b7cd26388bf359
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 21:53:50 2022 +0000
+
+    no-check-service for workstations
+
+commit 3d0b6e9e1f9b1662f098b9f3517a8942687fc23f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 21:26:59 2022 +0000
+
+    make installation of packages faster
+
+commit f94dd143c72978b4e550b8103b4becc7a833e007
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 21:04:04 2022 +0000
+
+    fix
+
+commit 33ab00b2ba9fa31f9be094d386cc6957ca2e631c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 20:48:39 2022 +0000
+
+    fix exiting script
+
+commit 2f89399f394219f6542539e290e1299b40960dc7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 19:50:49 2022 +0000
+
+    fix targe target for qubes-whonix
+
+commit 04e5f3f8ec7cc965051f30c54f7e9ec081f71581
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 19:48:51 2022 +0000
+
+    fix targe target for qubes-whonix
+
+commit 27d7159abee39aaef1cbf231beb62a8f3a09fafe
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 19:15:59 2022 +0000
+
+    fix shellcheck
+
+commit a906128335f4fc3e97e85aa7f80ddb0fca6c43c3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 19:12:01 2022 +0000
+
+    fix hs target default
+
+commit cd46fbcc23e448fd1acaa9a5004c8db5f525eac8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 19:07:29 2022 +0000
+
+    set default hsport target addr for qubes whonix, the targe tshould be the ws qube ip
+
+commit ca74ee2425ed824a3b8738fe460734696a5ec31f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 16:18:41 2022 +0000
+
+    make term gateway broader, not only whonix
+
+commit 5335a165d1f1aa40fb818cb9774ab5c812481db2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 01:12:18 2022 +0000
+
+    remove color after error_msg
+
+commit 317e9542644842059847cbab9913e3387aebff91
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 01:08:09 2022 +0000
+
+    fix emptying var
+
+commit 9de4b99d088491308983cda6418c706036f4846c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 00:37:45 2022 +0000
+
+    fix grepping existing services
+
+commit 24118471e93032cae5237e96aaed450e8f289aed
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 00:20:00 2022 +0000
+
+    fix typo
+
+commit 1a4877b43588728e542313d2736eff3c043b1bdd
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 00:18:07 2022 +0000
+
+    fix again grep services
+
+commit c959c50c2cbb18ce8c59bed28368a0b3b36c8da3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 00:16:40 2022 +0000
+
+    fix grepping existing services
+
+commit 8906f3ee912e9bb17a72ba89382d10e3c076607e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 00:15:14 2022 +0000
+
+    block hs with same name before other checks
+
+commit 33ff01ab6164210678e2b5e7de247f39ea373c93
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 17 00:06:54 2022 +0000
+
+    maintain .auth_private file name consistent by always removing .onion
+
+commit 21d56a909196ac2d80405dfc75ab45cb84aef1b5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 23:58:30 2022 +0000
+
+    fix typo
+
+commit b89da1482297c67574dc264127653b9f96f3a075
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 23:55:56 2022 +0000
+
+    fix auth-client
+
+commit 32d78f58d35323b4e374b9cc0e08dd088e5964a9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 23:38:40 2022 +0000
+
+    fix safe_edit variables
+
+commit 8d54cf9ca763d27a4efe90b4f39a6efd93deec21
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 23:32:48 2022 +0000
+
+    simplify safe_edit
+
+commit 7ee61bfe3753b81b4460369d212993d080c0906c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 23:23:36 2022 +0000
+
+    fix safe_edit
+
+commit b631e5e422e32a8f81d38a1634c0c03bf924a165
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 23:16:44 2022 +0000
+
+    fix shellcheck
+
+commit adf3b05f09b0603bd910da447e711824225662b5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 23:11:57 2022 +0000
+
+    fix eval
+    
+    https://github.com/nyxnor/onionjuggler/issues/54
+
+commit fd46b11af6f70fed290336940f368abb653b9320
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 01:20:04 2022 +0000
+
+    update getconf
+
+commit 1436f0772069663e9eddcd89669cedc640702b49
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 00:52:20 2022 +0000
+
+    fix tails and whonix installation
+
+commit dad2332778b21ca9699e95d28b3c9c796196c9ac
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Feb 16 00:45:53 2022 +0000
+
+    read all tor files to check if config is already set
+
+commit 588a11db6ff41084d167f5afec06e4375d039543
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Feb 15 17:50:56 2022 +0000
+
+    add tails default conf
+    
+    difference is the tor_conf owner is tor_user, not root
+
+commit 41a9659e45a2745fed6584a1b61fb5c1f330bde0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Feb 15 17:49:53 2022 +0000
+
+    whonix installation and default conf
+    
+    #54
+
+commit 4006a3d249868d7bda8befdc1e18e13d799cca58
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Feb 13 21:35:18 2022 +0100
+
+    set correct exit code
+
+commit b645b85e9e10c404ab1d66d70df17bdad22db337
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Feb 13 20:57:04 2022 +0100
+
+    define target for whonix-gw running on qubes, non-qubes, for itself
+
+commit ae8d84096e1b0cfc8fb8e9a148761794e30ab88c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Feb 13 02:46:37 2022 +0100
+
+    remove su_cmd from the tui, just call it as root
+
+commit 85d3c8763d77dce0ea3d7ce632357880357a2227
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 22:06:07 2022 +0100
+
+    fix debian installation
+
+commit 5d3960b081b49a377e313fc9d44f0ec8cd2d8de5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 20:36:08 2022 +0100
+
+    update debian packaging files
+
+commit a19b80697b7d7617cf7db843bcaaf62967a63683
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 15:56:24 2022 +0100
+
+    stop option parsing with double hifens '--'
+
+commit 5bc29331a17afd8e086b6b66f66b79551bfd67f0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 15:49:09 2022 +0100
+
+    improve getopts
+    
+    fix https://github.com/nyxnor/onionjuggler/issues/53
+
+commit 38a7bd0662fa9082e567e1d22c9015661cf05414
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 14:24:50 2022 +0100
+
+    comment on complex code
+
+commit db7c369de5422219d03b1c23a843c06be5cc4921
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 13:19:47 2022 +0100
+
+    check if target is already in use by looking at virtual port
+    
+    this enhances because it can catch more error, because tor accepts a blank target'
+
+commit 005b87e00e46b3ced9649f1fcaeebca703c6ab85
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 04:13:54 2022 +0100
+
+    update .gitignore
+
+commit 761df4535b5fa25e79cafec2359e9ef3f732d5e2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 04:10:04 2022 +0100
+
+    fix workflow
+
+commit f482d0b7cdbe1973e4bdc3034b454a606f915c83
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 04:08:43 2022 +0100
+
+    prepare debian packaging
+
+commit 7860140b74ef037d6292995ecab196a55d9e13a8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 01:42:21 2022 +0100
+
+    specifying port is needed now
+
+commit 1b10b580b57ea760d19df7d01d21d2ceef82f751
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 01:36:09 2022 +0100
+
+    stick to tor defaults
+    
+    fix https://github.com/nyxnor/onionjuggler/issues/49
+
+commit 05138e262fbb824ef50e03ce3f239e9cf4f2b1c3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 01:29:06 2022 +0100
+
+    fix https://github.com/nyxnor/onionjuggler/issues/14
+    
+    done when possible, rare cases now are using ls just to check if dir is not empty shortly as a for loop would be overkill for that
+
+commit 0638aa15095087a21507cb2d9821b58b3b1d066e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Feb 12 00:21:47 2022 +0100
+
+    removal of 'ls' command pt1
+    
+    https://github.com/nyxnor/onionjuggler/issues/14
+
+commit a8cbf9208a9de17c77313a5bcf567e34e53f484b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Feb 11 23:59:48 2022 +0100
+
+    remove su_cmd and require root to run
+    
+    fix https://github.com/nyxnor/onionjuggler/issues/52
+
+commit 5be0329f76ab29e371f7b87ecdbe405e5be27e74
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Feb 11 23:32:01 2022 +0100
+
+    fix https://github.com/nyxnor/onionjuggler/issues/51
+
+commit 9ee4ff832b9c9300e3ac58612e755246df1ccb1d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Feb 4 17:00:40 2022 +0100
+
+    inform on readme about unlimit ports
+
+commit a7436cc2e028a7e71d66e27fbc92df75ff6ed781
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Feb 4 16:56:04 2022 +0100
+
+    be more verbose about errors
+
+commit 055d7588b3efa1f9226cee8150da6edc85a724d6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Feb 4 15:54:30 2022 +0100
+
+    multiple hs ports
+    
+    fix https://github.com/nyxnor/onionjuggler/issues/45
+
+commit 50034f3f7ba8d4e921ae0a73c8a056fc115b859d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Feb 4 10:53:19 2022 +0100
+
+    add alternative user owner of tor conf
+    
+    this will help in tails, where the ownership is debian-tor:debian-tor, not root:root or root:wheel
+
+commit 3ea58f9feb5e70f08bfaf3f086e57defa099709e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Feb 3 23:51:56 2022 +0100
+
+    onions hostnames can only be lower case
+
+commit 0259953cfe7542834977fbdd09393c609de7e0f3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Feb 1 02:05:42 2022 +0100
+
+    accept hifen for service name
+    - https://github.com/nyxnor/onionjuggler/issues/47
+    - https://github.com/radio24/TorBox/issues/146
+    
+    by default, my option parsing will block if the argument starts with a '-', because that is reserved for options, and nobody should name their files starting with a punctuation execpt a dot.
+
+commit 664bf40bb3e7a03a32c57ff4f30f64982420f523
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Jan 30 23:10:10 2022 +0100
+
+    typo
+
+commit ff7aadb5c23814136a6c942d6e4acfc55417b651
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Jan 30 23:08:14 2022 +0100
+
+    fix configure.sh with vitor removal
+
+commit e1b7a60c736d4556150a1085c3185bfd76ed00dd
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Jan 30 23:04:03 2022 +0100
+
+    remove vitor - moved to a separate repo
+    repo available on github.com/nyxnor/vitor
+
+commit 0b53bd9e8eb43e978617b9a80eb7dce4e5b749ce
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Jan 30 23:03:59 2022 +0100
+
+    block special characters that break tor on service var
+    
+    fix https://github.com/radio24/TorBox/issues/146
+
+commit c5752e88b4eb823a1480e059b6c550bb4e514390
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Jan 10 21:11:22 2022 +0100
+
+    comments on vitor about command not being run
+
+commit a297a0a16bcbc90a009f1d7be95a44d0a049b2ec
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Jan 10 21:09:13 2022 +0100
+
+    improve vitor to use sudoedit/doasedit if available first hand
+
+commit 942e673e0376ec77896ee96b7e70b6e34dd11cb1
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Jan 10 20:48:58 2022 +0100
+
+    fix editor not being found and if empty, exit. fix m4 not being found.
+    https://github.com/nyxnor/onionjuggler/issues/43
+
+commit 9281d8fee91d333d39b7e1c27fc2ae574c5bb132
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Jan 9 18:30:38 2022 +0100
+
+    fix temporary copy being called before sanity checks when activating a service
+
+commit 636bc4ee01f0c31c0aee160774f3e411c7697bef
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Jan 8 19:45:15 2022 +0100
+
+    fix tor_control_port integer
+
+commit c427d4bc64be4d38965f4bbd21581b026622d5b9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Jan 3 23:58:51 2022 +0100
+
+    run configure.sh from any directory inside the onionjuggler git repository
+
+commit c9d8b770c8becd75bccb5d3885d86639155be629
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Jan 2 21:38:57 2022 +0100
+
+    fix vitor not detecting SUDO_EDITOR
+
+commit fb432bd8d92fa0a6e093a572b2a15586fef26f5e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Jan 2 21:26:45 2022 +0100
+
+    misceallaneous changes to vitor and its instructions
+
+commit 8f1ee653b2d5325b5a673153e9b200b588558ba4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 26 21:32:36 2021 +0100
+
+    update readme with new definition of the configurations
+
+commit d35e28ddb54e2c0f0d7b268f666f90d5182048d8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 26 21:26:47 2021 +0100
+
+    fix vitor not deleting the lock file
+    block interrupt signal, did not have luck with it
+
+commit da1f69af6927a0aee83ccb22858e2719d592939b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 26 18:22:24 2021 +0100
+
+    update notice on main scripts cli and tui, remove some horrible colors to be redesigned later
+
+commit 2f4e13630c8ecec86717871e14c25fd2c1b09c8e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 26 18:22:20 2021 +0100
+
+    update vitor to lock file if it is being edited
+
+commit 356e22ed0e132a432d2b5544476523c72abd712b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 25 16:19:51 2021 +0100
+
+    update readme table
+
+commit 97d3f4f2c10263f3c1c0316befd2154a1e98472f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 25 16:19:08 2021 +0100
+
+    Update outdated info on the readme
+
+commit c8255d94e6467c74683ee5f4f09decbecc533a46
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 25 16:17:59 2021 +0100
+
+    add vitor to readme
+    https://github.com/nyxnor/onionjuggler/issues/28
+
+commit 7f8c4bc58afdb9d7928158ac7fcf54d478e1cc10
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 25 16:01:17 2021 +0100
+
+    improve vitor error handling
+    https://github.com/nyxnor/onionjuggler/issues/28
+
+commit cf93685d2c34d59a3a33433c8ac25244663f2893
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 25 01:27:49 2021 +0100
+
+    vitor, safely edit tor config files by modifying a temporary copy and verifying it before applying to be run
+
+commit a44710e1a226c79591f6b22b996b6521190d0f6a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 24 16:17:40 2021 +0100
+
+    move scripts to bin
+
+commit d6be2cb3bb41d8c50fb6e79eaae0d6923ef216a8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 23:24:26 2021 +0100
+
+    fix tor --verify-config by running with its user only if User is not present on the config
+
+commit 690aecdbfc7de6ec4041174dbf16768b3d3a20b6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 22:44:53 2021 +0100
+
+    fix running tor with its user set with sudo/doas nut not as a tor arg
+    sudo/doas -u $tor_user tor -f torrc --verify-config -> this will fail if the torrc contains the config line User.
+    sudo/doas tor --User $tor_user -f torrc --verify-config -> will succeed and that is what is expected
+
+commit 5262cf1f5725477f81a4cb75920158d35070b05e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 21:52:09 2021 +0100
+
+    add development update option to git pull
+
+commit 38e7f537441842a7ed2f2a5b454a823929c90e17
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 21:45:53 2021 +0100
+
+    fix root group to wheel (to a var actually)
+
+commit 8a22646fafaac54b991a0064f51f446db51ce834
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 21:27:50 2021 +0100
+
+    add uninstall to configure.sh
+    https://github.com/nyxnor/onionjuggler/issues/39
+
+commit ea66ef568d9c80129877eda5af0f17a625248bf3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 21:13:59 2021 +0100
+
+    su_cmd to be shorter
+
+commit caa13d6160c2b2c90e19975d8744ddea58a180bc
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 21:04:29 2021 +0100
+
+    change exec_cmd_alt_user to a shorter one -> su_cmd
+
+commit 1ac23450b7a748f96c995dcff206249cdc09972f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 19:16:15 2021 +0100
+
+    copy torrc to tmp then modify there, verify if it is valid then return to origin
+    https://github.com/nyxnor/onionjuggler/issues/41
+    
+    * warning, this is a massive change although it was not many lines it inflicts directly on the torrc, take care
+
+commit dab932cad6c8cdc27eea37883c96aa813748a439
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 19:16:10 2021 +0100
+
+    copy -v is not posix
+
+commit efef855b405b8fe3bdc0b7b6ec0f1abb4fb9904b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 16:52:40 2021 +0100
+
+    cp -v is not posix :(
+
+commit ffe5980427eb4241ef37d1247c31cff04aeb05e4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 16:01:34 2021 +0100
+
+    improve copy file to temp architecture to be any file
+
+commit 4e89deccb6bdd4d4ba7e020ced7b514602ba4ca7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 16:00:07 2021 +0100
+
+    instruct on how to persist sudo and doas password
+
+commit 01813e40f8fd61b2a674704041906852d1933fcd
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 12:31:45 2021 +0100
+
+    function to verify tor config
+    https://github.com/nyxnor/onionjuggler/issues/41
+
+commit 3f726266d79a0202197bf64bd11d0e139125ed98
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 12:02:31 2021 +0100
+
+    s/restarting_tor/signal_tor
+
+commit 25a8a60f2d5c8f1a5d5c36e66196af6b6a2f27af
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 12:00:40 2021 +0100
+
+    fix eval when the arg has quotes
+
+commit d31cd5e42bb06ec750a3f4c6e8cb2b3af0ed8d6d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 11:20:48 2021 +0100
+
+    fix openbsd-httpd not reloading if configuration if valid but empty, commented or no server enabled
+    https://github.com/nyxnor/onionjuggler/issues/32
+
+commit 542e272813d2e2e94f11525eefddf5534c9423f7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 10:58:20 2021 +0100
+
+    openbsd web off and list trying..
+    https://github.com/nyxnor/onionjuggler/issues/32
+
+commit ae103df0bd0f5b7f92c0079e6505174ebdc1f5a9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 00:48:01 2021 +0100
+
+    update man pages
+
+commit c97c1b42bac7e5d2171d4d21850468b7e6d65361
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 00:40:53 2021 +0100
+
+    don't leak server token and signature on nginx and apache
+
+commit 467c6c8e1a4b4e18f51c4841c818130cd34ccce4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 23 00:14:35 2021 +0100
+
+    improve webserver_conf as a directory or as a file, depends on nginx, apache2 or openbsd-httpd
+
+commit 91ebfbc51c77bfafc58b22eb6c22ea6a3bdaf86b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 22:35:31 2021 +0100
+
+    remove tor_browser_* vars as there was no further improvement
+
+commit 77530277a1eac63ad661eee6f067bfeb606da810
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 22:34:35 2021 +0100
+
+    improve web
+
+commit 60f89c43bc5a396dbf4f4af31cc513c0a463fd98
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 14:29:48 2021 +0100
+
+    better unix_path assignment
+
+commit 33d52d2dfef8e44bcdb029b88e9a503f6bc3818a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 14:26:54 2021 +0100
+
+    facilitate socket removal by unix path ending with *-onion.sock
+    also instruct what to do if webserver or tor fails to reload
+
+commit d9a80e4a3808dcde684212725ffd8aff974485b8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 13:51:20 2021 +0100
+
+    rcctl -f only affects the start option for the web server, but we only reload it
+
+commit daf344412facf48d5b431395358acfb8bd808632
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 13:34:13 2021 +0100
+
+    fix folder being unassigned
+    https://github.com/nyxnor/onionjuggler/issues/32
+
+commit a4bda23b41fe7014822b33167f97e65313f6c481
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 13:22:40 2021 +0100
+
+    format on list
+
+commit 8f7bd229c684cf63bcf8c7200f6cee084eabb562
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 13:17:10 2021 +0100
+
+    correct folder placement on web for openbsd-http
+    https://github.com/nyxnor/onionjuggler/issues/32
+
+commit 57cf11f948dc22c305a996cd2b50c68b743f520b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 12:22:41 2021 +0100
+
+    fix service activation with tcp socket
+
+commit 9ff2169edb449c3c7aef1f6ad3bba81ad8faaf22
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 12:02:18 2021 +0100
+
+    improve openbsd-httpd web handling
+    https://github.com/nyxnor/onionjuggler/issues/32
+
+commit 4fff14283bb168e1b53f49609066f49bc1566af4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 11:32:19 2021 +0100
+
+    fix openbsd-httpd on configure.sh
+
+commit 02a2d2413204117b003e7dbe3388e9f42055afc0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 22 00:48:38 2021 +0100
+
+    wip to support openbsd httpd
+    https://github.com/nyxnor/onionjuggler/issues/32
+
+commit 3a8ae6f1fd44c9bd2a464107c40ecefc243a9adb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 21 23:44:15 2021 +0100
+
+    typo fix
+
+commit 39d7c89448cd5ae6f4528f3fc0ad2fe809412b34
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 21 23:28:08 2021 +0100
+
+    rever default.conf to onionjuggler.conf for uniformity and manual reference
+
+commit 2b25d161abd5dd87c1b7a8730cab7231d373b705
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 21 23:20:37 2021 +0100
+
+    just make dirs if they don't exist
+
+commit 26cb0de73d9bc05d04e85a08450f359d37e72aad
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 21 17:48:40 2021 +0100
+
+    add Vanguards version extracted from file and move man to manpath
+
+commit cce96ba3799ee97b0922dc8e88f09327cacba1f5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 21 17:47:17 2021 +0100
+
+    fix for stem on openbsd
+
+commit 5976061f482c4240e035636b2b5c69e0bcbe0025
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 21 16:00:58 2021 +0100
+
+    stem download page is outdated, stem is called py3-stem on openbsd
+
+commit b77c4959ccf89cb041dadefd4803e579749950f2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 21 00:45:01 2021 +0100
+
+    little fixes to last commit
+
+commit 10dad31c7860a79bb5b4676280164072e013f749
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 21 00:35:29 2021 +0100
+
+    refactor configuration files
+    now there is a certain order to source to not cause conflicts.
+    * Fist source default configuration file, which the configure.sh --setup will move your operatin system / distribution configuration to /etc/onionjuggler/default.conf
+    * the default.conf will be overriden everytime you run configure.sh --setup.
+    * it will be sourced first, then every *.conf inside /etc/onionjuggler/conf.d/*.conf
+    * the environment variable ONIONJUGGLER_CONF, if set, will source an alternative configuration file
+    * at last, the cli argument -C, --config ONIONJUGGLER_CONF will override previous configurations
+    
+    * add tui manual
+
+commit f71306305fc5af1265c61817fe85d03027fd01b0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 19 00:01:05 2021 +0100
+
+    removes protocol from the fron of the onion address as well as anything after onion
+    deletes http:// https:// git:// ssh://
+    deletes after address.onion(/something/here)
+
+commit e27a2617344a0b65ac5c033560aa1025f77524e5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 18 23:21:38 2021 +0100
+
+    better fix to git status on configure
+
+commit 1b6b867563e4fde6b5d720e1d6b08b63def4566f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 18 23:20:32 2021 +0100
+
+    extra line on printf of configure
+
+commit e5a625740549197a7ee9e92d3a31b32df5b7e918
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 18 23:18:53 2021 +0100
+
+    add fallback to editor's env variables
+
+commit 13a943a04de9cecf3a65e2e4742c1e11de97ecd7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 18 23:18:50 2021 +0100
+
+    move colors to top of the file
+
+commit 9cb085f73f03c2d363e005b1986ba63391ccd9a9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 18 23:18:22 2021 +0100
+
+    add some colors to facilitate reading
+    
+    see https://github.com/nyxnor/onionjuggler/issues/36
+
+commit a25fdc103f2fabd404cb39d8260ccc0eff5b2184
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 18 00:35:56 2021 +0100
+
+    improve configure release information
+
+commit 6669224e4619cba2f2550b9b7b1ab296e8a8694f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 18 00:32:15 2021 +0100
+
+    fix man
+
+commit 84066c3a31cfd0bd5d0ef4615723360956cb1806
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 18 00:31:23 2021 +0100
+
+    improve documentation
+
+commit 7dfc515fb00b06300030b960f169db84d7aeb20d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 18 00:29:48 2021 +0100
+
+    add logo to the cli inside it, not getting from another file
+
+commit c6cea0dcf6ca272c683034d4aa279a0696d8b566
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 01:41:15 2021 +0100
+
+    little improve to readme
+
+commit 77e38f3e34d21a493f742d99e3926ccc21e28622
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 01:39:15 2021 +0100
+
+    thin the sample conf
+
+commit a93d695ec43753a9f19fbf6600282b1f137d506d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 01:36:05 2021 +0100
+
+    fix var referenced but not assigned
+
+commit c341f33a5338a39de8bbddb208c122ed02ab21c6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 01:34:28 2021 +0100
+
+    add signal instructions to usage
+
+commit 27be27dab3878ce5a8c2e96987317ac29b7686cc
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 01:17:03 2021 +0100
+
+    signal tor to restart or reload as an argument, defaults to reload.
+    if restoring the torrc in the case the last process hanged, it is recommended to use --restart
+
+commit 3f7c0965b4251008f881e1103ce5751368f1c7f3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 01:03:20 2021 +0100
+
+    append to last
+
+commit cfbda353dcaac53cfab6d734f8d71677ddcda0be
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 01:02:26 2021 +0100
+
+    if var is empty, show usage with test, not with :?
+
+commit d681d411bf21b426859b3142bb7cc4d107ca1405
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 00:39:00 2021 +0100
+
+    s/echo/printf
+
+commit e2afed9e8bace29a619e797448f7deabc89041e9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 00:38:37 2021 +0100
+
+    add confirmation on tui before renewing services
+
+commit 408133c4b5d7ee9112a3aecc7430f5dde043a59e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 17 00:38:06 2021 +0100
+
+    dont ask for password before prompting the help message
+
+commit ba7395afd00c6e7f49d177061ce5c5da04491d48
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 16 18:39:36 2021 +0100
+
+    improve renew to sighug or sigkill tor only once, fix restarting_tor typo
+
+commit 4344ffb4229402a62ccec0ce5dacc14a730a955a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 15 16:07:31 2021 +0100
+
+    s/sudo/$exe_cmd_alt_user
+
+commit 9b650ee613f4e2be30a6fd820a998b4498129033
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 15 15:47:41 2021 +0100
+
+    grep to then later print or delete service config lines if ending with "/" or the service name
+
+commit 5f5e97475c2445823a48bb45159e3bb2e665f7b4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 15 15:13:58 2021 +0100
+
+    improve readme
+
+commit 00e064121044686eefc0be9600166259dfd0e009
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 15 15:12:08 2021 +0100
+
+    fix cat_squeeze_blank when there are multiple files
+
+commit c1021e2b46a44997d6fb151afb6ce73f75cda517
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 15 14:09:45 2021 +0100
+
+    fix folder variables ending with trailing forward slash '/'
+    * note that the cli function service_block still requests for the exact math of the "tor_services_dir/service$", but a hardcode was introduced that removve every trailing "/" from the torrc using sed, not optimal, but will do for now
+
+commit 82174e4147b62883d6920edf865557ba015b67f4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 15 01:53:30 2021 +0100
+
+    update man
+
+commit 86ab3ef1b7deb0a3b2d451cf8e7e22a9d863862b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 15 01:51:02 2021 +0100
+
+    specify the config file better
+    3 ways
+    - cli arg, will export itself as an env var
+    - environment variable that can be defined before running the script
+    - if environment variable is empty, will read the default path on /etc/onionjuggler.conf
+
+commit 8159f2e4d17037d58d9cf59faca4281c97c73337
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 15 01:21:51 2021 +0100
+
+    fix https://github.com/nyxnor/onionjuggler/issues/34
+
+commit d0e193bbd4b041ed90007eab32ab245b7da27a2c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 14 00:14:33 2021 +0100
+
+    fix development leftover
+
+commit 06e94bf7338a01d5d80ea495e68c9df8f2793783
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 14 00:12:27 2021 +0100
+
+    improve single option for tui to parse alternative configuration file
+
+commit cab6bb3b94f9237fe38f9a28cbe180fa4df02171
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Dec 13 01:54:41 2021 +0100
+
+    fix cat squeeze to only one file for now
+
+commit 6b781cbbb25556764bd1b1ae908866458f6b5d7f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Dec 13 01:51:50 2021 +0100
+
+    fix backup, add man pages
+
+commit 1b295a6f78a7a1fcc143853233283d005cc99fd7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Dec 13 01:48:28 2021 +0100
+
+    variables with better names, backup improved, alternative configuration file
+
+commit fea6f1534eb7fa03103bae369c066214bbab5748
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 12 19:54:07 2021 +0100
+
+    lil improvement on auth- command parsing on getopts
+
+commit 0110c239accbc8c025cc744c7b0e929157b6b643
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 12 19:40:33 2021 +0100
+
+    improve variable names
+
+commit 0f1251392c8e6afdcaef484dc30c409e2d2be2fa
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 11 00:16:33 2021 +0000
+
+    fix tor signal daemon and openssl and tail command on auth to be posix
+
+commit d5d4103868fef61a7572c6aa7844a8609aa243b6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 10 16:14:26 2021 +0000
+
+    improve tor daemon management, reorganize requirements and give better names to the variables
+
+commit 47edc41f2d9f60c77e292c2c77c8de61c2d83915
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 10 05:27:52 2021 +0000
+
+    nowwww really fix workflow
+
+commit 4542ad86dd4fcea1af53e7256ce781857f3ae631
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 10 05:26:56 2021 +0000
+
+    really fix workflow
+
+commit 6a4eb7bea9461f664862c471f513ce070b634862
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 10 05:24:00 2021 +0000
+
+    fix workflow
+
+commit 4ce3ae239d171f332c69626e8f6c3de56ab08945
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 10 05:19:14 2021 +0000
+
+    add tput to contributing
+
+commit 495520f3f5a6e391014d827d76b79fb352f04b27
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 10 05:09:38 2021 +0000
+
+    bunch of improvements to the getopts of the cli
+    * improve a whole lot the cli getopts
+    * fix configure.sh usage https://github.com/nyxnor/onionjuggler/issues/31
+    * fix openssl on openbsd https://github.com/nyxnor/onionjuggler/issues/29
+    * fix repo path https://github.com/nyxnor/onionjuggler/issues/25
+    * fix posix rules https://github.com/nyxnor/onionjuggler/issues/20
+    * fix guide https://github.com/nyxnor/onionjuggler/issues/16
+    * fix wording https://github.com/nyxnor/onionjuggler/issues/13
+
+commit d496881897281fb6e47288d406d25757f7e38b79
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 10 04:52:36 2021 +0000
+
+    update documentation with new openssl variable
+
+commit cc173cfe81681f77021abf0d0284b9ad10c8b483
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 7 19:27:33 2021 +0000
+
+    improve manual getoption and manuals
+
+commit c88bda1a9a8176667ffeb508aa878a036dd77fa7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 7 13:55:29 2021 +0000
+
+    add no color after colors
+
+commit d4e5a8d04d938f29db46429b5969d66e7a3233cb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 7 13:49:57 2021 +0000
+
+    shellcheck setup
+
+commit 4cc6533e0be3c82034d56d6095bd344503f883cd
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 7 13:44:39 2021 +0000
+
+    fix setup
+
+commit 53556f1bfe41ab5eaf40e0adc0b29d6335e9422b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 7 13:40:06 2021 +0000
+
+    fix setup
+
+commit a450b1ba0917aad203a156df3935880db8bb75ae
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 7 13:35:59 2021 +0000
+
+    move pandoc from user requirements to development requirements
+
+commit 5092514ff575d43230f9de28fbab796d5ca5a3bf
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Dec 7 13:34:52 2021 +0000
+
+    move pandoc from user requirements to development requirements
+
+commit c4fb4dfabdc850fd7fecc408029fba89b56ba5bf
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 5 23:39:00 2021 +0000
+
+    add usermod to debian tor guide, it is commented on the setup for now, possibly will be removed
+
+commit 60518c09d938154f2637eea86a34597811c84e87
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 5 23:34:46 2021 +0000
+
+    fix formatting on docs
+
+commit e44e8397097e131450d533bce80f08a812119e97
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 5 23:25:31 2021 +0000
+
+    improve service manager compatibility for tor, missing for vanguards as it needs a custom configuration
+
+commit fd26f9e74f791dd019db929846ed0e1d7c4a6c1b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 5 23:24:51 2021 +0000
+
+    improve compatibility guide
+
+commit 6fac9095749304da733bb603d3d65cd6dedfe67a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 5 21:42:50 2021 +0000
+
+    fix commands to be posix
+
+commit 2992b7d1313b57514f2ee9c532223f5f13b3e651
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Dec 5 03:47:02 2021 +0000
+
+    fix openbsd integration, more to come
+    
+    see https://github.com/nyxnor/onionjuggler/issues/29
+
+commit 445645192c8b9b03fdf0fc1135101223c7235af3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 4 21:22:24 2021 +0000
+
+    portability improvementes tested on openbsd. Missing the base32 package
+
+commit 5b172ade654eb68c4d348baccba3e0e134f88082
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 4 14:05:14 2021 +0000
+
+    add stem for freebsd
+
+commit a48922029f9326dfa68cbaf99120dbc6d884e117
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 4 04:57:40 2021 +0000
+
+    update docs
+
+commit 1736d3e3ecbd1bfed3d023a265b898412198b7a3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 4 04:49:21 2021 +0000
+
+    update images
+
+commit 796b883aea6c198c8e06377f95ad58bc1a67f318
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 4 04:48:59 2021 +0000
+
+    update images
+
+commit 1268eeb17ff208842812ca1680c2cb9e1b1fe67d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 4 04:48:41 2021 +0000
+
+    apache to apache2
+
+commit 3247d190098312e2d86755905ce63fdd16da7c50
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 4 04:48:29 2021 +0000
+
+    update docs
+
+commit 72c1890684867d7f3bb61d6b4c11b637c5b36359
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Dec 4 04:48:08 2021 +0000
+
+    apache to apache2, setup has better check of installed packages
+
+commit 19a3c0cd0ae4ee1197324b62e7b87c02748c543f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 3 17:23:35 2021 +0000
+
+    fix https://github.com/nyxnor/onionjuggler/issues/27
+
+commit d57825d032cea12c65c3a8975599e39048a50bc0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 3 17:19:21 2021 +0000
+
+    remove set -x
+
+commit 7f380474e2ef84fb6a42f942a3c2dd0a0c5e323f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 3 17:16:27 2021 +0000
+
+    enhance scripts and manual pages
+    * onionjuggler-cli can be run standalone, default configuration values inside it
+    * onionjuggler-tui only depends on the onionjuggler-cli, default configuration values are also inside the tui (partially, only the necessary)
+    * setup.sh creates manual pages, mv scripts to /usr/local/bin/
+    * docs: readme and contributing: update accordingly to changes
+
+commit c243ab4a2267a10459c0313ac4de953fd0b25bc9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 3 17:07:18 2021 +0000
+
+    set default configuration file
+
+commit 4793f4b35ee9cef54305eabd4113fdd8eecf69c1
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 3 17:06:54 2021 +0000
+
+    remove filess that need a fixed path, they are inside the cli now
+
+commit 0b229aff61d95606ecf22dd3a138d90bba3c58c7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Dec 3 17:06:09 2021 +0000
+
+    rename manuals to include .1.
+
+commit db572a2d0a731d681324298e9955c1f8d05c5911
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 2 22:14:58 2021 +0000
+
+    update scripts to new methodology of integrating it into the system
+
+commit 8bbdea5f9eeb6d953995a0974170b8e5e689b60a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 2 22:14:29 2021 +0000
+
+    remove unused files
+
+commit 64140d2c97de84c5bee78c4fa5417220a3bfe652
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 2 22:14:00 2021 +0000
+
+    add onionjuggler.conf example
+
+commit 07faa266496fc4bffe3cf16368f9aa4d1cc04b95
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 2 22:13:41 2021 +0000
+
+    improve setup to save files in /usr/local/bin, no more obligatory defining variable for the repo
+
+commit 25393894c030a22f2919987ab277bda55641cec6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Dec 2 22:12:43 2021 +0000
+
+    update all docs to no caps. Add config manual. Update old cli manual.
+
+commit 84d312f8ebf256f396746cd0a8211f2ad04ea3cc
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 1 03:23:02 2021 +0000
+
+    fix typo on the readme
+
+commit 4d488ef02180a7fb6cf5dd45a305286c2dba6274
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Dec 1 03:11:04 2021 +0000
+
+    service creation made easy
+    * short options for basically everything
+    * service creation just need to specify name, the rest is set to default, empty variables fallback, socket will be unix, version will be 3, port will be 80
+
+commit 5da29cbb4cfc2c36d5e952d0dedc2979fea557c2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 30 00:38:16 2021 +0000
+
+    fix setup.sh
+
+commit d4c8a6e8803c7b874d3d9e7728b818f04a110f93
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 30 00:36:43 2021 +0000
+
+    add websevers to the requirements in the readme
+
+commit 24920cde9a5a1a20565d335da900f7b4690fdd55
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 30 00:30:51 2021 +0000
+
+    add doas as a minimal sudo alternative. fix https://github.com/nyxnor/onionjuggler/issues/15
+
+commit 519cb359f21a20e04a8e7b78f6756c97e650ffc7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 29 23:24:53 2021 +0000
+
+    fix cli arguments that are passed from the tui. fix https://github.com/nyxnor/onionjuggler/issues/21
+
+commit 619d07f395f37953467ea55c47300feddba96f41
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 29 02:25:11 2021 +0000
+
+    fix echosystem typo to ecosystem
+
+commit 83fdcdb67dd4b4d628c096e197b5356843988f69
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 29 02:18:47 2021 +0000
+
+    fix project name on cli image
+
+commit 93448f5be6f37665fd11e214a95d1b121480e248
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 29 02:15:31 2021 +0000
+
+    change project name to OnionJuggler. fix https://github.com/nyxnor/onionjuggler/issues/19
+
+commit 30bf4d9283bfeceee4326a5407482d78efaefa01
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 29 02:13:54 2021 +0000
+
+    change project name to OnionJuggler. fix https://github.com/nyxnor/onionjuggler/issues/19
+
+commit 91db8bce3034487120098bea2572969392b38677
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 29 02:02:55 2021 +0000
+
+    update readme with new images
+
+commit 7d020a7b2de52d4d47849c15cf5ab7261a610a98
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 29 01:55:54 2021 +0000
+
+    parse cli arguments ellegantly. fix https://github.com/nyxnor/onionservice/issues/9
+
+commit 3900a200ded84770198c7edda8cf56531b2bfb1a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 28 21:08:09 2021 +0000
+
+    add sudo to the requirements
+
+commit 90062828faea6df50490fa3358240b629bd8a2d0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 28 21:07:38 2021 +0000
+
+    add compatibility list for tor and stem
+
+commit 7e065ba2c4df6f806868f52d2baf79b6e7666d78
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 27 21:48:18 2021 +0000
+
+    web option support ~/
+
+commit 51d7a1eea969a229938f2163bcf868be98b3b1f3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 27 01:00:47 2021 +0000
+
+    mv setup/setup.sh to install/setup.sh
+
+commit b12c9a977b85d6a190dc0da5abc1df4a8ac9ac7e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 27 00:22:11 2021 +0000
+
+    less lines on vanguards service
+
+commit 869cc3aa5f8c6a9e224d7746b27bd8c4cab7d1b0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 27 00:07:26 2021 +0000
+
+    fix vanguards
+
+commit 9f5a02b3eb345f43c80463367734336df0d44a19
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 24 00:02:53 2021 +0000
+
+    fix listen config on nginx
+
+commit 928244260a849b8e62182acfc28331d64a8c01c8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 24 00:01:09 2021 +0000
+
+    fix tui on auth server and display virtport at end of hostname
+
+commit 867ae206908e16f924e5088683f95c624a866a45
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 21 20:32:05 2021 +0000
+
+    fix setup.sh with unset vars
+
+commit c3092af69e2e42862c048f5e97bce279873d2333
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 21 20:24:13 2021 +0000
+
+    non env vars should not be capitalized. fix https://github.com/nyxnor/onionservice/issues/11
+
+commit 534ef5b697ad2fdcc4b52a82a897336dd57cb082
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 20 02:03:19 2021 +0000
+
+    update README info about commands
+
+commit f0c6c0cfddb9cdb517fa22d55612e335ff43a8ac
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 20 01:47:43 2021 +0000
+
+    tui: disable dialog box with dialog was not working prop
+    
+    the \n was not giving a new line, had to jump a line unfortunately
+
+commit 5462753e0daceb0b9e90f7d86ebe0c0fd1b095c9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 20 01:37:00 2021 +0000
+
+    improve tui auth server list to only show services with clients
+
+commit dd63d518f1aef0349ab4cb10d062e8509c62481c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 20 01:30:53 2021 +0000
+
+    improve tui auth server
+    
+    only show available options if clients are present.
+
+commit db1f257a8579b70110ab2843842ce3363527e9f4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 20 01:05:38 2021 +0000
+
+    make whiptail work with the tui
+    
+    s/WEBSERVER/WEB_SERVER, Whiptail tested, all the tui options were tested and improved, little bug fixes on auth options.
+
+commit e4c2fe7d87ee78fa73f2c6a71b41c407a881008c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Nov 20 01:03:49 2021 +0000
+
+    embed onion without .onion to use less vars
+
+commit 728d81c9e186c4429c6e06e99592ac798f00c9d2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Nov 19 01:06:00 2021 +0000
+
+    improve bug_report
+
+commit 6e0e8ee042f30cc4526c38e3666fcd65cc920039
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 18 20:58:24 2021 +0000
+
+    update docs: focus on requirements explanation
+
+commit 799bea90175f0883323bb57ebed80f4d31ba26f0
+Merge: 8801b53 44c2c96
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 18 16:28:09 2021 +0000
+
+    Merge branch 'main' of https://github.com/nyxnor/onionservice
+
+commit 8801b53e1967714e9c2f10394646ad9901c3946e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 18 16:28:05 2021 +0000
+
+    start accepting whiptail, not finished yet
+
+commit 44c2c96441b997c368c3bb36506ab1cae133a39f
+Merge: a997539 cdeb930
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 18 16:17:49 2021 +0000
+
+    Merge pull request #8 from radio24/main
+    
+    grep failing to catch the content of the auth file
+
+commit cdeb9308112c479dacba187810aaa13e6c6420d6
+Author: TorBox <anonym@torbox.ch>
+Date:   Thu Nov 18 16:02:29 2021 +0100
+
+    grep failing to catch the content of the auth file
+    
+    See issue #7
+
+commit a9975390c9cecc2f9c2153941821d13ab596ef60
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 10 10:15:33 2021 +0000
+
+    remove set -x
+
+commit 9f4da6186ef5eb029a51edc7dc6390552d2f8b4e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 10 10:14:55 2021 +0000
+
+    start supporting different dialog boxes -> whiptail/dialog
+    
+    it is not working with whiptail currently, but that is a start, variable DIALOG_BOX working with dialog
+
+commit 310bb4496babb1239e5069efbdf9a18898bdc742
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 10 10:01:42 2021 +0000
+
+    add --separate-output to checklist to match dialog with whiptail
+
+commit a6c11fa720dfefd9edfa8d9b35edd61d8ae69ad8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 10 00:31:15 2021 +0000
+
+    reorganize service creatio arguments
+    
+    it makes sense to put service at the beggining to match with setting it off, and socket near service ports because they go to the same line on HiddenServicePorts, the version at the mid because it is right after HiddenServiceDir and because port quantity may vary
+
+commit 5a51bb9d178fb730f55d035b43480ae3b752e1af
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 9 15:44:10 2021 +0000
+
+    fix TUI location
+    
+    order the variables correctly
+
+commit 8b040f53866cb4013eb5492cd3b79e622f32eb72
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 9 15:39:34 2021 +0000
+
+    unify dialog redirection
+
+commit c19193e85e5a56397d25428c82253f9863282778
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 9 14:54:14 2021 +0000
+
+    update variables names such as colors
+
+commit 1d55ea5a965b090d9f0046d4524dd897c79542bd
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 9 14:53:16 2021 +0000
+
+    update contributing guide
+
+commit 33693f73509927529a9179c2fe64334d0a647476
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 22:30:19 2021 +0000
+
+    contributing curl using https, following whonix scurl. Rest is formatting
+
+commit 49175c276b673b4c6c338554ecc25c91f34be00d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 21:56:22 2021 +0000
+
+    give up on pr workflow for now
+
+commit dcfbbc261428c7630a5840e60db3ff158c207690
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 21:55:31 2021 +0000
+
+    comment pr workflow
+
+commit 0fc01d1a662d2fbd0db36bf2ba7a172b346ca117
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 21:52:36 2021 +0000
+
+    double quote var, say aboyt license on CONTRIBUTING
+
+commit b61e0ecbc11a9be3cbaeaaed0e685eaf7de8eb18
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 14:21:49 2021 +0100
+
+    remove GPL verbatims
+    
+    .onionrc was GPL because it contained TorBox functions but they weren't being used, was just a plan to use. I also don't like that big chunk inside the scripts, there is already the LICENSE file and the commit authors is already handled by git.
+
+commit 08eb1d5ebeb03b6aeb3ba57cf80b8450491ce8c2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 04:16:51 2021 +0000
+
+    fix identation on workflow
+
+commit f780f345c98106e994af7bd824cb29e850a37d4a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 04:14:36 2021 +0000
+
+    mv setup.sh to setup folder
+    
+    this removes setup.sh from path, no other reason
+
+commit c35c30301e9f24457b3bcf9eeb61b35a7f7c486e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 03:28:23 2021 +0000
+
+    update README badges
+
+commit 6d15a29271e1f5a7abf72bccad3c6e4d3cd71e57
+Merge: c9e7779 402f207
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 02:48:24 2021 +0000
+
+    Merge branch 'radio24-main'
+    Limit menu/list height on TUI to 11 for LCD displays
+
+commit 402f207bfebbd625d652725190f4027567dbfe22
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 02:47:53 2021 +0000
+
+    finish https://github.com/nyxnor/onionservice/issues/3
+
+commit 4504294270c27a1ddcddda3fe3bb8450be45cb5f
+Merge: c9e7779 2ab5022
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 02:38:17 2021 +0000
+
+    Merge branch 'main' of https://github.com/radio24/onionservice into radio24-main
+
+commit c9e7779b2638962f78c29957f32aefbab5212949
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 02:21:38 2021 +0000
+
+    empty var CLIENT_COUNT, fix https://github.com/nyxnor/onionservice/issues/5
+
+commit 0492882cf6bde2e4930a89f5b652d7ed17d6d8cf
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 02:18:56 2021 +0000
+
+    completely fix https://github.com/nyxnor/onionservice/issues/5
+    
+    awk and wc removed entirely from the code
+
+commit aee0d65029c50bf52aa9715950056f4cdb397765
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Nov 8 01:43:49 2021 +0000
+
+    fix https://github.com/nyxnor/onionservice/issues/5
+    
+    client count was 1 when it should be zero
+
+commit 2ab50223416dc929bad1b47b2542b7db163c26ce
+Merge: 25adad2 717de24
+Author: TorBox <anonym@torbox.ch>
+Date:   Sun Nov 7 06:22:03 2021 +0100
+
+    Merge branch 'nyxnor:main' into main
+
+commit 25adad2efb03ded0fca020a52b82e9c24515c2f0
+Author: radio24 <anonym@torbox.ch>
+Date:   Sun Nov 7 06:20:16 2021 +0100
+
+    Pull Request to issue #3 - Checklist could be different than 2 entries
+
+commit 4511f6c25065e976c41c502ba25205dc0e06ffcf
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 04:37:58 2021 +0000
+
+    update SECURITY.md
+
+commit 717de24f14403248a69800d244bc8dc3c2bb2972
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 04:29:30 2021 +0000
+
+    add SECURITY policy. update README
+
+commit d429606e546b65321ce8b7191cd23702f8871dbb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 03:41:10 2021 +0000
+
+    update README
+
+commit f28600db654c61815b30b328a880c4636d2c3311
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 03:40:10 2021 +0000
+
+    change license from GPLv3 to MIT
+    
+    Intellectual property does not exist outside of ones mind. Ideas, words and code are not scarce, I cannot be the ministery of truth of the book 1984 to block someoneelese's expression until knowledge becomes corruptible and suscpetible to become a deceiving technique making the masses ignorant. The only reason this project is license is because on a mad man's mind, if I don't license it, it becomes only owner by me, even if publicly available. Reason of the change and choice: MIT is direct, short and easily readable. Does not enforce or restrict anything. GPL was chosen to keep the code open source, but there is no reason someone would use a tor related code that is not open source in the case someone releases it under a more restrictive license. MIT was also chosen to not contaminate a possibly future binary that could make it all GPL.
+
+commit 7582ff1a4980c097068ff313bd56d30627fbe6c9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 02:55:05 2021 +0000
+
+    improve torrc backup to only be used on options that modify it
+    
+    it was saving a backup before being restored, which of course was restoring to the same file, which means not restoring anything
+
+commit c717752a3a9d4f3734cc6fb4c771c71b7235dce8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 02:42:04 2021 +0000
+
+    improve wording when restarting tor
+
+commit 3c439b6a5f396c0ef3d702eda9bf9f7298817d9e
+Merge: 750fa1d 84b1bee
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 02:34:31 2021 +0000
+
+    radio24: avoid running restart tor on the background and infor to exit if taking too much time
+    
+    Background Execution of sudo systemctl reload-or-restart or restart gives a false impression
+
+commit 750fa1df5d4f53aa0f61571aa5491a0068a752a7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 02:30:29 2021 +0000
+
+    fix workflow on setup.sh
+
+commit 32b38992b7e487c47ec6e11e4c2454a7afa1df8f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 02:24:03 2021 +0000
+
+    update shellcheck workflow
+
+commit 3f27379019824acd271c29a6e87e8fa2147a1d12
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 02:22:46 2021 +0000
+
+    update shellcheck workflow
+
+commit b2005f1be4708358225d90a155f033008f90e4d6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 02:20:29 2021 +0000
+
+    update shellcheck workflow
+
+commit 3ca01fc9008b81ebcc71aff9c857899a9d950adc
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 02:19:14 2021 +0000
+
+    update shellcheck workflow
+
+commit 2ce646e9d2ecb11d5b3a18bfd41b9a6592957234
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Nov 7 02:12:03 2021 +0000
+
+    fix set_owner_permission and unify variables names. Delete unused vars from the .onionrc
+
+commit 84b1beed01176dde099a31b29f48a85c6f4d6630
+Author: TorBox <anonym@torbox.ch>
+Date:   Sat Nov 6 07:22:20 2021 +0100
+
+    Background Execution of sudo systemctl reload-or-restart or restart gives a false impression
+    
+    Changes
+    - The user is informed that restarting or reloading tor will take a moment and what he could do if it gets stuck.
+    - Restart or reload-or-restart took back as a foreground process.
+    - Removed the two seconds of sleep.
+
+commit 5a4f4991fdc6fa8f74e7120a9c4d9cf51cbe7940
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 4 15:11:57 2021 +0000
+
+    ignore commented HiddenService lines when checking for used ports
+
+commit 7dfa91015907e1b10573a83fbc56953419846e37
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 4 15:10:46 2021 +0000
+
+    fix folder permissions
+
+commit 3a5075a9bcf6d85aef0ce5064a7fda80dd8e5eb9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 4 11:34:30 2021 +0000
+
+    fix usage name reference
+
+commit 1baf49bfdc810053e90621ee94861a9028501145
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 4 11:27:39 2021 +0000
+
+    fix indentation
+
+commit a9158fc09f60d576753d83735bf79e3c76c92bd2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 4 10:41:06 2021 +0000
+
+    expand REQUIREMENTS to be installed
+
+commit 12b27b3d60fc49599b34c5a8182e5595e05dcd10
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Nov 4 10:40:21 2021 +0000
+
+    torrc should be owned by root
+
+commit 339b32634cbebd498cc35d0dacd91073ff7e2dbf
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 3 18:06:39 2021 +0100
+
+    better wording on previous man option of web path
+
+commit 3c4ab39dbeb60703029c19db573c8ac0f8339d13
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 3 18:05:58 2021 +0100
+
+    update man: web option can use any path now
+    
+    not just website_dir, if it starts with '/', will use specified path
+
+commit 0e9cbb43a7a870dc650993a06927dbaf966b89a0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 3 18:05:06 2021 +0100
+
+    requirements moved from setup.sh to .onionrc
+
+commit fceed50f4e0fcc758dfafbb7554a6109ff68e541
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 3 00:23:03 2021 +0100
+
+    small fixes
+
+commit d459453ac9cfc6174842b1473e3f018490645818
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Nov 3 00:22:48 2021 +0100
+
+    setup: better way to set a custom path
+
+commit ae31960a70f4c7ed15c8f79ad53e0709ae483885
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 18:05:10 2021 +0100
+
+    inform on README how to run the scripts
+
+commit 244f3f010640554e5463ed66be3fff8ff2f7de26
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 18:04:50 2021 +0100
+
+    inform on README how to run the scripts
+
+commit c7080f7115f8b59b8075fed87f761e2c17f18c23
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 18:02:23 2021 +0100
+
+    improve shellcheck on CONTRIBUTING.md
+
+commit 9bd918fcfaef66c5d81f6a800e58c8c4299074eb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 18:00:58 2021 +0100
+
+    organize renew structure of printfs
+
+commit affa298caa240855cf202aa65a5504e992a5c455
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 18:00:36 2021 +0100
+
+    use empty line before warning that will restart tor
+
+commit 29ea0748e1dd86a640f8b3b068396ddaa5989532
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 17:05:45 2021 +0100
+
+    remove spec shell to call cli from the tui
+    
+    it is not needed and now it respects the shbang
+
+commit 19dca3d342760ac21902d0944f6f1c0df423223e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 16:00:48 2021 +0100
+
+    renew: sleep long to restart/reload tor and remove uncessary restart
+
+commit 54bba2629825bda61760684ad973839a1df1b4ea
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 15:09:20 2021 +0100
+
+    real fix of identation
+
+commit 361ac210689ef14c8d7c858b35ba132352f4172e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 15:07:33 2021 +0100
+
+    fix identation
+
+commit e11ba988cbc5caa4852d80f72ef0604199d7abb3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 15:06:11 2021 +0100
+
+    avoid using 'sudo' and 'cat' if uncessary
+
+commit 16453b9cd2039a46a21a3d9dd25d2b871dcd1037
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 14:59:14 2021 +0100
+
+    remove exit 0 from tests
+
+commit e9f64eda26fe67b01210edb0643a4a5d0f5d125d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 14:58:57 2021 +0100
+
+    remove set -x
+
+commit 0c02e7fae0b4299ca42f42a57079e448de8b4d28
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 14:57:00 2021 +0100
+
+    clear is not builtin, this will clear with printf
+    
+    is this good? it works, it it the same as ctrl+l, it does not delete the old data from the scree, just drops the cursor down, it is still possible to slide backup and see the old 'screes'
+
+commit b744155873e50ad608eac8fbd8bf83e879d1f31f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 13:31:10 2021 +0100
+
+    substitute every 'cut' occurence and minimize 'cat' occurence
+    
+    this is for portability reasons, also less commands to worry about, dealing with shell expansion now
+
+commit e2ee29c9b31a4958798133bc8f6d4b4c50c2d05f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 13:13:20 2021 +0100
+
+    asynchronous execution of commands if ending with '&'
+    
+    see https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_09_03_02
+
+commit f791350158191bf5802e607671bcf0e18dc7418a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 11:32:31 2021 +0100
+
+    dir command is not in the posix manual, although it is in many unix systems
+
+commit f89c6140585773a249b6931f9e95b6fa405da586
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 11:11:19 2021 +0100
+
+    update docs
+
+commit cb1e6df3518a512d181dcd46c7227de62c1631fb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Nov 2 11:10:34 2021 +0100
+
+    improve shellcheck
+    
+    .shellcheckrc is just for global variables, the rest must be inside files for a better approach for the cases when it is necessary, so it avoids disabling all over the file, which could cause confusion and is not a good practice to correct code. It also avoids missing something because it is disabled globally, won't differ from the incorrect to the correct occurences
+
+commit e76e8df520f2d98e47bb3c98aaa6572db0ce43cd
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Oct 30 20:27:44 2021 +0200
+
+    update docs
+
+commit de4c704bee83f6c5cee05eb3fdcb5bead17351cf
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Oct 30 20:27:28 2021 +0200
+
+    add lightweight CoC
+    
+    make it clear what is forbidden and what is allowed
+
+commit 52f5a2475ce43c9a4673eb4c9a32c4f313a912bb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Oct 30 17:38:02 2021 +0200
+
+    pull request templage to root .github
+
+commit c3f5e24e81f52ab2c734572e9f5cf5c39037a204
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 22:14:44 2021 +0200
+
+    shell option does not work
+
+commit baa4d47c362ddf1c64446f882f29bb141db9eec5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 22:13:48 2021 +0200
+
+    shell option does not work
+
+commit 7e24c0d88e74fdc5e5cf19725020dddc6b5b160f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 22:12:25 2021 +0200
+
+    fix pull_request template
+
+commit 786dc31577759bd8ac99b1f3fb10dc0cfabc1107
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 22:10:51 2021 +0200
+
+    update .github fileS
+
+commit 47bde4e2b3e0c39a270147b04e908bc8a1267676
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 18:27:13 2021 +0200
+
+    cli: fix including 127.0.0.1 when only mentioning the target port
+
+commit 71ea1930977d974f045663df49b2027ba9782f5e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 03:37:55 2021 +0200
+
+    setup does not modify the torrc with ClientOnionAuthDir
+
+commit abba667bc3f0c5bfd2d77f98b29a2c3c5b3c1f03
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 03:37:16 2021 +0200
+
+    correct space between vars
+
+commit 4748bd67ec13019160f6735f06107918ddbac9c7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 03:37:01 2021 +0200
+
+    weird identation appearing on github because of tabs vs spaces
+
+commit 80e85400741ae1733d40981f9b48909a444a2478
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 03:36:30 2021 +0200
+
+    grep -q instead of [ -n .. ]
+
+commit ec4124935b698f11ff69bd94cc9d4257f6c3ccfe
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 03:35:05 2021 +0200
+
+    correct man option to the correct env man
+
+commit 2caf0d173c374e0945e7e2526b0b0fc7ee7ae975
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 29 00:30:41 2021 +0200
+
+    fix sed
+
+commit 7432a8d90133bf3063f8a5e5c3bf9688c6c34f9d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 28 21:18:18 2021 +0200
+
+    thanks shellcheck: double quote vars
+
+commit 8326d37226c54df141d17c6143201c03ca044432
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 28 21:13:31 2021 +0200
+
+    /usr/bin/sh mentioned on the README
+
+commit f1ba487b222e175a4638794cedd2ce9be7f30dd0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 28 20:53:52 2021 +0200
+
+    change shebang. see https://github.com/dylanaraps/pure-bash-bible#shebang and https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html
+
+commit 66af0636fa39c290d77c0c836c45652ef653617c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 28 12:40:01 2021 +0200
+
+    readme: build status directly from github
+
+commit 46da722f26b6c1f96b69b8ab567ea7d97f75f46a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 28 12:32:37 2021 +0200
+
+    print var with %s
+
+commit 190b3bac814daa6934f1b442dbc0a2e82b846ce5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 28 12:30:39 2021 +0200
+
+    update docs
+
+commit 5467f9fcf1cd52f1e8c89c38cb73ceb9adfdaf39
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 28 12:16:50 2021 +0200
+
+    script name on help function will be adjusted to variable, web command now hsa service as the  to be uniform with other options
+
+commit 1d8f7e1b7c80d5847823f066654364a2ea5ef9f3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Oct 26 10:06:31 2021 +0200
+
+    add pull request template
+
+commit c14f7d4d6e672c8d33c7d1265a578744a68c54e4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Oct 25 00:10:23 2021 +0200
+
+    separate workflows to push and pull-request to not appear failing on README if it is a pull request and not pushed
+
+commit 78cacc24019783421f4998bd13151dab3a088093
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Oct 24 23:44:01 2021 +0200
+
+    grep -q instead of [ -n .. ]
+
+commit 75ee6e24eae8f2093a96eb96c96b287fb1683f8d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Oct 24 23:39:02 2021 +0200
+
+    update contributing guide to use posix compliant commands and build status on README
+
+commit aba3126f6a2bd821cfef171acf83ee6824929828
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Oct 24 23:38:25 2021 +0200
+
+    vanguards sed to use '|' as delim
+
+commit 2e75da370d8378ae92fb8d216e2c234dfe15a8a0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Oct 23 13:41:04 2021 +0200
+
+    rename workflow name to no caps. Correct shellcheck argument to capital S for severity
+
+commit e940bca1ffe784d619435a9c4f947261279dfba7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 22 13:26:18 2021 +0200
+
+    inform about setting default editor else fallback to vi for unix portability as nano might not be installed and should not need to be installed
+
+commit 7eda51a7854202479261996bfc88630bb53f3ac9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 22 02:49:15 2021 +0200
+
+    update renew part on manual to not delete clients
+
+commit 19c62be868f88db0b4130a8a8289e369d9b910f3
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 22 02:40:25 2021 +0200
+
+    change checkout to branch
+
+commit 065beb4858260aa70c3080b9eaede794dfb88782
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 22 02:22:49 2021 +0200
+
+    change workflow distro
+
+commit f86ca3eb679707b34a8b722e132722e521846d94
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 22 02:18:38 2021 +0200
+
+    tui: correct printf format
+
+commit 21e0266fc66f9051c9335aaebf8f76d10935b333
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 22 02:01:40 2021 +0200
+
+    test workflow
+
+commit 028d49f11d5127eef6c5350a692ae885172159ad
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 22 02:01:16 2021 +0200
+
+    update docs
+
+commit 6b15cf989f592f7a2fc4d84df69dac5ee0e728c6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 21 22:54:59 2021 +0200
+
+    TUI: edit auth server|client with the default editor else set nano for ease to use
+
+commit 74935efe2c74c342b2bb41bd74fde09a46664a59
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 21 21:19:16 2021 +0200
+
+    TUI: reorganize, if functions just serve one time, place it correctly where the code should be
+
+commit 89d22940759d7194c026f6005b36605471f6ab95
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 21 17:39:46 2021 +0200
+
+    CLI: renew won't delete clients, will keep the same public key. Recommend to clients to update to the new hostname.
+
+commit 7bce913b3f022f6da16ffe63479288d1b2a9f6dd
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 21 16:18:55 2021 +0200
+
+    cli onion-location: enhance printf to use less lines
+
+commit 14c7c222c9be8e3577ce85a42cdc8af87e9ec74f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 21 13:41:52 2021 +0200
+
+    disable 1090 on .shellcheckrc
+
+commit 713c343dd55218be93c74abbe4e48c09762c95ae
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 21 13:41:36 2021 +0200
+
+    cli onion-location: enhance printf to use less lines
+
+commit d899a2babb1f15aa0b312eb56501eb011d575076
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 21 12:39:35 2021 +0200
+
+    shellcheck: quote . replace '! -z' with '-n' finally. See shellcheck without excluding anything to check every warning
+
+commit 16b354a8def87cbb7100084008d374fbb35051fc
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 21 12:31:58 2021 +0200
+
+    update docs
+
+commit 1ff5cc686e909f3137c635ec2ef2e4dc5521b2b6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Oct 21 10:36:01 2021 +0200
+
+    update cli.png
+
+commit de4fe1632cbb21c42fe02284308a0f9d5139b50e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Oct 19 15:43:52 2021 +0200
+
+    README: better portability wording and structure
+
+commit 70ae31cbac8f45be4fd38a434b708745fae17968
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Oct 19 15:43:21 2021 +0200
+
+    name the project as OnionService to distinguish, the repo name will stay no cap
+
+commit 379a6740cbcde5264d1cd54611f93cb2d1e55658
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Oct 19 15:42:30 2021 +0200
+
+    update docs formatting
+
+commit edb04e159b76ee52e9032f519c6c7d259e472ede
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Oct 19 15:42:00 2021 +0200
+
+    update CLI.png
+
+commit fd3cf0ef3e7a57f0ba5b16f97e62f3e3b61acd11
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Oct 19 15:41:40 2021 +0200
+
+    update github issues templates
+
+commit 95a5c08294b1e0ffe65db3b9d828dbf1aad374ba
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Oct 18 15:30:22 2021 +0200
+
+    new setup method to set path and env var to avoid leaving custom path when commiting, also cleaner
+
+commit 36e5e15a80506551329245857c865c4508a744c9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Oct 18 02:01:18 2021 +0200
+
+    change path to repo to variable on shellrc as ONIONSERVICE_PWD
+
+commit d828dacea35a1cd51f116d8a33b1ab4ed965f423
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Oct 18 01:24:23 2021 +0200
+
+    CLI: improve backup method
+
+commit a4c5ba25f4b6cefca0a3e38be813b549e700c031
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Oct 17 13:34:02 2021 +0200
+
+    remove PWD var for release
+
+commit 3958e6d603613fdfe374bad53e3e6c45ad0b61cc
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Oct 17 13:32:58 2021 +0200
+
+    fix activation bug using the wrong command number because of the onion version commit
+
+commit 85f95ba6961c01eeb9a1352dc698947c2ac9f20e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Oct 17 05:45:14 2021 +0200
+
+    add HiddenServiceVersion to be prepared for when v4 comes
+
+commit a5f0ce36d641875f42b5fe7061708d5c79c04433
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Oct 17 05:43:51 2021 +0200
+
+    add onion version to tui
+
+commit 43ccfb3c2d3e2651fc2608ba020adf00b0ea745b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Oct 17 05:42:41 2021 +0200
+
+    update docs
+
+commit 3555ab3bdc750fe659412427362884e1540f34a8
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 15 11:57:34 2021 +0200
+
+    remove manual in groff format
+
+commit 16e60cd371667ed167dd0df0c9fb57faaf8489ba
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 8 20:53:27 2021 +0200
+
+    activate->enable, deactivate->disable. Auth server list with not show client lines if there arent any.
+
+commit 7df6146a5044565dcd7dc679eaffac89b4bacb17
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 8 20:52:15 2021 +0200
+
+    correct intersection on function auth_server_menu again..
+
+commit 8a04a9f49f33209b085778308e7ab0e0d68b6c9b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 8 20:51:37 2021 +0200
+
+    correct editor config and bautify setup.sh a little
+
+commit e4e361019cc721682d437e33e322fd8dac0c4858
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 8 20:50:44 2021 +0200
+
+    update docs
+
+commit f529f5b3b048919d4c0727e62198e97e25d0ff30
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 8 00:45:48 2021 +0200
+
+    update scripts with s/{nginx,apache}/web/g
+
+commit 77541b15842ab60eb805669c28f25621bfb6d208
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Oct 8 00:43:53 2021 +0200
+
+    update documentation and manual
+
+commit baebc2a05f8152a93f9fd0ea452ca1ec64da3b13
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Oct 6 07:26:24 2021 +0200
+
+     update docs
+
+commit d6cb4afedc73e03d94945ca864fa36c0fec9be4b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Oct 6 07:19:26 2021 +0200
+
+    zsh completiom todo later
+
+commit 2ad5b010ea119925522d96688c29b56447aa9eb2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Oct 6 07:04:07 2021 +0200
+
+    s/image/images
+
+commit 641e6049a18b73cda54f9e6798c579d8053e20e4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Oct 6 06:59:54 2021 +0200
+
+    setup with correct sed for bsd and shellcheck specific for each file
+
+commit 9643b3fdac8d1ba2f7c06d726dc20a93834d2b99
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Oct 6 06:59:12 2021 +0200
+
+    rever to read -r confirmation for any other shell non bash (ash, ksh)
+
+commit 5b8eda490e0683dc34b57d9ff003be08c26794f9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Oct 6 06:58:21 2021 +0200
+
+    add support for sed on bsd with a little trick 'sed -i'' regex file'
+
+commit c7761f9c7080d7b08964773d8a5f9e45c25c686d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Oct 6 06:57:31 2021 +0200
+
+    update dot files
+
+commit 9dbfd6eba75d68987a12ac58f3c1dd9d5ed9ea00
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Oct 6 06:57:04 2021 +0200
+
+    update docs
+
+commit debd7e16bc3fca60446d888ef7431bf4776e2ae6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Oct 6 06:56:42 2021 +0200
+
+    add images
+
+commit 8a048a546156c932f0141b6f130ec7d40cd2017e
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Oct 2 12:56:37 2021 +0200
+
+    TUI: correct service_menu height. CLI: correct client_count if null
+
+commit faf066856620a677892280bda0ce8efe1a44ede2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Oct 2 12:54:48 2021 +0200
+
+    shellcheck obligatory before release
+
+commit bab04ebc0391a1031f51c99d996dd532660a6cdb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Oct 2 12:53:55 2021 +0200
+
+    update docs
+
+commit 3cb0a034412354ef0a19cf8c3939abb1e4aa82fb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 28 09:30:13 2021 +0200
+
+    change 'credentials' to 'list' for uniformity. Make error checks with if-else-then for clarity when needed
+
+commit 510664acc90f6b8ce835facb669be604db17a944
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 28 08:40:35 2021 +0200
+
+    mv doc/ to docs/
+
+commit 72714d7d43d1eb9a39dcee5199354d659caab124
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 28 07:51:15 2021 +0200
+
+    deprecate service_existent variable, it wil exist if test_service_exists=0
+
+commit e5534b0f2c0019cfaba3c8e4ec89bf873db7ce4d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 28 07:36:47 2021 +0200
+
+    update README
+
+commit b6650a1e991a1feae42821622d4ebe777ee6b69d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 28 07:36:35 2021 +0200
+
+     CLI: webserver list sites enabled. TUI: deactivate sites enabled. Folder path on the TUI is a variable from the .onionrc, but on the CLI you can specify any path
+
+commit 601f78052d6907dfac5cadfc41bc4880935aad36
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 27 08:50:23 2021 +0200
+
+    shellcheckrc: disable on item. man: correct mail information
+
+commit 5c978a7c74e933f4e09934483fb4ddc06cde1312
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 27 08:49:43 2021 +0200
+
+    CLI: cleanup: less loops to be faster, exit if service does not exist do less if-then-else inside command functions
+
+commit 0e4450fa9a430efb773cbe093d303e5c160f6b55
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 27 08:48:45 2021 +0200
+
+    TUI: fix service_menu height hiding one service when it is a secondary option.
+
+commit f583e0b267c5d5726ecd5786cb5d211f933fdb55
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 10:54:22 2021 +0200
+
+    setup correctly to release
+
+commit c4804c3b5c5d91456f329e0ebfe828a38061527a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 10:53:15 2021 +0200
+
+    correct text/ to doc/
+
+commit 7ed419018c29c50b7b788609f739a9fb8f4cefb9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 10:46:44 2021 +0200
+
+    Add apach2 option to readme
+
+commit 2463f70a0abd2de117e197a2d45d09d7dba34410
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 10:44:19 2021 +0200
+
+    text/man to doc/man
+
+commit 2f9e4f6c957637b82106d80a4e92d71b12c7a028
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 10:42:39 2021 +0200
+
+    final setup replacing bash completion, executing chmod setup.sh, adding nginx folder
+
+commit 0a3d1f109db19122f82401093db24d0757628049
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 10:40:17 2021 +0200
+
+    remove text folder
+
+commit 5840bf77cf7dcbbd8a16e38458af7a25d2aaca3f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 10:39:11 2021 +0200
+
+    move docs to doc folder and update README
+
+commit 51e381b4a2dcdccc1d6ef296c7bf3650d2f3f419
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 10:36:57 2021 +0200
+
+    add Apache2 web server. Add TUI option for web server. Fix tor not reloading on CLI
+
+commit e4904ca8ee076567cebbf16dffe6e0eab57cf56f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 08:35:17 2021 +0200
+
+    add apache2 configuration in etc folder in repo
+
+commit c16d58be552eb866fffb022b9986c5ca94d4c341
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 07:01:17 2021 +0200
+
+    mv bash compleiton to etc folder in repo
+
+commit cea038d8c2895d004a7a3c301fd033dc0c68a54b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 26 07:00:54 2021 +0200
+
+    mv vanguards service to etc folder in repo
+
+commit 1f1abfaae3c8bd4ea5c97783047b9888e8596724
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 25 04:00:25 2021 +0200
+
+    mv .onion.lib to .onionrc
+
+commit eba130e52329a4349d3bf8437e7c822c5f76803f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 25 03:59:46 2021 +0200
+
+    mv .onion.lib to .onionrc
+
+commit cd818559deda96b73e1e46f56e7ea2322ba14665
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 25 03:59:06 2021 +0200
+
+    mv TECHNICAL and CONTRIBUTING to text/ folder
+
+commit 886714f4ec523108bb2b41cf6fbad87fb7043421
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 25 03:52:33 2021 +0200
+
+    Remove vanguards log veriable and set default. Setup to exit if outside of folder
+
+commit 9c53fc77525697b3e8be6d9160649c59a6c6f4ef
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 25 03:51:29 2021 +0200
+
+    CLI: nginx option
+
+commit 7e8afbd2c54c780cefc9a10362c3cabb6d5c1cb6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 22 07:57:40 2021 +0200
+
+    SHELLCHECK every file. Commend python3stem cause it is not a command and is trying to install
+
+commit fb14fe6e3d5997d1b46752b7944867c2bb7996b5
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 22 07:34:59 2021 +0200
+
+    README: tls not required. LIB: Mv cert to 'optional'
+
+commit 93f4d6950e3c0ce3710bc6f8a015fdc4bf1ddb8b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 22 07:32:24 2021 +0200
+
+    SETUP: stem. README: general formatting
+
+commit 88eec488c942ed9fbde3fcf9e3729dacc1b0ba91
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 22 07:28:46 2021 +0200
+
+    LIB and README: add python3-stem
+
+commit 71dd77c436b3f7262d63b9db5eb31a7e449636eb
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 22 07:28:10 2021 +0200
+
+    LIB: Fix when there is no certificate to not throw errors
+
+commit 5cd7d074cc91e73125330908086a2f8f2d3ab667
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 22 07:27:32 2021 +0200
+
+    CLI and TUI fix vanguards. CLI verbose when removing files
+
+commit 6cc91d0bf7155e88286c1f8c8882b1c38f29c2c1
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 22 00:11:34 2021 +0200
+
+    shellcheck disable SC, .onion.lib tls cert path blank by default, .editorconfig indent is 2
+
+commit 23e47224b6e669ab00a95f8f757fcb6fd8567a71
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 22 00:06:23 2021 +0200
+
+    TUI: Fix 'auth server off' intersection
+
+commit 7f20a02619583d64ef777d7c447b65de765166d7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 22 00:05:51 2021 +0200
+
+    mv onon.lib to .onon.lib (dot file)
+
+commit 4dff1af3ded3945859f0677204ab97598180cbd7
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 19:29:05 2021 +0200
+
+    better description of the videos
+
+commit 8db780ef82363d5e2eb1374d368d7060151afe2c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 19:26:58 2021 +0200
+
+    try to link to videos instead of showing in the README as it is not loading
+
+commit b0286db0de0c9f1be830983503e9f9f498a2e342
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 19:08:39 2021 +0200
+
+    add video demo
+
+commit 8042caadd0570b6a09528d67770ebb509fa34071
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 12:24:52 2021 +0200
+
+    TUI: exit only with the QUIT/EXIT option in the menu, loop menu is correct, clear screen before running the CLI script invoked by the TUI, add purge to 'off' command in the TUI, press confirmation after seeing CLI output to get back to the TUI
+
+commit a152db187c841580d9df8fc5eaf47f7777a24056
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 12:22:50 2021 +0200
+
+    prepare release print message and CLI: comment Cert FIngerprint for now
+
+commit cc74e584b08b233aa169de0960dd9a1aca79f8a1
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 10:01:35 2021 +0200
+
+    install_package function only for first install, upgrading packages such as tor need to be by the user because the script cant be updating and upgrading every time a command is called that needs those packages
+
+commit 351f726278625933aea888ca290eb41fb230ba63
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 09:58:41 2021 +0200
+
+    CLI: less 'cut' command, dealing with shell expansion at its best
+
+commit d0f301ff8771a39d01b11bf837ba25a5d999368c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 09:57:27 2021 +0200
+
+    TUI: removes set -x and README formatting
+
+commit 9272424c4abefc5ff4607f76d76f415c6d4a7725
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 08:55:12 2021 +0200
+
+    Update README.md about how to use zsh
+
+commit 2929ef80274ed45e3661278520cbc7d382d8ca4d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 08:54:43 2021 +0200
+
+    colors and onionservice path to working directory
+
+commit d2a13f87d172f1a775b5c7ab8f867c1949fbdc90
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 08:54:14 2021 +0200
+
+    TUI: constant source to be run from any dir, made possible by the setup.sh
+
+commit 645176081564449e0f6380ba618bd802e0659e17
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 08:52:38 2021 +0200
+
+    CLI: cert fingerprint in credentials, colorize output to be easier to see important info
+
+commit f45ba6ee4e8a1a4904117f735a38ab51abfe73f9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 21 08:50:29 2021 +0200
+
+    setup script to prepare env
+
+commit 24c7104bfee6839afd64421d1f80ebaaad803773
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 20 20:51:15 2021 +0200
+
+    inputrc is only bash and does not work with zsh. Also it was a small feature only
+
+commit c48571b3323cd9d6fe080e83605f741cc27c0b84
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 20 17:29:57 2021 +0200
+
+    remove Raspiblitz copyright as there is no remaining code from the original source
+
+commit 3a6b9420f9541e67b95ee304320c113370f1d004
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 20 17:03:09 2021 +0200
+
+    loop menu
+
+commit 950038d8ee0dc6c003e45253d3a3390662822273
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 20 16:46:33 2021 +0200
+
+    TUI: POSIX compliant now, but does not work with ZSH because of some unknown force
+
+commit 5c23c7be651f917dc4738a19416b902d67c7d974
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 20 16:45:29 2021 +0200
+
+    CLI: add 'no-qr' to credentials, addr_port with var expansion, fix correct .onion detection for 'auth client'
+
+commit 70afbc406f378f7421fdcd052607230189f4f569
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 20 16:43:24 2021 +0200
+
+    explain the TUI does not work with ZSH for the moment
+
+commit 97da9b995bdb6f913019790bc1147fdb52b3fe0f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 20 16:42:44 2021 +0200
+
+    update dot files
+
+commit aa69c796d49127b9ebb0113786ceba7ca54860c6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 19 06:17:09 2021 +0200
+
+    README: bugs, do not fill it yet for the TUI, only the CLI
+
+commit 718d3c9dbfeb5f99a165592360199a5c4194da89
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 19 06:16:13 2021 +0200
+
+    CLI: case on|on) and rever shell expation substitute cause it isnt posix
+
+commit 3da7f02ad435f107504c0f10d538a883c0761982
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 19 06:14:39 2021 +0200
+
+    TUI: s/whiptail/dialog/g + .dialogrc from JoininBox
+
+commit 26a74e5f9f64674965b04cddb4bb46a0bac9ecc1
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 18 10:51:25 2021 +0200
+
+    instructions readme and technical, symlink instead of copying
+
+commit 636dfd3aebd8566bb9d501f8f7eb866d4e323ddd
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 18 10:47:48 2021 +0200
+
+    update lib and add .bash_completion
+
+commit 8fe746c4589f30682eeab26ebd9fe952daf979da
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 18 10:46:50 2021 +0200
+
+    cli and tui, correct double quotes on tui and change cut -d for var expansion
+
+commit ece8b2312e58b7669e9fd597696ee8e541632e0a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 18 10:44:50 2021 +0200
+
+    adding dot files for shellcheck, editorconfig and inputrc
+
+commit 1dd4c7a008f6c2ad47b0a91d86b52784a72f7aec
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Sep 17 03:40:38 2021 +0200
+
+    start enhancing tui to run faster and lighter
+
+commit af9a971be08c247035c2a8b08896756237714877
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Fri Sep 17 03:39:54 2021 +0200
+
+    error handling main script
+
+commit ba585caeb8f6d0dda9030279f7b31c24fdc5e7b9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Sep 16 21:30:52 2021 +0200
+
+    up readme
+
+commit 07b72455a51c3302ae912f4345605ba71791d6f9
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Sep 16 19:31:31 2021 +0200
+
+    installation readme
+
+commit 7b6670266640051c2b3b49c0b1326ecfd108cb50
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Sep 16 19:02:09 2021 +0200
+
+    correct wrong var that broke loop_dynamic
+
+commit 6e9df7bcce5d866f8037e742244864fc29b437af
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Sep 16 18:52:04 2021 +0200
+
+    sh instead of bash for the texts and small correction on main script
+
+commit 831a289483669be18be5cee50d0b4067b0ed2047
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Sep 16 18:09:15 2021 +0200
+
+    cli is POSIX compliant now :)
+
+commit d3384b6f4d957984d5e729da324c9052526be639
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Sep 16 18:07:14 2021 +0200
+
+    update readme and contributing.md
+
+commit d1de677d11b69a1617c3e6746543bd6290272198
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Sep 16 11:10:59 2021 +0200
+
+    rename scripts inside files
+
+commit b589d625743aee16d4dfec55b5384c38472587ed
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Sep 16 11:02:42 2021 +0200
+
+    rename scripts to -cli and -tui
+
+commit 050f692575d906e6e9e58a676d7b8e7709c945ff
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Sep 16 10:58:01 2021 +0200
+
+    clean cat | grep for grep minimalistic
+
+commit 1c62dbac364d532ed7a96a0a15740e9e57b51a79
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 15 04:54:39 2021 +0200
+
+    update readme
+
+commit 8454019b98285cdc3f0f396af4d7b6fa0a33545a
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 15 04:54:29 2021 +0200
+
+    restarting_tor clean
+
+commit 9bba2d493bcdbcab07c0e4a4ffc477bbe3fa7074
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Sep 15 04:53:12 2021 +0200
+
+    try to minimize loop, stream ed more
+
+commit 9b4e90949630212e840269068bc600f0723215ef
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 14 23:36:59 2021 +0200
+
+    shellcheck corrections and source to restarting_tor instead of hardoced command
+
+commit 3872e1b5e327b09a6b75d56721bd643b14be2737
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 14 14:13:30 2021 +0200
+
+    fool proof in README
+
+commit 3d7d7e289b8678340a18b32f5064f8bb3cd2a0bc
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 14 14:06:56 2021 +0200
+
+    formattin in README
+
+commit e7fa532c0e2aaa89c1d79d4482af53000222ae98
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 14 14:04:31 2021 +0200
+
+    wrote features in README
+
+commit 3cbc17bfc924114a4135726a5a54b679e0e5815b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 14 13:22:39 2021 +0200
+
+    Create BUG, FEATURE REQUEST and QUESTION templates
+
+commit 2ca0ed0220a0bcce05d67c13690eac68e07398ff
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 14 05:32:20 2021 +0200
+
+    maintain private the client key, now he can generate one without the service operator knowing the private part, he can forward only the public part. Also the operator can now insert only the public part with the script
+
+commit a7dbc8b9277e829d151ba6e03021eff2508a675b
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 14 05:30:26 2021 +0200
+
+    better README and more instructions to TECHNICAL
+
+commit 00d41fc420cc649ed048b1c25a0ec7862dbb6186
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 13 20:31:26 2021 +0200
+
+    aaahhh markdown formatting
+
+commit 6670daf012279de26c8198f9dc1a566013f1e461
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 13 20:16:14 2021 +0200
+
+    avoid using the same local port and show which service is using it
+
+commit c52dd0d22d3d5bb1e78c6280c1cceee24d0a2d5d
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 13 20:15:33 2021 +0200
+
+    edit TECHNICAL and README for better wording
+
+commit 87702c5b79d3cee5786c53af0697f993961bd263
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 13 20:09:10 2021 +0200
+
+    remove samples folder
+
+commit b8c6637e6a381924aee82c4a2c462fa2a27a5b88
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 11 08:59:40 2021 +0200
+
+    add auth [server|client] list to main script
+
+commit f764cd94cedb5af7413c56e72d5ccc7203f0df57
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 11 08:58:41 2021 +0200
+
+    format TECHNICAL.md
+
+commit 95d1b60fd04381f8e51126909e729178bad13c71
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 7 16:04:51 2021 +0200
+
+    TECHNICAL formatting hate markdown
+
+commit 5d8d921a1e420e0b884a7f51e187fc30aa819638
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 7 15:44:40 2021 +0200
+
+    TECHNICAL.md formatting
+
+commit 7311ea19fc738bd66ee4bf194e31035fdbd12724
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 7 15:23:14 2021 +0200
+
+    Journey to POSIX compliant pt2 AND remove purge option of 'auth server', implement 'all-clients' for 'auth server'. Implement 'list' for 'auth client'
+
+commit 2fa23fc1767d26d2d5c72a5f4578bdfe05de77ab
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Sep 7 15:21:32 2021 +0200
+
+    Add TECHNICAL Instructions
+
+commit 57a64c7329181861da0055a109c72feadd26d2ca
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 6 05:46:48 2021 +0200
+
+    add contributing instructions
+
+commit 0ed331b0807c03c010b7509dd061bb3b6538b5f2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Mon Sep 6 05:46:28 2021 +0200
+
+    Journey to POSIX compliant pt1
+
+commit 8950e12725e818c632fd56acad896f3e6a2982b1
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sun Sep 5 15:08:13 2021 +0200
+
+    less if statements, better exiting when error occurs for the main script
+
+commit 29c287ba01e616cf6ff8ba5f15fa560c9e5074c0
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 4 08:16:53 2021 +0200
+
+    small corrections
+
+commit 8541378d9c3d0ef987342a59491a0e0cc4ef0777
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 4 04:42:29 2021 +0200
+
+    spacing
+
+commit 6b0a0a30c6e3e74fb599947b201f3613a7f88640
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 4 04:38:38 2021 +0200
+
+    correct 'on tcp' bug
+
+commit e1d25ae5829c5590320797ebd9ba9f64702dda94
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Sat Sep 4 03:21:18 2021 +0200
+
+    Correct missing case endings with ;;
+
+commit f9954f04460bcfa6d9853df0a310de45fa57c211
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Aug 26 18:20:21 2021 +0200
+
+    organize the onion-service.sh to use case instead of if
+
+commit 0dc321dba4b23eeaf9c7471e27b26d4bfcee72ec
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Thu Aug 26 10:59:03 2021 +0200
+
+    add vanguards and clean onion.lib variables
+
+commit 1d621da731b555df5730ab4f19f686b468b431c2
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Aug 25 05:10:16 2021 +0200
+
+    typos and todo
+
+commit 11b7ae39c098de08d94ed451dd3af9ddbbe75c6c
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Wed Aug 25 05:04:25 2021 +0200
+
+    avoid duplication of services in the torrc finally
+
+commit 4500ec318accb3a32974edf85575a57362ba1138
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 24 22:17:32 2021 +0200
+
+    correct f indentation and enhance README
+
+commit 263f6a1926be85344d1507dbbe09f0580bae030f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 24 19:26:27 2021 +0200
+
+            deleted:    BEST-PRACTICES.md
+            deleted:    CLIENT-AUTH.md
+            deleted:    DOS-GUIDELINES.md
+            deleted:    MANUAL.md
+            deleted:    ONION-LOCATION.md
+            deleted:    ONION-SERVICES.md
+            deleted:    man-onion-cli
+            deleted:    onion-cli
+            deleted:    tor.lib
+
+commit f07a8f06dd31f7c1ee4f93eca464dfd49f2450c6
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 24 19:17:53 2021 +0200
+
+    correct backup method, still duplicating lines tho
+
+commit f120c55460fbed89f60e14aa7144e1ab93534ec4
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 24 04:50:38 2021 +0200
+
+    add README.md and LICENSE
+
+commit a7d43877edb26fe0f7b4f74401359c9b1f18f60f
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 24 04:44:28 2021 +0200
+
+    lol, lost my readme copying over
+
+commit fb81431112d8946aac9e9a08bc680ce3e8532a99
+Author: nyxnor <nyxnor@protonmail.com>
+Date:   Tue Aug 24 04:42:20 2021 +0200
+
+    first commit hey
