@@ -9,35 +9,51 @@ Vcs-Git: https://github.com/nyxnor/onionjuggler.git
 Standards-Version: 4.5.1
 Rules-Requires-Root: no
 
-Package: onionjuggler-cli
-Architecture: all
-Depends: onionjuggler-lib, tor
-Recommends: qrencode
-Suggests: onionjuggler-cli-auth,
- onionjuggler-cli-web, onionjuggler-tui
-Description: Onion service management
- for Unix like operating systems.
+#Package: onionjuggler
+#Architecture: all
+#Depends: onionjuggler-lib,
+# onionjuggler-cli,
+# onionjuggler-cli-auth,
+# onionjuggler-cli-web,
+# onionjuggler-tui
+#Description: Bundle all OnionJuggler scripts
+# into one package.
 
 Package: onionjuggler-lib
 Architecture: all
-Depends: tor, grep (>= 1.0), sed (>= 1.0), awk
-Recommends: qrencode
+Depends: tor,
+ grep (>= 1.0),
+ sed (>= 1.0),
+ awk
 Description: Library for OnionJuggler
  Helper functions to avoid cluttering scripts.
 
+Package: onionjuggler-cli
+Architecture: all
+Depends: onionjuggler-lib,
+  tor,
+  qrencode
+Suggests: onionjuggler-cli-auth,
+ onionjuggler-cli-web,
+ onionjuggler-tui
+Description: Onion service management
+ for Unix like operating systems.
+
 Package: onionjuggler-tui
 Architecture: all
-Depends: onionjuggler-lib, whiptail
-Recommends:
-Suggests: onionjuggler-cli, onionjuggler-cli-web,
- onionjuggler-cli-auth
+Depends: onionjuggler-lib,
+ whiptail
+Recommends: onionjuggler-cli,
+ onionjuggler-cli-auth,
+ onionjuggler-cli-web
 Description: Dialog boxes for OnionJuggler
  As beautiful as it can be.
 
 Package: onionjuggler-cli-auth
 Architecture: all
-Depends: onionjuggler-lib, openssl, basez
-Recommends:
+Depends: onionjuggler-lib,
+ openssl,
+ basez
 Description: Authentication scripts for OnionJuggler
  Help importing keys or generating a new key pair,
  to authenticate a client or be authenticated as
@@ -45,8 +61,8 @@ Description: Authentication scripts for OnionJuggler
 
 Package: onionjuggler-cli-web
 Architecture: all
-Depends: onionjuggler-lib, nginx
-Recommends:
+Depends: onionjuggler-lib,
+ nginx
 Description: Webserver management by OnionJuggler
  Helper for managing nginx webserver and configuring
  it easily for onion services.
