@@ -5,7 +5,7 @@
 #etc/onionjuggler/dialogrc
 #usr/*
 
-etc/onionjuggler/conf.d/*
-etc/onionjuggler/debian.conf => etc/onionjuggler/onionjuggler.conf
-etc/onionjuggler/dialogrc
+#etc/onionjuggler/conf.d/*
+#etc/onionjuggler/debian.conf => etc/onionjuggler/onionjuggler.conf
+#etc/onionjuggler/dialogrc
 usr/bin/onionjuggler-cli

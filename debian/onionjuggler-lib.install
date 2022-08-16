@@ -1,3 +1,6 @@
 #!/usr/bin/dh-exec
 
+etc/onionjuggler/conf.d/*
+etc/onionjuggler/debian.conf => etc/onionjuggler/onionjuggler.conf
+etc/onionjuggler/dialogrc
 usr/share/onionjuggler/*
