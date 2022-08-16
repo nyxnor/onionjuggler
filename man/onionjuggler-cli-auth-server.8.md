@@ -1,6 +1,6 @@
-% onionjuggler-cli-auth-server(8) Manage onion service server side authorization
+% ONIONJUGGLER-CLI-AUTH0-SERVER(8) Manage onion service server side authorization
 % Written by nyxnor (nyxnor@protonmail.com)
-% September 2069
+% default_date
 
 # NAME
 
@@ -17,6 +17,7 @@ onionjuggler-cli-auth-server - Manage onion service server side authorization
 **onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
 **onionjuggler-cli-auth-server** [**--off**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
 **onionjuggler-cli-auth-server** [**--list**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli-auth-server** [**-V**|**--version**]
 **onionjuggler-cli-auth-server** [**-h**|**--help**]
 
 
@@ -26,50 +27,6 @@ onionjuggler-cli-auth-server - Manage onion service server side authorization
 
 
 # OPTIONS
-
-## VARIABLES
-
-**[VAR]**
-
-: Variable is required.
-
-**<*VAR*>**
-
-: Variable is optional.
-
-**@all**, **@all**
-
-: Include all available services or clients.
-
-**SERV1,SERV2...**, **CLIENT1,CLIENT2,...**, **ONION1,ONION2**
-
-: List enabled option. e.g: ssh,xmpp,irc or alice,bob.
-
-**VERSION**
-
-: Onion service version. Currently only valid value is 3.
-
-**SERV**
-
-: Service name. String format.
-
-**main** [**--option**<=*ARGUMENT*>]
-
-: Commands that accept arguments can be specified as follow: *--service ssh* OR *--service "ssh nextcloud"* OR *--service=ssh,nextcloud*
-
-**ssh**, **xmpp**, **nextcloud**
-
-: Example of onion services directory names.
-
-## ARGUMENTS
-
-**--getconf**
-
-: Print configuration in the format **key**="*val*".
-
-**--getopt**
-
-: Print option parsing results.
 
 **--on** **--service** <*SERVICE*> **--client-pub-file** <*CLIENT_PUB_FILE*> **--replace-file**\
 **--on** **--service** <*SERVICE*> **--client-pub-config** <*CLIENT_PUB_CONFIG*> **--client** **--replace-file**\
@@ -105,6 +62,18 @@ onionjuggler-cli-auth-server --list --service ssh
 onionjuggler-cli-auth-server --list --service ssh,xmpp
 onionjuggler-cli-auth-server --list --service @all
 ```
+
+**-V**, **--version**
+
+: Print version information.
+
+**--getconf**
+
+: Print configuration in the format **key**="*val*".
+
+**--getopt**
+
+: Print option parsing results.
 
 **-h**, **--help**
 : Display the script help message. Abscense of any parameter will also have the same effect.

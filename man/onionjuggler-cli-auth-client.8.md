@@ -1,6 +1,6 @@
-% onionjuggler-cli-auth-server(8) Manage onion service client side authorization
+% ONIONJUGGLER-CLI-AUTH-CLIENT(8) Manage onion service client side authorization
 % Written by nyxnor (nyxnor@protonmail.com)
-% September 2069
+% default_date
 
 # NAME
 
@@ -17,6 +17,7 @@ onionjuggler-cli-auth-client - Manage onion service client side authorization
 **onionjuggler-cli-auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>] [**--onion** <*ONION*>] [**--replace-file**]\
 **onionjuggler-cli-auth-client** [**--off**] [**--client** <*CLIENT*>]\
 **onionjuggler-cli-auth-client** [**--list**]\
+**onionjuggler-cli-auth-client** [**-V**|**--version**]
 **onionjuggler-cli-auth-client** [**-h**|**--help**]
 
 
@@ -26,62 +27,6 @@ onionjuggler-cli-auth-client - Manage onion service client side authorization
 
 
 # OPTIONS
-
-## VARIABLES
-
-**[VAR]**
-
-: Variable is required.
-
-**<*VAR*>**
-
-: Variable is optional.
-
-**@all**, **@all**
-
-: Include all available services or clients.
-
-**SERV1,SERV2...**, **CLIENT1,CLIENT2,...**, **ONION1,ONION2**
-
-: List enabled option. e.g: ssh,xmpp,irc or alice,bob.
-
-**VERSION**
-
-: Onion service version. Currently only valid value is 3.
-
-**SERV**
-
-: Service name. String format.
-
-**VIRTPORT**
-
-: Virtual port. Integer format.
-
-**TARGET**
-
-: Target socket. TCP needs to be specified, the format is *addr:port*. Abscense of the address will bind to localhost using the address *127.0.0.1* for uniformity. Abscense of target and will use the same port as the virtual port, specifying just the port will bind to localhost using the address *127.0.0.1* for uniformity. Unix target is handled by the code using the format *unix:path* and does not require manual selection. Integer format.
-
-**ONION**
-
-: Onion address of the authenticated service for the client to connect to. Only accepted format is for onion v3 addresses, which contains 56 characters using the base32 format with the range *a-z2-7* and ending with (dot)onion. String format.
-
-**main** [**--option**<=*ARGUMENT*>]
-
-: Commands that accept arguments can be specified as follow: *--service ssh* OR *--service "ssh nextcloud"* OR *--service=ssh,nextcloud*
-
-**ssh**, **xmpp**, **nextcloud**
-
-: Example of onion services directory names.
-
-## ARGUMENTS
-
-**--getconf**
-
-: Print configuration in the format **key**="*val*".
-
-**--getopt**
-
-: Print option parsing results.
 
 **--on** **--client-priv-file** <*CLIENT_PRIV_FILE*> **--replace-file**\
 **--on** **--client** <*CLIENT*> **--client-priv-config** <*CLIENT_PRIV_CONFIG*> **--replace-file**\
@@ -110,6 +55,18 @@ onionjuggler-cli-auth-client --off --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6d
 ```
 onionjuggler-cli-auth-client --list
 ```
+
+**-V**, **--version**
+
+: Print version information.
+
+**--getconf**
+
+: Print configuration in the format **key**="*val*".
+
+**--getopt**
+
+: Print option parsing results.
 
 **-h**, **--help**
 : Display the script help message. Abscense of any parameter will also have the same effect.

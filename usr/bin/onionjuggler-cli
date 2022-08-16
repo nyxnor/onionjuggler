@@ -67,12 +67,13 @@ Usage: ${me} [--option <ARGUMENT>]
   -h|--help                  display this help message
 
 Options:
+  -V, --version              print version
   --getconf                  print configuration
   --getopt                   print options given by the command line
   --on                       activate an onion service
     -s, --service <SERVICE>  service to activate
     -S, --socket <tcp|unix>  define a socket, default tcp
-    -v, --version 3          define a version, default 3
+    -v, --hs-version 3       set service version, default 3
     -p, --port <VIRTPORT[:TARGET],VIRTPORT2[:TARGET2]>
                              define ports for the new onion service
     -g, --gateway            define target 127.0.0.1 (doesn't override target)
@@ -125,12 +126,12 @@ while :; do
   clean_opt "${1}" || break
   # shellcheck disable=SC2034
   case "${opt}" in
-    getopt|getopts|getconf) set_arg dev "${opt}";;
+    getopt|getconf|V|version) set_arg dev "${opt}";;
     on|off|list|n|f|l|renew) set_arg status "${opt}";;
     R|restart|r|reload) set_arg signal "${opt}";;
     P|purge|q|quiet) set_arg action "${opt}";;
     s|service|s=*|service=*) get_arg service;;
-    v|version|v=*|version=*) get_arg version;;
+    v|hs_version|v=*|hs_version=*) get_arg hs_version;;
     S|socket|S=*|socket=*) get_arg socket;;
     p|port|p=*|port=*) get_arg port;;
     g|gateway) set_arg gateway_service 1;;
@@ -152,6 +153,7 @@ done
 case "${dev}" in
   getconf) get_conf_values; exit 0;;
   getopt) printf %s"${arg_saved}\n"; exit 0;;
+  V|version) printf '%s\n' "${me} ${version}"; exit 0;;
 esac
 
 
@@ -174,7 +176,7 @@ case "${status}" in
   ## unix-socket uses unix:path, which is create a unique name for it. It does not leak onion address to the local network.
   ## virtport is the port to be used by the client when visiting the service.
   ## empty socket will default to tcp
-  ## empty version will default to 3
+  ## empty hs_version will default to 3
   ## target is where the incoming traffic from virtport gets redirected. This option is abscent on unix-socket because the script completes it.
   ##  if target is not specified, will use the same port from virtport and bind to localhost.
   ##  if target only contains the port number and not the address, will bind to localhost.
@@ -183,14 +185,14 @@ case "${status}" in
     check_opt_filled service
     check_name service
     grep -q -E "^HiddenServiceDir ${tor_data_dir_services}/${service}$|^HiddenServiceDir ${tor_data_dir_services}/${service}/$" "${tor_conf}" && error_msg "service '${service}' already exists, choose another name"
-    : "${version:=3}"; [ "${version}" != "3" ] && error_msg "version ${version} is not available" ## wait for v4 to change this
+    : "${hs_version:=3}"; [ "${hs_version}" != "3" ] && error_msg "hs-version ${hs_version} is not available" ## wait for v4 to change this
     : "${socket:=tcp}"
     check_opt_filled port
 
     ## backup torrc
     safe_edit tmp tor_conf
     notice "Including Hidden Service configuration to ${tor_conf_tmp}"
-    printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${version}\n" | tee -a "${tor_conf_tmp}"
+    printf %s"\nHiddenServiceDir ${tor_data_dir_services}/${service}\nHiddenServiceVersion ${hs_version}\n" | tee -a "${tor_conf_tmp}"
 
     finish_service_activation(){
       ## remove double empty lines

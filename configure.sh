@@ -9,13 +9,15 @@ onionjuggler_repo="${ONIONJUGGLER_GIT_ORIGIN:-"https://github.com/nyxnor/onionju
 command -v git >/dev/null || { printf '%s\n' "Missing dependency, please install git"; exit 1; }
 topdir="$(git rev-parse --show-toplevel || exit 1)"
 me="${0##*/}"
+configure_version="0.0.1"
 
 usage(){
   printf %s"Configure the environment for OnionJuggler
-\nUsage: ${me} [--option <ARG>]
-\nOptions:
+Usage: ${me} [--option <ARG>]
+Options:
   -i, --install                               setup environment copying files to path
   -d, --uninstall [-P, --purge]               remove onionjuggler scripts and manual pages from path
+  -V, --version
   -h, --help                                  show this help message
 \nAdvanced options:
   -B, --bin-dir <DIR>                         script directory that is on path (Default: /usr/local/bin)
@@ -25,6 +27,7 @@ usage(){
   -G, --plugin <PLUGIN>                       if plugin is specified, only install selected plugins (e.g: auth-client,web)
   -k, --check                                 run pre-defined shellcheck
   -m, --man                                   build manual pages
+  -S, --clean                                 remove temporary files
   -r, --release                               prepare for commiting
   -u, --update                                development updating by pulling from upstream
 "
@@ -38,7 +41,7 @@ usage(){
 
 check_repo(){
   if [ "${PWD}" != "${topdir}" ]; then
-    error_msg "This script must be run from inside the onionjuggler repository!"
+    error_msg "This script must be run from the root of the onionjuggler repository!"
   fi
 }
 
@@ -91,10 +94,15 @@ make_shellcheck(){
 
 make_man(){
   command -v pandoc >/dev/null || error_msg "Install pandoc to create manuals"
+  notice "${yellow}Setting version ${configure_version}${nocolor}"
+  sed -i'' "s/^version=.*/version=\"${configure_version}\"/" "${topdir}/usr/share/onionjuggler/defaults.sh"
   notice "${magenta}Creating manual pages${nocolor}"
   for man in "${topdir}"/man/*; do
     man="${man##*/}"
-    pandoc -s -f markdown-smart -t man "${topdir}/man/${man}" -o "${topdir}/auto-generated-man-pages/${man%*.md}"
+    ## remove man number (5,8) and file ending (.md)
+    man_ref="${man%.*}"; man_ref="${man_ref%.*}"
+    pandoc -s -f markdown-smart -V header="Tor's System Manager Manual" -V footer="${man_ref} ${version}" -t man "${topdir}/man/${man}" -o "${topdir}/auto-generated-man-pages/${man%*.md}"
+    sed -i'' "s/default_date/$(date +%Y-%m-%d)/" "${topdir}/auto-generated-man-pages/${man%*.md}"
   done
 }
 
@@ -212,7 +220,7 @@ while :; do
   clean_opt "${1}" || break
   # shellcheck disable=SC2034
   case "${opt}" in
-    c|clone|i|install|u|update|d|uninstall|r|release|k|check|m|man) command="${opt}";;
+    c|clone|i|install|u|update|d|uninstall|r|release|k|check|m|man|S|clean) command="${opt}";;
     G|plugin|G=*|plugin=*) get_arg plugin;;
     P|purge) action="${opt}";;
     B|bin-dir|B=*|bin-dir=*) get_arg bin_dir;;
@@ -350,6 +358,18 @@ case "${command}" in
   k|check) check_repo; make_shellcheck;;
 
   m|man) check_repo; not_as_root; make_man;;
+
+  S|clean)
+    notice "Cleaning directory..."
+    requires_root
+    cd "${topdir}" || error_msg "Failed to change directory to ${topdir}"
+    rm -rf -- *-build-deps_*.buildinfo *-build-deps_*.changes \
+      debian/*.debhelper.log debian/*.substvars \
+      debian/.debhelper debian/files \
+      debian/debhelper-build-stamp debian/tmp
+    find debian/ -type d -name "onionjuggler*" -exec rm -r {} +;
+    rm -f -- ../onionjuggler_*.deb ../onionjuggler_*.buildinfo ../onionjuggler_*.changes
+  ;;
 
   *) usage;;
 

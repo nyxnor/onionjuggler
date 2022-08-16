@@ -16,28 +16,35 @@ Recommends: qrencode
 Suggests: onionjuggler-auth-server, onionjuggler-auth-client,
  onionjuggler-web, onionjuggler-tui
 Description: Onion service management
+ for Unix like operating systems.
 
 Package: onionjuggler-lib
 Architecture: all
-Depends: tor, grep, sed
+Depends: tor, grep (>= 1.0), sed (>= 1.0), awk
 Recommends: qrencode
 Description: Library for OnionJuggler
+ Helper functions to avoid cluttering scripts.
 
 Package: onionjuggler-tui
 Architecture: all
 Depends: onionjuggler-cli, whiptail
 Recommends:
 Description: Dialog boxes for OnionJuggler
+ As beautiful as it can be.
 
 Package: onionjuggler-cli-auth
 Architecture: all
 Depends: onionjuggler-lib, openssl, basez
 Recommends:
 Description: Authentication scripts for OnionJuggler
+ Help importing keys or generating a new key pair,
+ to authenticate a client or be authenticated as
+ a client to an onion service.
 
 Package: onionjuggler-cli-web
 Architecture: all
 Depends: onionjuggler-lib, nginx
 Recommends:
 Description: Webserver management by OnionJuggler
-
+ Helper for managing nginx webserver and configuring
+ it easily for onion services.

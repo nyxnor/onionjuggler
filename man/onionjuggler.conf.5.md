@@ -1,6 +1,6 @@
-% onionjuggler.conf(5) Configuration file for OnionJuggler
+% ONIONJUGGLER.CONF(5) Configuration file for OnionJuggler
 % Written by nyxnor (nyxnor@protonmail.com)
-% September 2069
+% default_date
 
 # NAME
 

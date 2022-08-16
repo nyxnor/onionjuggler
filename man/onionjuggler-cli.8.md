@@ -1,6 +1,6 @@
-% onionjuggler-cli(8) Dinamically juggle with onion services with a POSIX compliant shell
+% ONIONJUGGLER-CLI(8) Dinamically juggle with onion services with a POSIX compliant shell
 % Written by nyxnor (nyxnor@protonmail.com)
-% September 2069
+% default_date
 
 # NAME
 
@@ -10,13 +10,14 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 # SYNOPSIS
 
 **onionjuggler-cli** [**--option**<=*ARGUMENT*>]\
-**onionjuggler-cli [--getconf]**\
-**onionjuggler-cli [--getopt]** [**--service** <*SERVICE*>]\
 **onionjuggler-cli --on** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT*[:*TARGET*],[*VIRTPORTn*][:*TARGETn*]>] [**--gateway**]\
 **onionjuggler-cli --on**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*>] [**--port** [*VIRTPORT*,[*VIRTPORT2*]>]\
 **onionjuggler-cli --off** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
 **onionjuggler-cli --list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
 **onionjuggler-cli --renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli [-V|--version]**\
+**onionjuggler-cli [--getconf]**\
+**onionjuggler-cli [--getopt]** [**--service** <*SERVICE*>]\
 **onionjuggler-cli** [**-h**|**--help**]
 
 
@@ -26,62 +27,6 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 
 
 # OPTIONS
-
-## VARIABLES
-
-**[VAR]**
-
-: Variable is required.
-
-**<*VAR*>**
-
-: Variable is optional.
-
-**@all**, **@all**
-
-: Include all available services or clients.
-
-**SERV1,SERV2...**, **CLIENT1,CLIENT2,...**, **ONION1,ONION2**
-
-: List enabled option. e.g: ssh,xmpp,irc or alice,bob.
-
-**VERSION**
-
-: Onion service version. Currently only valid value is 3.
-
-**SERV**
-
-: Service name. String format.
-
-**VIRTPORT**
-
-: Virtual port. Integer format.
-
-**TARGET**
-
-: Target socket. TCP needs to be specified, the format is *addr:port*. Abscense of the address will bind to localhost using the address *127.0.0.1* for uniformity. Abscense of target and will use the same port as the virtual port, specifying just the port will bind to localhost using the address *127.0.0.1* for uniformity. Unix target is handled by the code using the format *unix:path* and does not require manual selection. Integer format.
-
-**ONION**
-
-: Onion address of the authenticated service for the client to connect to. Only accepted format is for onion v3 addresses, which contains 56 characters using the base32 format with the range *a-z2-7* and ending with (dot)onion. String format.
-
-**main** [**--option**<=*ARGUMENT*>]
-
-: Commands that accept arguments can be specified as follow: *--service ssh* OR *--service "ssh nextcloud"* OR *--service=ssh,nextcloud*
-
-**ssh**, **xmpp**, **nextcloud**
-
-: Example of onion services directory names.
-
-## ARGUMENTS
-
-**--getconf**
-
-: Print configuration in the format **key**="*val*".
-
-**--getopt**
-
-: Print option parsing results.
 
 **--on** **--service** <*SERV*> **--version** *3* **--socket** *tcp* **--port** <*VIRTPORT*:<*TARGET*>,<*VIRTPORTn*>:<*TARGETn*>> **--gateway**
 
@@ -133,6 +78,18 @@ onionjuggler-cli --renew --service ssh
 onionjuggler-cli --renew --service ssh,xmpp
 onionjuggler-cli --renew --service @all
 ```
+
+**-V**, **--version**
+
+: Print version information.
+
+**--getconf**
+
+: Print configuration in the format **key**="*val*".
+
+**--getopt**
+
+: Print option parsing results.
 
 **-h**, **--help**
 : Display the script help message. Abscense of any parameter will also have the same effect.

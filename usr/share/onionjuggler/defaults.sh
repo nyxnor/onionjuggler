@@ -7,6 +7,9 @@
 ###################
 #### VARIABLES ####
 
+## don't change here, automatically set by configure.sh
+version="0.0.1"
+
 ## colors
 nocolor="\033[0m"
 bold="\033[1m"

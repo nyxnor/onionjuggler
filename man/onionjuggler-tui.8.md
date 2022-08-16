@@ -1,6 +1,6 @@
-% onionjuggler-tui(8) Dinamically juggle with onion services with a POSIX compliant shell
+% ONIONJUGGLER-TUI(8) Dinamically juggle with onion services with a POSIX compliant shell
 % Written by nyxnor (nyxnor@protonmail.com)
-% September 2069
+% default_date
 
 # NAME
 
@@ -10,6 +10,7 @@ onionjuggler-tui - OnionJuggler Terminal User Interface, also known as the *onio
 # SYNOPSIS
 
 **onionjuggler-tui** **command** [**--option**<=*ARGUMENT*>]\
+**onionjuggler-tui** **[-V|--version]**
 **onionjuggler-tui** **--help**
 
 # DESCRIPTION
@@ -18,6 +19,10 @@ onionjuggler-tui - OnionJuggler Terminal User Interface, also known as the *onio
 
 
 # OPTIONS
+
+**-V**, **-version**
+
+: Print version information.
 
 **-h**, **--help**
 

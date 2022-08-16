@@ -1,6 +1,6 @@
-% onionjuggler-cli-web(8) Manage webserver for onion services
+% ONIONJUGGLER-CLI-WEB(8) Manage webserver for onion services
 % Written by nyxnor (nyxnor@protonmail.com)
-% September 2069
+% default_date
 
 # NAME
 
@@ -16,6 +16,7 @@ onionjuggler-cli-web - Manage webserver for onion services
 **onionjuggler-cli-web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>] [**--no-check-service**] [**--port** <*VIRTPORT[:TARGET]*>]\
 **onionjuggler-cli-web** [**--off**] [**--service** <*SERVICE*>]\
 **onionjuggler-cli-web** [**--list**]\
+**onionjuggler-cli-web** [**-V**|**--version**]
 **onionjuggler-cli-web** [**-h**|**--help**]
 
 
@@ -25,54 +26,6 @@ onionjuggler-cli-web - Manage webserver for onion services
 
 
 # OPTIONS
-
-## VARIABLES
-
-**[VAR]**
-
-: Variable is required.
-
-**<*VAR*>**
-
-: Variable is optional.
-
-**@all**, **@all**
-
-: Include all available services or clients.
-
-**SERV1,SERV2...**, **CLIENT1,CLIENT2,...**, **ONION1,ONION2**
-
-: List enabled option. e.g: ssh,xmpp,irc or alice,bob.
-
-**SERV**
-
-: Service name. String format.
-
-**VIRTPORT**
-
-: Virtual port. Integer format.
-
-**TARGET**
-
-: Target socket. TCP needs to be specified, the format is *addr:port*. Abscense of the address will bind to localhost using the address *127.0.0.1* for uniformity. Abscense of target and will use the same port as the virtual port, specifying just the port will bind to localhost using the address *127.0.0.1* for uniformity. Unix target is handled by the code using the format *unix:path* and does not require manual selection. Integer format.
-
-**main** [**--option**<=*ARGUMENT*>]
-
-: Commands that accept arguments can be specified as follow: *--service ssh* OR *--service "ssh nextcloud"* OR *--service=ssh,nextcloud*
-
-**ssh**, **xmpp**, **nextcloud**
-
-: Example of onion services directory names.
-
-## ARGUMENTS
-
-**--getconf**
-
-: Print configuration in the format **key**="*val*".
-
-**--getopt**
-
-: Print option parsing results.
 
 **--on** **--service** <*SERV*> **--folder** <*FOLDER*>
 
@@ -94,6 +47,18 @@ onionjuggler-cli-web --off --service nextcloud
 ```
 onionjuggler-cli-web --list
 ```
+
+**-V**, **--version**
+
+: Print version information.
+
+**--getconf**
+
+: Print configuration in the format **key**="*val*".
+
+**--getopt**
+
+: Print option parsing results.
 
 **-h**, **--help**
 : Display the script help message. Abscense of any parameter will also have the same effect.

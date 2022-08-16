@@ -22,6 +22,7 @@ Complete options:
   --off [--service <SERVICE>]
                             stop serving a website for certain service and its folder
   --list                    list enabled websites
+  --version                 print version
   --getopt                  print options parsed
   --getconf                 print configuration values
 "
@@ -48,7 +49,7 @@ while :; do
     p|port|p=*|port=*) get_arg port;;
     w|folder|w=*|folder=*) get_arg folder;;
     no-check-service) set_arg no_check_service 1;;
-    getopt|getconf) set_arg dev "${opt}";;
+    getopt|getconf|V|version) set_arg dev "${opt}";;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac
@@ -64,6 +65,7 @@ done
 case "${dev}" in
   getconf) get_conf_values; exit 0;;
   getopt) printf %s"${arg_saved}\n"; exit 0;;
+  V|version) printf '%s\n' "${me} ${version}"; exit 0;;
 esac
 
 [ -z "${status}" ] && usage

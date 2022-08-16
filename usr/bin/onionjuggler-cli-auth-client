@@ -26,6 +26,7 @@ Complete options:
                             remove client side credential based on client name
   --list [--client <@all|CLIENT1,CLIENT2,...>]
                             list client side credentials, optionally specify client names
+  --version                 print version
   --getopt                  print options parsed
   --getconf                 print configuration values
 "
@@ -53,7 +54,7 @@ while :; do
     o|onion|o=*|onion=*) get_arg onion_hostname;;
     client|client=*) get_arg client;;
     replace-file) set_arg replace_file "1";;
-    getopt|getconf) set_arg dev "${opt}";;
+    getopt|getconf|V|version) set_arg dev "${opt}";;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
   esac
@@ -66,6 +67,7 @@ done
 case "${dev}" in
   getconf) get_conf_values; exit 0;;
   getopt) printf %s"${arg_saved}\n"; exit 0;;
+  V|version) printf '%s\n' "${me} ${version}"; exit 0;;
 esac
 
 [ "$(id -u)" -ne 0 ] && error_msg "run as root"
