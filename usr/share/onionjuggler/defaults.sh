@@ -318,7 +318,7 @@ read_tor_files(){
   fi
   ## verify tor confgiuration just to grep which files were included
   tor_verify_config_output="$(${tor_start_command:="tor"} --verify-config)"
-  tor_config_files="$(printf '%s\n' "${tor_verify_config_output}" |  grep -E " Read configuration file [^ ]*| Including configuration file [^ ]*" | awk '{print $NF}' | sed "s/\"//;s/\".//;s/\/\//\//" | tr "\n" " ")"
+  tor_config_files="$(printf '%s\n' "${tor_verify_config_output}" |  grep -E " Read configuration file [^ ]*| Including configuration file [^ ]*" | sed "s/.* //" | cut -d "\"" -f2 | tr "\n" " ")"
 }
 
 
