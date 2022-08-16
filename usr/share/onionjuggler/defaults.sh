@@ -108,7 +108,7 @@ error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
 
 ## helper for --getconf
 get_conf_values(){
-  for key in openssl_cmd webserver webserver_conf website_dir requirements \
+  for key in operating_system openssl_cmd webserver webserver_conf website_dir requirements \
   tor_daemon tor_user tor_conf_dir tor_conf_user_group tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
   tor_hiddenserviceport_target_addr; do
     eval val='$'"${key}"
