@@ -108,8 +108,8 @@ error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
 
 ## helper for --getconf
 get_conf_values(){
-  for key in operating_system openssl_cmd webserver webserver_conf website_dir requirements \
-  tor_daemon tor_user tor_conf_dir tor_conf_user_group tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
+  for key in operating_system onionjuggler_plugin pkg_mngr_install openssl_cmd webserver webserver_conf website_dir dialog requirements \
+  daemon_control tor_daemon tor_user tor_conf_user_group tor_conf_dir tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
   tor_hiddenserviceport_target_addr; do
     eval val='$'"${key}"
     test -n "${val}" && printf '%s\n' "${key}=\"${val}\""
@@ -146,16 +146,8 @@ set_default_conf_values(){
 source_conf(){
   test -f /etc/onionjuggler/onionjuggler.conf || error_msg "Default configuration file not found: /etc/onionjuggler/onionjuggler.conf"
   for file in /etc/onionjuggler/onionjuggler.conf /etc/onionjuggler/conf.d/*.conf; do
-    ## not sourcing file directly to avoid running commands
-    ## also us"eful to save variables to a list to be later printed
-    conf_filtered="/tmp/onionjuggler.conf.read"
-    grep -v -e "^[[:space:]]*\#" -e "^[[:space:]]*$" "${file}" | tee "${conf_filtered}" >/dev/null
-    #printf '%s\n' "${conf_read}" | while IFS='=' read -r key val; do
-    while IFS='=' read -r key val; do
-       test -n "${key}" && eval "${key}"="${val}"
-    done < "${conf_filtered}"
+    . "${file}"
   done
-  rm -f "${conf_filtered}"
   set_default_conf_values
 }
 
