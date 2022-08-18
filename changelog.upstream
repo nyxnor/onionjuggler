@@ -1747,7 +1747,7 @@ commit d57825d032cea12c65c3a8975599e39048a50bc0
 Author: nyxnor <nyxnor@protonmail.com>
 Date:   Fri Dec 3 17:19:21 2021 +0000
 
-    remove set -x
+    remove 
 
 commit 7f380474e2ef84fb6a42f942a3c2dd0a0c5e323f
 Author: nyxnor <nyxnor@protonmail.com>
@@ -2029,7 +2029,7 @@ commit a9975390c9cecc2f9c2153941821d13ab596ef60
 Author: nyxnor <nyxnor@protonmail.com>
 Date:   Wed Nov 10 10:15:33 2021 +0000
 
-    remove set -x
+    remove 
 
 commit 9f4da6186ef5eb029a51edc7dc6390552d2f8b4e
 Author: nyxnor <nyxnor@protonmail.com>
@@ -2423,7 +2423,7 @@ commit e9f64eda26fe67b01210edb0643a4a5d0f5d125d
 Author: nyxnor <nyxnor@protonmail.com>
 Date:   Tue Nov 2 14:58:57 2021 +0100
 
-    remove set -x
+    remove 
 
 commit 0c02e7fae0b4299ca42f42a57079e448de8b4d28
 Author: nyxnor <nyxnor@protonmail.com>
@@ -3165,7 +3165,7 @@ commit d0f301ff8771a39d01b11bf837ba25a5d999368c
 Author: nyxnor <nyxnor@protonmail.com>
 Date:   Tue Sep 21 09:57:27 2021 +0200
 
-    TUI: removes set -x and README formatting
+    TUI: removes  and README formatting
 
 commit 9272424c4abefc5ff4607f76d76f415c6d4a7725
 Author: nyxnor <nyxnor@protonmail.com>

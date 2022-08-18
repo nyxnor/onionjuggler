@@ -1,3 +1,4 @@
+build/
 *-build-deps_*.buildinfo
 *-build-deps_*.changes
 debian/*.debhelper.log

@@ -69,7 +69,7 @@ case "${dev}" in
 esac
 
 [ -z "${status}" ] && usage
-if [ "${webserver}" != "nginx" ] && [ "${webserver}" != "apache2" ] && [ "${webserver}" != "openbsd-httpd" ]; then
+if [ "${webserver}" != "nginx" ] && [ "${webserver}" != "apache2" ]; then
   error_msg "webserver can be either 'nginx' or 'apache2', not '${webserver}'"
 fi
 
@@ -80,7 +80,8 @@ reload_webserver(){
       if nginx -t; then
         nginx -s reload
       else
-        rm -f "${webserver_conf}/${service}-onion.conf"
+        rm -f "${webserver_conf_dir}/sites-available/${service}-onion.conf"
+        rm -f "${webserver_conf_dir}/sites-enabled/${service}-onion.conf"
         error_msg "Webserver configuration failed, aborting"
       fi
     ;;
@@ -88,14 +89,9 @@ reload_webserver(){
       if apache2 -t; then
         apache2 -k graceful
       else
-        rm -f "${webserver_conf}/${service}-onion.conf"
+        rm -f "${webserver_conf_dir}/sites-available/${service}-onion.conf"
+        rm -f "${webserver_conf_dir}/sites-enabled/${service}-onion.conf"
         error_msg "Webserver configuration failed, aborting"
-      fi
-    ;;
-    openbsd-httpd)
-      openbsd_httpd_test="$(httpd -n -f "${webserver_conf}" 2>&1)"
-      if [ "${openbsd_httpd_test}" = "no actions, nothing to do" ] || [ "${openbsd_httpd_test}" = "configuration OK" ]; then
-        rcctl reload httpd
       fi
     ;;
   esac
@@ -134,27 +130,19 @@ case "${status}" in
     fi
 
     case "${webserver}" in
-      apache2|openbsd-httpd) printf %s"${target}" | grep -q "unix" && error_msg "Web server '${webserver}' does not accept listening on a unix domain socket." ;;
+      apache2) printf %s"${target}" | grep -q "unix" && error_msg "Web server '${webserver}' does not accept listening on a unix domain socket." ;;
     esac
     notice "${cyan}Activating web server for the service: ${service}${nocolor}\n"
     case "${webserver}" in
       nginx|apache2)
-        [ ! -d "${webserver_conf}" ] && error_msg "webserver_conf=${webserver_conf} directory does not exist"
+        test -d "${webserver_conf_dir}/sites-available" || error_msg "${webserver_conf_dir}/sites-available directory does not exist"
+        test -d "${webserver_conf_dir}/sites-enabled" || error_msg "${webserver_conf_dir}/sites-enabled directory does not exist"
         ## If $folder starts with '~/' or '/', user specified the path, if started with anything else expect a folder inside ${website_dir}
         case "${folder}" in
           ~/*|/*) :;;
           *) folder="${website_dir}/${folder}";;
         esac
         [ ! -d "${folder}" ] && error_msg "Website folder '${folder}' does not exist."
-      ;;
-      openbsd-httpd)
-        ## TODO: website_dir is not being used here, the chroot dir is /var/www and the root expected is /htdocs
-        case "${folder}" in
-          "htdocs"*) folder="/${folder}";;
-          "/htdocs"*|/*) :;;
-          *) folder="/htdocs/${folder}";;
-        esac
-        [ ! -d "${folder}" ] && error_msg "Folder '${folder}' does not exist."
       ;;
     esac
 
@@ -171,7 +159,8 @@ server {
     root ${folder};
     index index.html index.htm index.nginx-debian.html index.php;
 }
-" | tee "${webserver_conf}/${service}-onion.conf"
+" | tee "${webserver_conf_dir}/sites-available/${service}-onion.conf"
+        ln -sf "${webserver_conf_dir}/sites-available/${service}-onion.conf" "${webserver_conf_dir}/sites-enabled/${service}-onion.conf"
       ;;
       apache2)
         printf %s"
@@ -182,15 +171,8 @@ server {
     ServerTokens Prod
     ServerSignature Off
 </VirtualHost>
-" | tee "${webserver_conf}/${service}-onion.conf"
-      ;;
-      openbsd-httpd)
-        printf %s"
-server \"${onion_hostname}\" {
-    listen on ${target_addr} port ${target_port}
-    root \"${folder}\"
-}
-" | tee -a "${webserver_conf}"
+" | tee "${webserver_conf_dir}/sites-available/${service}-onion.conf"
+        ln -sf "${webserver_conf_dir}/sites-available/${service}-onion.conf" "${webserver_conf_dir}/sites-enabled/${service}-onion.conf"
       ;;
     esac
     reload_webserver
@@ -219,7 +201,7 @@ server \"${onion_hostname}\" {
     [ -z "${service}" ] && usage
     if [ "${operating_system}" = "anon-workstation" ]; then
       ## block WS firewall based on webserver listening port
-      target="$(grep "listen " "${webserver_conf}/${service}-onion.conf" | sed "s/.*listen //;s/\;//")"
+      target="$(grep "listen " "${webserver_conf_dir}/sites-enabled/${service}-onion.conf" | sed "s/.*listen //;s/\;//")"
       target_addr="${target%%:*}"
       target_port="${target##*:}"
       printf '\n'
@@ -231,8 +213,7 @@ server \"${onion_hostname}\" {
       service="${1}"
       notice "\nStopping website of the service: ${service}"
       case "${webserver}" in
-        nginx|apache2) rm -fv "${webserver_conf}/${service}-onion.conf";;
-        openbsd-httpd) httpd_service_block delete "${service}" "${webserver_conf}";;
+        nginx|apache2) rm -fv "${webserver_conf_dir}/sites-available/${service}-onion.conf" "${webserver_conf_dir}/sites-enabled/${service}-onion.conf";;
       esac
     }
     loop_list disable_site "${service}" 0
@@ -244,13 +225,12 @@ server \"${onion_hostname}\" {
     notice "${bold}# Enabled websites:${nocolor}"
     case "${webserver}" in
       nginx|apache2)
-        for site in "${webserver_conf}"/*; do
+        for site in "${webserver_conf_dir}/sites-enabled"/*; do
           site="${site##*/}"
           site="${site%*-onion.conf}"
           sites_enabled="$(printf '%s\n%s\n' "${sites_enabled}" "${site}")"
         done
         ;;
-      openbsd-httpd) httpd_service_block print "${service}" "${webserver_conf}";;
     esac
     if [ -n "${sites_enabled}" ]; then
       notice "\n${sites_enabled}"

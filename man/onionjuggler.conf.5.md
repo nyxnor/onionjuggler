@@ -9,8 +9,7 @@ onionjuggler.conf - Configuration file for OnionJuggler
 
 # DESCRIPTION
 
-**onionjuggler.conf** is the configuration for for OnionJuggler, a combination of POSIX compliant scripts helps the interaction with onion service configuration and files to speed up usage and avoid misconfiguration. The system variables are defined by the default configuration file */etc/onionjuggler/onionjuggler.conf*. The configuration file is then sourced be used by the program. It defines where the hidden services are located, the owner of the DataDirectory older, the ControlPort to be used.
-Variables defined inside _/etc/onionjuggler/conf.d/*.conf_ are parsed in lexical order and overwrite the default configuration.
+**onionjuggler.conf** is the configuration for OnionJuggler. The default configuration file */etc/onionjuggler/onionjuggler.conf* is replaced on every upgrade user should assign variables inside _/etc/onionjuggler/conf.d/*.conf_, files in this directory are parsed in lexical order and overwrite the default configuration.
 
 The configuration file is parsed by the shell and interpreted as variables. When assigning a value to a variable, use double quotes to avoid word splitting: **variable**=*"value"*.
 
@@ -22,15 +21,11 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 **operating_system**
 
-: Set operating system.
+: Set operating system. Recognized values: debian, tails, anon-gateway, anon-workstation, fedora, arch, openbsd.
 
 **onionjuggler_plugin**
 
-: Only install specified plugins, else install everything. (Default: all plugins).
-
-**pkg_mngr_install**
-
-: Install the required packages via package manager. (Default: apt install -y).
+: Only allow specified plugins to run, if empty, allow every plugin. (Default: all plugins).
 
 **openssl_cmd**
 
@@ -38,11 +33,11 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 **webserver**
 
-: Web server to serve a website. Compatible with *nginx* and *apache2*. (Default: nginx).
+: Webserver to serve a website. Compatible with *nginx* and *apache2*. (Default: nginx).
 
-**webserver_conf**
+**webserver_conf_dir**
 
-: Web server configuration of the virtual hosts. With nginx and apache2 it must be a directory (sites-enabled, conf.d, conf, vhosts). With openbsd-httpd it is /etc/httpd.conf{.local}.
+: Webserver configuration directory of the virtual hosts. (Default: /etc/nginx).
 
 **website_dir**
 
@@ -50,11 +45,7 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 **dialog_box**
 
-: Terminal User Interface dialog box. Compatible with *dialog* and *whiptail*. (default: dialog).
-
-**requirements**
-
-: Necessary packages to fully control OnionJuggler. They will be checked first if installed already, if not, will install via using the *$pkg_mngr_install*. (Default: tor grep sed openssl basez qrencode dialog nginx")
+: Terminal User Interface dialog box. Compatible with *dialog* and *whiptail*. (Default: dialog).
 
 
 ## TOR DAEMON
@@ -104,7 +95,11 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 **/etc/onionjuggler/onionjuggler.conf**
 
-: Default system configuration file.
+: Default system configuration file. Replaced on every upgrade.
+
+**/etc/onionjuggler/conf.d/\*.conf**
+
+: User configuration file. Create files in the _conf.d_ directory with the extension _.conf_.
 
 # EXAMPLES
 

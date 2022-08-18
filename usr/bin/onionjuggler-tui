@@ -690,7 +690,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
 
       off)
         i=0
-        for service in "${webserver_conf}"/*; do
+        for service in "${webserver_conf_dir}/sites-enabled"/*; do
           service="${service##*/}"
           service="${service%*-onion.conf}"
           i=$((i+1))

@@ -108,7 +108,7 @@ error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
 
 ## helper for --getconf
 get_conf_values(){
-  for key in operating_system onionjuggler_plugin pkg_mngr_install openssl_cmd webserver webserver_conf website_dir dialog requirements \
+  for key in operating_system onionjuggler_plugin openssl_cmd webserver webserver_conf_dir website_dir dialog \
   daemon_control tor_daemon tor_user tor_conf_user_group tor_conf_dir tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
   tor_hiddenserviceport_target_addr; do
     eval val='$'"${key}"
@@ -124,7 +124,7 @@ set_default_conf_values(){
   ## system
   : "${openssl_cmd:="openssl"}"
   : "${webserver:="nginx"}"
-  : "${webserver_conf:="/etc/nginx/sites-enabled"}"
+  : "${webserver_conf_dir:="/etc/${webserver}"}"
   : "${website_dir:="/var/www"}"; website_dir="${website_dir%*/}"
 
   ## tor defaults
@@ -145,8 +145,10 @@ set_default_conf_values(){
 ## 3. set default values for empty variables
 source_conf(){
   test -f /etc/onionjuggler/onionjuggler.conf || error_msg "Default configuration file not found: /etc/onionjuggler/onionjuggler.conf"
-  for file in /etc/onionjuggler/onionjuggler.conf /etc/onionjuggler/conf.d/*.conf; do
-    . "${file}"
+  for file in /etc/onionjuggler/onionjuggler.conf /etc/onionjuggler/conf.d/*; do
+    file_name="${file##*/}"
+    file_suffix="${file_name##*.}"
+    [ "${file}" != "*" ] && [ "${file_suffix}" = "conf" ]  && . "${file}"
   done
   set_default_conf_values
 }
