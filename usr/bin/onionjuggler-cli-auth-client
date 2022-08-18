@@ -200,7 +200,7 @@ case "${status}" in
 
   ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
   f|off)
-    ! check_folder_is_not_empty "${tor_data_dir_auth}" && error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
+    ! is_dir_empty "${tor_data_dir_auth}" && error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
     check_opt_filled client
 
     auth_client_remove(){
@@ -229,7 +229,7 @@ case "${status}" in
       notice "${bold}Content:${nocolor} $(grep "descriptor:x25519:" "${tor_data_dir_auth}/${auth}.auth_private")"
     }
 
-    check_folder_is_not_empty "${tor_data_dir_auth}" || error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
+    is_dir_empty "${tor_data_dir_auth}" || error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
     notice "${bold}ClientOnionAuthDir ${tor_data_dir_auth}${nocolor}"
     if [ -z "${client}" ] || [ "${client}" = "@all" ]; then
       create_client_priv_list; client="${client_name_priv_list}"

@@ -270,6 +270,8 @@ case "${command}" in
   i|install)
     check_repo
     requires_root
+    test -d "${build_dir}" || error_msg "${build_dir} does not exist"
+    is_dir_empty "${build_dir}" && error_msg "${build_dir} does not have build files, use the option '--build'"
     notice "${magenta}Checking requirements${nocolor}"
     # shellcheck disable=SC2086
     install_package ${requirements}

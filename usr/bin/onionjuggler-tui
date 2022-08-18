@@ -143,7 +143,7 @@ service_menu(){
 }
 
 
-check_folder_is_not_empty(){
+is_dir_empty(){
   dir="${1}"
   [ -d "${dir}" ] && files=$(ls -qAH -- "${dir}") && [ -z "${files}" ] || return 1
 }
@@ -161,7 +161,7 @@ check_folder_is_not_empty(){
 title="OnionJuggler - Main Menu"
 menu="\nUse enter/spacebar to select:"
 backtitle="OnionJuggler - Onion Services Manager"
-if check_folder_is_not_empty "${tor_data_dir_services}"; then
+if is_dir_empty "${tor_data_dir_services}"; then
   if [ "${operating_system}" = "anon-workstation" ]; then
     # shellcheck disable=SC2046,SC2043
     choice_main=$("${dialog_box}" --clear --backtitle "${backtitle}" --title "${title}" \
@@ -320,7 +320,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
       for service in "${tor_data_dir_services}"/*; do
         service="${service##*/}"
         ## only include services that have at least one client
-        if ! check_folder_is_not_empty "${tor_data_dir_services}/${service}/authorized_clients/"; then
+        if ! is_dir_empty "${tor_data_dir_services}/${service}/authorized_clients/"; then
           i=$((i+1))
           onion_hostname="$(grep ".onion" "${tor_data_dir_services}"/"${service}"/hostname 2>/dev/null)"
           service_list_menu="$(printf "%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}")"

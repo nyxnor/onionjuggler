@@ -106,6 +106,7 @@ clean_opt(){
 notice(){ printf %s"${1}\n"; }
 error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
 
+
 ## helper for --getconf
 get_conf_values(){
   for key in operating_system onionjuggler_plugin openssl_cmd webserver webserver_conf_dir website_dir dialog \
@@ -116,7 +117,7 @@ get_conf_values(){
   done
 }
 
-## only called after source_conf
+
 set_default_conf_values(){
   ## : ${var:="value"} -> initialize the variable (SC2154) and if empty or unset, use default values
   ## var=${var%*/} -> removes the trailing slash "/" at the end of directories variables
@@ -139,6 +140,7 @@ set_default_conf_values(){
   : "${tor_conf:="${tor_conf_dir}/torrc"}"
   : "${tor_hiddenserviceport_target_addr:="127.0.0.1"}"
 }
+
 
 ## 1. source default configuration file first
 ## 2. source local (user made) configuration files to override the default values
@@ -177,6 +179,7 @@ tac(){
   sed '1!G;h;$!d' "${1}"
 }
 
+
 ## 'cat -s' is not posix
 cat_squeeze_blank(){
   while :; do
@@ -189,6 +192,7 @@ cat_squeeze_blank(){
   sed '1s/^$//p;/./,/^$/!d' ${files}
 }
 
+
 ## block names with special characters
 ## usage: check_name service
 ## where service is a variable with a value already assigned
@@ -199,6 +203,7 @@ check_name(){
   echo "${val}" | cut -c 1 | grep -qF "." && error_msg "${key} can not start with dot"
 }
 
+
 ## check if option has value, if not, error out
 ## this is intended to be used with required options
 check_opt_filled(){
@@ -206,6 +211,7 @@ check_opt_filled(){
   eval val='$'"${key}"
   test -n "${val}" || error_msg "${key} is missing"
 }
+
 
 ## Elegantly modify files. Test the configuration with another function.
 ## Original file will be hidden with a preceding dot in its name.
@@ -381,18 +387,20 @@ is_addr_port(){
 ## returns 1 if not empty
 ## returns 0 if empty
 ## no better way to do with posix utilities
-check_folder_is_not_empty(){
+is_dir_empty(){
   dir="${1}"
-  if [ -d "${dir}" ] && files=$(ls -qAH -- "${dir}") && [ -z "${files}" ]; then
+  if ls -1qA "${dir}" | grep -q "."; then
+     ## has file(s) / not empty
     return 1
   else
+    ## empty
     return 0
   fi
 }
 
 
 is_service_dir_empty(){
-  check_folder_is_not_empty "${tor_data_dir_services}" || error_msg "Onion services directory is empty. Create a service first before running this command again."
+  is_dir_empty "${tor_data_dir_services}" || error_msg "Onion services directory is empty. Create a service first before running this command again."
 }
 
 
@@ -421,6 +429,7 @@ create_client_list(){
   [ -n "${client_name_list}" ] && client_count="$(IFS=','; set -f -- ${client_name_list}; printf %s"${#}")"
 }
 
+
 ## save <ClientOnionAuthDir> files in list format (CLIENT1,CLIENT2,...)
 create_client_priv_list(){
   client_name_priv_list=""
@@ -445,6 +454,7 @@ create_service_list(){
   done
 }
 
+
 ## loops the parameters
 ## $1 must be the function to loop
 ## $2 normally is service, but can be any other parameter (accepts list -> SERV1,SERV2,...)
@@ -458,6 +468,7 @@ loop_list(){
     esac
   done
 }
+
 
 ## https://github.com/koalaman/shellcheck/wiki/SC3050
 escape_printf_percent() { printf "%s\n" "$(printf '%s' "${1}" | sed "s/\%/\%/g")"; }
@@ -509,23 +520,6 @@ service_block(){
     tr "\n" "\r" < "${file}" | sed "s|${hs_lines_delete}||" | tr "\r" "\n" | tee tmpfile >/dev/null
     mv tmpfile "${file}"
   fi
-}
-
-## TODO: finish: https://github.com/nyxnor/onionjuggler/issues/32
-httpd_service_block(){
-  process="${1}"
-  service="${2}"
-  file="${3:-"/etc/httpd.conf"}"
-  i=0
-  test_service_exists "${service}"
-  grep -A 10 "server \"${onion_hostname}\"" "${file}"  | while IFS= read -r line; do
-    case "${process}" in
-      print|printf) escape_printf_percent "${line}";;
-      delete) [ -n "${line}" ] && sed -i'' "s|${line}||" "${file}";;
-    esac
-    escape_printf_percent "${line}" | grep -q "^}" && break
-  done
-  cat_squeeze_blank "${file}"
 }
 
 

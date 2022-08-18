@@ -7,4 +7,4 @@ jobs:
             - uses: actions/checkout@main
             - name: Run shellcheck.
               shell: sh
-              run: sudo ./configure.sh -i && ./configure.sh -k
+              run: ./configure.sh -b && sudo ./configure.sh -b && ./configure.sh -k
