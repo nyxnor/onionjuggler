@@ -175,6 +175,7 @@ case "${status}" in
     check_opt_filled service
     check_name service
     read_tor_files
+    # shellcheck disable=SC2086
     if grep -n -e "HiddenServiceDir ${tor_data_dir_services}/${service}$" -e "HiddenServiceDir ${tor_data_dir_services}/${service}/$" ${tor_config_files} | grep -v "[[:space:]]*\#"; then
       error_msg "service '${tor_data_dir_services}/${service}' already exists, choose another name"
     fi
@@ -383,6 +384,8 @@ EOF
       if [ "${action}" != "q" ] && [ "${action}" != "quiet" ]; then
         has qrencode && qrencode -m 2 -t ANSIUTF8 "${onion_hostname}"
       fi
+
+      # shellcheck disable=SC2086
       service_configuration_found="$(grep -l -e "HiddenServiceDir ${service_path}/${service_base}$" -e "HiddenServiceDir ${service_path}/${service_base}/$" ${tor_config_files} | grep -v -F "#")"
 
       notice "${bold}Host:${nocolor} ${magenta}${onion_hostname}${nocolor}"

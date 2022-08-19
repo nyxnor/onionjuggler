@@ -411,9 +411,11 @@ is_addr_port(){
 ## returns 0 if empty
 ## returns 1 if not empty
 ## no better way to do with posix utilities
+## https://unix.stackexchange.com/questions/202243/how-to-check-directory-is-empty
 is_dir_empty(){
   dir="${1}"
-  if ls -1qA "${dir}" | grep -q "."; then
+  #if ls -1qA "${dir}" | grep -q "."; then
+  if [ -d "${dir}" ] && files=$(ls -qAH -- "${dir}") && [ -z "${files}" ]; then
      ## has file(s) / not empty
     return 1
   else
