@@ -71,9 +71,9 @@ case "${dev}" in
   V|version) printf '%s\n' "${me} ${version}"; exit 0;;
 esac
 
-[ "$(id -u)" -ne 0 ] && error_msg "run as root"
-is_service_dir_empty
 
+pre_run_check
+is_service_dir_empty
 case "${status}" in
 
   ## as the onion service operator, make your onion authenticated by generating a pair or public and private keys,

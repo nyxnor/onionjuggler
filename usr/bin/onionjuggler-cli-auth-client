@@ -70,7 +70,8 @@ case "${dev}" in
   V|version) printf '%s\n' "${me} ${version}"; exit 0;;
 esac
 
-[ "$(id -u)" -ne 0 ] && error_msg "run as root"
+
+pre_run_check
 case "${status}" in
 
 
@@ -124,9 +125,6 @@ case "${status}" in
     }
 
     create_clientonionauthdir(){
-      ## make sure ClientOnionAuthDir exists
-      read_tor_files
-
       # shellcheck disable=SC2086
       if grep -q "ClientOnionAuthDir"  ${tor_dump_config_file}; then
         if ! grep -q "ClientOnionAuthDir ${tor_data_dir_auth}" ${tor_dump_config_file}; then

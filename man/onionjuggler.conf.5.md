@@ -101,6 +101,7 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 : User configuration file. Create files in the _conf.d_ directory with the extension _.conf_.
 
+
 # EXAMPLES
 
 * **tor_user**=tor
@@ -118,7 +119,7 @@ Bugs you may find. First search for related issues on https://github.com/nyxnor/
 
 # SEE ALSO
 
-onionjuggler-tui(1), onionjuggler-cli(1), vitor(8), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
+onionjuggler-tui(8), onionjuggler-cli(8), onionjuggler-cli-auth-client(8), onionjuggler-cli-auth-server(8), onionjuggler-cli-web(8), tor(1)
 
 
 # COPYRIGHT

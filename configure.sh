@@ -302,7 +302,7 @@ case "${command}" in
     make_shellcheck
     notice "${cyan}Checking git status${nocolor}"
     ## should not delete, could destroy lines, just leave empty lines
-    find "${git_top_dir}" -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \;
+    find "${git_top_dir}/usr" -type f -exec sed -i'' "s/set \-\x//g;s/set \-\v//g;s/set \+\x//g;s/set \+\v//g" {} \;
     if [ -n "$(git status -s)" ]; then
       git status
       error_msg "Please record the changes to the file(s) above with a commit before pushing!"

@@ -49,7 +49,7 @@ while :; do
 done
 
 
-[ "$(id -u)" -ne 0 ] && error_msg "run as root"
+pre_run_check
 
 #if has vitor; then
 #  editor="vitor"

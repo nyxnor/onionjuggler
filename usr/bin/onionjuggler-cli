@@ -156,9 +156,8 @@ case "${dev}" in
   V|version) printf '%s\n' "${me} ${version}"; exit 0;;
 esac
 
-[ "$(id -u)" -ne 0 ] && error_msg "run as root"
-
 ## main options
+pre_run_check
 case "${status}" in
 
   ## enable a service by configure its own torrc's block, consequentially the <HiddenServiceDir> will be created.
@@ -174,7 +173,6 @@ case "${status}" in
   n|on)
     check_opt_filled service
     check_name service
-    read_tor_files
     # shellcheck disable=SC2086
     if grep -n -e "HiddenServiceDir ${tor_data_dir_services}/${service}$" -e "HiddenServiceDir ${tor_data_dir_services}/${service}/$" ${tor_config_files} | grep -v "[[:space:]]*\#"; then
       error_msg "service '${tor_data_dir_services}/${service}' already exists, choose another name"
@@ -410,7 +408,7 @@ EOF
     }
 
     #is_service_dir_empty
-    read_tor_files
+
     #for hs in $(grep "HiddenServiceDir" "${tor_dump_config_hs}" | sed "s/HiddenServiceDir//" | tr -s "\n" " "); do
     #  service_dir="${hs##* }"
     #  test -n "${service_dir}" && service_name_list="${service_name_list} ${service_dir}"

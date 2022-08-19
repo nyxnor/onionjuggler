@@ -313,12 +313,26 @@ trap_exit_restore(){
   done
 }
 
+## commands to run before any major script option is run
+## this function should be called after getopts and dev options and before main options
+pre_run_check(){
+  [ "$(id -u)" -ne 0 ] && error_msg "run as root"
+  read_tor_files
+  if [ "${ONIONJUGGLER_SKIP_PRE_TOR_CHECK}" != "1" ]; then
+    if ! ${tor_start_command} --verify-config >/dev/null 2>&1; then
+      notice "${bold}tor is failing, correct it before running this command again${nocolor}"
+      ! ${tor_start_command} --verify-config --hush | cut -d " " -f4-
+      error_msg "aborting: tor configuration is invalid"
+    fi
+  else
+    notice "Skipping pre run tor verification because ONIONJUGGLER_SKIP_PRE_TOR_CHECK='1'"
+  fi
+}
 
 ## Verify tor configuration of the temporary file and if variable is empty, use the main configuration, if wrong, exit.
 verify_config_tor(){
   notice "Verifying tor configuration"
-  read_tor_files
-  ! ${tor_start_command:="tor"} --verify-config --hush && error_msg "aborting: configuration is invalid"
+  ! ${tor_start_command} --verify-config --hush && error_msg "aborting: tor configuration is invalid"
   notice "${green}Configuration OK${nocolor}"
   printf '\n'
   ## as configuration is ok, save modified file and delete temporary ones
@@ -333,12 +347,11 @@ read_tor_files(){
   elif test -f /lib/systemd/system/tor.service; then
     tor_start_command="$(grep "ExecStart=" /lib/systemd/system/tor.service | sed "s/ExecStart=//")"
   fi
-  ## verify tor confgiuration just to grep which files were included
-  ## enforce "RunAsDaemon 0" to not run as daemon
+  ## verify tor confoguration just to grep which files and options were included
   : "${tor_start_command:="tor"}"
-  tor_verify_config_output="$(${tor_start_command} --RunAsDaemon 0 --verify-config)"
+  tor_verify_config_output="$(${tor_start_command} --verify-config)"
   tor_config_files="$(printf '%s\n' "${tor_verify_config_output}" |  grep -E " Read configuration file [^ ]*| Including configuration file [^ ]*" | sed "s/.* //" | cut -d "\"" -f2 | tr "\n" " ")"
-  tor_dump_config_output="$(${tor_start_command} --RunAsDaemon 0 --dump-config short)"
+  tor_dump_config_output="$(${tor_start_command} --dump-config short)"
   tor_dump_config_file="${onionjuggler_tmp_dir}/dump-config"
   tor_dump_config_hs="${tor_dump_config_file}.hs"
   printf '%s\n' "${tor_dump_config_output}" | tee "${tor_dump_config_file}" >/dev/null

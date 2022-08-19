@@ -79,6 +79,16 @@ onionjuggler-cli-auth-client --help
 : Signal tor daemon to restart or reload after the CLI edits tor's configuration files. (Default: reload)
 
 
+# ENVIRONMENT
+
+**ONIONJUGGLER_SKIP_PRE_TOR_CHECK**
+
+: If set to 1, skip pre run tor check to allow the script to run if the tor is failing to parse its configuration. As the scripts requires root, preserve the environment. If using _doas_, set _keepenv_ in doas.conf. If using _sudo_, use the command line option _-E_ or _--preserve-env_:
+```
+ONIONJUGGLER_SKIP_PRE_TOR_CHECK=1 sudo -E onionjuggler-cli
+```
+
+
 # FILES
 
 **/usr/share/onionjuggler/defaults.sh**
@@ -110,7 +120,7 @@ Bugs you may find. First search for related issues on https://github.com/nyxnor/
 
 # SEE ALSO
 
-onionjuggler-tui(8), onionjuggler.conf(5), vitor(8), tor(1), sh(1), regex(7), sed(1), grep(1), shellcheck(1)
+onionjuggler.conf(5), onionjuggler-tui(8), onionjuggler-cli-auth-server(8), onionjuggler-cli-web(8), onionjuggler-cli(8), tor(1)
 
 
 # COPYRIGHT

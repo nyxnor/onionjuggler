@@ -68,6 +68,7 @@ case "${dev}" in
   V|version) printf '%s\n' "${me} ${version}"; exit 0;;
 esac
 
+pre_run_check
 [ -z "${status}" ] && usage
 if [ "${webserver}" != "nginx" ] && [ "${webserver}" != "apache2" ]; then
   error_msg "webserver can be either 'nginx' or 'apache2', not '${webserver}'"
@@ -100,8 +101,7 @@ reload_webserver(){
   fi
 }
 
-## user option
-[ "$(id -u)" -ne 0 ] && error_msg "run as root"
+
 case "${status}" in
 
   n|on)
