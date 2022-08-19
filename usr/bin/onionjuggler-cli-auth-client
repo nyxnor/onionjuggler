@@ -83,6 +83,7 @@ case "${status}" in
 
     auth_client_check_file(){
       test -f "${client_priv_file}" || error_msg "file ${client_priv_file} does not exist or is not a regular file"
+      test -r "${client_priv_file}" || error_msg "file ${client_priv_file} cannot be read"
       client_priv_file_name="${client_priv_file##*/}"
       [ "${client_priv_file_name%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "file name can only contain letters, numbers, hifen, underscore and dot"
       echo "${client_priv_file_name}" | cut -c 1 | grep -qF "." && error_msg "file name can not start with dot"
@@ -125,11 +126,18 @@ case "${status}" in
     create_clientonionauthdir(){
       ## make sure ClientOnionAuthDir exists
       read_tor_files
+
       # shellcheck disable=SC2086
-      if ! grep -q "ClientOnionAuthDir" ${tor_config_files}; then
+      if grep -q "ClientOnionAuthDir"  ${tor_dump_config_file}; then
+        if ! grep -q "ClientOnionAuthDir ${tor_data_dir_auth}" ${tor_dump_config_file}; then
+          client_onion_auth_dir_found="$(grep "ClientOnionAuthDir"  ${tor_dump_config_file} | cut -d " " -f2)"
+          error_msg "ClientOnionAuthDir found is ${client_onion_auth_dir_found}, not ${tor_data_dir_auth} as specifed on onionjuggler configuration"
+        fi
+      else
         safe_edit tmp tor_conf
         printf %s"\nClientOnionAuthDir ${tor_data_dir_auth}\n\n" | tee -a "${tor_conf_tmp}"
       fi
+
       test -d "${tor_data_dir_auth}" || mkdir -p "${tor_data_dir_auth}"
     }
 
@@ -143,7 +151,10 @@ case "${status}" in
     }
 
     auth_client_finish(){
-      printf %s"${client_priv_key_config}\n" | tee "${tor_data_dir_auth}/${client}.auth_private" >/dev/null
+      # shellcheck disable=SC2034
+      auth_client_conf="${tor_data_dir_auth}/${client}.auth_private"
+      safe_edit tmp auth_client_conf
+      printf %s"${client_priv_key_config}\n" | tee "${auth_client_conf_tmp}" >/dev/null
       notice "Client side authorization configured"
       notice "\nClient private key config saved to ${tor_data_dir_auth}/${client}.auth_private"
       notice "${bold}- Client priv conf:${nocolor} ${client_priv_key_config}"
@@ -200,7 +211,7 @@ case "${status}" in
 
   ## as the onion service client, delete '.auth_private' files from ClientOnionAuthDir that are not valid or has no use anymore
   f|off)
-    ! is_dir_empty "${tor_data_dir_auth}" && error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
+    is_dir_empty "${tor_data_dir_auth}" && error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
     check_opt_filled client
 
     auth_client_remove(){
@@ -229,7 +240,7 @@ case "${status}" in
       notice "${bold}Content:${nocolor} $(grep "descriptor:x25519:" "${tor_data_dir_auth}/${auth}.auth_private")"
     }
 
-    is_dir_empty "${tor_data_dir_auth}" || error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
+    is_dir_empty "${tor_data_dir_auth}" && error_msg "ClientOnionAuthDir ${tor_data_dir_auth} is empty"
     notice "${bold}ClientOnionAuthDir ${tor_data_dir_auth}${nocolor}"
     if [ -z "${client}" ] || [ "${client}" = "@all" ]; then
       create_client_priv_list; client="${client_name_priv_list}"

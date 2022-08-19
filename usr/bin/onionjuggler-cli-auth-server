@@ -84,6 +84,7 @@ case "${status}" in
 
     auth_server_check_file(){
       test -f "${client_pub_file}" || error_msg "file ${client_pub_file} does not exist or is not a regular file"
+      test -r "${client_pub_file}" || error_msg "file ${client_pub_file} cannot be read"
       client_pub_file_name="${client_pub_file##*/}"
       [ "${client_pub_file_name%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "file name can only contain letters, numbers, hifen, underscore and dot"
       echo "${client_pub_file_name}" | cut -c 1 | grep -qF "." && error_msg "file name can not start with dot"
@@ -120,7 +121,10 @@ case "${status}" in
     }
 
     auth_server_finish(){
-      printf %s"${client_pub_key_config}\n" | tee "${tor_data_dir_services}/${service}/authorized_clients/${client}.auth" >/dev/null
+      # shellcheck disable=SC2034
+      auth_server_conf="${tor_data_dir_services}/${service}/authorized_clients/${client}.auth"
+      safe_edit tmp auth_server_conf
+      printf %s"${client_pub_key_config}\n" | tee "${auth_server_conf_tmp}" >/dev/null
       printf %s"${bold}Server side authorization configured${nocolor}\n"
       printf %s"\nClient public key config saved to ${tor_data_dir_services}/${service}/authorized_clients/${client}.auth\n"
       printf %s"${bold}- Client pub conf:${nocolor} ${client_pub_key_config}\n"
