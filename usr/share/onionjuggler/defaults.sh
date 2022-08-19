@@ -110,8 +110,7 @@ error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
 ## helper for --getconf
 get_conf_values(){
   for key in operating_system onionjuggler_plugin openssl_cmd webserver webserver_conf_dir website_dir dialog \
-  daemon_control tor_daemon tor_user tor_conf_user_group tor_conf_dir tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth \
-  tor_hiddenserviceport_target_addr; do
+  daemon_control tor_daemon tor_user tor_conf_user_group tor_conf_dir tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth; do
     eval val='$'"${key}"
     test -n "${val}" && printf '%s\n' "${key}=\"${val}\""
   done
@@ -138,7 +137,6 @@ set_default_conf_values(){
   : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
   : "${tor_conf_dir:="/etc/tor"}"; tor_conf_dir="${tor_conf_dir%*/}"
   : "${tor_conf:="${tor_conf_dir}/torrc"}"
-  : "${tor_hiddenserviceport_target_addr:="127.0.0.1"}"
 }
 
 

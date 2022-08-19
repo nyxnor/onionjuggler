@@ -209,18 +209,11 @@ case "${status}" in
         ## This measures avoid using the same local port for different services
         ## Sanity check
         if [ "${operating_system}" = "anon-gateway" ]; then ## Gateway
-          if [ "${gateway_service}" = "1" ]; then ## Service should use Gateway ip (127.0.0.1)
-            target_ip_default="127.0.0.1"
-          elif has qubesdb-read; then ## Qubes-Whonix
-            target_ip_default="${tor_hiddenserviceport_target_addr}"
-          else
-            target_ip_default="10.152.152.11" ## Non-Qubes-Whonix
-          fi
+          [ "${gateway_service}" = "1" ] && target_ip_default="127.0.0.1"
         elif [ "${operating_system}" = "anon-workstation" ]; then ## Workstation
           error_msg "Create onion services on the Gateway, not on the Workstation"
-        else
-          target_ip_default="${tor_hiddenserviceport_target_addr:-127.0.0.1}" ## Common target
         fi
+        : "${target_ip_default:="127.0.0.1"}" ## Common target
 
         ## get ports
         ## translate commas to spaces, truncate spaces, translate spaces to new lines,
@@ -246,19 +239,13 @@ EOF
           is_integer "${virtport}"
           is_addr_port "${target}"
 
-          ## Qubes-Whonix should have a different target for services aiming to the Workstation
-          if has qubesdb-read && [ "${target_addr}" = "127.0.0.1" ] && [ "${gateway_service}" != "1" ]; then
-            echo "1" | tee -a "${fail_log}" >/dev/null
-            error_msg "Option '--gateway' was not specified but target was set to 127.0.0.1. Either set the Workstation Qube IP address using the option 'tor_hiddenserviceport_target_addr' on /etc/onionjuggler/conf.d/*.conf to target a WS or use the gateway option to enforce a service to be run on the GW"
-          fi
-
           ## check if the target is already used in the torrc
           ## the first part check if the target is present on the tor configuration file
           ## the second part checks if the target port is used on a hs port without a target, meaning using the same port from virtual port
           if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp_orig}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf_tmp_orig}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
-            error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
+            error_msg "Target '${target}' is already in use. Choose another port or disable the service that is using the wanted port."
           fi
           ## this check is the same as from above, but instead, it check the temporary configuration file that is being modified now
           if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf_tmp}"; then
@@ -267,6 +254,13 @@ EOF
             error_msg "Target '${target}' was specified multiple times, but it can only happen once."
           fi
           printf %s"HiddenServicePort ${virtport} ${target}\n" | tee -a "${tor_conf_tmp}"
+
+          ## anon-gateway should have a different target for services aiming to the Workstation
+          if [ "${operating_system}" = "anon-gateway" ] && [ "${target_addr}" = "127.0.0.1" ] && [ "${gateway_service}" != "1" ]; then
+            echo "1" | tee -a "${fail_log}" >/dev/null
+            error_msg "Target was set to 127.0.0.1 but option '--gateway' was not specified, otherwise set the Workstation IP address"
+          fi
+
         done
         printf '\n' | tee -a "${tor_conf_tmp}"
         test -s "${fail_log}" && { rm -f -- "${fail_log}"; exit 1; }
@@ -293,7 +287,7 @@ EOF
           if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp_orig}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
-            error_msg "Target '${target}' is already in use.\nINFO: Choose another port or disable the service that is using the wanted port."
+            error_msg "Target '${target}' is already in use. Choose another port or disable the service that is using the wanted port."
           fi
           ## check wheter target is already in use on the temporary copy of the tor configuration file
           if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}"; then
