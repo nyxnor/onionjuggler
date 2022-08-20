@@ -221,7 +221,7 @@ case "${status}" in
         ## 80:127.0.0.1:80,443:127.0.0.1:443 becomes: 80 127.0.0.1:80\n443 127.0.0.1:443
         port="$(printf %s"${port}" | tr "," " " | tr -s " " | tr " " "\n" | sed "s|:| |")"
 
-        fail_log="$(mktemp)"
+        fail_log="${onionjuggler_tmp_dir}/on-fail"
         printf '%s\n' "${port}" | while IFS="$(printf '\n')" read -r port_line; do
           IFS=" " read -r virtport target <<-EOF
             $(printf '%s\n' "${port_line}")
@@ -239,20 +239,32 @@ EOF
           is_integer "${virtport}"
           is_addr_port "${target}"
 
-          ## check if the target is already used in the torrc
-          ## the first part check if the target is present on the tor configuration file
-          ## the second part checks if the target port is used on a hs port without a target, meaning using the same port from virtual port
-          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp_orig}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf_tmp_orig}"; then
+          ## check if the target is being used by another service
+          if grep -q \
+            -e "^HiddenServicePort ${target_port}$" \
+            -e "^HiddenServicePort .* ${target_port}$" \
+            -e "^HiddenServicePort .* ${target_addr}$" \
+            -e "^HiddenServicePort .* ${target}$" \
+            "${tor_dump_config_hs}"
+          then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
-            error_msg "Target '${target}' is already in use. Choose another port or disable the service that is using the wanted port."
+            error_msg "Target '${target}' is already in use. Choose another port or disable the service that is using the same target."
           fi
-          ## this check is the same as from above, but instead, it check the temporary configuration file that is being modified now
-          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp}" || grep -q "^HiddenServicePort ${target_port}$" "${tor_conf_tmp}"; then
+
+          ## check if the target is being used multiple times by the new configuration
+          if grep -q \
+            -e "^HiddenServicePort ${target_port}$" \
+            -e "^HiddenServicePort .* ${target_port}$" \
+            -e "^HiddenServicePort .* ${target_addr}$" \
+            -e "^HiddenServicePort .* ${target}$" \
+            "${tor_conf_tmp}"
+          then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' was specified multiple times, but it can only happen once."
           fi
+
           printf %s"HiddenServicePort ${virtport} ${target}\n" | tee -a "${tor_conf_tmp}"
 
           ## anon-gateway should have a different target for services aiming to the Workstation
@@ -274,7 +286,7 @@ EOF
         ## /var/run/ because it exists on Debian and OpenBSD, so respecting standards
         unix_path="unix:/var/run/${service}"
 
-        fail_log="$(mktemp)"
+        fail_log="${onionjuggler_tmp_dir}/on-fail"
         printf '%s\n' "${port}" | while IFS="$(printf '\n')" read -r port_line; do
           IFS=" " read -r virtport <<-EOF
             $(printf '%s\n' "${port_line}")
@@ -284,7 +296,7 @@ EOF
           target="${unix_path}-${virtport}-onion.sock"
           is_integer "${virtport}"
           ## check wheter target is already in use on the tor configuration file
-          if grep -q "^HiddenServicePort .* ${target}$" "${tor_conf_tmp_orig}"; then
+          if grep -q "^HiddenServicePort .* ${target}$" "${tor_dump_config_hs}"; then
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target '${target}' is already in use. Choose another port or disable the service that is using the wanted port."
