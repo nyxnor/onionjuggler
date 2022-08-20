@@ -68,15 +68,16 @@ onionjuggler-cli-auth-client --list
 
 : Print option parsing results.
 
+**--signal** <*reload*|*hup*|*restart*|*int*|*no*|*none*>
+
+: Send specific signal commands to the tor daemon. Sending the _restart|int_ signal is useful for correcting a previously broken tor configuration. Sending _no|none_ signal is useful when running consecutive commands to avoid tor signaling newnym everytime tor is hupped, then at last signal tor hup to tor reload its configuration and apply changes. (Default: reload|hup).
+
 **-h**, **--help**
 : Display the script help message. Abscense of any parameter will also have the same effect.
 ```
 onionjuggler-cli-auth-client -h
 onionjuggler-cli-auth-client --help
 ```
-
-**-R**, **--restart**, **-r**, **--reload**
-: Signal tor daemon to restart or reload after the CLI edits tor's configuration files. (Default: reload)
 
 
 # ENVIRONMENT

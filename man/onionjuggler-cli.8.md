@@ -62,7 +62,7 @@ onionjuggler-cli --off --service ssh,xmpp --purge
 
 **--list** **--service** <*@all*|*SERV1*,*SERV2*,*...*> <*--quiet*>
 
- List onion service information: hostname (address) and in QR encoded format, clients names and quantity, status if service is active or inactive regarding the torrc lines (un)present and the HiddenServiceDir presence, the torrc block. File(s) modified: none.
+: List onion service information: hostname (address) and in QR encoded format, clients names and quantity, status if service is active or inactive regarding the torrc lines (un)present and the HiddenServiceDir presence, the torrc block. File(s) modified: none.
 ```
 onionjuggler-cli --list --service ssh
 onionjuggler-cli --list --service ssh,xmpp
@@ -91,16 +91,16 @@ onionjuggler-cli --renew --service @all
 
 : Print option parsing results.
 
+**--signal** <*reload*|*hup*|*restart*|*int*|*no*|*none*>
+
+: Send specific signal commands to the tor daemon. Sending the _restart|int_ signal is useful for correcting a previously broken tor configuration. Sending _no|none_ signal is useful when running consecutive commands to avoid tor signaling newnym everytime tor is hupped, then at last signal tor hup to tor reload its configuration and apply changes. (Default: reload|hup).
+
 **-h**, **--help**
 : Display the script help message. Abscense of any parameter will also have the same effect.
 ```
 onionjuggler-cli -h
 onionjuggler-cli --help
 ```
-
-**-R**, **--restart**, **-r**, **--reload**
-: Signal tor daemon to restart or reload after the CLI edits tor's configuration files. (Default: reload)
-
 
 # ENVIRONMENT
 

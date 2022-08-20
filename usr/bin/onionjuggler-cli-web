@@ -25,6 +25,7 @@ Complete options:
   --version                 print version
   --getopt                  print options parsed
   --getconf                 print configuration values
+  -h, --help                print this help message
 "
   exit 1
 }

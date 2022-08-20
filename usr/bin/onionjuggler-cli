@@ -87,13 +87,13 @@ Options:
     -q, --quiet              don't QR encode the hostname
 
 Advanced:
-  -R, --restart              signal tor to restart if needed
-  -r, --reload               signal tor to reload (default option) if needed
+  --signal <SIGNAL>          when signaling tor, send signal to reload (hup),
+                             restart (int) or no signal (none). Default: reload
 
 Option names:
   status                     --on, --off, --list, --renew
   action                     --purge, --quiet
-  signal                     --restart, --reload
+  signal                     reload (int), restart (hup), no (none)
 
 Positional arguments:
   TARGET                     [addr:]port
@@ -127,8 +127,8 @@ while :; do
   # shellcheck disable=SC2034
   case "${opt}" in
     getopt|getconf|V|version) set_arg dev "${opt}";;
+    signal|signal=*) get_arg signal;;
     on|off|list|n|f|l|renew) set_arg status "${opt}";;
-    R|restart|r|reload) set_arg signal "${opt}";;
     P|purge|q|quiet) set_arg action "${opt}";;
     s|service|s=*|service=*) get_arg service;;
     v|hs_version|v=*|hs_version=*) get_arg hs_version;;
@@ -370,7 +370,6 @@ EOF
     loop_list delete_service "${service}"
     printf "\n"
     signal_tor
-    notice "${green}Done!${nocolor}"
   ;;
 
 

@@ -29,6 +29,8 @@ Complete options:
   --version                 print version
   --getopt                  print options parsed
   --getconf                 print configuration values
+  --signal <SIGNAL>         signal tor reload, restart, none
+  -h, --help                print this help message
 "
   exit 1
 }
@@ -48,6 +50,7 @@ while :; do
   clean_opt "${1}" || break
   case "${opt}" in
     on|off|list|n|f|l) set_arg status "${opt}";;
+    signal|signal=*) get_arg signal;;
     client-priv-file|client-priv-file=*) get_arg client_priv_file;;
     client-priv-config|client-priv-config=*) get_arg client_priv_config;;
     client-priv-key|client-priv-key=*) get_arg client_priv_key;;

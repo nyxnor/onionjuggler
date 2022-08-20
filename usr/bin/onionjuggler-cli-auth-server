@@ -29,6 +29,8 @@ Complete options:
   --version                 print version
   --getopt                  print options parsed
   --getconf                 print configuration values
+  --signal <SIGNAL>         signal tor reload, restart, none
+  -h, --help                print this help message
 "
   exit 1
 }
@@ -48,6 +50,7 @@ while :; do
   arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
   clean_opt "${1}" || break
   case "${opt}" in
+    signal|signal=*) get_arg signal;;
     on|off|list|n|f|l) set_arg status "${opt}";;
     s|service|s=*|service=*) get_arg service;;
     c|client|c=*|client=*) get_arg client;;

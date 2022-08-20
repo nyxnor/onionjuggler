@@ -34,23 +34,26 @@ get_intr="$(stty -a | sed -n '/.*intr = / {s///;s/;.*$//;p;}')"
 
 ## check if argument is within range
 ## usage:
-## $ range_arg key "1-5"
 ## $ range_arg key "1" "2" "3" "4" "5"
-## $ range_arg key "a-cA-C"
 ## $ range_arg key "a" "b" "c" "A" "B" "C"
 range_arg(){
   list="${*}"
+  key="${1}"
   eval var='$'"${1}"
   range="${list#"${1} "}"
   if [ -n "${var:-}" ]; then
     success=0
     for tests in ${range}; do
+      ## only envaluate if matches all chars
+      [ "${var}" = "${tests}" ] && success=1
       ## it needs to expand for ranges 'a-z' to be evaluated, and not considered as a value to be used
-      # shellcheck disable=SC2295
-      [ "${var%%*[^${tests}]*}" ] && success=1
+      ## $ range_arg key "1-5"
+      ## $ range_arg key "a-cA-C"
+      ## shellcheck disable=SC2295
+      #[ "${var%%*[^${tests}]*}" ] && success=1
     done
-    ## if not withing range, fail and show the fixed range that can be used
-    [ ${success} -ne 1 ] && error_msg "Option '${opt_orig}' can not be '${var}'! It can only be: ${range}."
+    ## if not within range, fail and show the fixed range that can be used
+    [ ${success} -ne 1 ] && error_msg "Option '${key}' can not have value '${var}'. It can only be: ${range}."
   fi
 }
 
@@ -316,6 +319,7 @@ trap_exit_restore(){
 pre_run_check(){
   [ "$(id -u)" -ne 0 ] && error_msg "run as root"
   read_tor_files
+
   if [ "${ONIONJUGGLER_SKIP_PRE_TOR_CHECK}" != "1" ]; then
     if ! ${tor_start_command} --verify-config >/dev/null 2>&1; then
       notice "${bold}tor is failing, correct it before running this command again${nocolor}"
@@ -325,6 +329,9 @@ pre_run_check(){
   else
     notice "Skipping pre run tor verification because ONIONJUGGLER_SKIP_PRE_TOR_CHECK='1'"
   fi
+
+  : "${signal:="reload"}"
+  range_arg signal "hup" "reload" "int" "restart" "no" "none"
 }
 
 ## Verify tor configuration of the temporary file and if variable is empty, use the main configuration, if wrong, exit.
@@ -376,10 +383,14 @@ set_owner_permission(){
 signal_tor(){
   verify_config_tor
   set_owner_permission
+
   ## default signal is to reload, but if restart was specified, use it
-  : "${signal:="reload"}"
-  [ "${signal}" = "r" ] && signal="reload"
-  [ "${signal}" = "R" ] && signal="restart"
+  case "${signal}" in
+    hup|reload) signal_text="Reload"; signal_send="reload";;
+    int|restart) signal_text="Restart"; signal_send="restart";;
+    no|none) notice "${yellow}Not signaling tor because signal '${signal}' was specified. Configuration changes will only be applied after tor is reloaded.${nocolor}\n"; exit 0;;
+  esac
+
   printf "\n"
   notice "${signal}ing tor, please be patient."
   notice "Process hanged? Press (${get_intr}) to abort and maintain previous configuration."
@@ -526,10 +537,6 @@ loop_list(){
 escape_printf_percent() { printf "%s\n" "$(printf '%s' "${1}" | sed "s/\%/\%/g")"; }
 
 
-## TODO: find a better way to handle commented lines and empty lines
-## the problem is that the script only stop at the next HiddenServiceDir,
-## but discard every line not starting with HiddenServiceDir
-## https://github.com/nyxnor/onionjuggler/issues/51
 service_block(){
   process="${1}" ## [print|delete]
   file="${3:-"${tor_conf_tmp}"}"
@@ -558,6 +565,7 @@ service_block(){
           case "${process}" in
             print|printf) printf '%s\n' "${line}";;
             delete)
+              ## TODO: https://github.com/nyxnor/onionjuggler/issues/51
               ## delete only works if hs lines are consecutive,
               ## meaning no blank lines or commented lines between the wanted hs
               if [ -z "${hs_lines_delete}" ]; then
