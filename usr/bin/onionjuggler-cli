@@ -239,7 +239,7 @@ EOF
           is_integer "${virtport}"
           is_addr_port "${target}"
 
-          ## check if the target is being used by another service
+          ## check if the target is being used by another already configured service
           if grep -q \
             -e "^HiddenServicePort ${target_port}$" \
             -e "^HiddenServicePort .* ${target_port}$" \
@@ -247,9 +247,17 @@ EOF
             -e "^HiddenServicePort .* ${target}$" \
             "${tor_dump_config_hs}"
           then
+            ## get which line number the pattern is repeated
+            repeated_port_line_number="$(grep -n \
+            -e "^HiddenServicePort ${target_port}$" \
+            -e "^HiddenServicePort .* ${target_port}$" \
+            -e "^HiddenServicePort .* ${target_addr}$" \
+            -e "^HiddenServicePort .* ${target}$" \
+            "${tor_dump_config_hs}" | cut -d ":" -f1)"
+            repeated_port_service="$(head -"${repeated_port_line_number}" "${tor_dump_config_hs}" | grep HiddenServiceDir | tail -1 | cut -d " " -f2)"
             printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
-            error_msg "Target '${target}' is already in use. Choose another port or disable the service that is using the same target."
+            error_msg "Target '${target}' is already in use by the service '${repeated_port_service}'. Choose another target combination of addr:port or disable the service that is using the same target."
           fi
 
           ## check if the target is being used multiple times by the new configuration
@@ -265,14 +273,14 @@ EOF
             error_msg "Target '${target}' was specified multiple times, but it can only happen once."
           fi
 
-          printf %s"HiddenServicePort ${virtport} ${target}\n" | tee -a "${tor_conf_tmp}"
-
           ## anon-gateway should have a different target for services aiming to the Workstation
           if [ "${operating_system}" = "anon-gateway" ] && [ "${target_addr}" = "127.0.0.1" ] && [ "${gateway_service}" != "1" ]; then
+            printf %s"HiddenServicePort ${virtport} ${target}\n"
             echo "1" | tee -a "${fail_log}" >/dev/null
             error_msg "Target was set to 127.0.0.1 but option '--gateway' was not specified, otherwise set the Workstation IP address"
           fi
 
+          printf %s"HiddenServicePort ${virtport} ${target}\n" | tee -a "${tor_conf_tmp}"
         done
         printf '\n' | tee -a "${tor_conf_tmp}"
         test -s "${fail_log}" && { rm -f -- "${fail_log}"; exit 1; }
