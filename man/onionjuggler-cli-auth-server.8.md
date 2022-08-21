@@ -10,14 +10,15 @@ onionjuggler-cli-auth-server - Manage onion service server side authorization
 # SYNOPSIS
 
 **onionjuggler-cli-auth-server** [**--option**<=*ARGUMENT*>]\
-**onionjuggler-cli-auth-server [--getconf]**\
-**onionjuggler-cli-auth-server [--getopt]** [**--service** <*SERVICE*>]\
 **onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client-pub-file** <*CLIENT_PUB_FILE*>]\
 **onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-config** <*CLIENT_PUB_CONFIG*>]\
 **onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
 **onionjuggler-cli-auth-server** [**--off**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
 **onionjuggler-cli-auth-server** [**--list**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
-**onionjuggler-cli-auth-server** [**-V**|**--version**]
+**onionjuggler-cli** [**--signal** <*reload*|*restart*|*none*>]\
+**onionjuggler-cli-auth-server [--getconf]**\
+**onionjuggler-cli-auth-server [--getopt]** [**--service** <*SERVICE*>]\
+**onionjuggler-cli-auth-server** [**-V**|**--version**]\
 **onionjuggler-cli-auth-server** [**-h**|**--help**]
 
 

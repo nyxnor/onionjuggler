@@ -15,9 +15,10 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 **onionjuggler-cli --off** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
 **onionjuggler-cli --list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
 **onionjuggler-cli --renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
-**onionjuggler-cli [-V|--version]**\
+**onionjuggler-cli** [**--signal** <*reload*|*restart*|*none*>]\
 **onionjuggler-cli [--getconf]**\
 **onionjuggler-cli [--getopt]** [**--service** <*SERVICE*>]\
+**onionjuggler-cli [-V|--version]**\
 **onionjuggler-cli** [**-h**|**--help**]
 
 

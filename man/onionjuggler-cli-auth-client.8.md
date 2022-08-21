@@ -17,7 +17,8 @@ onionjuggler-cli-auth-client - Manage onion service client side authorization
 **onionjuggler-cli-auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>] [**--onion** <*ONION*>] [**--replace-file**]\
 **onionjuggler-cli-auth-client** [**--off**] [**--client** <*CLIENT*>]\
 **onionjuggler-cli-auth-client** [**--list**]\
-**onionjuggler-cli-auth-client** [**-V**|**--version**]
+**onionjuggler-cli** [**--signal** <*reload*|*restart*|*none*>]\
+**onionjuggler-cli-auth-client** [**-V**|**--version**]\
 **onionjuggler-cli-auth-client** [**-h**|**--help**]
 
 

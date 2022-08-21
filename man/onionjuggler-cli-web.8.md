@@ -16,8 +16,10 @@ onionjuggler-cli-web - Manage webserver for onion services
 **onionjuggler-cli-web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>] [**--no-check-service**] [**--port** <*VIRTPORT[:TARGET]*>]\
 **onionjuggler-cli-web** [**--off**] [**--service** <*SERVICE*>]\
 **onionjuggler-cli-web** [**--list**]\
-**onionjuggler-cli-web** [**-V**|**--version**]
-**onionjuggler-cli-web** [**-h**|**--help**]
+**onionjuggler-cli [--getconf]**\
+**onionjuggler-cli [--getopt]** [**--service** <*SERVICE*>]\
+**onionjuggler-cli [-V|--version]**\
+**onionjuggler-cli** [**-h**|**--help**]
 
 
 # DESCRIPTION
