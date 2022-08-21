@@ -14,6 +14,12 @@ Verify the configuration file is valid:
 # tor --verify-config -f /etc/tor/torrc --User tor_user --DataDirectory tor_data_dir
 ```
 
+Get current configured onion serviecs options:
+```
+# tor --dump-config | grep "HiddenService"
+```
+
+
 ## THE CONFIGURATION FILE FORMAT
 
 All configuration options in a configuration are written on a single line by default. They take the form of an option name and a value, or an option name and a quoted value (option value or option "value"). Anything after a # character is treated as a comment. Options are case-insensitive. C-style escaped characters are allowed inside quoted values. To split one configuration entry into multiple lines, use a single backslash character (\) before the end of the line. Comments can be used in such multiline entries, but they must start at the beginning of a line.
