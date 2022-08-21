@@ -6,7 +6,7 @@
 command -v git >/dev/null || { printf '%s\n' "Missing dependency, please install git"; exit 1; }
 git_top_dir="$(git rev-parse --show-toplevel || exit 1)"
 me="${0##*/}"
-configure_version="0.0.1"
+version="$(cat "${git_top_dir}"/version.txt)"
 
 usage(){
   printf %s"Configure the environment for OnionJuggler
@@ -77,8 +77,8 @@ make_shellcheck(){
 
 make_man(){
   command -v pandoc >/dev/null || error_msg "Install pandoc to create manuals"
-  notice "${yellow}Setting version ${configure_version}${nocolor}"
-  sed -i'' "s/^version=.*/version=\"${configure_version}\"/" "${git_top_dir}/usr/share/onionjuggler/defaults.sh"
+  notice "${yellow}Setting version ${version}${nocolor}"
+  sed -i'' "s/^version=.*/version=\"${version}\"/" "${git_top_dir}/usr/share/onionjuggler/defaults.sh"
   notice "${magenta}Creating manual pages${nocolor}"
   for man in "${git_top_dir}"/man/*; do
     man="${man##*/}"
@@ -212,7 +212,7 @@ while :; do
     i|install|b|build|d|uninstall|r|release|k|check|m|man|S|clean) command="${opt}";;
     P|purge) action="${opt}";;
     no-install-requirements) no_install_requirements=1;;
-    V|version) printf '%s\n' "${me} ${configure_version}"; exit 0;;
+    V|version) printf '%s\n' "${me} ${version}"; exit 0;;
     h|help) usage;;
     "") break;;
     *) error_msg "Invalid option: '${opt_orig}'";;
