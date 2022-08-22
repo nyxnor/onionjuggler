@@ -3,7 +3,7 @@
 _onionjuggler_cli_auth_server()
 {
     local cur prev words cword
-    _init_completion || return
+    _init_completion -s || return
 
     case $prev in
         --client | --service | --replace-file | \

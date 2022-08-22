@@ -3,7 +3,7 @@
 _onionjuggler_cli_web()
 {
     local cur prev words cword
-    _init_completion || return
+    _init_completion -s || return
 
     case $prev in
         -no-check-service | \
