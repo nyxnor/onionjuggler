@@ -23,7 +23,8 @@ Package: onionjuggler-lib
 Architecture: all
 Depends: tor,
  grep (>= 1.0),
- sed (>= 1.0)
+ sed (>= 1.0),
+ bash-completion
 Description: Library for OnionJuggler
  Helper functions to avoid cluttering scripts.
 
