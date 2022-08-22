@@ -24,8 +24,8 @@ i=0
 
 usage(){
   printf "Configure the environment for OnionJuggler
-\nUsage: onionjuggler-tui [--option <ARG>]
-\nOptions:
+Usage: onionjuggler-tui [--option <ARG>]
+Options:
   -V, --version                               print version
   -h, --help                                  show this help message
 "
@@ -39,9 +39,9 @@ while :; do
   # shellcheck disable=SC2034
   arg_possible="${2}" ## need to pass the second positional parameter because maybe it is an argument
   clean_opt "${1}" || break
-  case "${1}" in
-    -V|--version) printf '%s\n' "${me} ${version}"; exit 0;;
-    -h|--help) usage;;
+  case "${opt}" in
+    V|version) printf '%s\n' "${me} ${version}"; exit 0;;
+    h|help) usage;;
     "") break;;
     *) error_msg "Invalid option: ${opt_orig}";;
   esac

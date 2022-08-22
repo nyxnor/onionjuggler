@@ -97,13 +97,13 @@ while :; do
   # shellcheck disable=SC2034
   case "${opt}" in
     getopt|getconf|V|version) set_arg dev "${opt}";;
-    signal|signal=*) get_arg signal;;
+    signal) get_arg signal;;
     on|off|list|n|f|l|renew) set_arg status "${opt}";;
     P|purge|q|quiet) set_arg action "${opt}";;
-    s|service|s=*|service=*) get_arg service;;
-    v|hs_version|v=*|hs_version=*) get_arg hs_version;;
-    S|socket|S=*|socket=*) get_arg socket;;
-    p|port|p=*|port=*) get_arg port;;
+    s|service) get_arg service;;
+    v|hs_version) get_arg hs_version;;
+    S|socket) get_arg socket;;
+    p|port) get_arg port;;
     g|gateway) set_arg gateway_service 1;;
     h|help) usage;;
     *) error_msg "Invalid option: '${opt_orig}'";;
