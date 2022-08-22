@@ -74,14 +74,35 @@ get_arg(){
 
 ## single source to set getopts so it can later be used to print the options parsed
 set_arg(){
+  ## check if $var had already a value assigned
+  eval var="$(printf '%s\n' '$'"${1}")"
+
   ## Escaping quotes is needed because else it will fail if the argument is quoted
-  # shellcheck disable=SC2140
-  eval "${1}"="\"${2}\""
+
+  ## if $var already has a value, add it to the beginning
+  ## this is commented because it might break some options that doesn't accept
+  ## multiple values for the same variable, such as "signal=reload,restart",
+  ## which is a wrong notation that would happen with
+  ## '--signal reload --signal restart' if the above addition was allowed.
+  #if test -z "${var}"; then
+    # shellcheck disable=SC2140
+    eval "${1}"="\"${2}\""
+  #else
+    # shellcheck disable=SC2140
+  #  eval "${1}"="\"${var},${2}\""
+  #fi
+
   ## variable used for --getopt
   if test -z "${arg_saved}"; then
     arg_saved="${1}=\"${2}\""
   else
-    arg_saved="${arg_saved}\n${1}=\"${2}\""
+    if test -z "${var}"; then
+      arg_saved="${arg_saved}\n${1}=\"${2}\""
+    else
+      arg_saved="${arg_saved}\n${1}=\"${2}\""
+      arg_saved="$(printf '%s\n' "${arg_saved}" | sed "s/${1}=.*/${1}=\"${2}\"/")"
+      #arg_saved="$(printf '%s\n' "${arg_saved}" | sed "s/${1}=.*/${1}=\"${var},${2}\"/")"
+    fi
   fi
 }
 
@@ -156,6 +177,7 @@ source_conf(){
   set_default_conf_values
 }
 
+
 ## block plugins that are not enabled if any is configured
 check_plugin_enabled(){
   if [ -n "${onionjuggler_plugin}" ]; then
@@ -163,6 +185,7 @@ check_plugin_enabled(){
     grep -q -- "^${1##*onionjuggler-cli-}$" || return 1
   fi
 }
+
 
 ## This is just a simple wrapper around 'command -v' to avoid
 ## spamming '>/dev/null' throughout this function. This also guards
