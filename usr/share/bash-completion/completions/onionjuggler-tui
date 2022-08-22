@@ -1,6 +1,6 @@
-# onionjuggler-cli-auth-client(8) completion               -*- shell-script -*-
+# onionjuggler-tui(8) completion               -*- shell-script -*-
 
-_onionjuggler_cli_auth_client()
+_onionjuggler_tui()
 {
     local cur prev words cword
     _init_completion || return
@@ -18,6 +18,6 @@ _onionjuggler_cli_auth_client()
     fi
 
 } &&
-    complete -F _onionjuggler_cli_auth_client onionjuggler-cli-auth-client
+    complete -F _onionjuggler_tui onionjuggler-tui
 
 # ex: filetype=sh
