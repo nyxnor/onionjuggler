@@ -10,14 +10,14 @@ onionjuggler-cli-auth-client - Manage onion service client side authorization
 # SYNOPSIS
 
 **onionjuggler-cli-auth-client** [**--option**<=*ARGUMENT*>]\
-**onionjuggler-cli-auth-client [--getconf]**\
-**onionjuggler-cli-auth-client [--getopt]** [**--client**=<*CLIENT*>]\
 **onionjuggler-cli-auth-client** [**--on**] [**--client-priv-file**=<*CLIENT_PRIV_FILE*>] [**--replace-file**]\
 **onionjuggler-cli-auth-client** [**--on**] [**--client**=<*CLIENT*>] [**--client-priv-config**=<*CLIENT_PRIV_CONFIG*>] [**--replace-file**]\
 **onionjuggler-cli-auth-client** [**--on**] [**--client**=<*CLIENT*>] [**--client-priv-key**=<*CLIENT_PRIV_KEY*>] [**--onion**=<*ONION*>] [**--replace-file**]\
 **onionjuggler-cli-auth-client** [**--off**] [**--client**=<*CLIENT*>]\
 **onionjuggler-cli-auth-client** [**--list**]\
-**onionjuggler-cli** [**--signal**=<*reload*|*restart*|*none*>]\
+**onionjuggler-cli-auth-client** [**--signal**=<*reload*|*restart*|*none*>]\
+**onionjuggler-cli-auth-client [--getconf]**\
+**onionjuggler-cli-auth-client [--getopt]** [**--client**=<*CLIENT*>]\
 **onionjuggler-cli-auth-client** [**-V**|**--version**]\
 **onionjuggler-cli-auth-client** [**-h**|**--help**]
 
