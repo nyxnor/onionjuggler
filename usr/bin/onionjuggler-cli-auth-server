@@ -16,20 +16,39 @@ usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]
 Description: server side onion authorization on HiddenServiceDir/authorized_clients
 Complete options:
-  --on [--service <SERVICE>] [--client-pub-file <FILE>] [--replace-file]
+  --on [--service=<SERVICE>] [--client-pub-file=<FILE>] [--replace-file]
                             import '<FILE>.auth' file
-  --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-config <CONFIG>] [--replace-file]
+  --on [--service=<SERVICE>] [--client=<CLIENT>] [--client-pub-config=<CONFIG>] [--replace-file]
                             import client public configuration
-  --on [--service <SERVICE>] [--client <CLIENT>] [--client-pub-key <CLIENT_PUB_KEY>] [--replace-file]
+  --on [--service=<SERVICE>] [--client=<CLIENT>] [--client-pub-key=<CLIENT_PUB_KEY>] [--replace-file]
                             generate client keys and import pub key, else use existent client's pub key
-  --off [--service <@all|SERV1,SERV2,...>] [--client <@all|CLIENT1,CLIENT2,...>]
+  --off [--service=<@all|SERV1,SERV2,...>] [--client=<@all|CLIENT1,CLIENT2,...>]
                             remove client authorization
-  --list [--service <@all|SERV1,SERV2,...>]
+  --list [--service=<@all|SERV1,SERV2,...>]
                             list authorized clients for indicated service
+
+Options:
+  --on
+    --service=<SERVICE>     service that will hold client keys
+    --client-pub-file=<FILE>
+                            client public file
+    --client-pub-config=<CONFIG>
+                            client private configuration
+    --client-pub-key <KEY>
+                            client private key
+    --replace-file          replace file if it exists under the same name
+  --off                     del client from HiddenServiceDir/authorized_clients
+    --service=<@all|SERV1,SERV2,...>]
+                            service that client will be removed from
+    --client=<@all|CLIENT1,CLIENT2,...>
+                            client that will be removed
+  --list                    list authorized clients for indicated service
+    --service=<@all|SERV1,SERV2,...>]
+                            service that clients will be listed from
   --version                 print version
   --getopt                  print options parsed
   --getconf                 print configuration values
-  --signal <SIGNAL>         signal tor reload, restart, none
+  --signal=<SIGNAL>         signal tor reload, restart, none
   -h, --help                print this help message
 "
   exit 1

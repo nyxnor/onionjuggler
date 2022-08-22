@@ -11,13 +11,13 @@ onionjuggler-cli-auth-client - Manage onion service client side authorization
 
 **onionjuggler-cli-auth-client** [**--option**<=*ARGUMENT*>]\
 **onionjuggler-cli-auth-client [--getconf]**\
-**onionjuggler-cli-auth-client [--getopt]** [**--service** <*SERVICE*>]\
-**onionjuggler-cli-auth-client** [**--on**] [**--client-priv-file** <*CLIENT_PRIV_FILE*>] [**--replace-file**]\
-**onionjuggler-cli-auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-config** <*CLIENT_PRIV_CONFIG*>] [**--replace-file**]\
-**onionjuggler-cli-auth-client** [**--on**] [**--client** <*CLIENT*>] [**--client-priv-key** <*CLIENT_PRIV_KEY*>] [**--onion** <*ONION*>] [**--replace-file**]\
-**onionjuggler-cli-auth-client** [**--off**] [**--client** <*CLIENT*>]\
+**onionjuggler-cli-auth-client [--getopt]** [**--client**=<*CLIENT*>]\
+**onionjuggler-cli-auth-client** [**--on**] [**--client-priv-file**=<*CLIENT_PRIV_FILE*>] [**--replace-file**]\
+**onionjuggler-cli-auth-client** [**--on**] [**--client**=<*CLIENT*>] [**--client-priv-config**=<*CLIENT_PRIV_CONFIG*>] [**--replace-file**]\
+**onionjuggler-cli-auth-client** [**--on**] [**--client**=<*CLIENT*>] [**--client-priv-key**=<*CLIENT_PRIV_KEY*>] [**--onion**=<*ONION*>] [**--replace-file**]\
+**onionjuggler-cli-auth-client** [**--off**] [**--client**=<*CLIENT*>]\
 **onionjuggler-cli-auth-client** [**--list**]\
-**onionjuggler-cli** [**--signal** <*reload*|*restart*|*none*>]\
+**onionjuggler-cli** [**--signal**=<*reload*|*restart*|*none*>]\
 **onionjuggler-cli-auth-client** [**-V**|**--version**]\
 **onionjuggler-cli-auth-client** [**-h**|**--help**]
 
@@ -29,25 +29,25 @@ onionjuggler-cli-auth-client - Manage onion service client side authorization
 
 # OPTIONS
 
-**--on** **--client-priv-file** <*CLIENT_PRIV_FILE*> **--replace-file**\
-**--on** **--client** <*CLIENT*> **--client-priv-config** <*CLIENT_PRIV_CONFIG*> **--replace-file**\
+**--on** **--client-priv-file**=<*CLIENT_PRIV_FILE*> **--replace-file**\
+**--on** **--client**=<*CLIENT*> **--client-priv-config**=<*CLIENT_PRIV_CONFIG*> **--replace-file**\
 
-**--on** **--client** <*CLIENT*> **--onion** <*ONION*> **--client-priv-key** <*CLIENT_PRIV_KEY*> **--replace-file**
+**--on** **--client**=<*CLIENT*> **--onion**=<*ONION*> **--client-priv-key**=<*CLIENT_PRIV_KEY*> **--replace-file**
 
 : Authenticate as a client to an onion serivce. If the client private keys is not provided, a new key pair of public and private keys will be generated, keys are sent to stdout and you should send to the onion service operator. Add a $ONION.auth_private to ClientOnionAuthDir. File(s) modified: ClientOnionAuthDir.
 ```
-onionjuggler-cli-auth-client --on --client-priv-file /home/user/alice.auth_private
-onionjuggler-cli-auth-client --on --client alice --client-priv-config fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd:descriptor:x25519:UBVCL52FL6IRYIOLEAYUVTZY3AIOM
-onionjuggler-cli-auth-client --on --client alice --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion --client-priv-key UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
-onionjuggler-cli-auth-client --on --client alice --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
+onionjuggler-cli-auth-client --on --client-priv-file=/home/user/alice.auth_private
+onionjuggler-cli-auth-client --on --client=alice --client-priv-config=fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd:descriptor:x25519:UBVCL52FL6IRYIOLEAYUVTZY3AIOM
+onionjuggler-cli-auth-client --on --client=alice --onion=fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion --client-priv-key=UBVCL52FL6IRYIOLEAYUVTZY3AIOMDI3AIFBAALZ7HJOHIJFVBIQ
+onionjuggler-cli-auth-client --on --client=alice --onion=fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
 ```
 
-**--off** **--client** <*CLIENT1,CLIENT2,...*>
+**--off** **--client**=<*CLIENT1,CLIENT2,...*>
 
 : Deauthenticate from a remote onion serivce. Remove the $ONION.auth_private file from ClientOnionAuthDir. File(s) modified: ClientOnionAuthDir/.
 ```
-onionjuggler-cli-auth-client --off --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
-onionjuggler-cli-auth-client --off --onion fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion,yyyzxhjk6psc6ul5jnfwloamhtyh7si74b47a3k2q3pskwwxrzhsxmad.onion
+onionjuggler-cli-auth-client --off --onion=fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion
+onionjuggler-cli-auth-client --off --onion=fe4avn4qtxht5wighyii62n2nw72spfabzv6dyqilokzltet4b2r4wqd.onion,yyyzxhjk6psc6ul5jnfwloamhtyh7si74b47a3k2q3pskwwxrzhsxmad.onion
 ```
 
 **--list**
@@ -69,7 +69,7 @@ onionjuggler-cli-auth-client --list
 
 : Print option parsing results.
 
-**--signal** <*reload*|*hup*|*restart*|*int*|*no*|*none*>
+**--signal**=<*reload*|*hup*|*restart*|*int*|*no*|*none*>
 
 : Send specific signal commands to the tor daemon. Sending the _restart|int_ signal is useful for correcting a previously broken tor configuration. Sending _no|none_ signal is useful when running consecutive commands to avoid tor signaling newnym everytime tor is hupped, then at last signal tor hup to tor reload its configuration and apply changes. (Default: reload|hup).
 

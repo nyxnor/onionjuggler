@@ -10,14 +10,12 @@ onionjuggler-cli-web - Manage webserver for onion services
 # SYNOPSIS
 
 **onionjuggler-cli-web** [**--option**<=*ARGUMENT*>]\
-**onionjuggler-cli-web [--getconf]**\
-**onionjuggler-cli-web [--getopt]** [**--service** <*SERVICE*>]\
-**onionjuggler-cli-web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>]\
-**onionjuggler-cli-web** [**--on**] [**--service** <*SERVICE*>] [**--folder** <*FOLDER*>] [**--no-check-service**] [**--port** <*VIRTPORT[:TARGET]*>]\
-**onionjuggler-cli-web** [**--off**] [**--service** <*SERVICE*>]\
+**onionjuggler-cli-web** [**--on**] [**--service**=<*SERVICE*>] [**--folder**=<*FOLDER*>]\
+**onionjuggler-cli-web** [**--on**] [**--service**=<*SERVICE*>] [**--folder**=<*FOLDER*>] [**--no-check-service**] [**--port**=<*VIRTPORT[:TARGET]*>]\
+**onionjuggler-cli-web** [**--off**] [**--service**=<*SERVICE*>]\
 **onionjuggler-cli-web** [**--list**]\
 **onionjuggler-cli [--getconf]**\
-**onionjuggler-cli [--getopt]** [**--service** <*SERVICE*>]\
+**onionjuggler-cli [--getopt]** [**--service**=<*SERVICE*>]\
 **onionjuggler-cli [-V|--version]**\
 **onionjuggler-cli** [**-h**|**--help**]
 
@@ -29,18 +27,25 @@ onionjuggler-cli-web - Manage webserver for onion services
 
 # OPTIONS
 
-**--on** **--service** <*SERV*> **--folder** <*FOLDER*>
+**--on** **--service**=<*SERV*> **--folder**=<*FOLDER*>
 
 : Enable a website using a specific onion service by creating a configuration file inside the web server folder by default, the folder name is to be considered the wanted folder inside website_dir variable defined on /etc/onionjuggler. If the path starts with forward slash "/" or tilde and slash "~/", that path will be considered instead. File(s) modified: $webserver_conf_dir.
 ```
-onionjuggler-cli-web --on --service nextcloud --folder nextcloud-local-site
+onionjuggler-cli-web --on --service=nextcloud --folder=nextcloud-local-site
 ```
 
-**--off** **--service** <*SERV*>
+**--on** **--service**=<*SERV*> **--folder**=<*FOLDER*> **--no-check-service** **--port**=<*VIRTPORT[:TARGET]*>
+
+: Enable a website on Workstations when there is no service being hosted on the same environment a a port must be manually specified. File(s) modified: $webserver_conf_dir.
+```
+onionjuggler-cli-web --on --service=nextcloud --folder=nextcloud-local-site --no-check-service --port=80
+```
+
+**--off** **--service**=<*SERV*>
 
 : Disable a website from a specific onion service by removing its configuration file from the webserver folder. File(s) modified: $webserver_conf_dir
 ```
-onionjuggler-cli-web --off --service nextcloud
+onionjuggler-cli-web --off --service=nextcloud
 ```
 
 **--list**
@@ -68,9 +73,6 @@ onionjuggler-cli-web --list
 onionjuggler-cli-web -h
 onionjuggler-cli-web --help
 ```
-
-**-R**, **--restart**, **-r**, **--reload**
-: Signal tor daemon to restart or reload after the CLI edits tor's configuration files. (Default: reload)
 
 
 # ENVIRONMENT

@@ -16,20 +16,38 @@ usage(){
   printf %s"Usage: ${me} [--option <ARGUMENT>]
 Description: client side onion authorization on ClientOnionAuthDir
 Complete options:
-  --on [--client-priv-file <FILE>] [--replace-file]
+  --on [--client-priv-file=<FILE>] [--replace-file]
                             import '<FILE>.auth_private' contents
-  --on [--client <CLIENT>] [--client-priv-config <CONFIG>] [--replace-file]
+  --on [--client=<CLIENT>] [--client-priv-config=<CONFIG>] [--replace-file]
                             import client private configuration
-  --on [--client <CLIENT>] [--onion <ONION>] [--client-priv-key <CLIENT_PRIV_KEY>] [--replace-file]
+  --on [--client=<CLIENT>] [--onion <ONION>] [--client-priv-key=<KEY>] [--replace-file]
                             generate client keys and import priv key, else use existent client's priv key
-  --off [--client <CLIENT1,CLIENT2,...>]
+  --off [--client=<CLIENT1,CLIENT2,...>]
                             remove client side credential based on client name
-  --list [--client <@all|CLIENT1,CLIENT2,...>]
+  --list [--client=<@all|CLIENT1,CLIENT2,...>]
                             list client side credentials, optionally specify client names
+
+Options:
+  --on                      add client private keys to ClientOninAuthDir
+    --client=<CLIENT>       client name
+    --client-priv-file=<FILE>
+                            client private file
+    --client-priv-config=<CONFIG>
+                            client private configuration
+    --client-priv-key=<KEY>
+                            client private key
+    --onion=<ONION>         onion hostname
+    --replace-file          replace file if it exists under the same name
+  --off                     remove clients in ClientOnionAuthDir
+    --client=<CLIENT1,CLIENT2,...>
+                            client names
+  --list                    list clients in ClientOnionAuthDir
+    --client=<@all|CLIENT1,CLIENT2>
+                            client names
   --version                 print version
   --getopt                  print options parsed
   --getconf                 print configuration values
-  --signal <SIGNAL>         signal tor reload, restart, none
+  --signal=<SIGNAL>         signal tor reload, restart, none
   -h, --help                print this help message
 "
   exit 1

@@ -1,0 +1,38 @@
+# onionjuggler-cli(8) completion       -*- shell-script -*-
+
+_onionjuggler_cli()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    case $prev in
+        --service | --port | --gateway | \
+            --purge | --quiet | --renew | \
+            --on | --off | --list | --getopt )
+            return
+        ;;
+        --hs-version )
+            COMPREPLY=($(compgen -W '3' -- "$cur"))
+            return
+        ;;
+        --socket )
+            COMPREPLY=($(compgen -W 'tcp unix' -- "$cur"))
+            return
+        ;;
+        --help | --version | --getconf )
+            return
+        ;;
+        --signal )
+            COMPREPLY=($(compgen -W 'reload restart none' -- "$cur"))
+            return
+        ;;
+    esac
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=($(compgen -W '$(_parse_help "$1")' -- "$cur"))
+    fi
+
+} &&
+    complete -F _onionjuggler_cli onionjuggler-cli
+
+# ex: filetype=sh

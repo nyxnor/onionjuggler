@@ -10,14 +10,14 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 # SYNOPSIS
 
 **onionjuggler-cli** [**--option**<=*ARGUMENT*>]\
-**onionjuggler-cli --on** [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*tcp*>] [**--port** <*VIRTPORT*[:*TARGET*],[*VIRTPORTn*][:*TARGETn*]>] [**--gateway**]\
-**onionjuggler-cli --on**  [**--service** <*SERVICE*>] [**--version** <*VERSION*>] [**--socket** <*unix*>] [**--port** [*VIRTPORT*,[*VIRTPORT2*]>]\
-**onionjuggler-cli --off** [**--service** <*SERV1*,*SERV2*,*...*>] [**--purge**]\
-**onionjuggler-cli --list** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
-**onionjuggler-cli --renew** [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
-**onionjuggler-cli** [**--signal** <*reload*|*restart*|*none*>]\
+**onionjuggler-cli --on** [**--service**=<*SERVICE*>] [**--hs-version**=<*VERSION*>] [**--socket**=<*tcp*>] [**--port**=<*VIRTPORT*[:*TARGET*],[*VIRTPORTn*][:*TARGETn*]>] [**--gateway**]\
+**onionjuggler-cli --on**  [**--service**=<*SERVICE*>] [**--version**=<*VERSION*>] [**--socket**=<*unix*>] [**--port**=[*VIRTPORT*,[*VIRTPORT2*]>]\
+**onionjuggler-cli --off** [**--service**=<*SERV1*,*SERV2*,*...*>] [**--purge**]\
+**onionjuggler-cli --list** [**--service**=<*@all*|*SERV1*,*SERV2*,*...*>] [**--quiet**]\
+**onionjuggler-cli --renew** [**--service**=<*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli** [**--signal**=<*reload*|*restart*|*none*>]\
 **onionjuggler-cli [--getconf]**\
-**onionjuggler-cli [--getopt]** [**--service** <*SERVICE*>]\
+**onionjuggler-cli [--getopt]** [**--service**=<*SERVICE*>]\
 **onionjuggler-cli [-V|--version]**\
 **onionjuggler-cli** [**-h**|**--help**]
 
@@ -29,55 +29,55 @@ onionjuggler-cli - Dinamically juggle with onion services with a POSIX compliant
 
 # OPTIONS
 
-**--on** **--service** <*SERV*> **--version** *3* **--socket** *tcp* **--port** <*VIRTPORT*:<*TARGET*>,<*VIRTPORTn*>:<*TARGETn*>> **--gateway**
+**--on** **--service**=<*SERV*> **--version**=*3* **--socket**=*tcp* **--port**=<*VIRTPORT*:<*TARGET*>,<*VIRTPORTn*>:<*TARGETn*>> **--gateway**
 
 : Enable an onion service using TCP socket (addr:port) as target. If the TARGET is only the port of it TARGET was not provided, will use the same port as VIRTPORT and bind to 127.0.0.1. TARGET examples: 127.0.0.1:80, 192.168.1.100:80. File(s) modified: torrc.
 ```
-onionjuggler-cli --on --service ssh --version 3 --socket tcp --port 22
-onionjuggler-cli --on --service ssh --port 22:127.0.1:22
-onionjuggler-cli --on --service ssh --port "80:127.0.0.1:80 443:127.0.0.1:443"
-onionjuggler-cli --on --service ssh --port "80:127.0.0.1:80,443:127.0.0.1:443"
-onionjuggler-cli --on --service ssh --port="80,443"
+onionjuggler-cli --on --service=ssh --version=3 --socket=tcp --port=22
+onionjuggler-cli --on --service=ssh --port=22:127.0.1:22
+onionjuggler-cli --on --service=ssh --port="80:127.0.0.1:80 443:127.0.0.1:443"
+onionjuggler-cli --on --service=ssh --port="80:127.0.0.1:80,443:127.0.0.1:443"
+onionjuggler-cli --on --service=ssh --port="80,443"
 ```
 By default, services created on a Qubes-Whonix Gateway uses the Whonix Workstation qube IP address, services created on a Non-Qubes-Whonix uses the IP address 10.152.152.11. If you are on Whonix Gateway want to enforce the creation of a service to be running on the Whonix-Gateway (for itself), for example and onion service to ssh to the Gateway, and you haven't set the target, just the virtual port, use the option *--gateway*:
 ```
-onionjuggler-cli --on --service ssh --socket tcp --port 22 --gateway
+onionjuggler-cli --on --service=ssh --socket=tcp --port=22 --gateway
 ```
 
-**--on** **--service** <*SERV*> **--version** *3* **--socket** *unix* **--port** <*VIRTPORT*,<*VIRTPORT2*>>
+**--on** **--service**=<*SERV*> **--version**=*3* **--socket**=*unix* **--port**=<*VIRTPORT*,<*VIRTPORT2*>>
 
 : Enable an onion service using UNIX socket (unix:path) as target. The TARGET is handled automatically by the script. This method avoids leaking the onion service address to the local network. File(s) modified: torrc.
 ```
-onionjuggler-cli --on --service ssh --version 3 --socket unix --port 22
-onionjuggler-cli --on --service ssh --version 3 --socket unix --port 22,80
+onionjuggler-cli --on --service=ssh --version=3 --socket=unix --port=22
+onionjuggler-cli --on --service=ssh --version=3 --socket=unix --port=22,80
 ```
 
-**--off** **--service** <*SERV1*,*SERV2*,*...*> <*--purge*>
+**--off** **--service**=<*SERV1*,*SERV2*,*...*> <*--purge*>
 
 : Disable an onion service by removing it configuration lines (HiddenService) from the torrc. Optionally purge its data directory, which will delete permanently the onion service folder (HiddenServiceDir). File(s) modified: torrc and optionally HiddenServiceDir.
 ```
-onionjuggler-cli --off --service ssh
-onionjuggler-cli --off --service ssh,xmpp
-onionjuggler-cli --off --service ssh,xmpp --purge
+onionjuggler-cli --off --service=ssh
+onionjuggler-cli --off --service=ssh,xmpp
+onionjuggler-cli --off --service=ssh,xmpp --purge
 ```
 
-**--list** **--service** <*@all*|*SERV1*,*SERV2*,*...*> <*--quiet*>
+**--list** **--service**=<*@all*|*SERV1*,*SERV2*,*...*> <*--quiet*>
 
 : List onion service information: hostname (address) and in QR encoded format, clients names and quantity, status if service is active or inactive regarding the torrc lines (un)present and the HiddenServiceDir presence, the torrc block. File(s) modified: none.
 ```
-onionjuggler-cli --list --service ssh
-onionjuggler-cli --list --service ssh,xmpp
-onionjuggler-cli --list --service @all
-onionjuggler-cli --list --service @all --quiet
+onionjuggler-cli --list --service=ssh
+onionjuggler-cli --list --service=ssh,xmpp
+onionjuggler-cli --list --service=@all
+onionjuggler-cli --list --service=@all --quiet
 ```
 
-**--renew** **--service** <*@all*|*SERV1*,*SERV2*,*...*>
+**--renew** **--service**=<*@all*|*SERV1*,*SERV2*,*...*>
 
 : Renew onion service hostname (.onion domain) and clients (inside HiddenServiceDir/authorized_clients/). The onion service keys (hs_ed25519_public_key and hs_ed25519_private_key) will be removed to override the hostname file. File(s) modified: HiddenServiceDir.
 ```
-onionjuggler-cli --renew --service ssh
-onionjuggler-cli --renew --service ssh,xmpp
-onionjuggler-cli --renew --service @all
+onionjuggler-cli --renew --service=ssh
+onionjuggler-cli --renew --service=ssh,xmpp
+onionjuggler-cli --renew --service=@all
 ```
 
 **-V**, **--version**
@@ -92,7 +92,7 @@ onionjuggler-cli --renew --service @all
 
 : Print option parsing results.
 
-**--signal** <*reload*|*hup*|*restart*|*int*|*no*|*none*>
+**--signal**=<*reload*|*hup*|*restart*|*int*|*no*|*none*>
 
 : Send specific signal commands to the tor daemon. Sending the _restart|int_ signal is useful for correcting a previously broken tor configuration. Sending _no|none_ signal is useful when running consecutive commands to avoid tor signaling newnym everytime tor is hupped, then at last signal tor hup to tor reload its configuration and apply changes. (Default: reload|hup).
 

@@ -9,7 +9,7 @@
 * Criticize code, not people.
 * Constructive criticism always. Explain what is wrong and what could have been done better if applied to the case.
 * Satire/Irony/Sarcasm mode are enabled, have some sense of humour, altough it is forbidden the use of derrogatory/insulting/personal attacks and intimidation/threats, such as doxing private information of someonelse's identity or attempting to do so by any means and claim it was "just a joke".
-* Humans evolved to use the brain further than their animal instincts of fighting for food, water and copulation, so harassing the offender as it was done to you also makes you and offender.
+* Humans evolved to use the brain further than their animal instincts of fighting for food, water and copulation, so harassing the offender as it was done to you also makes you an offender.
 
 ## Enforcement
 

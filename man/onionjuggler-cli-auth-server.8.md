@@ -10,14 +10,14 @@ onionjuggler-cli-auth-server - Manage onion service server side authorization
 # SYNOPSIS
 
 **onionjuggler-cli-auth-server** [**--option**<=*ARGUMENT*>]\
-**onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client-pub-file** <*CLIENT_PUB_FILE*>]\
-**onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-config** <*CLIENT_PUB_CONFIG*>]\
-**onionjuggler-cli-auth-server** [**--on**] [**--service** <*SERVICE*>] [**--client** <*CLIENT*>] [**--client-pub-key** <*CLIENT_PUB_KEY*>]\
-**onionjuggler-cli-auth-server** [**--off**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>] [**--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
-**onionjuggler-cli-auth-server** [**--list**] [**--service** <*@all*|*SERV1*,*SERV2*,*...*>]\
-**onionjuggler-cli** [**--signal** <*reload*|*restart*|*none*>]\
+**onionjuggler-cli-auth-server** [**--on**] [**--service**=<*SERVICE*>] [**--client-pub-file**=<*CLIENT_PUB_FILE*>]\
+**onionjuggler-cli-auth-server** [**--on**] [**--service**=<*SERVICE*>] [**--client**=<*CLIENT*>] [**--client-pub-config**=<*CLIENT_PUB_CONFIG*>]\
+**onionjuggler-cli-auth-server** [**--on**] [**--service**=<*SERVICE*>] [**--client**=<*CLIENT*>] [**--client-pub-key**=<*CLIENT_PUB_KEY*>]\
+**onionjuggler-cli-auth-server** [**--off**] [**--service**=<*@all*|*SERV1*,*SERV2*,*...*>] [**--client**=<*@all*|*CLIENT1*,*CLIENT2*,*...*>]\
+**onionjuggler-cli-auth-server** [**--list**] [**--service**=<*@all*|*SERV1*,*SERV2*,*...*>]\
+**onionjuggler-cli** [**--signal**=<*reload*|*restart*|*none*>]\
 **onionjuggler-cli-auth-server [--getconf]**\
-**onionjuggler-cli-auth-server [--getopt]** [**--service** <*SERVICE*>]\
+**onionjuggler-cli-auth-server [--getopt]** [**--service**=<*SERVICE*>]\
 **onionjuggler-cli-auth-server** [**-V**|**--version**]\
 **onionjuggler-cli-auth-server** [**-h**|**--help**]
 
@@ -29,39 +29,39 @@ onionjuggler-cli-auth-server - Manage onion service server side authorization
 
 # OPTIONS
 
-**--on** **--service** <*SERVICE*> **--client-pub-file** <*CLIENT_PUB_FILE*> **--replace-file**\
-**--on** **--service** <*SERVICE*> **--client-pub-config** <*CLIENT_PUB_CONFIG*> **--client** **--replace-file**\
-**--on** **--service** <*SERVICE*> **--client** <*CLIENT*> **--client-pub-key** <*CLIENT_PUB_KEY*> **--replace-file**\
+**--on** **--service**=<*SERVICE*> **--client-pub-file**=<*CLIENT_PUB_FILE*> **--replace-file**\
+**--on** **--service**=<*SERVICE*> **--client-pub-config**=<*CLIENT_PUB_CONFIG*> **--client** **--replace-file**\
+**--on** **--service**=<*SERVICE*> **--client**=<*CLIENT*> **--client-pub-key**=<*CLIENT_PUB_KEY*> **--replace-file**\
 
-**--on** **--service** <*SERVICE*> **--client** <*CLIENT*>
+**--on** **--service**=<*SERVICE*> **--client**=<*CLIENT*>
 
 : Authorize a client to your service. A key pair of public and private keys will be generated, keys are sent to stdout and you should send to the client. A CLIENT.auth file will be created on HiddenServiceDir/authorized_clients folder. If no key is specified, then a key pair will be generated.File(s) modified: HiddenServiceDir/authorized_clients/
 ```
-onionjuggler-cli-auth-server --on --service ssh --client-pub-file /home/user/bob.auth
-onionjuggler-cli-auth-server --on --service ssh --client bob --client-pub-config descriptor:x25519:UQYM2MJ4CKZU25JABR3Z5L2QP3552EH2BUOIZC2XVULY2QRGXUVQ
-onionjuggler-cli-auth-server --on --service ssh --client bob --client-pub-key UQYM2MJ4CKZU25JABR3Z5L2QP3552EH2BUOIZC2XVULY2QRGXUVQ
-onionjuggler-cli-auth-server --on --service ssh --client bob
+onionjuggler-cli-auth-server --on --service=ssh --client-pub-file=/home/user/bob.auth
+onionjuggler-cli-auth-server --on --service=ssh --client=bob --client-pub-config=descriptor:x25519:UQYM2MJ4CKZU25JABR3Z5L2QP3552EH2BUOIZC2XVULY2QRGXUVQ
+onionjuggler-cli-auth-server --on --service=ssh --client=bob --client-pub-key=UQYM2MJ4CKZU25JABR3Z5L2QP3552EH2BUOIZC2XVULY2QRGXUVQ
+onionjuggler-cli-auth-server --on --service=ssh --client=bob
 ```
 
-**--off** **--service** <*@all*|*SERV1*,*SERV2*,*...*> **--client** <*@all*|*CLIENT1*,*CLIENT2*,*...*>
+**--off** **--service**=<*@all*|*SERV1*,*SERV2*,*...*> **--client**=<*@all*|*CLIENT1*,*CLIENT2*,*...*>
 
 : Deauthorize from your service a client that is inside HiddenServiceDir/authorized_clients folder. File(s) modified: HiddenServiceDir/authorized_clients/
 ```
-onionjuggler-cli-auth-server --off --service ssh --client alice
-onionjuggler-cli-auth-server --off --service ssh --client alice,bob
-onionjuggler-cli-auth-server --off --service ssh,xmpp --client alice
-onionjuggler-cli-auth-server --off --service ssh,xmpp --client alice,bob
-onionjuggler-cli-auth-server --off --service @all --client alice,bob
-onionjuggler-cli-auth-server --off --service @all --client @all
+onionjuggler-cli-auth-server --off --service=ssh --client=alice
+onionjuggler-cli-auth-server --off --service=ssh --client=alice,bob
+onionjuggler-cli-auth-server --off --service=ssh,xmpp --client=alice
+onionjuggler-cli-auth-server --off --service=ssh,xmpp --client=alice,bob
+onionjuggler-cli-auth-server --off --service=@all --client=alice,bob
+onionjuggler-cli-auth-server --off --service=@all --client=@all
 ```
 
-**--list**  **--service** <*@all*|*SERV1*,*SERV2*,*...*>
+**--list**  **--service**=<*@all*|*SERV1*,*SERV2*,*...*>
 
 : List authorized clients and the respective public keys that are inside HiddenServiceDir/authorized_clients folder. File(s) modified: none
 ```
-onionjuggler-cli-auth-server --list --service ssh
-onionjuggler-cli-auth-server --list --service ssh,xmpp
-onionjuggler-cli-auth-server --list --service @all
+onionjuggler-cli-auth-server --list --service=ssh
+onionjuggler-cli-auth-server --list --service=ssh,xmpp
+onionjuggler-cli-auth-server --list --service=@all
 ```
 
 **-V**, **--version**
@@ -76,7 +76,7 @@ onionjuggler-cli-auth-server --list --service @all
 
 : Print option parsing results.
 
-**--signal** <*reload*|*hup*|*restart*|*int*|*no*|*none*>
+**--signal**=<*reload*|*hup*|*restart*|*int*|*no*|*none*>
 
 : Send specific signal commands to the tor daemon. Sending the _restart|int_ signal is useful for correcting a previously broken tor configuration. Sending _no|none_ signal is useful when running consecutive commands to avoid tor signaling newnym everytime tor is hupped, then at last signal tor hup to tor reload its configuration and apply changes. (Default: reload|hup).
 

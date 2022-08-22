@@ -16,52 +16,22 @@ onionjuggler_defaults="/usr/share/onionjuggler/defaults.sh"
 source_conf
 
 usage(){
-  printf %s"${magenta}
-                           ';:  -'''
-                      ':' -=l.:>l_
-                     '^';z;_|J/':'
-                    '|;l''?7xc:'
-                    r1ztJtv;':'
-                   'xxxtx|-'
-               ':' '|ttxv:
-               7Or:{tx|'
-                O?':,Jom,
-                vN'_'i9@;
-               'g9'_'j2Qg-
-             _xBt-':'>USMQv'
-          ;uQDc.'';_:'lOjoOBNu:
-       ~yQ6|.'''':;_:,';DSjjj6#QX;
-     ?BQv''''''-=>'_'l'''8yjjjujqQQi
-   :R#>'''''->|r-''_'.7'';gjjuujjjPQN:
-  7@7'''''rl>-''''.;:'-1.'OPjuuuujjjM@l
- i@:''''*i'''''''.;_*''.u'lQjuuuuuujjK@r
-~@1''''u,'''''',::'_-J,',1~@SjjuuuujjjQQ'
-}@'''.a.'''':>;.'''_''/,'e.@Ejjuuuuuujh@>
-Z@'''],'''.v^'''''';_''u'l:@Kjjuuuuuuja@v
-}@.''a'''-o''''''->^;;'*l>/@OjjuuuuuujX@|
-_@v'':i''L,'''''_{'_'y''kJu@6jjuuuujjjN@-
- v@:''7r'l;'''''x''_'o':Eqe@ojjuuuujjE@L
-  F@c''|=.R'''''u''_'o:lSjQQjjjuujjuO@}
-   ?Qq,'rcr8,'''e,'_'q-kZv@EjuujujoNQ|
-    'iQO^,xlm7-''E'_~g;DO@OjjjujhBQ1'
-       :jWkmycjl^:FxPXQ@@kjSEDQQe;
-          -;vmdgN@@Q@@@QROsev^-
-${nocolor}
-Usage: ${me} [--option <ARGUMENT>]
+
+  printf %s"Usage: ${me} [--option <ARGUMENT>]
 \nComplete options:
-  --on [--service <SERVICE>] [--socket <unix>] [--port <VIRTPORT,[VIRTPORT2]>]
+  --on [--service=<SERVICE>] [--socket=<unix>] [--port=<VIRTPORT,[VIRTPORT2]>]
                              enable a service listening with tcp sockets
 
-  --on [--service <SERVICE>] [--port <VIRTPORT[:TARGET][,VIRTPORT2][:TARGET2]>]
+  --on [--service=<SERVICE>] [--port=<VIRTPORT[:TARGET][,VIRTPORT2][:TARGET2]>]
                              enable a service listening on unix sockets
 
-  --off [--purge] [--service <@all|SERV1,SERV2,...>
+  --off [--purge] [--service=<@all|SERV1,SERV2,...>
                              disable a service and optionally purge its dir
 
-  --list [--quiet] [--service <@all|SERV1,SERV2,...>]
+  --list [--quiet] [--service=<@all|SERV1,SERV2,...>]
                              see credentials from indicated services
 
-  --renew [--service <@all|SERV1,SERV2,...>]
+  --renew [--service=<@all|SERV1,SERV2,...>]
                              renew indicated services addresses
 
   -h|--help                  display this help message
@@ -71,23 +41,23 @@ Options:
   --getconf                  print configuration
   --getopt                   print options given by the command line
   --on                       activate an onion service
-    -s, --service <SERVICE>  service to activate
-    -S, --socket <tcp|unix>  define a socket, default tcp
-    -v, --hs-version 3       set service version, default 3
-    -p, --port <VIRTPORT[:TARGET],VIRTPORT2[:TARGET2]>
+    -s, --service=<SERVICE>  service to activate
+    -S, --socket=<tcp|unix>  define a socket, default tcp
+    -v, --hs-version=3       set service version, default 3
+    -p, --port=<VIRTPORT[:TARGET],VIRTPORT2[:TARGET2]>
                              define ports for the new onion service
     -g, --gateway            define target 127.0.0.1 (doesn't override target)
   --off                      deactivate an onion service configuration
-    -s, --service <SERV1,SERV2,...>
+    -s, --service=<SERV1,SERV2,...>
                              service to deactivate
     -P, --purge              purge the onion service data
   --list                     list existing services data
-    -s, --service <@all|SERV1,SERV2,...>
+    -s, --service=<@all|SERV1,SERV2,...>
                              list all services or indicate them comma separated
     -q, --quiet              don't QR encode the hostname
 
 Advanced:
-  --signal <SIGNAL>          when signaling tor, send signal to reload (hup),
+  --signal=<SIGNAL>          when signaling tor, send signal to reload (hup),
                              restart (int) or no signal (none). Default: reload
 
 Option names:
