@@ -1,4 +1,4 @@
-# onionjuggler-cli(8) completion       -*- shell-script -*-
+# onionjuggler-cli(8) completion                           -*- shell-script -*-
 
 _onionjuggler_cli()
 {
@@ -6,9 +6,10 @@ _onionjuggler_cli()
     _init_completion || return
 
     case $prev in
-        --service | --port | --gateway | \
-            --purge | --quiet | --renew | \
-            --on | --off | --list | --getopt )
+        --gateway | --purge | --quiet | --renew )
+            return
+        ;;
+        --service | --port )
             return
         ;;
         --hs-version )
@@ -17,6 +18,9 @@ _onionjuggler_cli()
         ;;
         --socket )
             COMPREPLY=($(compgen -W 'tcp unix' -- "$cur"))
+            return
+        ;;
+        --on | --off | --list | --getopt )
             return
         ;;
         --help | --version | --getconf )
@@ -30,6 +34,7 @@ _onionjuggler_cli()
 
     if [[ $cur == -* ]]; then
         COMPREPLY=($(compgen -W '$(_parse_help "$1")' -- "$cur"))
+        [[ ${COMPREPLY-} == *= ]] && compopt -o nospace
     fi
 
 } &&

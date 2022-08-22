@@ -1,18 +1,18 @@
-# onionjuggler-cli-auth-client(8) completion               -*- shell-script -*-
+# onionjuggler-cli-auth-server(8) completion               -*- shell-script -*-
 
-_onionjuggler_cli_auth_client()
+_onionjuggler_cli_auth_server()
 {
     local cur prev words cword
     _init_completion || return
 
     case $prev in
         --client | --service | --replace-file | \
-            --client-priv-config | --client-priv-key | \
+            --client-pub-config | --client-pub-key | \
             --on | --off | --list | --getopt )
             return
         ;;
-        --client-priv-file )
-            _filedir auth_private
+        --client-pub-file )
+            _filedir auth
             return
         ;;
         --help | --version | --getconf )
@@ -30,6 +30,6 @@ _onionjuggler_cli_auth_client()
     fi
 
 } &&
-    complete -F _onionjuggler_cli_auth_client onionjuggler-cli-auth-client
+    complete -F _onionjuggler_cli_auth_server onionjuggler-cli-auth-server
 
 # ex: filetype=sh
