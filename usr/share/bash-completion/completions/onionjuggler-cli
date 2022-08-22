@@ -13,11 +13,11 @@ _onionjuggler_cli()
             return
         ;;
         --hs-version )
-            COMPREPLY=($(compgen -W '3' -- "$cur"))
+            COMPREPLY=($(compgen -W "3" -- "$cur"))
             return
         ;;
         --socket )
-            COMPREPLY=($(compgen -W 'tcp unix' -- "$cur"))
+            COMPREPLY=($(compgen -W "tcp unix" -- "$cur"))
             return
         ;;
         --on | --off | --list | --getopt )
@@ -27,13 +27,13 @@ _onionjuggler_cli()
             return
         ;;
         --signal )
-            COMPREPLY=($(compgen -W 'reload restart none' -- "$cur"))
+            COMPREPLY=($(compgen -W "reload restart none" -- "$cur"))
             return
         ;;
     esac
 
     if [[ $cur == -* ]]; then
-        COMPREPLY=($(compgen -W '$(_parse_help "$1")' -- "$cur"))
+        COMPREPLY=($(compgen -W "$(_parse_help "$1")" -- "$cur"))
         [[ ${COMPREPLY-} == *= ]] && compopt -o nospace
         return
     fi

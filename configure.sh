@@ -68,9 +68,11 @@ make_shellcheck(){
   command -v shellcheck >/dev/null || error_msg "Install shellcheck to review syntax"
   notice "${yellow}Checking shell syntax${nocolor}"
   ## Customize severity with -S [error|warning|info|style]
-  if ! shellcheck "${git_top_dir}"/configure.sh "${git_top_dir}"/etc/onionjuggler/*.conf \
-  "${git_top_dir}"/etc/onionjuggler/conf.d/*.conf "${git_top_dir}"/usr/bin/* \
-  "${git_top_dir}"/usr/share/onionjuggler/*; then
+  if ! shellcheck -s sh "${git_top_dir}"/configure.sh "${git_top_dir}"/etc/onionjuggler/*.conf \
+    "${git_top_dir}"/etc/onionjuggler/conf.d/*.conf "${git_top_dir}"/usr/bin/* \
+    "${git_top_dir}"/usr/share/onionjuggler/* || \
+  ! shellcheck -s bash "${git_top_dir}"/usr/share/bash-completion/completions/onionjuggler-*
+  then
     error_msg "Please fix the shellcheck warnings above before pushing!"
   fi
 }

@@ -19,13 +19,13 @@ _onionjuggler_cli_auth_client()
             return
         ;;
         --signal )
-            COMPREPLY=($(compgen -W 'reload restart none' -- "$cur"))
+            COMPREPLY=($(compgen -W "reload restart none" -- "$cur"))
             return
         ;;
     esac
 
     if [[ $cur == -* ]]; then
-        COMPREPLY=($(compgen -W '$(_parse_help "$1")' -- "$cur"))
+        COMPREPLY=($(compgen -W "$(_parse_help "$1")" -- "$cur"))
         [[ ${COMPREPLY-} == *= ]] && compopt -o nospace
         return
     fi
