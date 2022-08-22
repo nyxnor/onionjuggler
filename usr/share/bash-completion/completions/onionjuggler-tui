@@ -6,20 +6,7 @@ _onionjuggler_cli_auth_client()
     _init_completion || return
 
     case $prev in
-        --client | --service | --replace-file | \
-            --client-priv-config | --client-priv-key | \
-            --on | --off | --list | --getopt )
-            return
-        ;;
-        --client-priv-file )
-            _filedir auth_private
-            return
-        ;;
-        --help | --version | --getconf )
-            return
-        ;;
-        --signal )
-            COMPREPLY=($(compgen -W 'reload restart none' -- "$cur"))
+        --help | --version )
             return
         ;;
     esac

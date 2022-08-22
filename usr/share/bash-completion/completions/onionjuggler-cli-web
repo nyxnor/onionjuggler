@@ -1,0 +1,37 @@
+# onionjuggler-cli-web(8) completion               -*- shell-script -*-
+
+_onionjuggler_cli_web()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    case $prev in
+        -no-check-service | \
+            --on | --off | --list | --getopt )
+            return
+        ;;
+        --port )
+            return
+        ;;
+        --service )
+            return
+        ;;
+        --folder )
+            _filedir
+            return
+        ;;
+        --help | --version | --getconf )
+            return
+        ;;
+    esac
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=($(compgen -W '$(_parse_help "$1")' -- "$cur"))
+        [[ ${COMPREPLY-} == *= ]] && compopt -o nospace
+        return
+    fi
+
+} &&
+    complete -F _onionjuggler_cli_web onionjuggler-cli-web
+
+# ex: filetype=sh
