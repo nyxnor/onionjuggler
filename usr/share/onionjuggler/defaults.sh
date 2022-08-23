@@ -453,25 +453,19 @@ is_addr_port(){
 }
 
 
-## returns 0 if empty
 ## returns 1 if not empty
 ## no better way to do with posix utilities
 ## https://unix.stackexchange.com/questions/202243/how-to-check-directory-is-empty
 is_dir_empty(){
   dir="${1}"
-  #if ls -1qA "${dir}" | grep -q "."; then
-  if [ -d "${dir}" ] && files=$(ls -qAH -- "${dir}") && [ -z "${files}" ]; then
-     ## has file(s) / not empty
-    return 1
-  else
-    ## empty
-    return 0
-  fi
+  test -d "${dir}" || return 1
+  # shellcheck disable=SC2010
+  ls -1qA "${dir}" | grep -q "." && return 1
 }
 
 
 is_service_dir_empty(){
-  is_dir_empty "${tor_data_dir_services}" && error_msg "Onion services directory is empty. Create a service first before running this command again."
+  is_dir_empty "${tor_data_dir_services}" && error_msg "${tor_data_dir_services} is empty. Create a service first before running this command again."
 }
 
 
