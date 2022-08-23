@@ -322,7 +322,7 @@ PURGE: Service will be permanently disabled, all the directory data, including h
         ## only include services that have at least one client
         if ! is_dir_empty "${tor_data_dir_services}/${service}/authorized_clients/"; then
           i=$((i+1))
-          onion_hostname="$(grep ".onion" "${tor_data_dir_services}"/"${service}"/hostname 2>/dev/null)"
+          onion_hostname="$(grep ".onion" "${tor_data_dir_services}/${service}"/hostname" 2>/dev/null)"
           service_list_menu="$(printf "%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}")"
           service_list_checklist="$(printf "%s\n%s\n%s\n%s\n" "${service_list}" "${service}" "${onion_hostname%.onion}" 0)"
         fi
