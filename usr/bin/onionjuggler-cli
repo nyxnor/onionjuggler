@@ -349,15 +349,20 @@ EOF
   l|list)
 
     get_service_info(){
-      #service="${1}"
-      service_clean="${1%*/}"
-      service_base="${service_clean##*/}"
-      service_path="${service_clean%/*}"
-      if [ "${service_path}" = "${service}" ]; then
-        service_path="${tor_data_dir_services}"
+      service="${1}"
+      service_clean="${service%*/}" ## remove trailing slash from the end
+      service_base="${service_clean##*/}" ## get basename
+      service_dir="${service_clean%/*}" ## get dirname
+
+      if [ "${service_dir}" = "${service}" ]; then
+        service_dir="${tor_data_dir_services}"
       fi
 
-      test_service_exists "${service_clean}"
+      ## happens when there is a hidden service configured but
+      ## the configuration was not parsed because tor was not reloaded
+      ## so no hostname is found
+      test_service_exists "${service_clean}" || return
+
       j=$((j+1))
       [ ${j} -eq 1 ] && printf '\n'
       ## save clients names that are inside <HiddenServiceDir>/authorized_clients/
@@ -367,22 +372,29 @@ EOF
       fi
 
       # shellcheck disable=SC2086
-      service_configuration_found="$(grep -l -e "HiddenServiceDir ${service_path}/${service_base}$" -e "HiddenServiceDir ${service_path}/${service_base}/$" ${tor_config_files} | grep -v -F "#")"
-
+      service_configuration_found="$(grep -H -e "HiddenServiceDir ${service_dir}/${service_base}$" -e "HiddenServiceDir ${service_dir}/${service_base}/$" ${tor_config_files} | grep -v -F "#" | cut -d ":" -f1)"
       notice "${bold}Host:${nocolor} ${magenta}${onion_hostname}${nocolor}"
       notice "${bold}Directory:${nocolor} ${service}"
-      notice "${bold}Conf:${nocolor} ${service_configuration_found:="NONE"}"
+      test -n "${service_configuration_found}" && notice "${bold}Conf:${nocolor} ${service_configuration_found}"
 
       [ -n "${client_name_list}" ] && notice "${bold}Clients:${nocolor} ${client_name_list} (${client_count})"
 
-      if [ "${service_configuration_found}" = "${tor_conf}" ]; then
+      if [ "${service_configuration_found}" = "${tor_conf}" ] && [ "${service_dir}" = "${tor_data_dir_services}" ]; then
         notice "${bold}Managed:${nocolor} ${green}True${nocolor}"
+      elif [ -z "${service_configuration_found}" ] && [ "${service_dir}" = "${tor_data_dir_services}" ]; then
+        notice "${bold}Managed:${nocolor} ${yellow}Could be - Inactive service${nocolor}"
+      elif [ -z "${service_configuration_found}" ] && [ "${service_dir}" != "${tor_data_dir_services}" ]; then
+        notice "${bold}Managed:${nocolor} ${yellow}False - Inactive service - Data is not at ${tor_data_dir_services}${nocolor}"
+      elif [ "${service_configuration_found}" != "${tor_conf}" ] && [ "${service_dir}" = "${tor_data_dir_services}" ]; then
+        notice "${bold}Managed:${nocolor} ${yellow}False - Not created by ${tor_conf}${nocolor}"
+      elif [ "${service_configuration_found}" = "${tor_conf}" ] && [ "${service_dir}" != "${tor_data_dir_services}" ]; then
+        notice "${bold}Managed:${nocolor} ${yellow}False - Data is not at ${tor_data_dir_services}${nocolor}"
       else
-        notice "${bold}Managed:${nocolor} ${yellow}False${nocolor}"
+        notice "${bold}Managed:${nocolor} ${yellow}False - Not created by ${tor_conf} - Data is not at ${tor_data_dir_services}${nocolor}"
       fi
 
-      if [ "${service_configuration_found}" = "NONE" ]; then
-        notice "${bold}Status:${nocolor} ${yellow}Inactive${nocolor}"
+      if [ -z "${service_configuration_found}" ]; then
+        notice "${bold}Status:${nocolor} ${yellow}Inactive - No configuration found${nocolor}"
       else
         notice "${bold}Status:${nocolor} ${green}Active${nocolor}" && service_block print "${service_clean}" "${tor_dump_config_hs}"
       fi
@@ -392,18 +404,36 @@ EOF
 
     #is_service_dir_empty
 
-    #for hs in $(grep "HiddenServiceDir" "${tor_dump_config_hs}" | sed "s/HiddenServiceDir//" | tr -s "\n" " "); do
-    #  service_dir="${hs##* }"
-    #  test -n "${service_dir}" && service_name_list="${service_name_list} ${service_dir}"
-    #done
-
-    j=0
     if [ -z "${service}" ] || [ "${service}" = "@all" ]; then
+
+      ## get all services found by configuration
+      ## tor --dump-config also shows services that have never been created (tor not reloaded)
+      for hs in $(grep "HiddenServiceDir" "${tor_dump_config_hs}" | sed "s/HiddenServiceDir //" | tr -s "\n" " "); do
+        service_dir="${hs##* }"
+        if test -z "${service_dir}"; then
+          service_name_list="$(printf %s"${service_dir}\n")"
+        else
+          service_name_list="$(printf %s"${service_name_list}\n${service_dir}\n")"
+        fi
+      done
+
+      ## get services that may or may not be inactive that are in ${tor_data_dir}
+      ## and add it to the service_name_list
       service_dir_pattern="hs_ed25519_secret_key"
-      service_name_list="$(find "${tor_data_dir}" -type f -name "${service_dir_pattern}" | sed "s|/${service_dir_pattern}||" | tr -s "\n" " ")"
-      test -z "${service_name_list}" && error_msg "No services found in ${tor_data_dir}"
+      service_found_by_key="$(find "${tor_data_dir}" -type f -name "${service_dir_pattern}")"
+      for hs in ${service_found_by_key}; do
+        service_dir="${hs%/*}"
+        echo "${service_name_list}" | grep -q -e "^${service_dir}$" -e "^${service_dir}/$" || \
+          service_name_list="$(printf %s"${service_name_list}\n${service_dir}\n")"
+      done
+
+      ## print error message about no services found
+      test -z "${service_name_list}" && error_msg "No services were found in active by configuration or inactive in ${tor_data_dir}"
+
       service="${service_name_list}"
     fi
+
+    j=0
     loop_list get_service_info "${service}"
   ;;
 

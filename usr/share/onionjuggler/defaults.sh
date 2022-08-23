@@ -128,7 +128,7 @@ clean_opt(){
 
 ## display error message with instructions to use the script correctly.
 notice(){ printf %s"${1}\n"; }
-error_msg(){ notice "${red}error: ${1}${nocolor}" 1>&2; exit 1; }
+error_msg(){ notice "${red}ERROR: ${1}${nocolor}" 1>&2; exit 1; }
 
 
 ## helper for --getconf
@@ -478,6 +478,11 @@ is_service_dir_empty(){
 ## test if service exists to continue the script or output error logs.
 ## if the service exists, will save the hostname for when requested.
 test_service_exists(){
+
+  ## find a better function to put this...
+  test -d "${tor_data_dir_services}" || mkdir -p "${tor_data_dir_services}"
+
+  no_exit="${2}"
   service_clean="${1%*/}"
   service_base="${service_clean##*/}"
   service_path="${service_clean%/*}"
@@ -485,10 +490,13 @@ test_service_exists(){
     service_path="${tor_data_dir_services}"
   fi
   onion_hostname=$(grep -F ".onion" "${service_path}/${service_base}/hostname" 2>/dev/null)
-  [ -z "${onion_hostname}" ] && error_msg "File '${service_path}/${service_base}/hostname' does not exist"
-
-  ## find a better function to put this...
-  test -d "${tor_data_dir_services}" || mkdir -p "${tor_data_dir_services}"
+  if [ -z "${onion_hostname}" ]; then
+   if test -z "${no_exit}"; then
+     error_msg "File '${service_path}/${service_base}/hostname' does not exist"
+    else
+      return
+    fi
+  fi
 }
 
 

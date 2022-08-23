@@ -13,7 +13,7 @@ usage(){
 Usage: ${me} [--option <ARG>]
 Options:
   -b, --build                                 build onionjuggler
-  -i, --instal [--no-install-requirements]    copy build to path
+  -i, --instal                                copy build to path
   -d, --uninstall [-P, --purge]               remove onionjuggler scripts and manual pages from path
   -V, --version
   -h, --help                                  show this help message
@@ -54,13 +54,7 @@ install_package(){
   done
 
   if test -n "${install_pkg}" && [ "${install_pkg}" != " " ]; then
-    if test -n "${no_install_requirements}"; then
-      notice "Missing requirements, maybe try: ${pkg_mngr_install} '${install_pkg}'"
-    else
-      notice "${nocolor}Installing package(s): ${install_pkg}"
-      # shellcheck disable=SC2086
-      ${pkg_mngr_install} ${install_pkg}
-    fi
+    notice "Missing requirements, maybe try: ${pkg_mngr_install} ${install_pkg}"
   fi
 }
 
@@ -68,7 +62,8 @@ make_shellcheck(){
   command -v shellcheck >/dev/null || error_msg "Install shellcheck to review syntax"
   notice "${yellow}Checking shell syntax${nocolor}"
   ## Customize severity with -S [error|warning|info|style]
-  if ! shellcheck -s sh "${git_top_dir}"/configure.sh "${git_top_dir}"/etc/onionjuggler/*.conf \
+  if
+  ! shellcheck -s sh "${git_top_dir}"/configure.sh "${git_top_dir}"/etc/onionjuggler/*.conf \
     "${git_top_dir}"/etc/onionjuggler/conf.d/*.conf "${git_top_dir}"/usr/bin/* \
     "${git_top_dir}"/usr/share/onionjuggler/* || \
   ! shellcheck -s bash "${git_top_dir}"/usr/share/bash-completion/completions/onionjuggler-*
@@ -146,37 +141,37 @@ get_os(){
       case "${distro}" in
         "Debian"*|*"buntu"*|"Armbian"*|"Rasp"*|"Linux Mint"*|"LinuxMint"*|"mint"*|"Tails"*)
           pkg_mngr_install="apt install -y"
-          requirements="tor grep sed openssl basez qrencode whiptail nginx"
+          requirements="tor grep sed openssl basez qrencode whiptail nginx bash-completion"
         ;;
         "Anon Gateway")
           pkg_mngr_install="apt install -y"
-          requirements="tor grep sed openssl basez qrencode dialog"
+          requirements="tor grep sed openssl basez qrencode dialog bash-completion"
         ;;
         "Anon Workstation")
           pkg_mngr_install="apt install -y"
-          requirements="grep sed qrencode dialog nginx"
+          requirements="grep sed qrencode dialog nginx bash-completion"
         ;;
         "Arch"*|"Artix"*|"ArcoLinux"*)
           pkg_mngr_install="pacman -Syu"
-          requirements="tor grep sed openssl basez qrencode dialog nginx"
+          requirements="tor grep sed openssl basez qrencode dialog nginx bash-completion"
         ;;
         "Fedora"*|"CentOS"*|"rhel"*|"Redhat"*|"Red hat")
           pkg_mngr_install="dnf install -y"
-          requirements="tor grep sed openssl basez qrencode dialog nginx"
+          requirements="tor grep sed openssl basez qrencode dialog nginx bash-completion"
         ;;
       esac
     ;;
     "OpenBSD"*)
       pkg_mngr_install="pkg_add"
-      requirements="tor grep sed eopenssl30 basez libqrencode dialog nginx"
+      requirements="tor grep sed eopenssl30 basez libqrencode dialog nginx shells/bash-completion"
     ;;
     "NetBSD"*)
       pkg_mngr_install="pkg_add"
-      requirements="tor grep sed openssl basez libqrencode dialog nginx"
+      requirements="tor grep sed openssl basez libqrencode dialog nginx shells/bash-completion"
      ;;
     "FreeBSD"*|"HardenedBSD"*|"DragonFly"*)
       pkg_mngr_install="pkg install"
-      requirements="tor grep sed openssl basez libqrencode dialog nginx"
+      requirements="tor grep sed openssl basez libqrencode dialog nginx shells/bash-completion"
     ;;
     *) error_msg "Unsupported system: ${os} ${kernel} ${distro}"
   esac
@@ -213,7 +208,6 @@ while :; do
   case "${opt}" in
     i|install|b|build|d|uninstall|r|release|k|check|m|man|S|clean) command="${opt}";;
     P|purge) action="${opt}";;
-    no-install-requirements) no_install_requirements=1;;
     V|version) printf '%s\n' "${me} ${version}"; exit 0;;
     h|help) usage;;
     "") break;;
