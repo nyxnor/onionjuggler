@@ -1,15 +1,40 @@
 # onionjuggler-cli(8) completion                           -*- shell-script -*-
 
+#COMPREPLY=($(_comp_xfunc onionjuggler-cli services $cur))
+_comp_xfunc_onionjuggler_cli_services()
+{
+  . /usr/share/onionjuggler/defaults.sh || return
+  source_conf || return
+  test -f "${tor_conf}" || return
+
+  # shellcheck disable=SC2013
+  for hs in $(grep "HiddenServiceDir ${tor_data_dir_services}/" "${tor_conf}" \
+      | sed "s|HiddenServiceDir ||")
+  do
+    service_clean="${hs%*/}"
+    service_base="${service_clean##*/}"
+    service_path="${service_clean%/*}"
+    if test -z "${service_store}"; then
+      service_store="$(printf '%s\n' "${service_base}")"
+    else
+      service_store="$(printf '%s\n%s\n' "${service_store}" "${service_base}")"
+    fi
+  done
+
+  printf '%s\n' "${service_store}"
+}
+
 _onionjuggler_cli()
 {
     local cur prev words cword
     _init_completion -s || return
 
     case $prev in
-        --gateway | --purge | --quiet | --renew )
+        --port | --gateway | --purge | --renew | --quiet )
             return
         ;;
-        --service | --port )
+        --service )
+            COMPREPLY=($(compgen -W "$(_comp_xfunc_onionjuggler_cli_services)" -- "$cur"))
             return
         ;;
         --hs-version )
@@ -20,14 +45,14 @@ _onionjuggler_cli()
             COMPREPLY=($(compgen -W "tcp unix" -- "$cur"))
             return
         ;;
+        --signal )
+            COMPREPLY=($(compgen -W "reload restart none" -- "$cur"))
+            return
+        ;;
         --on | --off | --list | --getopt )
             return
         ;;
         --help | --version | --getconf )
-            return
-        ;;
-        --signal )
-            COMPREPLY=($(compgen -W "reload restart none" -- "$cur"))
             return
         ;;
     esac

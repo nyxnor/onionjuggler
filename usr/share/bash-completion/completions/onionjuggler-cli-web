@@ -6,18 +6,18 @@ _onionjuggler_cli_web()
     _init_completion -s || return
 
     case $prev in
-        -no-check-service | \
-            --on | --off | --list | --getopt )
-            return
-        ;;
-        --port )
+        --port | -no-check-service )
             return
         ;;
         --service )
+            COMPREPLY=($(compgen -W "$(_comp_xfunc onionjuggler-cli services)" -- "$cur"))
             return
         ;;
         --folder )
-            _filedir
+            _filedir -d
+            return
+        ;;
+        --on | --off | --list | --getopt )
             return
         ;;
         --help | --version | --getconf )

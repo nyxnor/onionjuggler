@@ -6,20 +6,26 @@ _onionjuggler_cli_auth_server()
     _init_completion -s || return
 
     case $prev in
-        --client | --service | --replace-file | \
-            --client-pub-config | --client-pub-key | \
-            --on | --off | --list | --getopt )
+        --client | --replace-file | \
+            --client-pub-config | --client-pub-key )
+            return
+        ;;
+        --service )
+            COMPREPLY=($(compgen -W "$(_comp_xfunc onionjuggler-cli services)" -- "$cur"))
             return
         ;;
         --client-pub-file )
             _filedir auth
             return
         ;;
-        --help | --version | --getconf )
-            return
-        ;;
         --signal )
             COMPREPLY=($(compgen -W "reload restart none" -- "$cur"))
+            return
+        ;;
+        --on | --off | --list | --getopt )
+            return
+        ;;
+        --help | --version | --getconf )
             return
         ;;
     esac

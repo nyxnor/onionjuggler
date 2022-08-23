@@ -12,3 +12,10 @@ disable=SC2207  # suggested alternatives fail in posix mode or use temp files
 #disable=SC2016
 #disable=SC2086
 #disable=SC2155
+
+
+## This is onionjuggler rc
+source=/dev/null
+## disabling 2154 is raw but the variables
+## are sourced from a non constant source
+disable=SC2154
