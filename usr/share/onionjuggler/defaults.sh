@@ -218,13 +218,14 @@ cat_squeeze_blank(){
 
 
 ## block names with special characters
-## usage: check_name service
+## usage: check_name $service
 ## where service is a variable with a value already assigned
 check_name(){
   key="${1}"
   eval val='$'"${key}"
   [ "${val%%*[^a-zA-Z0-9_.-]*}" ] || error_msg "${key}=\"${val}\" is invalid, must only contain letters, numbers, hifen, underscore and dot"
   echo "${val}" | cut -c 1 | grep -qF "." && error_msg "${key} can not start with dot"
+  echo "${val}" | cut -c 1 | grep -qF "-" && error_msg "${key} can not start with a dash (hifen)"
 }
 
 
