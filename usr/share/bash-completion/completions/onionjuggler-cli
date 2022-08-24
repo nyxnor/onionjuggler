@@ -7,10 +7,21 @@ _comp_xfunc_onionjuggler_cli_services()
   source_conf || return
   test -f "${tor_conf}" || return
 
+  ## empty the value
+  service_store=""
+
+  ## TODO: improve loop to catch active services, inactive services, all managed services
+
   # shellcheck disable=SC2013
-  for hs in $(grep "HiddenServiceDir ${tor_data_dir_services}/" "${tor_conf}" \
-      | sed "s|HiddenServiceDir ||")
-  do
+  #for hs in $(grep -e "HiddenServiceDir ${tor_data_dir_services}/" "${tor_conf}"); do
+  for hs in $(grep -e "HiddenServiceDir ${tor_data_dir_services}/" "${tor_conf}"\
+    | grep -v -F "#" | sed "s/HiddenServiceDir //"); do
+    ## remove the longest hashtag, if nothing remains, line was commented
+    #service_commented="${hs##'#'*}"
+    #test -z "${service_commented}" && return
+
+    #service_clean="${hs/HiddenServiceDir//}"
+
     service_clean="${hs%*/}"
     service_base="${service_clean##*/}"
     service_path="${service_clean%/*}"
