@@ -391,21 +391,23 @@ read_tor_files(){
 ## find helps do the job because it can segreggate directories from files
 set_owner_permission(){
   ## data
-  chown -R "${tor_user}:${tor_user}" "${tor_data_dir}"
-  find "${tor_data_dir}" -type d -exec chmod 700 {} \;
-  find "${tor_data_dir}" -type f -exec chmod 600 {} \;
+  chown -R "${tor_user}:${tor_user}" "${tor_data_dir_services}"
+  find "${tor_data_dir_services}" -type d -exec chmod 700 {} \;
+  find "${tor_data_dir_services}" -type f -exec chmod 600 {} \;
+  chown -R "${tor_user}:${tor_user}" "${tor_data_dir_auth}"
+  find "${tor_data_dir_auth}" -type d -exec chmod 700 {} \;
+  find "${tor_data_dir_auth}" -type f -exec chmod 600 {} \;
   ## conf
-  chown -R "${tor_conf_user_group}" "${tor_conf_dir}"
-  find "${tor_conf_dir}" -type d -exec chmod 755 {} \;
-  find "${tor_conf_dir}" -type f -exec chmod 644 {} \;
+  chown "${tor_conf_user_group}" "${tor_conf}"
+  find "${tor_conf}" -type f -exec chmod 644 {} \;
 }
 
 
 # reloads tor by default or forces to restart if $1 is not empty
 # shellcheck disable=SC2120
 signal_tor(){
-  verify_config_tor
   set_owner_permission
+  verify_config_tor
 
   ## default signal is to reload, but if restart was specified, use it
   case "${signal}" in
@@ -415,16 +417,16 @@ signal_tor(){
   esac
 
   printf "\n"
-  notice "${signal}ing tor, please be patient."
+  notice "${signal_text}ing tor, please be patient."
   notice "Process hanged? Press (${get_intr}) to abort and maintain previous configuration."
   case "${daemon_control}" in
-    systemctl|sv|rcctl) "${daemon_control}" "${signal}" "${tor_daemon}";;
-    service) "${daemon_control}" "${tor_daemon}" "${signal}";;
-    /etc/rc.d) "${daemon_control}"/"${tor_daemon}" "${signal}";;
+    systemctl|sv|rcctl) "${daemon_control}" "${signal_send}" "${tor_daemon}";;
+    service) "${daemon_control}" "${tor_daemon}" "${signal_send}";;
+    /etc/rc.d) "${daemon_control}"/"${tor_daemon}" "${signal_send}";;
     *) error_msg "daemon_control value not supported: ${daemon_control}"
   esac
   [ "${?}" -eq 1 ] && error_msg "Failed to ${signal} tor. Check logs first, correct the problem them restart tor."
-  notice "${green}${signal}ed tor succesfully!${nocolor}"
+  notice "${green}${signal_text}ed tor succesfully!${nocolor}"
   printf "\n"
 }
 
