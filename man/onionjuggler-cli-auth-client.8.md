@@ -85,9 +85,10 @@ onionjuggler-cli-auth-client --help
 
 **ONIONJUGGLER_SKIP_PRE_TOR_CHECK**
 
-: If set to 1, skip pre run tor check to allow the script to run if the tor is failing to parse its configuration. As the scripts requires root, preserve the environment. If using _doas_, set _keepenv_ in doas.conf. If using _sudo_, use the command line option _-E_ or _--preserve-env_:
+: If set to 1, skip pre run tor check to allow the script to start running if the tor is failing to parse its configuration. Note it does not disable the last tor check to apply configuration changes, that is, if the configuration is still invalid, nothing will be changed. This option is useful if you are certain the configuration check will be fixed by the command. As the scripts requires root and you are probably calling the script from an unpriviliged user, preserve the variable value through environment changes by assigning it after the command to run the onionjuggler script as another user and before the script name:
 ```
-ONIONJUGGLER_SKIP_PRE_TOR_CHECK=1 sudo -E onionjuggler-cli
+sudo ONIONJUGGLER_SKIP_PRE_TOR_CHECK=1 onionjuggler-cli-auth-client
+doas ONIONJUGGLER_SKIP_PRE_TOR_CHECK=1 onionjuggler-cli-auth-client
 ```
 
 
