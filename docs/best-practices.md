@@ -1,4 +1,4 @@
-## SECURITY ADVICE
+## Security Advice
 
 The default version of onion services is version 3 and it has 56 characters long. Onion services version 2 is being deprecated and will be retired soon from the Tor network, after 0.4.6.x Tor release, in July 2021. Please read the blog post Onion Service version deprecation timeline for more information.
 
@@ -14,7 +14,7 @@ Now that you have an onion site working, you may want to deploy Onion-Location, 
 https://community.torproject.org/onion-services/setup/#security-advice-and-more-tips
 
 
-## ONION SERVICES BEST PRACTICES
+## Onion Services Best Practices
 
 ### How to use this guide.
 

@@ -16,56 +16,9 @@ Every contribution will licensed accordingly to the [LICENSE](LICENSE), which cu
 
 Currently there are many commands used and there is a constant development to use less commands, focusing on installing less packages.
 
-Commands used by this project:
+All POSIX shell comands are allowed - [Shell and Utilities volume of POSIX.1-2017 - IEEE Std 1003.1-2017 - ISO/IEC/IEEE 9945:2009](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html):
 
-* [Shell and Utilities volume of POSIX.1-2017 - IEEE Std 1003.1-2017 - ISO/IEC/IEEE 9945:2009](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html):
-  * [cat](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cat.html#tag_20_13)
-  * [chmod](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chmod.html#tag_20_17)
-  * [chown](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/chown.html#tag_20_18)
-  * [cmp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cmp.html#tag_20_20)
-  * [cp](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cp.html#tag_20_24)
-  * [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html#tag_20_28)
-  * [date](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/date.html#tag_20_30)
-  * [dot](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_18)
-  * [env](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/env.html#tag_20_39)
-  * [exit](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_21)
-  * [export](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_22)
-  * [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_20_55)
-  * [id](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/id.html#tag_20_59)
-  * [ln](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ln.html#tag_20_67)
-  * [ls](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ls.html#tag_20_73)
-  * [man](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/man.html#tag_20_77)
-  * [mkdir](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mkdir.html#tag_20_79)
-  * [mv](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/mv.html#tag_20_82)
-  * [printf](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html#tag_20_94)
-  * [read](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html#tag_20_109)
-  * [rm](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/rm.html#tag_20_111)
-  * [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html#tag_20_116)
-  * [sh](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html#tag_20_117)
-  * [sort](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sort.html#tag_20_119)
-  * [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html#tag_20_125)
-  * [tee](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tee.html#tag_20_127)
-  * [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html#tag_20_132)
-  * [trap](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28)
-  * [tput](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tput.html#tag_20_131)
-  * [uniq](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html#tag_20_144)
-  * [vi](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/vi.html#tag_20_152)
-
-* Installation:
-  * Required:
-    * [tor](https://github.com/torproject/tor/blob/main/doc/man/tor.1.txt)
-    * [tar](https://linux.die.net/man/1/tar)
-    * [openssl](https://www.openssl.org/docs/manmaster/man1/genpkey.html)
-    * [basez](http://www.quarkline.net/basez/)
-    * [git](https://git-scm.com/docs/user-manual)
-    * [python3-stem](https://stem.torproject.org/download.html)
-    * [nginx](https://docs.nginx.com/nginx/admin-guide/)/[apache](https://httpd.apache.org/docs/current/)/[openbsd-httpd](https://man.openbsd.org/httpd.8)
-    * [dialog](https://invisible-island.net/dialog/manpage/dialog.txt)/[whiptail](https://manpages.debian.org/testing/whiptail/whiptail.1.en.html)
-  * Optional:
-    * [(lib)qrencode](https://github.com/fukuchi/libqrencode)
-  * Development:
-    * [pandoc](https://pandoc.org/MANUAL.html)
-    * [shellcheck](https://github.com/koalaman/shellcheck/blob/master/shellcheck.1.md)
+New requirements will be evaluated regarding their need and value.
 
 ### Builtins
 
@@ -85,20 +38,18 @@ Operating system extensions (GNU extesions on commands such as grep) and command
 
 ### Syntax
 
-* Identation is 2.
-* Lines that begin with "## " try to explain what's going on. Lines that begin with just "#" are disabled commands.
+* Identation is made by 2 spaces.
+* Lines that begin with `## ` try to explain what's going on. Lines that begin with just `#` are disabled commands.
 * Sacrificing some code legibility for speed is acceptable, but if the maintainer considers it messy because it does not help performance, it won't be approved. This is the only subjective requirement.
 * Less commands invoked and the lighter they are (following their use case for performance) -> Inefficient: `cat file | grep pattern`, Efficient: `grep pattern file`.
 * `printf` instead of `echo` for portability reasons.
 * exit codes if no error occurs is `0`, else `1`.
 * test managed with `&&` for true and `||` for false.
-* `case` instead of `if-then-else` on most of the cases.
-* for loops using command instead of variables for the Z SHell -> `for ITEM in $(command)`.
+* `case` instead of `if-then-else` when possible.
 * variables should be reffered with brackets `{}` and double quotes `""`, resulting in `"${var}"`.
-* unquoted variabes are for commands that need to expand, disable SC2086 as a directive in this case one line before the occurence -> `# shellcheck disable=SC2086`
-* the project variables are lower case and if there are two or more words, separated by `_` (underscore) -> `$var_onion`
-* environmental variables are upper case letters -> `$VAR`.
-* variable values must be quoted -> `var="something"`.
+* unquoted variabes are for commands that need to expand, disable SC2086 as a directive in this case one line before the occurence -> `# shellcheck disable=SC2086`.
+* variables must be lower case and if there are two or more words, separated by `_` (underscore) -> `${onion}"`.
+* only environment variables can be uppercase.
 * for the rest, follow the same pattern predominant in the scripts.
 
 ### Check
@@ -171,10 +122,3 @@ Open a pull request on GitHub and compare it against the `upstream/<BASE_BRANCH>
 ## Pull Requests
 
 Help with pull requests by reviewing it.
-
-Regarding reviewing pull requests, the vocabulary is:
-* **cACK** - Concept ACK - Agree with the idea and overall direction, but haven't reviewed the code changes or tested them.
-* **utACK** - Untested ACK - Reviewed and agree with the code changes but haven't actually tested them.
-* **tACK** - Tested ACK -Reviewed the code changes and have verified the functionality or bug fix.
-* **ACK** - A loose ACK can be confusing. It's best to avoid them unless it's a documentation/comment only change in which case there is nothing to test/verify; therefore the tested/untested distinction is not there.
-* **NACK** - Not ACK - Disagree with the code changes/concept. Should be accompanied by an explanation.

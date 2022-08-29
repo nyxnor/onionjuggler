@@ -22,13 +22,12 @@ Quick link to this repository: [git.io/onionjuggler](https://git.io/onionjuggler
   * [Goal](#goal)
   * [Features](#features)
 * [Requirements](#requirements)
+* [Compatibility](#compatibility)
 * [Instructions](#instructions)
   * [Clone the repository](#clone-the-repository)
   * [Set custom variables](#set-custom-variables)
   * [Setup the environment](#setup-the-environment)
   * [Usage](#usage)
-    * [tui](#tui)
-    * [cli](#cli)
 * [Featured on](#featured-on)
 * [Contributors](#contributors)
 
@@ -103,6 +102,16 @@ Editing the tor configuration file (torrc) is not difficult, but automation solv
   * **pandoc** (Manual)
   * **shellcheck** (Review)
 
+## Compatibility
+
+Mainly tested on Debian systems, including Whonix.
+
+It can work on OpenBSD -
+- auth -> if you build `basez` from source, as it is not in ports.
+- web -> nginx or apache, openbsd's httpd configuration was difficult to cleanly remove the server block
+
+Regarding other operating systems, please see [etc/onionjuggler](etc/onionjuggler) for pre-defined configuration for your operating system. They were not all tested
+
 ## Instructions
 
 ### Clone the repository
@@ -121,33 +130,22 @@ Run from inside the cloned repository to create the tor directories, create manu
 
 ### Set custom variables
 
-You should not modify the default configuration on `/etc/onionjuggler/onionjuggler.conf`, it will be modified on every update. Your local configurations should be on `/etc/onionjuggler/conf.d/*.conf`.
+You should not modify the default configuration on `/etc/onionjuggler/onionjuggler.conf`, it will be modified on every update. Your local configurations should be on `/etc/onionjuggler/conf.d/*.conf`, and from this folder, they will be parsed using lexical order, and the last value will supersede the defaults.
 
-To assign values to the variables, yyou can either:
-
-* Open the mentioned configuration file with your favorite editor:
-```sh
-"${EDITOR:-vi}" /etc/onionjuggler/conf.d/local.conf
-```
-
-* or insert configuration to the end of the file with tee:
-```sh
-printf "tor_conf_dir=\"/etc/tor\"\n" | tee -a /etc/onionjuggler/conf.d/local.conf
-```
-
-* or edit with sed:
-```sh
-sed -i'' "s|^tor_conf_dir=.*|tor_conf_dir=\"/etc/tor\"|" /etc/onionjuggler/conf.d/local.conf
-```
-
-Before executing anything, it is recommended to see what options are configured. Every script has a `--getconf` option that will print the current configuration read by onionjuggler:
-```sh
-onionjuggler-cli --getconf
-```
 
 ### Usage
 
 Each configuration and script has its own manual page and help message, it is the best way to learning onionjuggler entirely.
+
+Before executing any script to make changes, it is recommended to see what options are configured. Every script has a `--getconf` option that will print the current configuration read by onionjuggler:
+```sh
+onionjuggler-cli --getconf
+```
+
+It is also possible to get command line options without making changes, useful to see if the assignment is correct:
+```sh
+onionjuggler-cli --getopt --service=example --hs-version=3
+```
 
 **To use the TUI, just run:**
 ```sh

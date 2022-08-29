@@ -1,4 +1,4 @@
-## ONION SERVICES
+## Onion Services
 
 Onion services (formerly known as "hidden services") are services (like websites) that are only accessible through the Tor network.
 
@@ -8,7 +8,7 @@ Onion services offer several advantages over ordinary services on the non-privat
 * All traffic between Tor users and onion services is end-to-end encrypted, so you do not need to worry about connecting over HTTPS.
 * The address of an onion service is automatically generated, so the operators do not need to purchase a domain name; the .onion URL also helps Tor ensure that it is connecting to the right location and that the connection is not being tampered with.
 
-### HOW TO ACCESS AN ONION SERVICE
+### How to access an Onion Service
 
 Just like any other website, you will need to know the address of an onion service in order to connect to it. An onion address is a string of 56 mostly random letters and numbers, followed by ".onion".
 
@@ -24,7 +24,7 @@ To prioritize an onion site version of a website, you can enable automatic Onion
 Click on hamburger menu (≡), go to Preferences (or Options on Windows), click on Privacy & Security, and in the Onion Services section look for the entry "Prioritize .onion sites when known." and check the option "Always".
 Or, if you're already running Tor Browser, you can copy and paste this string in a new tab: `about:preferences#privacy` and change this setting.
 
-## ONION SERVICE AUTHENTICATION
+## Onion Service Authentication
 
 An authenticated onion service is a service like an onion site that requires the client to provide an authentication token before accessing the service.
 As a Tor user, you may authenticate yourself directly in the Tor Browser.
@@ -32,7 +32,7 @@ In order to access this service, you will need access credentials from the onion
 When accessing an authenticated onion service, Tor Browser will show in the URL bar an icon of a little gray key, accompanied by a tooltip.
 Enter your valid private key into the input field.
 
-### ONION SERVICES ERRORS
+### Onion Services Errors
 
 If you can't connect to an onion site, Tor Browser will provide a specific error message informing why the website is unavailable.
 Errors can happen in different layers: client errors, network errors or service errors.
@@ -50,7 +50,7 @@ The table below shows all the possible errors and which action you should take t
 | XF6 | Invalid Onion site Address | The provided onion site address is invalid. Please check that you entered it correctly. |
 | XF7 | Onion site Circuit Creation Timed Out | Failed to connect to the onion site, possibly due to a poor network connection. |
 
-### TROUBLESHOOTING
+### Troubleshooting
 
 If you cannot reach the onion service you requested, make sure that you have entered the onion address correctly: even a small mistake will stop Tor Browser from being able to reach the site.
 
