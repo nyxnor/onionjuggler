@@ -134,7 +134,7 @@ error_msg(){ notice "${red}ERROR: ${1}${nocolor}" 1>&2; exit 1; }
 ## helper for --getconf
 get_conf_values(){
   for key in operating_system onionjuggler_plugin openssl_cmd webserver webserver_conf_dir website_dir dialog \
-  daemon_control tor_daemon tor_user tor_conf_user_group tor_conf_dir tor_conf tor_data_dir tor_data_dir_services tor_data_dir_auth; do
+  daemon_control tor_daemon tor_user tor_conf_user_group tor_conf_dir tor_conf tor_main_torrc_conf tor_defaults_torrc_conf tor_data_dir tor_data_dir_services tor_data_dir_auth; do
     eval val='$'"${key}"
     test -n "${val}" && printf '%s\n' "${key}=\"${val}\""
   done
@@ -161,6 +161,8 @@ set_default_conf_values(){
   : "${tor_data_dir_auth:="${tor_data_dir}/onion_auth"}"; tor_data_dir_auth="${tor_data_dir_auth%*/}"
   : "${tor_conf_dir:="/etc/tor"}"; tor_conf_dir="${tor_conf_dir%*/}"
   : "${tor_conf:="${tor_conf_dir}/torrc"}"
+  : "${tor_main_torrc_conf:="${tor_conf_dir}/torrc"}"
+  : "${tor_defaults_torrc_conf:="${tor_conf}-defaults"}"
 }
 
 
@@ -371,12 +373,8 @@ verify_config_tor(){
 
 ## get files tor will read
 read_tor_files(){
-  if test -f /lib/systemd/system/tor@default.service; then
-    tor_start_command="$(grep "ExecStart=" /lib/systemd/system/tor@default.service | sed "s/ExecStart=//")"
-  elif test -f /lib/systemd/system/tor.service; then
-    tor_start_command="$(grep "ExecStart=" /lib/systemd/system/tor.service | sed "s/ExecStart=//")"
-  fi
-  ## verify tor confoguration just to grep which files and options were included
+  tor_start_command="tor --torrc-file ${tor_main_torrc_conf} --defaults-torrc ${tor_defaults_torrc_conf}"
+  ## verify tor configuration just to get read files, and dump all important configurations
   : "${tor_start_command:="tor"}"
   tor_verify_config_output="$(${tor_start_command} --verify-config)"
   tor_config_files="$(printf '%s\n' "${tor_verify_config_output}" |  grep -E " Read configuration file [^ ]*| Including configuration file [^ ]*" | sed "s/.* //" | cut -d "\"" -f2 | tr "\n" " ")"
@@ -407,8 +405,8 @@ set_owner_permission(){
 # reloads tor by default or forces to restart if $1 is not empty
 # shellcheck disable=SC2120
 signal_tor(){
-  set_owner_permission
   verify_config_tor
+  set_owner_permission
 
   ## default signal is to reload, but if restart was specified, use it
   case "${signal}" in

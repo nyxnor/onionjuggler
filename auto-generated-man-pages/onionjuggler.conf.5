@@ -86,8 +86,30 @@ Base folder of torrc configuration.
 (Default: /etc/tor).
 .TP
 \f[B]tor_conf\f[R]
-The torrc, tor run commands file.
+The tor configuration file that will be modified.
+It is recommended to a set a separate configuration file to be managed
+by onionjuggler, one that is included by tor, as there could be some
+unpredicated issues if the file is modified manually.
+Read about \f[I]%include\f[R] on the \f[I]torrc(1)\f[R] man.
 (Default: /etc/tor/torrc).
+.TP
+\f[B]tor_main_torrc_conf\f[R]
+The main tor configuration file that tor reads.
+It is the file specified to the tor daemon with the option \f[I]-f
+FILE\f[R] or \f[I]--torrc-file FILE\f[R].
+This file won\[aq]t be modified unless it is set as value to the
+\f[B]tor_conf\f[R] option, its purpose is to fully verify the tor
+configuration.
+(Default: /etc/tor/torrc).
+.TP
+\f[B]tor_defaults_torrc_conf\f[R]
+The tor defaults configuration file that tor reads.
+It is the file specified to the tor daemon with the option
+\f[I]--defaults-torrc FILE\f[R].
+This file won\[aq]t be modified unless it is set as value to the
+\f[B]tor_conf\f[R] option, its purpose is to fully verify the tor
+configuration.
+(Default: /etc/tor/torrc-defaults).
 .TP
 \f[B]tor_data_dir\f[R]
 Specify the DataDirectory for tor.

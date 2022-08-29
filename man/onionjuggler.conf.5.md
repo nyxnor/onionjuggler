@@ -72,7 +72,15 @@ Variables set to and empty string, either *var=* or *var=""*, will run with defa
 
 **tor_conf**
 
-: The torrc, tor run commands file. (Default: /etc/tor/torrc).
+: The tor configuration file that will be modified. It is recommended to a set a separate configuration file to be managed by onionjuggler, one that is included by tor, as there could be some unpredicated issues if the file is modified manually. Read about _%include_ on the _torrc(1)_ man. (Default: /etc/tor/torrc).
+
+**tor_main_torrc_conf**
+
+: The main tor configuration file that tor reads. It is the file specified to the tor daemon with the option _-f FILE_ or _--torrc-file FILE_. This file won't be modified unless it is set as value to the **tor_conf** option, its purpose is to fully verify the tor configuration. (Default: /etc/tor/torrc).
+
+**tor_defaults_torrc_conf**
+
+: The tor defaults configuration file that tor reads. It is the file specified to the tor daemon with the option _--defaults-torrc FILE_. This file won't be modified unless it is set as value to the **tor_conf** option, its purpose is to fully verify the tor configuration. (Default: /etc/tor/torrc-defaults).
 
 **tor_data_dir**
 
