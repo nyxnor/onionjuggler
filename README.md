@@ -112,6 +112,13 @@ git clone https://github.com/nyxnor/onionjuggler.git
 cd onionjuggler
 ```
 
+### Setup the enviroment
+
+Run from inside the cloned repository to create the tor directories, create manual pages and copy scripts to path:
+```sh
+./configure.sh --install
+```
+
 ### Set custom variables
 
 You should not modify the default configuration on `/etc/onionjuggler/onionjuggler.conf`, it will be modified on every update. Your local configurations should be on `/etc/onionjuggler/conf.d/*.conf`.
@@ -120,80 +127,40 @@ To assign values to the variables, yyou can either:
 
 * Open the mentioned configuration file with your favorite editor:
 ```sh
-"${EDITOR:-vi}" /etc/onionjuggler/cond.d/local.conf
+"${EDITOR:-vi}" /etc/onionjuggler/conf.d/local.conf
 ```
 
 * or insert configuration to the end of the file with tee:
 ```sh
-printf "tor_conf_dir=\"/etc/tor\"\n" | tee -a /etc/onionjuggler/cond.d/local.conf
+printf "tor_conf_dir=\"/etc/tor\"\n" | tee -a /etc/onionjuggler/conf.d/local.conf
 ```
 
 * or edit with sed:
 ```sh
-sed -i'' "s|^tor_conf_dir=.*|tor_conf_dir=\"/etc/tor\"|" /etc/onionjuggler/cond.d/local.conf
+sed -i'' "s|^tor_conf_dir=.*|tor_conf_dir=\"/etc/tor\"|" /etc/onionjuggler/conf.d/local.conf
 ```
 
-### Setup the enviroment
-
-Run from inside the cloned repository to create the tor directories, create manual pages and copy scripts to path:
+Before executing anything, it is recommended to see what options are configured. Every script has a `--getconf` option that will print the current configuration read by onionjuggler:
 ```sh
-./configure.sh --install
+onionjuggler-cli --getconf
 ```
 
 ### Usage
 
-### configure.sh
+Each configuration and script has its own manual page and help message, it is the best way to learning onionjuggler entirely.
 
-**configure.sh** setup the environment for OnionJuggler by adding the scripts and manual pages to path and detecting your operating system to fit with its default configuration. It can also be used to uninstall. Common development use is to create manual pages, check shell syntax and do all of the aforementioned and give the git status for files to be commited. The update option is raw and only recommended for development as of now.
-
-Install:
-```sh
-configure.sh -i
-```
-
-Uninstall:
-```sh
-configure.sh -d
-```
-
-Update (development only):
-```sh
-configure.sh -u
-```
-
-#### tui
-
-**onionjuggler-tui** wraps the CLI in a Terminal User Interface.
-Some TUI options will let you edit the authorization files, which is recommended to set your favorite text editor to an environment variable that will be tried on the following order: `DOAS_EDITOR`/`SUDO_EDITOR`, if empty will try `VISUAL`, if empty will try `EDITOR`, if empty WILL fallback to `Vi`.
-
-Read the [tui manual](docs/onionjuggler-tui.1.md)
-```sh
-man onionjuggler-tui
-```
-
-To use the TUI, just run:
+**To use the TUI, just run:**
 ```sh
 onionjuggler-tui
 ```
 
-#### cli
-
-**onionjuggler-cli** is the main script that manages the HiddenServices. Take a look at the documentation inside `docs` folder, there are many other onion services management guides. Read:
-
-Don't forget the [cli manual](docs/onionjuggler-cli.1.md) and the [conf manual](docs/onionjuggler.conf.5.md) for advanced usage:
+**To create a service on the CLI:**
 ```sh
-man onionjuggler-cli
-man onionjuggler.conf
+onionjuggler-cli --on --service=terminator --socket=tcp --hs-version=3 --port="80:127.0.0.1:80"
 ```
 
-To create a service named `terminator`, it is as easy as possible:
-```sh
-onionjuggler-cli --on -s terminator -p 80
-```
-But can be as advanced as specifying all the parameters:
-```sh
-onionjuggler-cli --on --service terminator --socket tcp --hs-version 3 --port "80:127.0.0.1:80 443:127.0.0.1:443"
-```
+Many more things are possible, read the man pages
+
 
 ## Featured on
 
