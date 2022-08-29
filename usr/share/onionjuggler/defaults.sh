@@ -587,7 +587,8 @@ service_block(){
       i=$((i+1))
       case "${line}" in
         "HiddenServiceStatistics"*) :;; ## relays only
-        "HiddenService"*)
+        "HiddenServiceSingleHopMode"*|"HiddenServiceNonAnonymousMode"*) :;; ## per instance
+        "HiddenService"*) ## per service
           ## break on next HiddenService configuration
           { [ ${i} -gt 1 ] && [ "${line%% *}" = "HiddenServiceDir" ]; } && break
           case "${process}" in
