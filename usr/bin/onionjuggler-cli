@@ -144,8 +144,11 @@ case "${status}" in
     check_opt_filled service
     check_name service
     # shellcheck disable=SC2086
-    if grep -n -e "HiddenServiceDir ${tor_data_dir_services}/${service}$" -e "HiddenServiceDir ${tor_data_dir_services}/${service}/$" ${tor_config_files} | grep -v "[[:space:]]*\#"; then
-      error_msg "service '${tor_data_dir_services}/${service}' already exists, choose another name"
+    service_exists="$(grep -n -e "HiddenServiceDir ${tor_data_dir_services}/${service}$" -e "HiddenServiceDir ${tor_data_dir_services}/${service}/$" ${tor_config_files} | grep -v "[[:space:]]*\#")"
+    if test -n "${service_exists}"; then
+      service_exists_file="$(printf '%s\n' "${service_exists}" | cut -d ":" -f1)"
+      service_exists_line="$(printf '%s\n' "${service_exists}" | cut -d ":" -f2)"
+      error_msg "service '${tor_data_dir_services}/${service}' already exists on file '${service_exists_file}' at line '${service_exists_line}'. Choose another name"
     fi
     : "${hs_version:=3}"; [ "${hs_version}" != "3" ] && error_msg "hs-version ${hs_version} is not available" ## wait for v4 to change this
     : "${socket:=tcp}"
@@ -428,7 +431,7 @@ EOF
       done
 
       ## print error message about no services found
-      test -z "${service_name_list}" && error_msg "No services were found in active by configuration or inactive in ${tor_data_dir}"
+      test -z "${service_name_list}" && error_msg "No services were found active by configuration or inactive in ${tor_data_dir}"
 
       service="${service_name_list}"
     fi

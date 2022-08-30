@@ -263,6 +263,9 @@ safe_edit(){
     tmp)
       file_dir="${file%/*}"
       file_name="${file##*/}"
+      ## empty file suffix as it can have a value from before
+      ## and below, it will only be assigned a non empty value if it has a suffix
+      file_suffix=""
       echo "${file_name}" | grep -qF "." && file_suffix="${file_name##*.}"
       ## create an empty file if not existent
       if test -f "${file}"; then
@@ -362,8 +365,20 @@ pre_run_check(){
 
 ## Verify tor configuration of the temporary file and if variable is empty, use the main configuration, if wrong, exit.
 verify_config_tor(){
-  notice "Verifying tor configuration"
-  ! ${tor_start_command} --verify-config --hush && error_msg "aborting: tor configuration is invalid"
+  ## this option will set the torrc file to the temporary conf, as the user is using it
+  ## to be managed by onionjuggler
+  [ "${tor_main_torrc_conf}" = "${tor_conf}" ] && tor_start_command="${tor_start_command} --torrc-file ${tor_conf_tmp}"
+  notice "Verifying tor configuration with:"
+  notice "$ ${tor_start_command} --verify-config --hush"
+  if ! ${tor_start_command} --verify-config --hush >/dev/null 2>&1; then
+    ## print warn and error messages only  if configuration is invalid
+    ## excluding warning messages caused by the script, which are irrelevant to the user
+    ${tor_start_command} --verify-config --hush | \
+      grep -v -F \
+      -e "[warn] Duplicate --torrc-file options on command line." \
+      -e "[warn] Duplicate --f options on command line."
+    error_msg "aborting: tor configuration is invalid"
+  fi
   notice "${green}Configuration OK${nocolor}"
   printf '\n'
   ## as configuration is ok, save modified file and delete temporary ones
@@ -373,7 +388,7 @@ verify_config_tor(){
 
 ## get files tor will read
 read_tor_files(){
-  tor_start_command="tor --torrc-file ${tor_main_torrc_conf} --defaults-torrc ${tor_defaults_torrc_conf}"
+  tor_start_command="tor --defaults-torrc ${tor_defaults_torrc_conf} --torrc-file ${tor_main_torrc_conf}"
   ## verify tor configuration just to get read files, and dump all important configurations
   : "${tor_start_command:="tor"}"
   tor_verify_config_output="$(${tor_start_command} --verify-config)"
