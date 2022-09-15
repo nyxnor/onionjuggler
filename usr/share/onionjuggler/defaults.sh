@@ -133,10 +133,16 @@ error_msg(){ notice "${red}ERROR: ${1}${nocolor}" 1>&2; exit 1; }
 
 ## helper for --getconf
 get_conf_values(){
-  for key in operating_system onionjuggler_plugin openssl_cmd webserver webserver_conf_dir website_dir dialog \
-  daemon_control tor_daemon tor_user tor_conf_user_group tor_conf_dir tor_conf tor_main_torrc_conf tor_defaults_torrc_conf tor_data_dir tor_data_dir_services tor_data_dir_auth; do
+  for key in onionjuggler_conf_included onionjuggler_conf_excluded \
+             operating_system onionjuggler_plugin openssl_cmd \
+             webserver webserver_conf_dir website_dir dialog \
+             daemon_control tor_daemon tor_user tor_conf_user_group \
+             tor_conf_dir tor_conf tor_main_torrc_conf \
+             tor_defaults_torrc_conf tor_data_dir tor_data_dir_services \
+             tor_data_dir_auth
+  do
     eval val='$'"${key}"
-    test -n "${val}" && printf '%s\n' "${key}=\"${val}\""
+    printf '%s\n' "${key}=\"${val}\""
   done
 }
 
@@ -150,6 +156,7 @@ set_default_conf_values(){
   : "${webserver:="nginx"}"
   : "${webserver_conf_dir:="/etc/${webserver}"}"
   : "${website_dir:="/var/www"}"; website_dir="${website_dir%*/}"
+  : "${dialog:="dialog"}"
 
   ## tor defaults
   : "${daemon_control:="systemctl"}"; daemon_control="${daemon_control%*/}"
@@ -171,10 +178,38 @@ set_default_conf_values(){
 ## 3. set default values for empty variables
 source_conf(){
   test -f /etc/onionjuggler/onionjuggler.conf || error_msg "Default configuration file not found: /etc/onionjuggler/onionjuggler.conf"
-  for file in /etc/onionjuggler/onionjuggler.conf /etc/onionjuggler/conf.d/*; do
+  for file in \
+    /etc/onionjuggler/onionjuggler.conf \
+    /etc/onionjuggler/conf.d/* \
+    /usr/local/etc/onionjuggler/onionjuggler.conf \
+    /usr/local/etc/onionjuggler/conf.d/*
+  do
     file_name="${file##*/}"
     file_suffix="${file_name##*.}"
-    [ "${file}" != "*" ] && [ "${file_suffix}" = "conf" ]  && . "${file}"
+    ## the '*' means the glob was not expanded because there are no files
+    #[ "${file}" != "*" ] && continue
+    if [ "${file_name}" != "*" ]; then
+      ## only source files ending with ".conf"
+      ## else add to the list of excluded files
+      if [ "${file_suffix}" = "conf" ]; then
+        ## only try to source files that can be read
+        ## else add to the list of excluded files
+        if test -r "${file}"; then
+          . "${file}"
+          onionjuggler_conf_included="${onionjuggler_conf_included} ${file}"
+        elif ! test -f "${file}"; then
+          ## assign nothing, file doesn't exist or is not a regular file
+          ## this happens with /usr/local/etc/onionjuggler/onionjuggler.conf
+          ## in the case it doesn't exist, just to avoid it beind added to the
+          ## excluded list
+          true
+        else
+          onionjuggler_conf_excluded="${onionjuggler_conf_excluded} ${file}"
+        fi
+      else
+        onionjuggler_conf_excluded="${onionjuggler_conf_excluded} ${file}"
+      fi
+    fi
   done
   set_default_conf_values
 }
